@@ -1,6 +1,8 @@
+import { CustomToast } from "@/components/CustomToast";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
+import Toast from "react-native-toast-message";
 import "./globals.css";
 
 export default function RootLayout() {
@@ -20,9 +22,19 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-    </Stack>
+    <>
+      <Stack>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack>
+      <Toast
+        config={{
+          success: (props) => <CustomToast {...props} type="success" />,
+          error: (props) => <CustomToast {...props} type="error" />,
+          info: (props) => <CustomToast {...props} type="info" />,
+        }}
+        topOffset={60}
+      />
+    </>
   );
 }
