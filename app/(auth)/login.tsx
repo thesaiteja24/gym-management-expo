@@ -1,8 +1,10 @@
 import InputField from "@/components/InputField";
 import { useAuth } from "@/stores/authStore";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Text,
   TouchableOpacity,
@@ -23,22 +25,30 @@ export default function Login() {
   const isLoading = useAuth((state: any) => state.isLoading);
 
   const onContinue = async () => {
+    Keyboard.dismiss();
+
     const payload = { countryCode: country.dial_code, phone, resend: false };
     const response = await sendOtp(payload);
-    console.log("OTP Response:", response.error);
 
     if (response.success) {
       // Navigate to OTP verification screen
+      router.push({
+        pathname: "/(auth)/verify-otp",
+        params: {
+          data: JSON.stringify({
+            countryCode: payload.countryCode,
+            phone: payload.phone,
+          }),
+        },
+      });
       Toast.show({
         type: "success",
-        text1: "Success",
-        text2: response.message || "OTP sent successfully",
+        text1: response.message || "OTP sent successfully",
       });
     } else {
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: response.error?.message || "Failed to send OTP",
+        text1: response.error?.message || "Failed to send OTP",
       });
     }
   };
