@@ -8,7 +8,7 @@ type SendOtpPayload = {
   resend: boolean;
 };
 
-export async function sendOtp(payload: SendOtpPayload) {
+export async function sendOtpService(payload: SendOtpPayload) {
   try {
     const res = await client.post(send_otp_url, payload);
     return handleApiResponse(res);
