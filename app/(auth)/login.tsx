@@ -1,12 +1,15 @@
 import InputField from "@/components/InputField";
+import { useAuth } from "@/stores/authStore";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
@@ -15,6 +18,30 @@ export default function Login() {
     dial_code: "+91",
     code: "IN",
   });
+
+  const sendOtp = useAuth((state: any) => state.sendOtp);
+  const isLoading = useAuth((state: any) => state.isLoading);
+
+  const onContinue = async () => {
+    const payload = { countryCode: country.dial_code, phone, resend: false };
+    const response = await sendOtp(payload);
+    console.log("OTP Response:", response.error);
+
+    if (response.success) {
+      // Navigate to OTP verification screen
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: response.message || "OTP sent successfully",
+      });
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: response.error?.message || "Failed to send OTP",
+      });
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }} className="bg-white dark:bg-black">
@@ -66,11 +93,13 @@ export default function Login() {
       >
         <TouchableOpacity
           className="w-full bg-blue-600 py-2 rounded-full items-center"
-          onPress={() => {
-            /* send OTP */
-          }}
+          onPress={onContinue}
         >
-          <Text className="text-white font-semibold text-lg">Continue</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text className="text-white font-semibold text-lg">Continue</Text>
+          )}
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </SafeAreaView>

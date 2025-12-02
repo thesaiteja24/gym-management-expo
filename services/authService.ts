@@ -14,12 +14,6 @@ export async function sendOtpService(payload: SendOtpPayload) {
     return handleApiResponse(res);
   } catch (error: any) {
     const errData = error.response?.data;
-    if (errData) return Promise.reject(errData);
-
-    return Promise.reject({
-      succss: false,
-      message: error.message || "Network error",
-    });
+    throw new Error(errData?.message || error.message || "Network error");
   }
 }
-
