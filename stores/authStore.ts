@@ -3,11 +3,15 @@ import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
 
 type User = {
-  id?: string;
+  userId?: string;
   name?: string;
   phoneE164?: string;
   firstName?: string;
   lastName?: string;
+  dateOfBirth?: string | null;
+  height?: number | null;
+  weight?: number | null;
+  profilePicUrl?: string | null;
   role?: string;
 };
 
@@ -20,6 +24,7 @@ type AuthState = {
   sendOtp: (payload: any) => Promise<any>;
   verifyOtp: (payload: any) => Promise<any>;
   restoreFromStorage: () => Promise<void>;
+  setUser: (user: User) => void;
   logout: () => Promise<void>;
 };
 
@@ -115,6 +120,10 @@ export const useAuth = create<AuthState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  setUser: (user: User) => {
+    set({ user });
   },
 
   logout: async () => {
