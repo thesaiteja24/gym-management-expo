@@ -79,7 +79,7 @@ client.interceptors.response.use(
         // get userId from secure storage (your refresh API expects userId)
         const userJson = await SecureStore.getItemAsync("user");
         const user = userJson ? JSON.parse(userJson) : null;
-        const userId = user?.id;
+        const userId = user?.userId;
 
         if (!userId) {
           throw new Error("No user id for refresh");
