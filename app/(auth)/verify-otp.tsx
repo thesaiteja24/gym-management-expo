@@ -28,7 +28,7 @@ export default function VerifyOtp() {
 
     if (response.success) {
       // Navigate to the next screen or home screen after successful verification
-      router.replace("/(auth)/welcome"); // Adjust the path as needed
+      router.replace("/home"); // Adjust the path as needed
       Toast.show({
         type: "success",
         text1: response.message || "OTP verified successfully",

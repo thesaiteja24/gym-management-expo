@@ -1,5 +1,27 @@
 import { sendOtpService, verifyOtpService } from "@/services/authService";
+import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
+
+type User = {
+  id?: string;
+  name?: string;
+  phoneE164?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+};
+
+type AuthState = {
+  user: User | null;
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+
+  sendOtp: (payload: any) => Promise<any>;
+  verifyOtp: (payload: any) => Promise<any>;
+  restoreFromStorage: () => Promise<void>;
+  logout: () => Promise<void>;
+};
 
 const initialState = {
   user: null,
@@ -8,7 +30,7 @@ const initialState = {
   isLoading: false,
 };
 
-export const useAuth = create((set) => ({
+export const useAuth = create<AuthState>((set, get) => ({
   ...initialState,
 
   sendOtp: async (payload: any) => {
@@ -32,23 +54,83 @@ export const useAuth = create((set) => ({
     try {
       const response = await verifyOtpService(payload);
       if (response.success) {
+        const accessToken = response.data?.accessToken ?? null;
+        const user = response.data?.user ?? null;
+
+        // persist token + user in secure storage
+        if (accessToken) {
+          await SecureStore.setItemAsync("accessToken", accessToken);
+        }
+        if (user) {
+          await SecureStore.setItemAsync("user", JSON.stringify(user));
+        }
+
         set({
           isLoading: false,
-          user: response.data.user,
-          accessToken: response.data.accessToken,
+          user,
+          accessToken,
           isAuthenticated: true,
         });
         return response;
       } else {
         set({ isLoading: false });
+        return response;
       }
-    } catch (error) {
+    } catch (error: any) {
       set({ isLoading: false });
 
       return {
         success: false,
         error: error,
       };
+    }
+  },
+
+  restoreFromStorage: async () => {
+    set({ isLoading: true });
+    try {
+      const token = await SecureStore.getItemAsync("accessToken");
+      const userJson = await SecureStore.getItemAsync("user");
+      const user = userJson ? JSON.parse(userJson) : null;
+
+      if (token) {
+        set({
+          accessToken: token,
+          user,
+          isAuthenticated: true,
+        });
+      } else {
+        set({
+          accessToken: null,
+          user: null,
+          isAuthenticated: false,
+        });
+      }
+    } catch (e) {
+      set({
+        accessToken: null,
+        user: null,
+        isAuthenticated: false,
+      });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  logout: async () => {
+    set({ isLoading: true });
+    try {
+      await SecureStore.deleteItemAsync("accessToken");
+      await SecureStore.deleteItemAsync("user");
+    } catch (e) {
+      // ignore
+    } finally {
+      set({
+        user: null,
+        accessToken: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
     }
   },
 }));
