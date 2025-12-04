@@ -2,10 +2,12 @@ import { CustomToast } from "@/components/CustomToast";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
+import { StatusBar, useColorScheme } from "react-native";
 import Toast from "react-native-toast-message";
 import "./globals.css";
 
 export default function RootLayout() {
+  const theme = useColorScheme();
   const [loaded] = useFonts({
     Monoton: require("../assets/fonts/Monoton-Regular.ttf"),
   });
@@ -28,6 +30,9 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
       </Stack>
+      <StatusBar
+        barStyle={theme === "dark" ? "light-content" : "dark-content"}
+      />
       <Toast
         config={{
           success: (props) => <CustomToast {...props} type="success" />,
