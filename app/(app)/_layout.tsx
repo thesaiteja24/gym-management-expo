@@ -7,7 +7,6 @@ export default function AppLayout() {
     <AuthGuard redirectTo="/login">
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="settings" />
       </Stack>
     </AuthGuard>
   );

@@ -32,7 +32,7 @@ export default function AppLayout() {
             rightIcons: [
               {
                 name: "settings-outline",
-                onPress: () => router.push("/settings"),
+                onPress: () => router.push("/profile/settings"),
               },
             ],
           } as any
@@ -56,11 +56,11 @@ export default function AppLayout() {
             rightIcons: [
               {
                 name: "create-outline",
-                onPress: () => console.log("Edit clicked"),
+                onPress: () => router.push("/profile/edit"),
               },
               {
                 name: "settings-outline",
-                onPress: () => router.push("/settings"),
+                onPress: () => router.push("/profile/settings"),
               },
             ],
           } as any
