@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-  StyleSheet,
+  Platform,
   Text,
   TouchableOpacity,
   View,
@@ -25,42 +25,57 @@ export default function CustomHeader({
   onLeftPress,
 }: CustomHeaderProps) {
   const insets = useSafeAreaInsets();
-  const theme = useColorScheme(); // "light" | "dark"
+  const isDark = useColorScheme() === "dark";
 
-  const isDark = theme === "dark";
+  const headerHeight =
+    Platform.OS === "ios" ? 44 + insets.top : 56 + insets.top;
 
   return (
     <View
-      style={[
-        styles.container,
-        {
-          paddingTop: insets.top,
-          backgroundColor: isDark ? "#000" : "#fff",
-          borderBottomColor: isDark ? "#333" : "#ddd",
-        },
-      ]}
+      className="flex flex-row w-full items-center justify-between px-4 bg-white dark:bg-black border-b border-b-[#ddd] dark:border-b-[#333]"
+      style={{ height: headerHeight, paddingTop: insets.top }}
     >
-      {leftIcon ? (
-        <TouchableOpacity onPress={onLeftPress} style={styles.left}>
+      {/* Left icon */}
+
+      {leftIcon && (
+        <TouchableOpacity onPress={onLeftPress}>
           <Ionicons
             name={leftIcon}
             size={24}
             color={isDark ? "white" : "black"}
           />
         </TouchableOpacity>
-      ) : null}
+      )}
 
-      <Text style={[styles.title, { color: isDark ? "#fff" : "#000" }]}>
-        {title}
-      </Text>
-
-      <View style={styles.rightContainer}>
-        {rightIcons.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={item.onPress}
-            style={styles.iconWrapper}
+      {/* Title */}
+      {leftIcon && (
+        // If left icon exists → center the title
+        <View
+          className="absolute left-0 right-0 items-center"
+          style={{ marginTop: insets.top }}
+        >
+          <Text
+            className="font-semibold text-2xl text-black dark:text-white"
+            numberOfLines={1}
           >
+            {title}
+          </Text>
+        </View>
+      )}
+
+      {!leftIcon && (
+        <Text
+          className="font-semibold text-2xl text-black dark:text-white"
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+      )}
+
+      {/* Right icons */}
+      <View className="flex flex-row items-center w-16 justify-end">
+        {rightIcons.map((item, index) => (
+          <TouchableOpacity key={index} onPress={item.onPress} className="px-2">
             <Ionicons
               name={item.name}
               size={24}
@@ -72,26 +87,3 @@ export default function CustomHeader({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    paddingHorizontal: 16,
-  },
-  left: { width: 40 },
-  emptyLeft: { width: 40 },
-  rightContainer: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  iconWrapper: {
-    padding: 4,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-  },
-});
