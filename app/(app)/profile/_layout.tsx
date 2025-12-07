@@ -31,6 +31,13 @@ export default function ProfileLayout() {
             onLeftPress: () => {
               router.back();
             },
+            rightIcons: [
+              {
+                name: "checkmark-done",
+                disabled: true,
+                color: "green",
+              },
+            ],
           } as any
         }
       />

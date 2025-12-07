@@ -3,62 +3,154 @@ import ProfilePic from "@/components/ProfilePic";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
 import { createFormData } from "@/utils/createFormData";
-import React, { memo, useEffect, useState } from "react";
-import { Platform, ScrollView, Text, TextInput, View } from "react-native";
+import { useNavigation } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  Keyboard,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  useColorScheme,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
 
-const InfoRow = memo(function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | number | null;
-}) {
-  return (
-    <View className="flex-row items-center justify-between py-3 border-b border-neutral-200/60 dark:border-neutral-800 last:border-b-0">
-      <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-        {label}
-      </Text>
-      <Text className="text-base font-medium text-blue-500">
-        {value ?? "—"}
-      </Text>
-    </View>
-  );
-});
-
 export default function EditProfile() {
-  const user = useAuth((state) => state.user);
-  const updateProfilePic = useUser((s: any) => s.updateProfilePic);
-  const isUploading = useUser((s: any) => s.isLoading);
-  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const navigation = useNavigation();
+
+  // global state (stores)
+  const user = useAuth((s) => s.user);
+  const getUserData = useUser((s) => s.getUserData);
+  const updateProfilePic = useUser((s) => s.updateProfilePic);
+  const updateUserData = useUser((s) => s.updateUserData);
+  const isLoading = useUser((s) => s.isLoading);
+
   const lineHeight = Platform.OS === "ios" ? 0 : 30;
 
-  // Fields
-  const [firstName, setFirstName] = useState<string>(user?.firstName ?? "");
-  const [lastName, setLastName] = useState<string>(user?.lastName ?? "");
-  const [height, setHeight] = useState<number | null>(user?.height ?? null);
-  const [weight, setWeight] = useState<number | null>(user?.weight ?? null);
-  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(
-    user?.dateOfBirth ? new Date(user.dateOfBirth) : null
-  );
+  // local state
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [height, setHeight] = useState<number | null>(null);
+  const [weight, setWeight] = useState<number | null>(null);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
 
-  const getUserData = useUser((s: any) => s.getUserData);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
 
-  // fetch user data on mount
+  // Snapshot of original values
+  const originalRef = useRef({
+    firstName: "",
+    lastName: "",
+    height: null as number | null,
+    weight: null as number | null,
+    dateOfBirth: null as Date | null,
+  });
+
+  // sync local state with global user data
+  useEffect(() => {
+    if (!user) return;
+
+    setFirstName(user.firstName ?? "");
+    setLastName(user.lastName ?? "");
+    setHeight(user.height ?? null);
+    setWeight(user.weight ?? null);
+    setDateOfBirth(user.dateOfBirth ? new Date(user.dateOfBirth) : null);
+
+    originalRef.current = {
+      firstName: user.firstName ?? "",
+      lastName: user.lastName ?? "",
+      height: user.height ?? null,
+      weight: user.weight ?? null,
+      dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth) : null,
+    };
+  }, [user]);
+
+  // Dirty checking
+  const isDirty = useMemo(() => {
+    const original = originalRef.current;
+
+    const sameDOB =
+      (dateOfBirth &&
+        original.dateOfBirth &&
+        dateOfBirth.toDateString() === original.dateOfBirth.toDateString()) ||
+      (!dateOfBirth && !original.dateOfBirth);
+
+    return !(
+      firstName === original.firstName &&
+      lastName === original.lastName &&
+      height === original.height &&
+      weight === original.weight &&
+      sameDOB
+    );
+  }, [firstName, lastName, height, weight, dateOfBirth, user]);
+
+  // save handler
+  const onSave = useCallback(async () => {
+    if (!user?.userId || !isDirty) return;
+    Keyboard.dismiss();
+
+    const payload = {
+      firstName,
+      lastName,
+      height,
+      weight,
+      dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : null,
+    };
+
+    const response = await updateUserData(user.userId, payload);
+
+    if (response?.success) {
+      Toast.show({ type: "success", text1: "Profile updated successfully" });
+
+      // update original snapshot
+      originalRef.current = {
+        firstName,
+        lastName,
+        height,
+        weight,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      };
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "Profile update failed, try again",
+      });
+    }
+  }, [firstName, lastName, height, weight, dateOfBirth, isDirty, user?.userId]);
+
+  // load user data on mount
   useEffect(() => {
     if (user?.userId) {
       getUserData(user.userId);
     }
   }, []);
 
-  // handler for picking a new profile picture
+  // nav bar checkmark
+  useEffect(() => {
+    (navigation as any).setOptions({
+      rightIcons: [
+        {
+          name: "checkmark-done",
+          onPress: onSave,
+          disabled: !isDirty || isLoading,
+          color: "green",
+        },
+      ],
+    });
+  }, [navigation, isDirty, onSave, user, isLoading]);
+
+  // profile pic picker
   const onPick = async (uri: string | null) => {
     if (!uri) return;
-
     setLocalPreview(uri);
 
     if (!user?.userId) {
-      setLocalPreview(null);
       Toast.show({ type: "error", text1: "No user id" });
       return;
     }
@@ -67,17 +159,15 @@ export default function EditProfile() {
       const formData = createFormData(uri, "profilePic");
       const res = await updateProfilePic(user.userId, formData);
 
-      if (res?.success) {
-        Toast.show({ type: "success", text1: "Profile picture updated" });
-      } else {
-        console.error("Profile pic upload error:", res?.message);
-        Toast.show({ type: "error", text1: "Upload failed please try again" });
+      if (!res?.success) {
         setLocalPreview(user?.profilePicUrl ?? null);
+        Toast.show({ type: "error", text1: "Upload failed" });
+      } else {
+        Toast.show({ type: "success", text1: "Profile picture updated" });
       }
-    } catch (err: any) {
-      console.error("Profile pic upload error:", err);
-      Toast.show({ type: "error", text1: "Upload failed please try again" });
+    } catch {
       setLocalPreview(user?.profilePicUrl ?? null);
+      Toast.show({ type: "error", text1: "Upload failed" });
     }
   };
 
@@ -87,18 +177,17 @@ export default function EditProfile() {
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       className="bg-white dark:bg-black"
     >
-      {/* Avatar */}
       <View className="items-center mb-6">
         <ProfilePic
           uri={localPreview ?? user?.profilePicUrl}
           size={132}
-          editable={true}
+          editable={!isLoading}
           onChange={(newUri) => newUri && onPick(newUri)}
         />
       </View>
 
       <View className="flex flex-col gap-2">
-        {/* First Name field */}
+        {/* first name */}
         <View className="flex flex-row items-center gap-8">
           <Text className="font-semibold text-lg text-black dark:text-white">
             First Name
@@ -106,14 +195,13 @@ export default function EditProfile() {
           <TextInput
             value={firstName}
             onChangeText={setFirstName}
+            editable={!isLoading}
             className="text-lg text-blue-500"
-            style={{
-              lineHeight: lineHeight,
-            }}
+            style={{ lineHeight }}
           />
         </View>
 
-        {/* Last Name field */}
+        {/* last name */}
         <View className="flex flex-row items-center gap-8">
           <Text className="font-semibold text-lg text-black dark:text-white">
             Last Name
@@ -121,28 +209,62 @@ export default function EditProfile() {
           <TextInput
             value={lastName}
             onChangeText={setLastName}
+            editable={!isLoading}
             className="text-lg text-blue-500"
-            style={{
-              lineHeight: lineHeight,
-            }}
+            style={{ lineHeight }}
           />
         </View>
 
+        {/* details card */}
         <View className="rounded-2xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm mt-4">
-          <View className="flex-row items-center justify-between py-3 border-b border-neutral-200/60 dark:border-neutral-800 last:border-b-0">
+          {/* date of birth */}
+          <View className="flex-row items-center justify-between py-3 border-b border-neutral-200/60 dark:border-neutral-800">
             <Text className="text-sm text-neutral-500 dark:text-neutral-400">
               Date of Birth
             </Text>
             <DatePicker value={dateOfBirth} onChange={setDateOfBirth} />
           </View>
-          <InfoRow
-            label="Height"
-            value={user?.height ? `${user.height}` : ""}
-          />
-          <InfoRow
-            label="Weight"
-            value={user?.weight ? `${user.weight}` : ""}
-          />
+
+          {/* height */}
+          <View className="flex-row items-center justify-between py-3 border-b border-neutral-200/60 dark:border-neutral-800">
+            <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+              Height (cm)
+            </Text>
+            <TextInput
+              value={height?.toString() ?? ""}
+              placeholder="--"
+              keyboardType="numeric"
+              onChangeText={(text) =>
+                // @ts-ignore
+                setHeight(text)
+              }
+              editable={!isLoading}
+              className="text-lg text-blue-500"
+              style={{ lineHeight }}
+            />
+          </View>
+
+          {/* weight */}
+          <View className="flex-row items-center justify-between py-3 border-neutral-200/60 dark:border-neutral-800">
+            <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+              Weight (kg)
+            </Text>
+            <TextInput
+              value={weight?.toString() ?? ""}
+              placeholder="--"
+              placeholderTextColor={
+                useColorScheme() === "dark" ? "#555" : "#aaa"
+              }
+              keyboardType="decimal-pad"
+              onChangeText={(text) =>
+                // @ts-ignore
+                setWeight(text)
+              }
+              editable={!isLoading}
+              className="text-lg text-blue-500"
+              style={{ lineHeight }}
+            />
+          </View>
         </View>
       </View>
     </ScrollView>
