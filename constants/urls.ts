@@ -7,3 +7,4 @@ export const REFRESH_TOKEN_URL = `/auth/refresh-token`;
 export const GET_USER_DATA_URL = (id: string) => `/users/${id}`;
 export const UPDATE_PROFILE_PIC_URL = (id: string) =>
   `/users/${id}/profile-picture`;
+export const UPDATE_USER_DATA_URL = (id: string) => `/users/${id}`;
