@@ -11,11 +11,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
+type RightIcon = {
+  name: IoniconName;
+  onPress: () => void;
+  disabled?: boolean;
+  color?: string; // optional per-icon color override
+};
+
 type CustomHeaderProps = {
   title: string;
   leftIcon?: IoniconName;
-  rightIcons?: { name: IoniconName; onPress: () => void }[];
+  rightIcons?: RightIcon[];
   onLeftPress?: () => void;
+  iconColor?: string; // global override for enabled icon color
 };
 
 export default function CustomHeader({
@@ -23,12 +31,14 @@ export default function CustomHeader({
   leftIcon,
   rightIcons = [],
   onLeftPress,
+  iconColor,
 }: CustomHeaderProps) {
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === "dark";
-
   const headerHeight =
     Platform.OS === "ios" ? 44 + insets.top : 56 + insets.top;
+
+  const baseIconColor = iconColor ? iconColor : isDark ? "white" : "black";
 
   return (
     <View
@@ -36,36 +46,28 @@ export default function CustomHeader({
       style={{ height: headerHeight, paddingTop: insets.top }}
     >
       {/* Left icon */}
-
       {leftIcon && (
         <TouchableOpacity onPress={onLeftPress}>
-          <Ionicons
-            name={leftIcon}
-            size={24}
-            color={isDark ? "white" : "black"}
-          />
+          <Ionicons name={leftIcon} size={24} color={baseIconColor} />
         </TouchableOpacity>
       )}
 
       {/* Title */}
-      {leftIcon && (
-        // If left icon exists → center the title
+      {leftIcon ? (
         <View
           className="absolute left-0 right-0 items-center"
           style={{ marginTop: insets.top }}
         >
           <Text
-            className="font-semibold text-2xl text-black dark:text-white"
+            className="font-semibold text-xl text-black dark:text-white"
             numberOfLines={1}
           >
             {title}
           </Text>
         </View>
-      )}
-
-      {!leftIcon && (
+      ) : (
         <Text
-          className="font-semibold text-2xl text-black dark:text-white"
+          className="font-semibold text-xl text-black dark:text-white"
           numberOfLines={1}
         >
           {title}
@@ -74,15 +76,26 @@ export default function CustomHeader({
 
       {/* Right icons */}
       <View className="flex flex-row items-center w-16 justify-end">
-        {rightIcons.map((item, index) => (
-          <TouchableOpacity key={index} onPress={item.onPress} className="px-2">
-            <Ionicons
-              name={item.name}
-              size={24}
-              color={isDark ? "white" : "black"}
-            />
-          </TouchableOpacity>
-        ))}
+        {rightIcons.map((item, index) => {
+          const color = item.disabled
+            ? "#9ca3af"
+            : item.color // individual override
+            ? item.color
+            : baseIconColor; // global or system color
+
+          return (
+            <TouchableOpacity
+              key={index}
+              onPress={item.disabled ? undefined : item.onPress}
+              disabled={!!item.disabled}
+              className="px-2"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !!item.disabled }}
+            >
+              <Ionicons name={item.name} size={24} color={color} />
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
