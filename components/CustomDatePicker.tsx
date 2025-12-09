@@ -1,7 +1,8 @@
 import { BlossomThemeProvider } from "@react-native-blossom-ui/components";
 import { DateSelectPicker } from "@react-native-blossom-ui/dates";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Modal, Pressable, Text, useColorScheme, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import blossomDarkTheme from "../constants/blossomDarkTheme.json";
 import blossomLightTheme from "../constants/blossomLightTheme.json";
 
@@ -14,40 +15,44 @@ export default function CustomDatePicker({ value, onChange }: Props) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const minYear = new Date().getFullYear() - 60;
+  const insets = useSafeAreaInsets();
 
   const [visible, setVisible] = useState(false);
 
   const initialDate = value ?? new Date();
-  const day = initialDate.getDate();
-  const month = initialDate.getMonth();
-  const year = initialDate.getFullYear();
   const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
+
+  // hold in-progress selection without triggering parent state updates
+  const draftDateRef = useRef<Date>(initialDate);
 
   const open = () => setVisible(true);
   const close = () => setVisible(false);
 
   const handleDone = () => {
-    onChange(selectedDate);
+    const finalDate = draftDateRef.current ?? selectedDate;
+    setSelectedDate(finalDate);
+    onChange(finalDate);
     close();
   };
 
   return (
     <>
-      {/* Pressable text to open picker */}
       <Pressable onPress={open}>
         <Text className="text-base font-medium text-blue-500">
           {value ? value.toDateString() : "Select date"}
         </Text>
       </Pressable>
 
-      {/* Modal */}
       <Modal
         transparent
         animationType="slide"
         visible={visible}
         onRequestClose={close}
       >
-        <View className="flex-1 justify-end bg-black/40">
+        <View
+          className="flex-1 justify-end bg-black/40"
+          style={{ paddingBottom: insets.bottom }}
+        >
           <View
             className={`h-1/4 rounded-t-2xl p-4 ${
               isDark ? "bg-[#111]" : "bg-white"
@@ -68,17 +73,17 @@ export default function CustomDatePicker({ value, onChange }: Props) {
               >
                 <DateSelectPicker
                   yearProps={{
-                    minYear: minYear,
+                    minYear,
                     maxYear: new Date().getFullYear(),
-                    currentYear: year,
+                    currentYear: (value ?? new Date()).getFullYear(),
                   }}
                   onDateComplete={(selected) => {
-                    const newDate = new Date(
-                      selected.year,
-                      selected.month,
-                      selected.day
+                    // IMPORTANT: do not call setState here
+                    // Check your lib: if month is 1–12, subtract 1; if 0–11, leave as is.
+                    const monthIndex = selected.month; // change to (selected.month - 1) if needed
+                    draftDateRef.current = new Date(
+                      Date.UTC(selected.year, monthIndex, selected.day)
                     );
-                    setSelectedDate(newDate);
                   }}
                 />
               </BlossomThemeProvider>

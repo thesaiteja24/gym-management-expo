@@ -8,6 +8,7 @@ type ProfilePicProps = {
   uri?: string | null;
   size?: number;
   editable?: boolean;
+  uploading?: boolean;
   onChange?: (newUri: string | null) => void;
 
   borderColor?: string;
@@ -24,6 +25,7 @@ export default function ProfilePic({
   uri = null,
   size = 120,
   editable = true,
+  uploading = false,
   onChange,
 
   borderColor = "#d1d5db",
@@ -81,7 +83,7 @@ export default function ProfilePic({
           backgroundColor: "#e5e7eb",
         }}
       >
-        {loading ? (
+        {loading || uploading ? (
           <ActivityIndicator size="small" color="#555" />
         ) : (
           <Image

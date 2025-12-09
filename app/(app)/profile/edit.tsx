@@ -31,6 +31,7 @@ export default function EditProfile() {
   const updateProfilePic = useUser((s) => s.updateProfilePic);
   const updateUserData = useUser((s) => s.updateUserData);
   const isLoading = useUser((s) => s.isLoading);
+  const [uploading, setUploading] = useState(false);
 
   const lineHeight = Platform.OS === "ios" ? 0 : 30;
 
@@ -40,8 +41,6 @@ export default function EditProfile() {
   const [height, setHeight] = useState<number | null>(null);
   const [weight, setWeight] = useState<number | null>(null);
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
-
-  const [localPreview, setLocalPreview] = useState<string | null>(null);
 
   // Snapshot of original values
   const originalRef = useRef({
@@ -148,7 +147,6 @@ export default function EditProfile() {
   // profile pic picker
   const onPick = async (uri: string | null) => {
     if (!uri) return;
-    setLocalPreview(uri);
 
     if (!user?.userId) {
       Toast.show({ type: "error", text1: "No user id" });
@@ -157,17 +155,18 @@ export default function EditProfile() {
 
     try {
       const formData = createFormData(uri, "profilePic");
+      setUploading(true);
       const res = await updateProfilePic(user.userId, formData);
 
       if (!res?.success) {
-        setLocalPreview(user?.profilePicUrl ?? null);
         Toast.show({ type: "error", text1: "Upload failed" });
       } else {
         Toast.show({ type: "success", text1: "Profile picture updated" });
       }
     } catch {
-      setLocalPreview(user?.profilePicUrl ?? null);
       Toast.show({ type: "error", text1: "Upload failed" });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -179,9 +178,12 @@ export default function EditProfile() {
     >
       <View className="items-center mb-6">
         <ProfilePic
-          uri={localPreview ?? user?.profilePicUrl}
+          uri={
+            user?.profilePicUrl ? `${user.profilePicUrl}?t=${Date.now()}` : null
+          }
           size={132}
           editable={!isLoading}
+          uploading={uploading}
           onChange={(newUri) => newUri && onPick(newUri)}
         />
       </View>
@@ -196,7 +198,11 @@ export default function EditProfile() {
             value={firstName}
             onChangeText={setFirstName}
             editable={!isLoading}
+            placeholder="Enter Name..."
             className="text-lg text-blue-500"
+            placeholderTextColor={
+              useColorScheme() === "dark" ? "#a3a3a3" : "#737373"
+            }
             style={{ lineHeight }}
           />
         </View>
@@ -210,7 +216,11 @@ export default function EditProfile() {
             value={lastName}
             onChangeText={setLastName}
             editable={!isLoading}
+            placeholder="Enter Surname..."
             className="text-lg text-blue-500"
+            placeholderTextColor={
+              useColorScheme() === "dark" ? "#a3a3a3" : "#737373"
+            }
             style={{ lineHeight }}
           />
         </View>
@@ -233,6 +243,9 @@ export default function EditProfile() {
             <TextInput
               value={height?.toString() ?? ""}
               placeholder="--"
+              placeholderTextColor={
+                useColorScheme() === "dark" ? "#555" : "#aaa"
+              }
               keyboardType="numeric"
               onChangeText={(text) =>
                 // @ts-ignore

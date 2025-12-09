@@ -8,6 +8,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function CustomTabs({
   state,
@@ -15,6 +16,7 @@ export default function CustomTabs({
   navigation,
 }: BottomTabBarProps) {
   const isDark = useColorScheme() === "dark";
+  const insets = useSafeAreaInsets();
 
   // monochrome palette
   const barBg = isDark ? "#000000" : "#FFFFFF";
@@ -39,7 +41,7 @@ export default function CustomTabs({
           paddingHorizontal: 12,
           paddingVertical: Platform.OS === "ios" ? 10 : 8,
           marginHorizontal: 20,
-          marginBottom: 24,
+          marginBottom: insets.bottom,
           height: 52,
           flexDirection: "row",
           alignItems: "center",
