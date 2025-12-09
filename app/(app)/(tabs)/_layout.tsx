@@ -1,17 +1,17 @@
 import CustomHeader from "@/components/CustomHeader";
+import CustomTabs from "@/components/CustomTabs";
+import { Ionicons } from "@expo/vector-icons";
 import { router, Tabs } from "expo-router";
 import React from "react";
 
 export default function AppLayout() {
   return (
     <Tabs
+      tabBar={(props) => <CustomTabs {...props} />}
       screenOptions={{
         header: (props) => {
           const { options } = props;
-
-          // read custom props from options
           const custom = options as any;
-
           return (
             <CustomHeader
               title={options.title ?? ""}
@@ -21,6 +21,7 @@ export default function AppLayout() {
             />
           );
         },
+        tabBarShowLabel: false, // labels handled by our CustomTabs
       }}
     >
       <Tabs.Screen
@@ -28,7 +29,21 @@ export default function AppLayout() {
         options={
           {
             title: "Home",
-            // custom props
+            tabBarIcon: ({
+              color,
+              focused,
+              size,
+            }: {
+              focused: boolean;
+              color: string;
+              size: number;
+            }) => (
+              <Ionicons
+                name={focused ? "home" : "home-outline"}
+                size={size ?? 22}
+                color={color as string}
+              />
+            ),
             rightIcons: [
               {
                 name: "settings-outline",
@@ -44,6 +59,21 @@ export default function AppLayout() {
         options={
           {
             title: "Workouts",
+            tabBarIcon: ({
+              color,
+              focused,
+              size,
+            }: {
+              focused: boolean;
+              color: string;
+              size: number;
+            }) => (
+              <Ionicons
+                name={focused ? "barbell" : "barbell-outline"}
+                size={size ?? 22}
+                color={color as string}
+              />
+            ),
           } as any
         }
       />
@@ -53,6 +83,21 @@ export default function AppLayout() {
         options={
           {
             title: "Profile",
+            tabBarIcon: ({
+              color,
+              focused,
+              size,
+            }: {
+              focused: boolean;
+              color: string;
+              size: number;
+            }) => (
+              <Ionicons
+                name={focused ? "person" : "person-outline"}
+                size={size ?? 22}
+                color={color as string}
+              />
+            ),
             rightIcons: [
               {
                 name: "create-outline",
