@@ -20,6 +20,7 @@ type AuthState = {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hasRestored: boolean;
 
   sendOtp: (payload: any) => Promise<any>;
   verifyOtp: (payload: any) => Promise<any>;
@@ -33,6 +34,7 @@ const initialState = {
   accessToken: null,
   isAuthenticated: false,
   isLoading: false,
+  hasRestored: false,
 };
 
 export const useAuth = create<AuthState>((set, get) => ({
@@ -118,7 +120,7 @@ export const useAuth = create<AuthState>((set, get) => ({
         isAuthenticated: false,
       });
     } finally {
-      set({ isLoading: false });
+      set({ isLoading: false, hasRestored: true });
     }
   },
 
