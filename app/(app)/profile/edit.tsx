@@ -146,22 +146,24 @@ export default function EditProfile() {
 
   // profile pic picker
   const onPick = async (uri: string | null) => {
-    if (!uri || !user?.userId) return;
+    if (!uri || !user?.userId || uploading) return;
 
     try {
       setUploading(true);
 
-      // 1️⃣ Prepare image for avatar usage (256px target)
+      // 1️⃣ Prepare image (retina-safe avatar)
       const prepared = await prepareImageForUpload(
         {
           uri,
+          fileName: "profile.jpg", // safe default
+          type: "image/jpeg",
         },
         "avatar"
       );
 
-      // 2️⃣ Build FormData from prepared image
+      // 2️⃣ Build FormData
       const formData = new FormData();
-      formData.append("file", prepared as any);
+      formData.append("profilePic", prepared as any);
 
       // 3️⃣ Upload
       const res = await updateProfilePic(user.userId, formData);
