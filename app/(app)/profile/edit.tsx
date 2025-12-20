@@ -2,7 +2,7 @@ import DatePicker from "@/components/CustomDatePicker";
 import ProfilePic from "@/components/ProfilePic";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
-import { createFormData } from "@/utils/createFormData";
+import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import { useNavigation } from "expo-router";
 import React, {
   useCallback,
@@ -146,25 +146,42 @@ export default function EditProfile() {
 
   // profile pic picker
   const onPick = async (uri: string | null) => {
-    if (!uri) return;
-
-    if (!user?.userId) {
-      Toast.show({ type: "error", text1: "No user id" });
-      return;
-    }
+    if (!uri || !user?.userId) return;
 
     try {
-      const formData = createFormData(uri, "profilePic");
       setUploading(true);
+
+      // 1️⃣ Prepare image for avatar usage (256px target)
+      const prepared = await prepareImageForUpload(
+        {
+          uri,
+        },
+        "avatar"
+      );
+
+      // 2️⃣ Build FormData from prepared image
+      const formData = new FormData();
+      formData.append("file", prepared as any);
+
+      // 3️⃣ Upload
       const res = await updateProfilePic(user.userId, formData);
 
       if (!res?.success) {
-        Toast.show({ type: "error", text1: "Upload failed" });
+        Toast.show({
+          type: "error",
+          text1: res?.error || "Profile picture upload failed",
+        });
       } else {
-        Toast.show({ type: "success", text1: "Profile picture updated" });
+        Toast.show({
+          type: "success",
+          text1: "Profile picture updated",
+        });
       }
-    } catch {
-      Toast.show({ type: "error", text1: "Upload failed" });
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: error?.message || "Image processing failed",
+      });
     } finally {
       setUploading(false);
     }

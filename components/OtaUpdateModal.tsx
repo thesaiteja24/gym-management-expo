@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 
 type UpdateState = "idle" | "downloading" | "restarting";
@@ -6,11 +7,14 @@ type Props = {
   visible: boolean;
   state: UpdateState;
   onLater: () => void;
-  onRestart: () => void;
+  onRestart: () => Promise<void>;
 };
 
 export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
   const isBusy = state !== "idle";
+
+  // 🔒 Immediate synchronous lock (no re-render needed)
+  const restartLockedRef = useRef(false);
 
   return (
     <Modal transparent visible={visible} animationType="fade">
@@ -29,6 +33,7 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
             dark:shadow-black
           "
           style={{ elevation: 8 }}
+          pointerEvents={isBusy ? "none" : "auto"}
         >
           <Text className="text-xl font-bold text-center text-black dark:text-white">
             Update available
@@ -53,6 +58,7 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
           )}
 
           <View className="flex-row mt-6 gap-3">
+            {/* Later */}
             <Pressable
               disabled={isBusy}
               onPress={onLater}
@@ -67,9 +73,21 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
               </Text>
             </Pressable>
 
+            {/* Restart */}
             <Pressable
               disabled={isBusy}
-              onPress={onRestart}
+              onPress={async () => {
+                // 🔐 Guard against multi-tap
+                if (restartLockedRef.current) return;
+                restartLockedRef.current = true;
+
+                try {
+                  await onRestart();
+                } catch {
+                  // Unlock only if something goes wrong
+                  restartLockedRef.current = false;
+                }
+              }}
               className={`flex-1 py-3 rounded-xl ${
                 isBusy ? "bg-gray-400" : "bg-black dark:bg-white"
               }`}
