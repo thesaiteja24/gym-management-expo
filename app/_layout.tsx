@@ -14,6 +14,7 @@ import {
 import Toast from "react-native-toast-message";
 import "./globals.css";
 
+// Keep splash visible until we explicitly hide it
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -32,12 +33,12 @@ export default function RootLayout() {
 
   const isAuthRoute = segments[0] === "(auth)";
 
-  // 1️⃣ Restore auth
+  // 1️⃣ Restore auth state
   useEffect(() => {
     restoreFromStorage();
   }, [restoreFromStorage]);
 
-  // 2️⃣ OTA check (skip auth screens)
+  // 2️⃣ OTA check (skip auth routes)
   useEffect(() => {
     async function checkOTA() {
       if (isAuthRoute) {
@@ -50,6 +51,7 @@ export default function RootLayout() {
 
         if (update.isAvailable) {
           setShowOtaModal(true);
+          setOtaChecked(true); // 🔑 unblock splash
           return;
         }
       } catch (e) {
@@ -62,14 +64,14 @@ export default function RootLayout() {
     checkOTA();
   }, [isAuthRoute]);
 
-  // 3️⃣ Hide splash only when all boot tasks complete
+  // 3️⃣ Hide splash only when ALL boot tasks finish
   useEffect(() => {
     if (fontsLoaded && hasRestored && otaChecked) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, hasRestored, otaChecked]);
 
-  // 4️⃣ Loading fallback
+  // 4️⃣ Loading fallback (rarely visible, but safe)
   if (!fontsLoaded || !hasRestored || !otaChecked) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -104,7 +106,6 @@ export default function RootLayout() {
         visible={showOtaModal}
         onLater={() => {
           setShowOtaModal(false);
-          setOtaChecked(true);
         }}
         onRestart={async () => {
           await Updates.fetchUpdateAsync();
