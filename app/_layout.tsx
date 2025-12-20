@@ -1,9 +1,10 @@
-// app/_layout.tsx
 import { CustomToast } from "@/components/CustomToast";
-import { useAuth } from "@/stores/authStore"; // <-- add this
+import { OtaUpdateModal } from "@/components/OtaUpdateModal";
+import { useAuth } from "@/stores/authStore";
 import { useFonts } from "expo-font";
-import { SplashScreen, Stack } from "expo-router";
-import { useEffect } from "react";
+import { SplashScreen, Stack, useSegments } from "expo-router";
+import * as Updates from "expo-updates";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   StatusBar,
@@ -13,37 +14,73 @@ import {
 import Toast from "react-native-toast-message";
 import "./globals.css";
 
+// Keep splash visible until we explicitly hide it
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const theme = useColorScheme();
-  const [loaded] = useFonts({
+  const segments = useSegments();
+
+  const [fontsLoaded] = useFonts({
     Monoton: require("../assets/fonts/Monoton-Regular.ttf"),
   });
 
   const restoreFromStorage = useAuth((s) => s.restoreFromStorage);
   const hasRestored = useAuth((s) => s.hasRestored);
 
-  // Step 1: restore auth info on startup
+  const [otaChecked, setOtaChecked] = useState(false);
+  const [showOtaModal, setShowOtaModal] = useState(false);
+
+  const isAuthRoute = segments[0] === "(auth)";
+
+  // 1️⃣ Restore auth state
   useEffect(() => {
     restoreFromStorage();
   }, [restoreFromStorage]);
 
-  // Step 2: wait for fonts
+  // 2️⃣ OTA check (skip auth routes)
   useEffect(() => {
-    if (loaded && hasRestored) {
+    async function checkOTA() {
+      if (isAuthRoute) {
+        setOtaChecked(true);
+        return;
+      }
+
+      try {
+        const update = await Updates.checkForUpdateAsync();
+
+        if (update.isAvailable) {
+          setShowOtaModal(true);
+          setOtaChecked(true); // 🔑 unblock splash
+          return;
+        }
+      } catch (e) {
+        console.log("OTA check failed:", e);
+      }
+
+      setOtaChecked(true);
+    }
+
+    checkOTA();
+  }, [isAuthRoute]);
+
+  // 3️⃣ Hide splash only when ALL boot tasks finish
+  useEffect(() => {
+    if (fontsLoaded && hasRestored && otaChecked) {
       SplashScreen.hideAsync();
     }
-  }, [loaded, hasRestored]);
+  }, [fontsLoaded, hasRestored, otaChecked]);
 
-  // Step 3: while loading or restoring, keep splash or show spinner
-  if (!loaded || !hasRestored) {
+  // 4️⃣ Loading fallback (rarely visible, but safe)
+  if (!fontsLoaded || !hasRestored || !otaChecked) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator />
       </View>
     );
   }
 
-  // Step 4: render navigation
+  // 5️⃣ App UI
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
@@ -51,9 +88,11 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
       </Stack>
+
       <StatusBar
         barStyle={theme === "dark" ? "light-content" : "dark-content"}
       />
+
       <Toast
         config={{
           success: (props) => <CustomToast {...props} type="success" />,
@@ -61,6 +100,17 @@ export default function RootLayout() {
           info: (props) => <CustomToast {...props} type="info" />,
         }}
         topOffset={60}
+      />
+
+      <OtaUpdateModal
+        visible={showOtaModal}
+        onLater={() => {
+          setShowOtaModal(false);
+        }}
+        onRestart={async () => {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }}
       />
     </>
   );

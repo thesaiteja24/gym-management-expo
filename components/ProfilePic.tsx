@@ -87,6 +87,7 @@ export default function ProfilePic({
           <ActivityIndicator size="small" color="#555" />
         ) : (
           <Image
+            cachePolicy={"memory-disk"}
             source={uri ? { uri } : require("../assets/images/icon.png")}
             style={{
               width: "100%",

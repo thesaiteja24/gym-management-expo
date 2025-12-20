@@ -57,6 +57,7 @@ export default function Workout() {
                     {equipment.title}
                   </Text>
                   <Image
+                    cachePolicy={"memory-disk"}
                     source={equipment.thumbnailUrl}
                     style={{
                       borderRadius: 100,
