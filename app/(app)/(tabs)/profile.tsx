@@ -45,9 +45,7 @@ export default function Profile() {
       {/* Avatar */}
       <View className="items-center mb-6">
         <ProfilePic
-          uri={
-            user?.profilePicUrl ? `${user.profilePicUrl}?t=${Date.now()}` : null
-          }
+          uri={user?.profilePicUrl ? user.profilePicUrl : null}
           size={132}
           editable={false}
         />
