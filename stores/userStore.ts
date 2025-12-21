@@ -52,8 +52,7 @@ export const useUser = create<UserState>((set) => ({
 
       if (res.success) {
         useAuth.getState().setUser({
-          ...useAuth.getState().user,
-          profilePicUrl: res.data?.profilePicUrl || null,
+          profilePicUrl: res.data.profilePicUrl,
         });
       }
 
