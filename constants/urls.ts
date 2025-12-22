@@ -14,3 +14,7 @@ export const UPDATE_USER_DATA_URL = (id: string) => `/users/${id}`;
 // Equipment Endpoints
 export const EQUIPMENT_URL = `/equipment`;
 export const EQUIPMENT_ITEM_URL = (id: string) => `/equipment/${id}`;
+
+// Muscle Group Endpoints
+export const MUSCLE_GROUP_URL = `/muscle-group`;
+export const MUSCLE_GROUP_ITEM_URL = (id: string) => `/muscle-group/${id}`;
