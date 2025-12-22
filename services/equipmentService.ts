@@ -33,6 +33,27 @@ export async function createEquipmentService(title: string, data: FormData) {
   }
 }
 
+export async function updateEquipmentService(
+  id: string,
+  title: string,
+  data: FormData
+) {
+  try {
+    const res = await client.put(
+      equipment_item_url(id),
+      { title, data },
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}
+
 export async function deleteEquipmentService(id: string) {
   try {
     const res = await client.delete(equipment_item_url(id));

@@ -2,6 +2,7 @@ import {
   createEquipmentService,
   deleteEquipmentService,
   getAllEquipmentService,
+  updateEquipmentService,
 } from "@/services/equipmentService";
 import { create } from "zustand";
 
@@ -48,6 +49,23 @@ export const useEquipment = create<EquipmentState>((set) => ({
     set({ equipmentLoading: true });
     try {
       const res = await createEquipmentService(title, data);
+
+      set({ equipmentLoading: false });
+      return res;
+    } catch (error) {
+      set({ equipmentLoading: false });
+
+      return {
+        success: false,
+        error: error,
+      };
+    }
+  },
+
+  updateEquipment: async (id: string, title: string, data: FormData) => {
+    set({ equipmentLoading: true });
+    try {
+      const res = await updateEquipmentService(id, title, data);
 
       set({ equipmentLoading: false });
       return res;
