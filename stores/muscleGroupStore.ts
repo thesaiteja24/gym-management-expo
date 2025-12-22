@@ -1,4 +1,9 @@
-import { getAllMuscleGroupsService } from "@/services/muscleGroupService";
+import {
+  createMuscleGroupService,
+  deleteMuscleGroupService,
+  getAllMuscleGroupsService,
+  updateMuscleGroupService,
+} from "@/services/muscleGroupService";
 import { create } from "zustand";
 
 type MuscleGroup = {
@@ -35,6 +40,56 @@ export const useMuscleGroup = create<MuscleGroupState>((set) => ({
       set({ muscleGroupLoading: false });
     } catch (error) {
       set({ muscleGroupLoading: false });
+    }
+  },
+
+  createMuscleGroup: async (title: string, data: FormData) => {
+    set({ muscleGroupLoading: true });
+    try {
+      const res = await createMuscleGroupService(title, data);
+
+      set({ muscleGroupLoading: false });
+      return res;
+    } catch (error) {
+      set({ muscleGroupLoading: false });
+
+      return {
+        succss: false,
+        error: error,
+      };
+    }
+  },
+
+  updateEquipment: async (id: string, title: string, data: FormData) => {
+    set({ muscleGroupLoading: true });
+    try {
+      const res = await updateMuscleGroupService(id, title, data);
+      set({ muscleGroupLoading: false });
+      return res;
+    } catch (error) {
+      set({ muscleGroupLoading: false });
+
+      return {
+        succss: false,
+        error: error,
+      };
+    }
+  },
+
+  deleteMuscleGroup: async (id: string) => {
+    set({ muscleGroupLoading: true });
+    try {
+      const res = await deleteMuscleGroupService(id);
+
+      set({ muscleGroupLoading: false });
+      return res;
+    } catch (error) {
+      set({ muscleGroupLoading: false });
+
+      return {
+        success: false,
+        error: error,
+      };
     }
   },
 }));
