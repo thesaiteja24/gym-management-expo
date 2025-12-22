@@ -1,79 +1,171 @@
 import { useEquipment } from "@/stores/equipmentStore";
+import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { ActivityIndicator, View } from "@react-native-blossom-ui/components";
 import { Image } from "expo-image";
 import React, { useEffect } from "react";
-import { Modal, ScrollView, Text, TouchableOpacity } from "react-native";
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 
 export default function Workout() {
+  const muscleVolumes = new Map([
+    ["upper-pectoralis", 1],
+    ["mid-lower-pectoralis", 1],
+  ]);
   const handleEquipmentPress = () => {
-    setShowModal(true);
+    setShowEquipmentModal(true);
   };
-  const [showModal, setShowModal] = React.useState(false);
+  const handleMuscleGroupsPress = () => {
+    setShowMuscleGroupsModal(true);
+  };
+
+  const [showEquipmentModal, setShowEquipmentModal] = React.useState(false);
   const equipmentLoading = useEquipment((s) => s.equipmentLoading);
   const equipmentList = useEquipment((s) => s.equipmentList);
   const getAllEquipment = useEquipment((s) => s.getAllEquipment);
+
+  const [showMuscleGroupsModal, setShowMuscleGroupsModal] =
+    React.useState(false);
+  const muscleGroupLoading = useMuscleGroup((s) => s.muscleGroupLoading);
+  const muscleGroupList = useMuscleGroup((s) => s.muscleGroupList);
+  const getAllMuscleGroups = useMuscleGroup((s) => s.getAllMuscleGroups);
 
   useEffect(() => {
     getAllEquipment();
   }, []);
 
+  useEffect(() => {
+    getAllMuscleGroups();
+  }, []);
+
   return (
     <ScrollView style={{ flex: 1 }} className="bg-white dark:bg-black p-4">
-      <TouchableOpacity
-        onPress={handleEquipmentPress}
-        className="flex flex-row items-center justify-start w-full gap-4 rounded-2xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm"
-      >
-        <Text className="text-black dark:text-white font-semibold text-xl">
-          Equipment
-        </Text>
-      </TouchableOpacity>
-
-      <Modal animationType="slide" transparent={true} visible={showModal}>
-        <ScrollView
-          contentContainerStyle={{ flex: 1, justifyContent: "flex-end" }}
-          className="bg-black/40"
-          onTouchEnd={() => setShowModal(false)}
+      <View className="flex flex-row w-full gap-4">
+        <TouchableOpacity
+          onPress={handleEquipmentPress}
+          className="flex-1 flex-row items-center justify-start gap-4 rounded-2xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm"
         >
-          <TouchableOpacity
-            className="bg-white dark:bg-[#111] rounded-t-3xl p-6 pt-4 min-h-[80%]"
-            activeOpacity={1}
-          >
-            <Text className="text-black dark:text-white text-xl font-bold text-center mb-8">
+          <Text className="text-black dark:text-white font-semibold text-xl">
+            Equipment
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={handleMuscleGroupsPress}
+          className="flex-1 flex-row items-center justify-start gap-4 rounded-2xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm"
+        >
+          <Text className="text-black dark:text-white font-semibold text-xl">
+            Muscle Groups
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Equipment modal */}
+      <Modal animationType="slide" transparent visible={showEquipmentModal}>
+        <View className="flex-1 bg-black/40 justify-end">
+          {/* Backdrop */}
+          <Pressable
+            className="absolute inset-0"
+            onPress={() => setShowEquipmentModal(false)}
+          />
+
+          {/* Modal content */}
+          <View className="bg-white dark:bg-[#111] rounded-t-3xl p-6 pt-4 h-[80%]">
+            <Text className="text-black dark:text-white text-xl font-bold text-center mb-6">
               Equipment
             </Text>
+
             {equipmentLoading ? (
-              <ActivityIndicator
-                animating={equipmentLoading}
-                size="large"
-                className="mt-8"
-              />
+              <ActivityIndicator animating size="large" className="mt-8" />
             ) : (
-              equipmentList.map((equipment) => (
-                <View
-                  key={equipment.id}
-                  className="flex-row items-center justify-between gap-4 pb-4"
-                >
-                  <Text className="text-black dark:text-white text-xl font-semibold py-2">
-                    {equipment.title}
-                  </Text>
-                  <Image
-                    cachePolicy={"memory-disk"}
-                    source={equipment.thumbnailUrl}
-                    style={{
-                      borderRadius: 100,
-                      borderColor: "gray",
-                      borderWidth: 1,
-                      width: 50,
-                      height: 50,
-                      backgroundColor: "white",
-                    }}
-                    contentFit="contain"
-                  />
-                </View>
-              ))
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ paddingBottom: 32 }}
+              >
+                {equipmentList.map((equipment) => (
+                  <View
+                    key={equipment.id}
+                    className="flex-row items-center justify-between gap-4 pb-4"
+                  >
+                    <Text className="text-black dark:text-white text-xl font-semibold py-2">
+                      {equipment.title}
+                    </Text>
+                    <Image
+                      cachePolicy="memory-disk"
+                      source={equipment.thumbnailUrl}
+                      style={{
+                        borderRadius: 100,
+                        borderColor: "gray",
+                        borderWidth: 1,
+                        width: 50,
+                        height: 50,
+                        backgroundColor: "white",
+                      }}
+                      contentFit="contain"
+                    />
+                  </View>
+                ))}
+              </ScrollView>
             )}
-          </TouchableOpacity>
-        </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Muscle Groups modal */}
+      <Modal animationType="slide" transparent visible={showMuscleGroupsModal}>
+        <View className="flex-1 bg-black/40 justify-end">
+          {/* Backdrop */}
+          <Pressable
+            className="absolute inset-0"
+            onPress={() => setShowMuscleGroupsModal(false)}
+          />
+
+          {/* Modal content */}
+          <View className="bg-white dark:bg-[#111] rounded-t-3xl p-6 pt-4 h-[80%]">
+            <Text className="text-black dark:text-white text-xl font-bold text-center mb-6">
+              Muscle Groups
+            </Text>
+
+            {muscleGroupLoading ? (
+              <ActivityIndicator animating size="large" className="mt-8" />
+            ) : (
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ paddingBottom: 32 }}
+              >
+                {muscleGroupList.map((muscleGroup) => (
+                  <View
+                    key={muscleGroup.id}
+                    className="flex-row items-center justify-between gap-4 pb-4"
+                  >
+                    <Text className="text-black dark:text-white text-xl font-semibold py-2">
+                      {muscleGroup.title}
+                    </Text>
+                    <Image
+                      cachePolicy="memory-disk"
+                      source={{ uri: muscleGroup.thumbnailUrl }}
+                      style={{
+                        borderRadius: 100,
+                        borderColor: "gray",
+                        borderWidth: 1,
+                        width: 50,
+                        height: 50,
+                        backgroundColor: "white",
+                      }}
+                      contentFit="contain"
+                    />
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
       </Modal>
     </ScrollView>
   );

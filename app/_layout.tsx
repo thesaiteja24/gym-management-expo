@@ -14,31 +14,39 @@ import {
 import Toast from "react-native-toast-message";
 import "./globals.css";
 
-// Keep splash visible until we explicitly hide it
+// ─────────────────────────────────────────────
+// Keep splash until we explicitly release it
+// ─────────────────────────────────────────────
 SplashScreen.preventAutoHideAsync();
+
+type UpdateState = "idle" | "downloading" | "restarting";
 
 export default function RootLayout() {
   const theme = useColorScheme();
   const segments = useSegments();
 
+  // ───── Fonts ─────
   const [fontsLoaded] = useFonts({
     Monoton: require("../assets/fonts/Monoton-Regular.ttf"),
   });
 
+  // ───── Auth restore ─────
   const restoreFromStorage = useAuth((s) => s.restoreFromStorage);
   const hasRestored = useAuth((s) => s.hasRestored);
 
+  // ───── OTA state ─────
   const [otaChecked, setOtaChecked] = useState(false);
   const [showOtaModal, setShowOtaModal] = useState(false);
+  const [updateState, setUpdateState] = useState<UpdateState>("idle");
 
   const isAuthRoute = segments[0] === "(auth)";
 
-  // 1️⃣ Restore auth state
+  // 1️⃣ Restore auth
   useEffect(() => {
     restoreFromStorage();
   }, [restoreFromStorage]);
 
-  // 2️⃣ OTA check (skip auth routes)
+  // 2️⃣ Check OTA (skip auth routes)
   useEffect(() => {
     async function checkOTA() {
       if (isAuthRoute) {
@@ -51,7 +59,7 @@ export default function RootLayout() {
 
         if (update.isAvailable) {
           setShowOtaModal(true);
-          setOtaChecked(true); // 🔑 unblock splash
+          setOtaChecked(true); // 🔑 never block splash
           return;
         }
       } catch (e) {
@@ -64,14 +72,14 @@ export default function RootLayout() {
     checkOTA();
   }, [isAuthRoute]);
 
-  // 3️⃣ Hide splash only when ALL boot tasks finish
+  // 3️⃣ Release splash ONLY when all boot work is done
   useEffect(() => {
     if (fontsLoaded && hasRestored && otaChecked) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, hasRestored, otaChecked]);
 
-  // 4️⃣ Loading fallback (rarely visible, but safe)
+  // 4️⃣ Fallback loader (normally never visible)
   if (!fontsLoaded || !hasRestored || !otaChecked) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -102,14 +110,25 @@ export default function RootLayout() {
         topOffset={60}
       />
 
+      {/* OTA Modal */}
       <OtaUpdateModal
         visible={showOtaModal}
+        state={updateState}
         onLater={() => {
+          if (updateState !== "idle") return;
           setShowOtaModal(false);
         }}
         onRestart={async () => {
-          await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();
+          try {
+            setUpdateState("downloading");
+            await Updates.fetchUpdateAsync();
+
+            setUpdateState("restarting");
+            await Updates.reloadAsync();
+          } catch (e) {
+            console.log("OTA update failed:", e);
+            setUpdateState("idle");
+          }
         }}
       />
     </>

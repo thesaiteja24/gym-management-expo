@@ -32,9 +32,9 @@ export default function Profile() {
 
   useEffect(() => {
     if (user?.userId) {
-      getUserData(user.userId);
+      getUserData(user.userId); // background refresh
     }
-  }, []);
+  }, [user?.userId]);
 
   return (
     <ScrollView

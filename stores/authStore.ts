@@ -124,8 +124,15 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 
-  setUser: (user: User) => {
-    set({ user });
+  setUser: (partial: User) => {
+    const current = get().user;
+
+    const merged = current ? { ...current, ...partial } : partial;
+
+    set({ user: merged });
+
+    // persist merged user
+    SecureStore.setItemAsync("user", JSON.stringify(merged)).catch(() => {});
   },
 
   logout: async () => {
