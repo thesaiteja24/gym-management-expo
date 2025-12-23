@@ -1,7 +1,11 @@
+import { DeleteConfirmModal } from "@/components/DeleteConfrimModal";
+import { ROLES as roles } from "@/constants/roles";
+import { useAuth } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { ActivityIndicator, View } from "@react-native-blossom-ui/components";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import React, { useEffect } from "react";
 import {
   Modal,
@@ -10,29 +14,37 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function Workout() {
-  const muscleVolumes = new Map([
-    ["upper-pectoralis", 1],
-    ["mid-lower-pectoralis", 1],
-  ]);
+  const role = useAuth((s) => s.user?.role);
+  const [deleteEquipmentId, setDeleteEquipmentId] = React.useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [showEquipmentModal, setShowEquipmentModal] = React.useState(false);
+  const equipmentLoading = useEquipment((s) => s.equipmentLoading);
+  const equipmentList = useEquipment((s) => s.equipmentList);
+  const getAllEquipment = useEquipment((s) => s.getAllEquipment);
+  const deleteEquipment = useEquipment((s) => s.deleteEquipment);
+
+  const [showMuscleGroupsModal, setShowMuscleGroupsModal] =
+    React.useState(false);
+  const [deleteMuscleGroupId, setDeleteMuscleGroupId] = React.useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const muscleGroupLoading = useMuscleGroup((s) => s.muscleGroupLoading);
+  const muscleGroupList = useMuscleGroup((s) => s.muscleGroupList);
+  const getAllMuscleGroups = useMuscleGroup((s) => s.getAllMuscleGroups);
+  const deleteMuscleGroup = useMuscleGroup((s) => s.deleteMuscleGroup);
+
   const handleEquipmentPress = () => {
     setShowEquipmentModal(true);
   };
   const handleMuscleGroupsPress = () => {
     setShowMuscleGroupsModal(true);
   };
-
-  const [showEquipmentModal, setShowEquipmentModal] = React.useState(false);
-  const equipmentLoading = useEquipment((s) => s.equipmentLoading);
-  const equipmentList = useEquipment((s) => s.equipmentList);
-  const getAllEquipment = useEquipment((s) => s.getAllEquipment);
-
-  const [showMuscleGroupsModal, setShowMuscleGroupsModal] =
-    React.useState(false);
-  const muscleGroupLoading = useMuscleGroup((s) => s.muscleGroupLoading);
-  const muscleGroupList = useMuscleGroup((s) => s.muscleGroupList);
-  const getAllMuscleGroups = useMuscleGroup((s) => s.getAllMuscleGroups);
 
   useEffect(() => {
     getAllEquipment();
@@ -75,9 +87,31 @@ export default function Workout() {
 
           {/* Modal content */}
           <View className="bg-white dark:bg-[#111] rounded-t-3xl p-6 pt-4 h-[80%]">
-            <Text className="text-black dark:text-white text-xl font-bold text-center mb-6">
-              Equipment
-            </Text>
+            <View
+              className={`flex-row ${
+                role === roles.systemAdmin
+                  ? "justify-between"
+                  : "justify-center"
+              } items-center mb-6`}
+            >
+              <Text className="text-black dark:text-white text-xl font-bold text-center">
+                Equipment
+              </Text>
+              {role === roles.systemAdmin && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowEquipmentModal(false);
+                    if (role === roles.systemAdmin) {
+                      router.push("/equipment/create");
+                    }
+                  }}
+                >
+                  <Text className="text-blue-500 text-xl text-center">
+                    Create
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             {equipmentLoading ? (
               <ActivityIndicator animating size="large" className="mt-8" />
@@ -88,13 +122,35 @@ export default function Workout() {
                 contentContainerStyle={{ paddingBottom: 32 }}
               >
                 {equipmentList.map((equipment) => (
-                  <View
+                  <TouchableOpacity
                     key={equipment.id}
                     className="flex-row items-center justify-between gap-4 pb-4"
+                    onPress={() => {
+                      setShowEquipmentModal(false);
+
+                      if (role === roles.systemAdmin) {
+                        router.push(`/equipment/${equipment.id}`);
+                      } else {
+                        Toast.show({
+                          type: "info",
+                          text1: "Coming Soon",
+                        });
+                      }
+                    }}
+                    onLongPress={() => {
+                      if (role !== roles.systemAdmin) return;
+
+                      setDeleteEquipmentId({
+                        id: equipment.id,
+                        title: equipment.title,
+                      });
+                    }}
+                    delayLongPress={700}
                   >
                     <Text className="text-black dark:text-white text-xl font-semibold py-2">
                       {equipment.title}
                     </Text>
+
                     <Image
                       cachePolicy="memory-disk"
                       source={equipment.thumbnailUrl}
@@ -108,7 +164,7 @@ export default function Workout() {
                       }}
                       contentFit="contain"
                     />
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </ScrollView>
             )}
@@ -127,9 +183,31 @@ export default function Workout() {
 
           {/* Modal content */}
           <View className="bg-white dark:bg-[#111] rounded-t-3xl p-6 pt-4 h-[80%]">
-            <Text className="text-black dark:text-white text-xl font-bold text-center mb-6">
-              Muscle Groups
-            </Text>
+            <View
+              className={`flex-row ${
+                role === roles.systemAdmin
+                  ? "justify-between"
+                  : "justify-center"
+              } items-center mb-6`}
+            >
+              <Text className="text-black dark:text-white text-xl font-bold text-center">
+                Muscle Groups
+              </Text>
+              {role === roles.systemAdmin && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowMuscleGroupsModal(false);
+                    if (role === roles.systemAdmin) {
+                      router.push("/muscle-group/create");
+                    }
+                  }}
+                >
+                  <Text className="text-blue-500 text-xl text-center">
+                    Create
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             {muscleGroupLoading ? (
               <ActivityIndicator animating size="large" className="mt-8" />
@@ -140,9 +218,29 @@ export default function Workout() {
                 contentContainerStyle={{ paddingBottom: 32 }}
               >
                 {muscleGroupList.map((muscleGroup) => (
-                  <View
+                  <TouchableOpacity
                     key={muscleGroup.id}
                     className="flex-row items-center justify-between gap-4 pb-4"
+                    onPress={() => {
+                      setShowMuscleGroupsModal(false);
+                      if (role === roles.systemAdmin) {
+                        router.push(`/muscle-group/${muscleGroup.id}`);
+                      } else {
+                        Toast.show({
+                          type: "info",
+                          text1: "Coming Soon",
+                        });
+                      }
+                    }}
+                    onLongPress={() => {
+                      if (role !== roles.systemAdmin) return;
+
+                      setDeleteMuscleGroupId({
+                        id: muscleGroup.id,
+                        title: muscleGroup.title,
+                      });
+                    }}
+                    delayLongPress={700}
                   >
                     <Text className="text-black dark:text-white text-xl font-semibold py-2">
                       {muscleGroup.title}
@@ -160,13 +258,69 @@ export default function Workout() {
                       }}
                       contentFit="contain"
                     />
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </ScrollView>
             )}
           </View>
         </View>
       </Modal>
+
+      {/* Delete Muscle Group Confirm Modal */}
+      {deleteMuscleGroupId && (
+        <DeleteConfirmModal
+          visible
+          title={`Delete "${deleteMuscleGroupId.title}"?`}
+          description="This muscle group will be permanently removed."
+          onCancel={() => setDeleteMuscleGroupId(null)}
+          onConfirm={async () => {
+            setDeleteMuscleGroupId(null);
+            const res = await deleteMuscleGroup(deleteMuscleGroupId.id);
+            await getAllMuscleGroups();
+            if (res.success) {
+              Toast.show({
+                type: "success",
+                text1: "Muscle group deleted successfully",
+              });
+            } else {
+              Toast.show({
+                type: "error",
+                text1: "Error deleting muscle group",
+                text2: res.message,
+              });
+            }
+          }}
+        />
+      )}
+
+      {/* Delete Equipment Confirm Modal */}
+      {deleteEquipmentId && (
+        <DeleteConfirmModal
+          visible
+          title={`Delete "${deleteEquipmentId.title}"?`}
+          description="This equipment will be permanently removed."
+          onCancel={() => setDeleteEquipmentId(null)}
+          onConfirm={async () => {
+            setDeleteEquipmentId(null);
+
+            const res = await deleteEquipment(deleteEquipmentId.id);
+            await getAllEquipment();
+
+            if (res.success) {
+              Toast.show({
+                type: "success",
+                text1: "Equipment deleted successfully",
+              });
+            } else {
+              Toast.show({
+                type: "error",
+                text1: "Error deleting equipment",
+                text2: res.message,
+              });
+            }
+          }}
+        />
+      )}
     </ScrollView>
   );
 }
