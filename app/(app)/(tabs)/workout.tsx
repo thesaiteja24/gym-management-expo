@@ -1,3 +1,4 @@
+import { DeleteConfirmModal } from "@/components/DeleteConfrimModal";
 import { ROLES as roles } from "@/constants/roles";
 import { useAuth } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
@@ -16,10 +17,6 @@ import {
 import Toast from "react-native-toast-message";
 
 export default function Workout() {
-  const muscleVolumes = new Map([
-    ["upper-pectoralis", 1],
-    ["mid-lower-pectoralis", 1],
-  ]);
   const role = useAuth((s) => s.user?.role);
   const [showEquipmentModal, setShowEquipmentModal] = React.useState(false);
   const equipmentLoading = useEquipment((s) => s.equipmentLoading);
@@ -28,9 +25,14 @@ export default function Workout() {
 
   const [showMuscleGroupsModal, setShowMuscleGroupsModal] =
     React.useState(false);
+  const [deleteMuscleGroupId, setDeleteMuscleGroupId] = React.useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const muscleGroupLoading = useMuscleGroup((s) => s.muscleGroupLoading);
   const muscleGroupList = useMuscleGroup((s) => s.muscleGroupList);
   const getAllMuscleGroups = useMuscleGroup((s) => s.getAllMuscleGroups);
+  const deleteMuscleGroup = useMuscleGroup((s) => s.deleteMuscleGroup);
 
   const handleEquipmentPress = () => {
     setShowEquipmentModal(true);
@@ -159,6 +161,15 @@ export default function Workout() {
                         });
                       }
                     }}
+                    onLongPress={() => {
+                      if (role !== roles.systemAdmin) return;
+
+                      setDeleteMuscleGroupId({
+                        id: muscleGroup.id,
+                        title: muscleGroup.title,
+                      });
+                    }}
+                    delayLongPress={1000}
                   >
                     <Text className="text-black dark:text-white text-xl font-semibold py-2">
                       {muscleGroup.title}
@@ -183,6 +194,32 @@ export default function Workout() {
           </View>
         </View>
       </Modal>
+      {/* Delete Muscle Group Confirm Modal */}
+      {deleteMuscleGroupId && (
+        <DeleteConfirmModal
+          visible
+          title={`Delete "${deleteMuscleGroupId.title}"?`}
+          description="This muscle group will be permanently removed."
+          onCancel={() => setDeleteMuscleGroupId(null)}
+          onConfirm={async () => {
+            setDeleteMuscleGroupId(null);
+            const res = await deleteMuscleGroup(deleteMuscleGroupId.id);
+            await getAllMuscleGroups();
+            if (res.success) {
+              Toast.show({
+                type: "success",
+                text1: "Muscle group deleted successfully",
+              });
+            } else {
+              Toast.show({
+                type: "error",
+                text1: "Error deleting muscle group",
+                text2: res.message,
+              });
+            }
+          }}
+        />
+      )}
     </ScrollView>
   );
 }
