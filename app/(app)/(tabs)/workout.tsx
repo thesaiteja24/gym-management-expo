@@ -1,7 +1,10 @@
+import { ROLES as roles } from "@/constants/roles";
+import { useAuth } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { ActivityIndicator, View } from "@react-native-blossom-ui/components";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import React, { useEffect } from "react";
 import {
   Modal,
@@ -10,19 +13,14 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function Workout() {
   const muscleVolumes = new Map([
     ["upper-pectoralis", 1],
     ["mid-lower-pectoralis", 1],
   ]);
-  const handleEquipmentPress = () => {
-    setShowEquipmentModal(true);
-  };
-  const handleMuscleGroupsPress = () => {
-    setShowMuscleGroupsModal(true);
-  };
-
+  const role = useAuth((s) => s.user?.role);
   const [showEquipmentModal, setShowEquipmentModal] = React.useState(false);
   const equipmentLoading = useEquipment((s) => s.equipmentLoading);
   const equipmentList = useEquipment((s) => s.equipmentList);
@@ -33,6 +31,13 @@ export default function Workout() {
   const muscleGroupLoading = useMuscleGroup((s) => s.muscleGroupLoading);
   const muscleGroupList = useMuscleGroup((s) => s.muscleGroupList);
   const getAllMuscleGroups = useMuscleGroup((s) => s.getAllMuscleGroups);
+
+  const handleEquipmentPress = () => {
+    setShowEquipmentModal(true);
+  };
+  const handleMuscleGroupsPress = () => {
+    setShowMuscleGroupsModal(true);
+  };
 
   useEffect(() => {
     getAllEquipment();
@@ -140,9 +145,20 @@ export default function Workout() {
                 contentContainerStyle={{ paddingBottom: 32 }}
               >
                 {muscleGroupList.map((muscleGroup) => (
-                  <View
+                  <TouchableOpacity
                     key={muscleGroup.id}
                     className="flex-row items-center justify-between gap-4 pb-4"
+                    onPress={() => {
+                      setShowMuscleGroupsModal(false);
+                      if (role === roles.systemAdmin) {
+                        router.push(`/muscle-group/${muscleGroup.id}`);
+                      } else {
+                        Toast.show({
+                          type: "info",
+                          text1: "Coming Soon",
+                        });
+                      }
+                    }}
                   >
                     <Text className="text-black dark:text-white text-xl font-semibold py-2">
                       {muscleGroup.title}
@@ -160,7 +176,7 @@ export default function Workout() {
                       }}
                       contentFit="contain"
                     />
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </ScrollView>
             )}
