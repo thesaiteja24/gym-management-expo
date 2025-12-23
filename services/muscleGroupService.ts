@@ -27,15 +27,11 @@ export async function getMuscleGroupByIdService(id: string) {
   }
 }
 
-export async function createMuscleGroupService(title: string, data: FormData) {
+export async function createMuscleGroupService(data: FormData) {
   try {
-    const res = await client.post(
-      muscle_group_url,
-      { title, data },
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+    const res = await client.post(muscle_group_url, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
     return handleApiResponse(res);
   } catch (error: any) {

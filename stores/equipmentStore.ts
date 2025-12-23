@@ -21,7 +21,7 @@ type EquipmentState = {
 
   getAllEquipment: () => Promise<void>;
   getEquipmentById: (id: string) => Promise<any>;
-  createEquipment: (id: string, data: FormData) => Promise<any>;
+  createEquipment: (data: FormData) => Promise<any>;
   updateEquipment: (id: string, data: FormData) => Promise<any>;
   deleteEquipment: (id: string) => Promise<any>;
 };
@@ -65,10 +65,10 @@ export const useEquipment = create<EquipmentState>((set) => ({
     }
   },
 
-  createEquipment: async (title: string, data: FormData) => {
+  createEquipment: async (data: FormData) => {
     set({ equipmentLoading: true });
     try {
-      const res = await createEquipmentService(title, data);
+      const res = await createEquipmentService(data);
 
       set({ equipmentLoading: false });
       return res;

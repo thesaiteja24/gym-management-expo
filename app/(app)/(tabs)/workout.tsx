@@ -87,9 +87,31 @@ export default function Workout() {
 
           {/* Modal content */}
           <View className="bg-white dark:bg-[#111] rounded-t-3xl p-6 pt-4 h-[80%]">
-            <Text className="text-black dark:text-white text-xl font-bold text-center mb-6">
-              Equipment
-            </Text>
+            <View
+              className={`flex-row ${
+                role === roles.systemAdmin
+                  ? "justify-between"
+                  : "justify-center"
+              } items-center mb-6`}
+            >
+              <Text className="text-black dark:text-white text-xl font-bold text-center">
+                Equipment
+              </Text>
+              {role === roles.systemAdmin && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowEquipmentModal(false);
+                    if (role === roles.systemAdmin) {
+                      router.push("/equipment/create");
+                    }
+                  }}
+                >
+                  <Text className="text-blue-500 text-xl text-center">
+                    Create
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             {equipmentLoading ? (
               <ActivityIndicator animating size="large" className="mt-8" />
@@ -161,9 +183,31 @@ export default function Workout() {
 
           {/* Modal content */}
           <View className="bg-white dark:bg-[#111] rounded-t-3xl p-6 pt-4 h-[80%]">
-            <Text className="text-black dark:text-white text-xl font-bold text-center mb-6">
-              Muscle Groups
-            </Text>
+            <View
+              className={`flex-row ${
+                role === roles.systemAdmin
+                  ? "justify-between"
+                  : "justify-center"
+              } items-center mb-6`}
+            >
+              <Text className="text-black dark:text-white text-xl font-bold text-center">
+                Muscle Groups
+              </Text>
+              {role === roles.systemAdmin && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowMuscleGroupsModal(false);
+                    if (role === roles.systemAdmin) {
+                      router.push("/muscle-group/create");
+                    }
+                  }}
+                >
+                  <Text className="text-blue-500 text-xl text-center">
+                    Create
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             {muscleGroupLoading ? (
               <ActivityIndicator animating size="large" className="mt-8" />
@@ -221,6 +265,7 @@ export default function Workout() {
           </View>
         </View>
       </Modal>
+
       {/* Delete Muscle Group Confirm Modal */}
       {deleteMuscleGroupId && (
         <DeleteConfirmModal

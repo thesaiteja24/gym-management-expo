@@ -21,7 +21,7 @@ type MuscleGroupState = {
 
   getAllMuscleGroups: () => Promise<void>;
   getMuscleGroupById: (id: string) => Promise<any>;
-  createMuscleGroup: (title: string, data: FormData) => Promise<any>;
+  createMuscleGroup: (data: FormData) => Promise<any>;
   updateMuscleGroup: (id: string, data: FormData | null) => Promise<any>;
   deleteMuscleGroup: (id: string) => Promise<any>;
 };
@@ -65,10 +65,10 @@ export const useMuscleGroup = create<MuscleGroupState>((set) => ({
     }
   },
 
-  createMuscleGroup: async (title: string, data: FormData) => {
+  createMuscleGroup: async (data: FormData) => {
     set({ muscleGroupLoading: true });
     try {
-      const res = await createMuscleGroupService(title, data);
+      const res = await createMuscleGroupService(data);
 
       set({ muscleGroupLoading: false });
       return res;

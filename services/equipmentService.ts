@@ -16,15 +16,11 @@ export async function getAllEquipmentService() {
   }
 }
 
-export async function createEquipmentService(title: string, data: FormData) {
+export async function createEquipmentService(data: FormData) {
   try {
-    const res = await client.post(
-      equipment_url,
-      { title, data },
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+    const res = await client.post(equipment_url, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
     return handleApiResponse(res);
   } catch (error: any) {

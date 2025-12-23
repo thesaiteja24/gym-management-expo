@@ -23,10 +23,49 @@ export default function SystemAdminLayout() {
       }}
     >
       <Stack.Screen
+        name="muscle-group/create"
+        options={
+          {
+            title: "Create Muscle Group",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
+            rightIcons: [
+              {
+                name: "checkmark-done",
+                disabled: true,
+                color: "green",
+              },
+            ],
+          } as any
+        }
+      />
+      <Stack.Screen
         name="muscle-group/[id]"
         options={
           {
             title: "Edit Muscle Group",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
+            rightIcons: [
+              {
+                name: "checkmark-done",
+                disabled: true,
+                color: "green",
+              },
+            ],
+          } as any
+        }
+      />
+
+      <Stack.Screen
+        name="equipment/create"
+        options={
+          {
+            title: "Create Equipment",
             leftIcon: "chevron-back-outline",
             onLeftPress: () => {
               router.back();
