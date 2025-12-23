@@ -18,10 +18,15 @@ import Toast from "react-native-toast-message";
 
 export default function Workout() {
   const role = useAuth((s) => s.user?.role);
+  const [deleteEquipmentId, setDeleteEquipmentId] = React.useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const [showEquipmentModal, setShowEquipmentModal] = React.useState(false);
   const equipmentLoading = useEquipment((s) => s.equipmentLoading);
   const equipmentList = useEquipment((s) => s.equipmentList);
   const getAllEquipment = useEquipment((s) => s.getAllEquipment);
+  const deleteEquipment = useEquipment((s) => s.deleteEquipment);
 
   const [showMuscleGroupsModal, setShowMuscleGroupsModal] =
     React.useState(false);
@@ -95,13 +100,35 @@ export default function Workout() {
                 contentContainerStyle={{ paddingBottom: 32 }}
               >
                 {equipmentList.map((equipment) => (
-                  <View
+                  <TouchableOpacity
                     key={equipment.id}
                     className="flex-row items-center justify-between gap-4 pb-4"
+                    onPress={() => {
+                      setShowEquipmentModal(false);
+
+                      if (role === roles.systemAdmin) {
+                        router.push(`/equipment/${equipment.id}`);
+                      } else {
+                        Toast.show({
+                          type: "info",
+                          text1: "Coming Soon",
+                        });
+                      }
+                    }}
+                    onLongPress={() => {
+                      if (role !== roles.systemAdmin) return;
+
+                      setDeleteEquipmentId({
+                        id: equipment.id,
+                        title: equipment.title,
+                      });
+                    }}
+                    delayLongPress={700}
                   >
                     <Text className="text-black dark:text-white text-xl font-semibold py-2">
                       {equipment.title}
                     </Text>
+
                     <Image
                       cachePolicy="memory-disk"
                       source={equipment.thumbnailUrl}
@@ -115,7 +142,7 @@ export default function Workout() {
                       }}
                       contentFit="contain"
                     />
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </ScrollView>
             )}
@@ -169,7 +196,7 @@ export default function Workout() {
                         title: muscleGroup.title,
                       });
                     }}
-                    delayLongPress={1000}
+                    delayLongPress={700}
                   >
                     <Text className="text-black dark:text-white text-xl font-semibold py-2">
                       {muscleGroup.title}
@@ -214,6 +241,35 @@ export default function Workout() {
               Toast.show({
                 type: "error",
                 text1: "Error deleting muscle group",
+                text2: res.message,
+              });
+            }
+          }}
+        />
+      )}
+
+      {/* Delete Equipment Confirm Modal */}
+      {deleteEquipmentId && (
+        <DeleteConfirmModal
+          visible
+          title={`Delete "${deleteEquipmentId.title}"?`}
+          description="This equipment will be permanently removed."
+          onCancel={() => setDeleteEquipmentId(null)}
+          onConfirm={async () => {
+            setDeleteEquipmentId(null);
+
+            const res = await deleteEquipment(deleteEquipmentId.id);
+            await getAllEquipment();
+
+            if (res.success) {
+              Toast.show({
+                type: "success",
+                text1: "Equipment deleted successfully",
+              });
+            } else {
+              Toast.show({
+                type: "error",
+                text1: "Error deleting equipment",
                 text2: res.message,
               });
             }

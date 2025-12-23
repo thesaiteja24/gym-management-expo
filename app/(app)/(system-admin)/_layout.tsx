@@ -41,6 +41,25 @@ export default function SystemAdminLayout() {
           } as any
         }
       />
+      <Stack.Screen
+        name="equipment/[id]"
+        options={
+          {
+            title: "Edit Equipment",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
+            rightIcons: [
+              {
+                name: "checkmark-done",
+                disabled: true,
+                color: "green",
+              },
+            ],
+          } as any
+        }
+      />
     </Stack>
   );
 }

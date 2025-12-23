@@ -33,19 +33,22 @@ export async function createEquipmentService(title: string, data: FormData) {
   }
 }
 
-export async function updateEquipmentService(
-  id: string,
-  title: string,
-  data: FormData
-) {
+export async function getEquipmentByIdService(id: string) {
   try {
-    const res = await client.put(
-      equipment_item_url(id),
-      { title, data },
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+    const res = await client.get(equipment_item_url(id));
+
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}
+
+export async function updateEquipmentService(id: string, data: FormData) {
+  try {
+    const res = await client.put(equipment_item_url(id), data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
     return handleApiResponse(res);
   } catch (error: any) {

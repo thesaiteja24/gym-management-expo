@@ -2,6 +2,7 @@ import {
   createEquipmentService,
   deleteEquipmentService,
   getAllEquipmentService,
+  getEquipmentByIdService,
   updateEquipmentService,
 } from "@/services/equipmentService";
 import { create } from "zustand";
@@ -19,7 +20,9 @@ type EquipmentState = {
   equipmentList: Array<Equipment>;
 
   getAllEquipment: () => Promise<void>;
+  getEquipmentById: (id: string) => Promise<any>;
   createEquipment: (id: string, data: FormData) => Promise<any>;
+  updateEquipment: (id: string, data: FormData) => Promise<any>;
   deleteEquipment: (id: string) => Promise<any>;
 };
 
@@ -45,6 +48,23 @@ export const useEquipment = create<EquipmentState>((set) => ({
     }
   },
 
+  getEquipmentById: async (id: string) => {
+    set({ equipmentLoading: true });
+    try {
+      const res = await getEquipmentByIdService(id);
+
+      set({ equipmentLoading: false });
+      return res;
+    } catch (error) {
+      set({ equipmentLoading: false });
+
+      return {
+        succss: false,
+        error: error,
+      };
+    }
+  },
+
   createEquipment: async (title: string, data: FormData) => {
     set({ equipmentLoading: true });
     try {
@@ -62,10 +82,10 @@ export const useEquipment = create<EquipmentState>((set) => ({
     }
   },
 
-  updateEquipment: async (id: string, title: string, data: FormData) => {
+  updateEquipment: async (id: string, data: FormData) => {
     set({ equipmentLoading: true });
     try {
-      const res = await updateEquipmentService(id, title, data);
+      const res = await updateEquipmentService(id, data);
 
       set({ equipmentLoading: false });
       return res;
