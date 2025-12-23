@@ -2,6 +2,7 @@ import {
   createMuscleGroupService,
   deleteMuscleGroupService,
   getAllMuscleGroupsService,
+  getMuscleGroupByIdService,
   updateMuscleGroupService,
 } from "@/services/muscleGroupService";
 import { create } from "zustand";
@@ -19,6 +20,10 @@ type MuscleGroupState = {
   muscleGroupList: Array<MuscleGroup>;
 
   getAllMuscleGroups: () => Promise<void>;
+  getMuscleGroupById: (id: string) => Promise<any>;
+  createMuscleGroup: (title: string, data: FormData) => Promise<any>;
+  updateMuscleGroup: (id: string, data: FormData | null) => Promise<any>;
+  deleteMuscleGroup: (id: string) => Promise<any>;
 };
 
 const initialState = {
@@ -43,6 +48,23 @@ export const useMuscleGroup = create<MuscleGroupState>((set) => ({
     }
   },
 
+  getMuscleGroupById: async (id: string) => {
+    set({ muscleGroupLoading: true });
+    try {
+      const res = await getMuscleGroupByIdService(id);
+
+      set({ muscleGroupLoading: false });
+      return res;
+    } catch (error) {
+      set({ muscleGroupLoading: false });
+
+      return {
+        succss: false,
+        error: error,
+      };
+    }
+  },
+
   createMuscleGroup: async (title: string, data: FormData) => {
     set({ muscleGroupLoading: true });
     try {
@@ -60,10 +82,14 @@ export const useMuscleGroup = create<MuscleGroupState>((set) => ({
     }
   },
 
-  updateEquipment: async (id: string, title: string, data: FormData) => {
+  updateMuscleGroup: async (
+    id: string,
+
+    data: FormData | null
+  ) => {
     set({ muscleGroupLoading: true });
     try {
-      const res = await updateMuscleGroupService(id, title, data);
+      const res = await updateMuscleGroupService(id, data);
       set({ muscleGroupLoading: false });
       return res;
     } catch (error) {
