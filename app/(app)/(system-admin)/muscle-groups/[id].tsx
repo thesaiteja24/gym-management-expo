@@ -75,7 +75,8 @@ export default function EditMuscleGroup() {
     Keyboard.dismiss();
 
     try {
-      let formData: FormData | null = null;
+      const formData = new FormData();
+      formData.append("title", title);
 
       if (thumbnailUri && normalize(thumbnailUri) !== original.thumbnailUrl) {
         setUploading(true);
@@ -89,8 +90,6 @@ export default function EditMuscleGroup() {
           "equipment"
         );
 
-        formData = new FormData();
-        formData.append("title", title);
         formData.append("image", prepared as any);
       }
 

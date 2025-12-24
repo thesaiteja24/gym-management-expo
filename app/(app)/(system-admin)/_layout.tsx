@@ -22,8 +22,9 @@ export default function SystemAdminLayout() {
         },
       }}
     >
+      {/* Muscle Groups */}
       <Stack.Screen
-        name="muscle-group/create"
+        name="muscle-groups/create"
         options={
           {
             title: "Create Muscle Group",
@@ -42,7 +43,7 @@ export default function SystemAdminLayout() {
         }
       />
       <Stack.Screen
-        name="muscle-group/[id]"
+        name="muscle-groups/[id]"
         options={
           {
             title: "Edit Muscle Group",
@@ -61,6 +62,7 @@ export default function SystemAdminLayout() {
         }
       />
 
+      {/* Equipment */}
       <Stack.Screen
         name="equipment/create"
         options={
@@ -85,6 +87,46 @@ export default function SystemAdminLayout() {
         options={
           {
             title: "Edit Equipment",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
+            rightIcons: [
+              {
+                name: "checkmark-done",
+                disabled: true,
+                color: "green",
+              },
+            ],
+          } as any
+        }
+      />
+
+      {/* Exercises */}
+      <Stack.Screen
+        name="exercises/create"
+        options={
+          {
+            title: "Create Exercise",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
+            rightIcons: [
+              {
+                name: "checkmark-done",
+                disabled: true,
+                color: "green",
+              },
+            ],
+          } as any
+        }
+      />
+      <Stack.Screen
+        name="exercises/[id]"
+        options={
+          {
+            title: "Edit Exercise",
             leftIcon: "chevron-back-outline",
             onLeftPress: () => {
               router.back();
