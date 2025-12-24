@@ -1,6 +1,6 @@
 import {
   API_BASE_URL as api_base_url,
-  REFRESH_TOKEN_URL as refresh_token_url,
+  REFRESH_TOKEN_ENDPOINT as refresh_token_endpoint,
 } from "@/constants/urls";
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import * as SecureStore from "expo-secure-store";
@@ -61,7 +61,7 @@ client.interceptors.response.use(
       err?.response?.status === 401 &&
       originalConfig &&
       !originalConfig._retry &&
-      !originalConfig.url?.includes(refresh_token_url)
+      !originalConfig.url?.includes(refresh_token_endpoint)
     ) {
       // mark it to prevent infinite loops
       originalConfig._retry = true;
@@ -88,14 +88,17 @@ client.interceptors.response.use(
         // call refresh endpoint using fetch to avoid circular imports
         // include current token (optional)
         const oldToken = await SecureStore.getItemAsync("accessToken");
-        const refreshRes = await fetch(`${api_base_url}${refresh_token_url}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(oldToken ? { Authorization: `Bearer ${oldToken}` } : {}),
-          },
-          body: JSON.stringify({ userId }),
-        });
+        const refreshRes = await fetch(
+          `${api_base_url}${refresh_token_endpoint}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(oldToken ? { Authorization: `Bearer ${oldToken}` } : {}),
+            },
+            body: JSON.stringify({ userId }),
+          }
+        );
 
         if (!refreshRes.ok) {
           const body = await refreshRes.text();

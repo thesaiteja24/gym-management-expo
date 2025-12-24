@@ -1,6 +1,6 @@
 import {
-  SEND_OTP_URL as send_otp_url,
-  VERIFY_OTP_URL as verify_otp_url,
+  SEND_OTP_ENDPOINT as send_otp_endpoint,
+  VERIFY_OTP_ENDPOINT as verify_otp_endpoint,
 } from "@/constants/urls";
 import { handleApiResponse } from "@/utils/handleApiResponse";
 import client from "./api";
@@ -19,7 +19,7 @@ type VerifyOtpPayload = {
 
 export async function sendOtpService(payload: SendOtpPayload) {
   try {
-    const res = await client.post(send_otp_url, payload);
+    const res = await client.post(send_otp_endpoint, payload);
     return handleApiResponse(res);
   } catch (error: any) {
     const errData = error.response?.data;
@@ -29,7 +29,7 @@ export async function sendOtpService(payload: SendOtpPayload) {
 
 export async function verifyOtpService(payload: VerifyOtpPayload) {
   try {
-    const res = await client.post(verify_otp_url, payload);
+    const res = await client.post(verify_otp_endpoint, payload);
     return handleApiResponse(res);
   } catch (error: any) {
     const errData = error.response?.data;
