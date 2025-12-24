@@ -28,6 +28,7 @@ export async function getEquipmentByIdService(id: string) {
 }
 
 export async function createEquipmentService(data: FormData) {
+export async function createEquipmentService(data: FormData) {
   try {
     const res = await client.post(equipment_endpoint, data, {
       headers: { "Content-Type": "multipart/form-data" },

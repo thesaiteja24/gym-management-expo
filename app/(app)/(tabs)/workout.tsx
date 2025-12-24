@@ -1,11 +1,15 @@
 import { DeleteConfirmModal } from "@/components/DeleteConfrimModal";
 import { ROLES as roles } from "@/constants/roles";
 import { useAuth } from "@/stores/authStore";
+import { DeleteConfirmModal } from "@/components/DeleteConfrimModal";
+import { ROLES as roles } from "@/constants/roles";
+import { useAuth } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
 import { useExercise } from "@/stores/exerciseStore";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { ActivityIndicator, View } from "@react-native-blossom-ui/components";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
 import {
@@ -15,6 +19,7 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import Toast from "react-native-toast-message";
 
 export default function Workout() {
@@ -41,6 +46,10 @@ export default function Workout() {
   // Muscle Group related state and actions
   const [showMuscleGroupsModal, setShowMuscleGroupsModal] =
     React.useState(false);
+  const [deleteMuscleGroupId, setDeleteMuscleGroupId] = React.useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const [deleteMuscleGroupId, setDeleteMuscleGroupId] = React.useState<{
     id: string;
     title: string;
@@ -202,6 +211,31 @@ export default function Workout() {
                 </TouchableOpacity>
               )}
             </View>
+            <View
+              className={`flex-row ${
+                role === roles.systemAdmin
+                  ? "justify-between"
+                  : "justify-center"
+              } items-center mb-6`}
+            >
+              <Text className="text-black dark:text-white text-xl font-bold text-center">
+                Equipment
+              </Text>
+              {role === roles.systemAdmin && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowEquipmentModal(false);
+                    if (role === roles.systemAdmin) {
+                      router.push("/equipment/create");
+                    }
+                  }}
+                >
+                  <Text className="text-blue-500 text-xl text-center">
+                    Create
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
             {equipmentLoading ? (
               <ActivityIndicator animating size="large" className="mt-8" />
@@ -213,8 +247,30 @@ export default function Workout() {
               >
                 {equipmentList.map((equipment) => (
                   <TouchableOpacity
+                  <TouchableOpacity
                     key={equipment.id}
                     className="flex-row items-center justify-between gap-4 pb-4"
+                    onPress={() => {
+                      setShowEquipmentModal(false);
+
+                      if (role === roles.systemAdmin) {
+                        router.push(`/equipment/${equipment.id}`);
+                      } else {
+                        Toast.show({
+                          type: "info",
+                          text1: "Coming Soon",
+                        });
+                      }
+                    }}
+                    onLongPress={() => {
+                      if (role !== roles.systemAdmin) return;
+
+                      setDeleteEquipmentId({
+                        id: equipment.id,
+                        title: equipment.title,
+                      });
+                    }}
+                    delayLongPress={700}
                     onPress={() => {
                       setShowEquipmentModal(false);
 
@@ -241,6 +297,7 @@ export default function Workout() {
                       {equipment.title}
                     </Text>
 
+
                     <Image
                       cachePolicy="memory-disk"
                       source={equipment.thumbnailUrl}
@@ -254,6 +311,7 @@ export default function Workout() {
                       }}
                       contentFit="contain"
                     />
+                  </TouchableOpacity>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -309,6 +367,7 @@ export default function Workout() {
               >
                 {muscleGroupList.map((muscleGroup) => (
                   <TouchableOpacity
+                  <TouchableOpacity
                     key={muscleGroup.id}
                     className="flex-row items-center justify-between gap-4 pb-4"
                     onPress={() => {
@@ -348,6 +407,7 @@ export default function Workout() {
                       }}
                       contentFit="contain"
                     />
+                  </TouchableOpacity>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
