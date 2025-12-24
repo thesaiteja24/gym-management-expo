@@ -1,13 +1,13 @@
 import {
-  MUSCLE_GROUP_ITEM_ENDPOINT as muscle_group_item_endpoint,
-  MUSCLE_GROUPS_ENDPOINT as muscle_groups_endpoint,
+  EXERCISE_ITEM_ENDPOINT as exercise_item_endpoint,
+  EXERCISES_ENDPOINT as exercises_url,
 } from "@/constants/urls";
 import { handleApiResponse } from "@/utils/handleApiResponse";
 import client from "./api";
 
-export async function getAllMuscleGroupsService() {
+export async function getAllExercisesService() {
   try {
-    const res = await client.get(muscle_groups_endpoint);
+    const res = await client.get(exercises_url);
 
     return handleApiResponse(res);
   } catch (error: any) {
@@ -16,9 +16,9 @@ export async function getAllMuscleGroupsService() {
   }
 }
 
-export async function getMuscleGroupByIdService(id: string) {
+export async function getExerciseByIdService(id: string) {
   try {
-    const res = await client.get(muscle_group_item_endpoint(id));
+    const res = await client.get(exercise_item_endpoint(id));
 
     return handleApiResponse(res);
   } catch (error: any) {
@@ -27,9 +27,9 @@ export async function getMuscleGroupByIdService(id: string) {
   }
 }
 
-export async function createMuscleGroupService(data: FormData) {
+export async function createExerciseService(data: FormData) {
   try {
-    const res = await client.post(muscle_groups_endpoint, data, {
+    const res = await client.post(exercises_url, data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
@@ -40,9 +40,9 @@ export async function createMuscleGroupService(data: FormData) {
   }
 }
 
-export async function updateMuscleGroupService(id: string, data: FormData) {
+export async function updateExerciseService(id: string, data: FormData) {
   try {
-    const res = await client.put(muscle_group_item_endpoint(id), data, {
+    const res = await client.put(exercise_item_endpoint(id), data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
@@ -53,9 +53,9 @@ export async function updateMuscleGroupService(id: string, data: FormData) {
   }
 }
 
-export async function deleteMuscleGroupService(id: string) {
+export async function deleteExerciseService(id: string) {
   try {
-    const res = await client.delete(muscle_group_item_endpoint(id));
+    const res = await client.delete(exercise_item_endpoint(id));
 
     return handleApiResponse(res);
   } catch (error: any) {

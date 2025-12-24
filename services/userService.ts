@@ -1,14 +1,14 @@
 import {
-  GET_USER_DATA_URL as get_user_data_url,
-  UPDATE_PROFILE_PIC_URL as update_profile_pic_url,
-  UPDATE_USER_DATA_URL as update_user_data_url,
+  UPDATE_PROFILE_PIC_ENDPOINT as update_profile_pic_endpoint,
+  UPDATE_USER_DATA_ENDPOINT as update_user_data_endpoint,
+  USER_ENDPOINT as user_endpoint,
 } from "@/constants/urls";
 import { handleApiResponse } from "@/utils/handleApiResponse";
 import client from "./api";
 
 export async function getUserDataService(userId: string) {
   try {
-    const res = await client.get(get_user_data_url(userId));
+    const res = await client.get(user_endpoint(userId));
 
     return handleApiResponse(res);
   } catch (error: any) {
@@ -19,7 +19,7 @@ export async function getUserDataService(userId: string) {
 
 export async function updateProfilePicService(userId: string, data: FormData) {
   try {
-    const res = await client.patch(update_profile_pic_url(userId), data, {
+    const res = await client.patch(update_profile_pic_endpoint(userId), data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
@@ -35,7 +35,7 @@ export async function updateUserDataService(
   data: Record<string, any>
 ) {
   try {
-    const res = await client.patch(update_user_data_url(userId), data);
+    const res = await client.patch(update_user_data_endpoint(userId), data);
 
     return handleApiResponse(res);
   } catch (error: any) {
