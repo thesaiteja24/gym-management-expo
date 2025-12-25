@@ -7,7 +7,7 @@ import {
 } from "@/services/exerciseService";
 import { create } from "zustand";
 
-type Exercise = {
+export type Exercise = {
   id: string;
   title: string;
   instructions: string;
