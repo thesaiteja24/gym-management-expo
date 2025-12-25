@@ -1,0 +1,47 @@
+import CustomHeader from "@/components/CustomHeader";
+import { router, Stack } from "expo-router";
+import React from "react";
+
+export default function ExercisesLayout() {
+  return (
+    <Stack
+      screenOptions={{
+        header: (props) => {
+          const { options } = props;
+          const custom = options as any;
+
+          if (options.headerShown === false) return null;
+
+          return (
+            <CustomHeader
+              title={options.title ?? ""}
+              leftIcon={custom.leftIcon}
+              onLeftPress={custom.onLeftPress}
+              rightIcons={custom.rightIcons}
+            />
+          );
+        },
+      }}
+    >
+      {/* EXERCISES LIST */}
+      <Stack.Screen
+        name="index"
+        options={{
+          title: "Exercises",
+        }}
+      />
+
+      {/* EXERCISE DETAIL */}
+      <Stack.Screen
+        name="[id]"
+        options={
+          {
+            title: "Exercise",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => router.back(),
+          } as any
+        }
+      />
+    </Stack>
+  );
+}

@@ -4,7 +4,7 @@ import React from "react";
 
 export default function AppLayout() {
   return (
-    <AuthGuard redirectTo="/login">
+    <AuthGuard redirectTo="/(auth)/login">
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
       </Stack>

@@ -8,8 +8,9 @@ export default function ProfileLayout() {
       screenOptions={{
         header: (props) => {
           const { options } = props;
-
           const custom = options as any;
+
+          if (options.headerShown === false) return null;
 
           return (
             <CustomHeader
@@ -22,15 +23,34 @@ export default function ProfileLayout() {
         },
       }}
     >
+      {/* PROFILE HOME */}
+      <Stack.Screen
+        name="index"
+        options={
+          {
+            title: "Profile",
+            rightIcons: [
+              {
+                name: "create-outline",
+                onPress: () => router.push("/profile/edit"),
+              },
+              {
+                name: "settings-outline",
+                onPress: () => router.push("/profile/settings"),
+              },
+            ],
+          } as any
+        }
+      />
+
+      {/* EDIT */}
       <Stack.Screen
         name="edit"
         options={
           {
             title: "Edit Profile",
             leftIcon: "chevron-back-outline",
-            onLeftPress: () => {
-              router.back();
-            },
+            onLeftPress: () => router.back(),
             rightIcons: [
               {
                 name: "checkmark-done",
@@ -41,15 +61,15 @@ export default function ProfileLayout() {
           } as any
         }
       />
+
+      {/* SETTINGS */}
       <Stack.Screen
         name="settings"
         options={
           {
             title: "Settings",
             leftIcon: "chevron-back-outline",
-            onLeftPress: () => {
-              router.back();
-            },
+            onLeftPress: () => router.back(),
           } as any
         }
       />
