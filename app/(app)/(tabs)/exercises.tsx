@@ -12,7 +12,7 @@ import EquipmentModal from "@/components/exercises/EquipmentModal";
 import ExerciseList from "@/components/exercises/ExerciseList";
 import MuscleGroupModal from "@/components/exercises/MuscleGroupModal";
 
-export default function Workout() {
+export default function Exercises() {
   const role = useAuth((s) => s.user?.role);
 
   const { equipmentList, equipmentLoading, getAllEquipment, deleteEquipment } =

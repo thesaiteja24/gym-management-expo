@@ -55,10 +55,10 @@ export default function AppLayout() {
       />
 
       <Tabs.Screen
-        name="workout"
+        name="exercises"
         options={
           {
-            title: "Workouts",
+            title: "Exercises",
             tabBarIcon: ({
               color,
               focused,
