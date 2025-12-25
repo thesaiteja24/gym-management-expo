@@ -3,9 +3,9 @@ import { useAuth } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
 import { useExercise } from "@/stores/exerciseStore";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
-import { View } from "@react-native-blossom-ui/components";
-import React, { useEffect, useState } from "react";
-import { Text, TouchableOpacity } from "react-native";
+import Fuse from "fuse.js";
+import React, { useEffect, useMemo, useState } from "react";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 import EquipmentModal from "@/components/exercises/EquipmentModal";
@@ -52,8 +52,51 @@ export default function Exercises() {
     getAllExercises();
   }, []);
 
+  // Fuzzy Serach Setup
+  const [query, setQuery] = useState("");
+
+  const fuse = useMemo(() => {
+    if (!exerciseList.length) return null;
+
+    return new Fuse(exerciseList, {
+      keys: [
+        { name: "title", weight: 0.7 },
+        { name: "equipment.title", weight: 0.2 },
+        { name: "primaryMuscleGroup.title", weight: 0.1 },
+        { name: "secondaryMuscleGroups.title", weight: 0.1 },
+      ],
+
+      threshold: 0.3,
+      ignoreLocation: true,
+    });
+  }, [exerciseList]);
+
+  const filteredExercises = useMemo(() => {
+    if (!fuse || query.trim() === "") return exerciseList;
+
+    const results = fuse.search(query);
+    return results.map((res) => res.item);
+  }, [fuse, query]);
+
+  useEffect(() => {
+    if (showEquipmentModal || showMuscleGroupsModal) {
+      setQuery("");
+    }
+  }, [showEquipmentModal, showMuscleGroupsModal]);
+
   return (
     <View className="flex-1 bg-white dark:bg-black p-4">
+      {/* Search Filter for Exercises */}
+      <View className="mb-4">
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search exercises, equipment, muscles…"
+          placeholderTextColor="#9CA3AF"
+          className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 text-lg text-black dark:text-white"
+        />
+      </View>
+
       {/* Top buttons */}
       <View className="flex-row gap-4">
         <TouchableOpacity
@@ -78,7 +121,7 @@ export default function Exercises() {
       {/* Exercises */}
       <ExerciseList
         loading={exerciseLoading}
-        exercises={exerciseList}
+        exercises={filteredExercises}
         role={role}
         onDelete={setDeleteExerciseId}
       />

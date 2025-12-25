@@ -22,6 +22,16 @@ export default function ExerciseList({
     return <ActivityIndicator animating size="large" className="mt-8" />;
   }
 
+  if (!exercises.length && !loading) {
+    return (
+      <View className="mt-8 px-4">
+        <Text className="text-center text-black dark:text-white">
+          No exercises found.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView className="mt-4 px-4" showsVerticalScrollIndicator={false}>
       {exercises.map((exercise) => (
