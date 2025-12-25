@@ -4,7 +4,6 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import Toast from "react-native-toast-message";
 
 type Props = {
   loading: boolean;
@@ -29,11 +28,7 @@ export default function ExerciseList({
         <TouchableOpacity
           key={exercise.id}
           className="flex-row justify-between pb-4"
-          onPress={() =>
-            role === roles.systemAdmin
-              ? router.push(`/exercises/${exercise.id}`)
-              : Toast.show({ type: "info", text1: "Coming Soon" })
-          }
+          onPress={() => router.push(`/exercises/${exercise.id}`)}
           onLongPress={() =>
             role === roles.systemAdmin &&
             onDelete({ id: exercise.id, title: exercise.title })

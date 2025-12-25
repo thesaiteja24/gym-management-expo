@@ -38,18 +38,6 @@ export default function HomeLayout() {
           } as any
         }
       />
-
-      {/* HOME DETAIL */}
-      <Stack.Screen
-        name="[id]"
-        options={
-          {
-            title: "Home",
-            leftIcon: "chevron-back-outline",
-            onLeftPress: () => router.back(),
-          } as any
-        }
-      />
     </Stack>
   );
 }
