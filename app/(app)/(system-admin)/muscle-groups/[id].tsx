@@ -1,3 +1,4 @@
+import { DeleteConfirmModal } from "@/components/DeleteConfrimModal";
 import ProfilePic from "@/components/ProfilePic";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
@@ -22,10 +23,15 @@ export default function EditMuscleGroup() {
 
   const normalize = (v: string | null | undefined) => v ?? "";
 
-  const getMuscleGroupById = useMuscleGroup((s) => s.getMuscleGroupById);
-  const refreshMuscleGroups = useMuscleGroup((s) => s.getAllMuscleGroups);
-  const updateMuscleGroup = useMuscleGroup((s) => s.updateMuscleGroup);
-  const muscleGroupLoading = useMuscleGroup((s) => s.muscleGroupLoading);
+  const {
+    getMuscleGroupById,
+    getAllMuscleGroups: refreshMuscleGroups,
+    updateMuscleGroup,
+    muscleGroupLoading,
+    deleteMuscleGroup,
+  } = useMuscleGroup();
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // current editable state
   const [title, setTitle] = useState("");
@@ -146,6 +152,13 @@ export default function EditMuscleGroup() {
           disabled: !isDirty || muscleGroupLoading,
           color: "green",
         },
+        {
+          name: "trash",
+          onPress: async () => {
+            setShowDeleteModal(true);
+          },
+          color: "red",
+        },
       ],
     });
   }, [navigation, isDirty, onSave, muscleGroupLoading]);
@@ -186,6 +199,36 @@ export default function EditMuscleGroup() {
           style={{ lineHeight }}
         />
       </View>
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          visible
+          title={`Delete "${original.title}"?`}
+          description="This muscle group will be permanently removed."
+          onCancel={() => setShowDeleteModal(false)}
+          onConfirm={async () => {
+            setShowDeleteModal(false);
+
+            const res = await deleteMuscleGroup(id);
+
+            if (res?.success) {
+              Toast.show({
+                type: "success",
+                text1: "Muscle group deleted",
+              });
+
+              await refreshMuscleGroups();
+              navigation.goBack();
+            } else {
+              Toast.show({
+                type: "error",
+                text1: "Failed to delete muscle group",
+              });
+            }
+          }}
+        />
+      )}
     </ScrollView>
   );
 }

@@ -11,24 +11,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Toast from "react-native-toast-message";
 
 type Props = {
   visible: boolean;
-  onClose: () => void;
   role?: string;
   loading: boolean;
   equipment: any[];
-  onDelete: (v: { id: string; title: string }) => void;
+  onClose: () => void;
+  onSelect: (id: string) => void;
 };
 
 export default function EquipmentModal({
   visible,
-  onClose,
   role,
   loading,
   equipment,
-  onDelete,
+  onClose,
+  onSelect,
 }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -64,19 +63,15 @@ export default function EquipmentModal({
               {equipment.map((item) => (
                 <TouchableOpacity
                   key={item.id}
-                  className="flex-row justify-between pb-4"
-                  onPress={() =>
-                    role === roles.systemAdmin
-                      ? (() => {
-                          router.push(`/equipment/${item.id}`);
-                          onClose();
-                        })()
-                      : Toast.show({ type: "info", text1: "Coming Soon" })
-                  }
-                  onLongPress={() =>
-                    role === roles.systemAdmin &&
-                    onDelete({ id: item.id, title: item.title })
-                  }
+                  className="flex-row justify-between items-center pb-4"
+                  onPress={() => {
+                    onSelect(item.id);
+                  }}
+                  onLongPress={() => {
+                    if (role !== roles.systemAdmin) return;
+                    onClose();
+                    router.push(`/equipment/${item.id}`);
+                  }}
                   delayLongPress={700}
                 >
                   <Text className="text-xl font-semibold text-black dark:text-white">

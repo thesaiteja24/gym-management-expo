@@ -1,3 +1,4 @@
+import { DeleteConfirmModal } from "@/components/DeleteConfrimModal";
 import ProfilePic from "@/components/ProfilePic";
 import { useEquipment } from "@/stores/equipmentStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
@@ -22,10 +23,15 @@ export default function EditEquipment() {
 
   const normalize = (v: string | null | undefined) => v ?? "";
 
-  const getEquipmentById = useEquipment((s) => s.getEquipmentById);
-  const refreshEquipment = useEquipment((s) => s.getAllEquipment);
-  const updateEquipment = useEquipment((s) => s.updateEquipment);
-  const equipmentLoading = useEquipment((s) => s.equipmentLoading);
+  const {
+    getEquipmentById,
+    getAllEquipment: refreshEquipment,
+    updateEquipment,
+    equipmentLoading,
+    deleteEquipment,
+  } = useEquipment();
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // editable state
   const [title, setTitle] = useState("");
@@ -41,9 +47,7 @@ export default function EditEquipment() {
     thumbnailUrl: "",
   });
 
-  /* ---------------------------------------------
-     Load equipment
-  --------------------------------------------- */
+  //  Load equipment
   useEffect(() => {
     if (!id) return;
 
@@ -150,6 +154,13 @@ export default function EditEquipment() {
           disabled: !isDirty || equipmentLoading,
           color: "green",
         },
+        {
+          name: "trash",
+          onPress: async () => {
+            setShowDeleteModal(true);
+          },
+          color: "red",
+        },
       ],
     });
   }, [navigation, isDirty, onSave, equipmentLoading]);
@@ -191,6 +202,36 @@ export default function EditEquipment() {
           style={{ lineHeight }}
         />
       </View>
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          visible={showDeleteModal}
+          title={`Delete Equipment "${original.title}"?`}
+          description="This equipment will be permanently removed"
+          onCancel={() => setShowDeleteModal(false)}
+          onConfirm={async () => {
+            setShowDeleteModal(false);
+
+            const res = await deleteEquipment(id);
+
+            if (res?.success) {
+              Toast.show({
+                type: "success",
+                text1: "Equipment deleted",
+              });
+
+              await refreshEquipment();
+              navigation.goBack();
+            } else {
+              Toast.show({
+                type: "error",
+                text1: "Failed to delete equipment",
+              });
+            }
+          }}
+        />
+      )}
     </ScrollView>
   );
 }
