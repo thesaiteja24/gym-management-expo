@@ -15,6 +15,8 @@ export default function ViewExercise() {
     { uri: videoSource, useCaching: true },
     (player) => {
       player.loop = true;
+      player.volume = 0;
+      player.audioMixingMode = "mixWithOthers";
       player.play();
     }
   );
