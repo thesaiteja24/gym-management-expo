@@ -2,15 +2,14 @@ import CustomHeader from "@/components/CustomHeader";
 import { router, Stack } from "expo-router";
 import React from "react";
 
-export default function HomeLayout() {
+export default function WorkoutLayout() {
   return (
     <Stack
       screenOptions={{
         header: (props) => {
           const { options } = props;
-          const custom = options as any;
 
-          if (options.headerShown === false) return null;
+          const custom = options as any;
 
           return (
             <CustomHeader
@@ -23,16 +22,21 @@ export default function HomeLayout() {
         },
       }}
     >
-      {/* EXERCISES LIST */}
+      {/* Muscle Groups */}
       <Stack.Screen
         name="index"
         options={
           {
-            title: "Home",
+            title: "Log Your Pump",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
             rightIcons: [
               {
-                name: "settings-outline",
-                onPress: () => router.push("/profile/settings"),
+                name: "checkmark-done",
+                disabled: true,
+                color: "red",
               },
             ],
           } as any
