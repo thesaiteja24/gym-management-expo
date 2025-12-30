@@ -121,7 +121,10 @@ export default function Exercises() {
 
     if (!fuse || query.trim() === "") return data;
 
-    return fuse.search(query).map((r) => r.item);
+    const searchResults = fuse.search(query).map((r) => r.item);
+    const searchIds = new Set(searchResults.map((item) => item.id));
+
+    return data.filter((exercise) => searchIds.has(exercise.id));
   }, [exerciseList, filter, fuse, query]);
 
   useEffect(() => {
@@ -254,9 +257,9 @@ export default function Exercises() {
           description="This exercise will be permanently removed."
           onCancel={() => setDeleteExerciseId(null)}
           onConfirm={async () => {
-            setDeleteExerciseId(null);
             const res = await deleteExercise(deleteExerciseId.id);
             await getAllExercises();
+            setDeleteExerciseId(null);
 
             Toast.show({
               type: res.success ? "success" : "error",
