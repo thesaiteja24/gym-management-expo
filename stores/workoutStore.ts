@@ -25,16 +25,20 @@ type WorkoutLogSets = {
 type WorkoutState = {
   workoutLoading: boolean;
   workoutList?: Array<Workout>;
-  activeWorkout?: Workout;
+  activeWorkout: Workout | null;
+  exerciseSelection: boolean;
 
   // actions can be added here as needed
   startWorkout: () => void;
   endWorkout: () => void;
+  setExerciseSelection: (select: boolean) => void;
+  toggleExerciseInActiveWorkout: (exerciseId: string) => void;
 };
 
 const initialState = {
   workoutLoading: false,
-  activeWorkout: undefined,
+  activeWorkout: null,
+  exerciseSelection: false,
 };
 
 export const useWorkout = create<WorkoutState>((set) => ({
@@ -53,7 +57,55 @@ export const useWorkout = create<WorkoutState>((set) => ({
     };
     set({ activeWorkout: workout });
   },
+
   endWorkout: () => {
-    set({ activeWorkout: undefined });
+    set({ activeWorkout: null });
+  },
+
+  setExerciseSelection: (select: boolean) => {
+    set({ exerciseSelection: select });
+  },
+
+  toggleExerciseInActiveWorkout: (exerciseId) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      const existsIndex = workout.exercises.findIndex(
+        (e) => e.exerciseId === exerciseId,
+      );
+
+      // remove if exists
+      if (existsIndex !== -1) {
+        const updated = workout.exercises
+          .filter((e) => e.exerciseId !== exerciseId)
+          .map((e, index) => ({
+            ...e,
+            exerciseIndex: index,
+          }));
+
+        return {
+          activeWorkout: {
+            ...workout,
+            exercises: updated,
+          },
+        };
+      }
+
+      // add if not exists
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: [
+            ...workout.exercises,
+            {
+              exerciseId,
+              exerciseIndex: workout.exercises.length,
+              sets: [],
+            },
+          ],
+        },
+      };
+    });
   },
 }));

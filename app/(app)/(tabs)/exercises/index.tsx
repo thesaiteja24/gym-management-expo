@@ -6,8 +6,9 @@ import MuscleGroupModal from "@/components/exercises/MuscleGroupModal";
 import { ROLES as roles } from "@/constants/roles";
 import { useAuth } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
-import { useExercise } from "@/stores/exerciseStore";
+import { Exercise, useExercise } from "@/stores/exerciseStore";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
+import { useWorkout } from "@/stores/workoutStore";
 
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -58,6 +59,9 @@ export default function Exercises() {
     useMuscleGroup();
   const { exerciseList, exerciseLoading, getAllExercises, deleteExercise } =
     useExercise();
+
+  const { exerciseSelection, activeWorkout, toggleExerciseInActiveWorkout } =
+    useWorkout();
 
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [showMuscleGroupsModal, setShowMuscleGroupsModal] = useState(false);
@@ -123,12 +127,28 @@ export default function Exercises() {
     return data.filter((e) => resultIds.has(e.id));
   }, [exerciseList, filter, fuse, query]);
 
+  const selectedExerciseIds = useMemo(() => {
+    if (!activeWorkout) return new Set<string>();
+
+    return new Set(activeWorkout.exercises.map((e) => e.exerciseId));
+  }, [activeWorkout]);
+
   //  Clear search when modal opens
   useEffect(() => {
     if (showEquipmentModal || showMuscleGroupsModal) {
       setQuery("");
     }
   }, [showEquipmentModal, showMuscleGroupsModal]);
+
+  // handler for exercise selection mode
+  const handleExercisePress = (exercise: Exercise) => {
+    if (!exerciseSelection) {
+      router.push(`/exercises/${exercise.id}`);
+      return;
+    }
+
+    toggleExerciseInActiveWorkout(exercise.id);
+  };
 
   return (
     <View className="flex-1 bg-white p-4 dark:bg-black">
@@ -190,11 +210,11 @@ export default function Exercises() {
 
       {/* Exercise list */}
       <ExerciseList
+        exerciseSelection={exerciseSelection}
         loading={exerciseLoading}
         exercises={filteredExercises}
-        onPress={(exercise) => {
-          router.push(`/exercises/${exercise.id}`);
-        }}
+        selectedExerciseIds={selectedExerciseIds}
+        onPress={handleExercisePress}
         onLongPress={(exercise) => {
           if (role !== roles.systemAdmin) return;
           setDeleteExerciseId({
