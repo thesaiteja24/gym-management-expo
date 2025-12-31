@@ -1,21 +1,21 @@
-import { ROLES as roles } from "@/constants/roles";
 import { ActivityIndicator } from "@react-native-blossom-ui/components";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import React from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
   loading: boolean;
   exercises: any[];
-  role?: string;
-  onDelete: (v: { id: string; title: string }) => void;
+
+  onPress: (exercise: any) => void;
+  onLongPress?: (exercise: any) => void;
 };
 
 export default function ExerciseList({
   loading,
   exercises,
-  role,
-  onDelete,
+  onPress,
+  onLongPress,
 }: Props) {
   if (loading) {
     return <ActivityIndicator animating size="large" className="mt-8" />;
@@ -40,25 +40,23 @@ export default function ExerciseList({
       renderItem={({ item }) => (
         <TouchableOpacity
           className="flex-row justify-between pb-4"
-          onPress={() => router.push(`/exercises/${item.id}`)}
-          onLongPress={() =>
-            role === roles.systemAdmin &&
-            onDelete({ id: item.id, title: item.title })
-          }
+          onPress={() => onPress(item)}
+          onLongPress={() => onLongPress?.(item)}
           delayLongPress={700}
         >
           <View className="w-3/4">
             <Text className="text-xl font-semibold text-black dark:text-white">
               {item.title}
             </Text>
-            <View className="flex-row gap-4 mt-1">
-              <Text className="text-sm text-blue-500 font-semibold">
+
+            <View className="mt-1 flex-row gap-4">
+              <Text className="text-sm font-semibold text-blue-500">
                 {item.equipment.title}
               </Text>
-              <Text className="text-sm text-blue-500 font-semibold">
+              <Text className="text-sm font-semibold text-blue-500">
                 {item.primaryMuscleGroup.title}
               </Text>
-              <Text className="text-sm text-red-500 font-semibold">PR</Text>
+              <Text className="text-sm font-semibold text-red-500">PR</Text>
             </View>
           </View>
 

@@ -1,9 +1,18 @@
 import { DeleteConfirmModal } from "@/components/DeleteConfrimModal";
+import EquipmentModal from "@/components/exercises/EquipmentModal";
+import ExerciseList from "@/components/exercises/ExerciseList";
+import MuscleGroupModal from "@/components/exercises/MuscleGroupModal";
+
+import { ROLES as roles } from "@/constants/roles";
 import { useAuth } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
 import { useExercise } from "@/stores/exerciseStore";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
+
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import Fuse from "fuse.js";
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Text,
@@ -14,12 +23,7 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 
-import EquipmentModal from "@/components/exercises/EquipmentModal";
-import ExerciseList from "@/components/exercises/ExerciseList";
-import MuscleGroupModal from "@/components/exercises/MuscleGroupModal";
-import { Ionicons } from "@expo/vector-icons";
-
-//  Reusable Chip (same size & shape as button)
+// Chip (pure UI)
 type ChipProps = {
   label: string;
   onRemove: () => void;
@@ -31,24 +35,12 @@ function Chip({ label, onRemove }: ChipProps) {
   return (
     <TouchableOpacity
       onPress={onRemove}
-      className="
-        w-full
-        h-12
-        flex-row
-        items-center
-        justify-around
-        gap-2
-        rounded-2xl
-        border border-neutral-200/60
-        dark:border-neutral-800
-        bg-neutral-200 dark:bg-neutral-800
-      "
+      className="h-12 w-full flex-row items-center justify-around rounded-2xl border border-neutral-200/60 bg-neutral-200 dark:border-neutral-800 dark:bg-neutral-800"
     >
       <Text className="text-lg font-semibold text-black dark:text-white">
         {label}
       </Text>
       <Ionicons
-        className="justify-self-end"
         name="close-circle"
         size={24}
         color={isDark ? "#737373" : "#a3a3a3"}
@@ -57,6 +49,7 @@ function Chip({ label, onRemove }: ChipProps) {
   );
 }
 
+// Screen
 export default function Exercises() {
   const role = useAuth((s) => s.user?.role);
 
@@ -79,13 +72,18 @@ export default function Exercises() {
     title: string;
   } | null>(null);
 
+  /* ---------------------------------------------
+     Load data
+  --------------------------------------------- */
   useEffect(() => {
     getAllEquipment();
     getAllMuscleGroups();
     getAllExercises();
   }, []);
 
-  //  Search + Fuzzy setup
+  /* ---------------------------------------------
+     Fuzzy Search and Filtering
+  --------------------------------------------- */
   const [query, setQuery] = useState("");
 
   const fuse = useMemo(() => {
@@ -114,19 +112,18 @@ export default function Exercises() {
       data = data.filter(
         (e) =>
           e.primaryMuscleGroup?.id === filter.muscleGroupId ||
-          // @ts-ignore
-          e.secondaryMuscleGroups?.some((m) => m.id === filter.muscleGroupId)
+          e.otherMuscleGroups?.some((m) => m.id === filter.muscleGroupId),
       );
     }
 
     if (!fuse || query.trim() === "") return data;
 
-    const searchResults = fuse.search(query).map((r) => r.item);
-    const searchIds = new Set(searchResults.map((item) => item.id));
+    const resultIds = new Set(fuse.search(query).map((r) => r.item.id));
 
-    return data.filter((exercise) => searchIds.has(exercise.id));
+    return data.filter((e) => resultIds.has(e.id));
   }, [exerciseList, filter, fuse, query]);
 
+  //  Clear search when modal opens
   useEffect(() => {
     if (showEquipmentModal || showMuscleGroupsModal) {
       setQuery("");
@@ -134,7 +131,7 @@ export default function Exercises() {
   }, [showEquipmentModal, showMuscleGroupsModal]);
 
   return (
-    <View className="flex-1 bg-white dark:bg-black p-4">
+    <View className="flex-1 bg-white p-4 dark:bg-black">
       {/* Search */}
       <View className="mb-4">
         <TextInput
@@ -142,20 +139,12 @@ export default function Exercises() {
           onChangeText={setQuery}
           placeholder="Search exercises, equipment, muscles…"
           placeholderTextColor="#9CA3AF"
-          className="
-            rounded-xl
-            border border-neutral-200
-            dark:border-neutral-800
-            bg-white dark:bg-neutral-900
-            px-4 py-3
-            text-lg text-black dark:text-white
-          "
+          className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-lg text-black dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
         />
       </View>
 
-      {/* Top filter slots */}
-      <View className="flex-row gap-4 mb-4">
-        {/* Equipment slot */}
+      {/* Filters */}
+      <View className="mb-4 flex-row gap-4">
         <View className="flex-1">
           {filter.equipmentId ? (
             <Chip
@@ -168,24 +157,15 @@ export default function Exercises() {
           ) : (
             <TouchableOpacity
               onPress={() => setShowEquipmentModal(true)}
-              className="
-                w-full
-                h-12
-                rounded-2xl
-                border border-neutral-200/60
-                dark:border-neutral-800
-                bg-white dark:bg-neutral-900
-                justify-center
-              "
+              className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
             >
-              <Text className="text-xl font-semibold text-black dark:text-white text-center">
+              <Text className="text-center text-xl font-semibold text-black dark:text-white">
                 Equipment
               </Text>
             </TouchableOpacity>
           )}
         </View>
 
-        {/* Muscle group slot */}
         <View className="flex-1">
           {filter.muscleGroupId ? (
             <Chip
@@ -198,17 +178,9 @@ export default function Exercises() {
           ) : (
             <TouchableOpacity
               onPress={() => setShowMuscleGroupsModal(true)}
-              className="
-                w-full
-                h-12
-                rounded-2xl
-                border border-neutral-200/60
-                dark:border-neutral-800
-                bg-white dark:bg-neutral-900
-                justify-center
-              "
+              className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
             >
-              <Text className="text-xl font-semibold text-black dark:text-white text-center">
+              <Text className="text-center text-xl font-semibold text-black dark:text-white">
                 Muscle Groups
               </Text>
             </TouchableOpacity>
@@ -220,36 +192,53 @@ export default function Exercises() {
       <ExerciseList
         loading={exerciseLoading}
         exercises={filteredExercises}
-        role={role}
-        onDelete={setDeleteExerciseId}
+        onPress={(exercise) => {
+          router.push(`/exercises/${exercise.id}`);
+        }}
+        onLongPress={(exercise) => {
+          if (role !== roles.systemAdmin) return;
+          setDeleteExerciseId({
+            id: exercise.id,
+            title: exercise.title,
+          });
+        }}
       />
 
-      {/* Modals */}
+      {/* Equipment modal */}
       <EquipmentModal
         visible={showEquipmentModal}
-        onClose={() => setShowEquipmentModal(false)}
-        role={role}
         loading={equipmentLoading}
         equipment={equipmentList}
-        onSelect={(id) => {
-          setFilter((f) => ({ ...f, equipmentId: id }));
+        onClose={() => setShowEquipmentModal(false)}
+        onSelect={(item) => {
+          setFilter((f) => ({ ...f, equipmentId: item.id }));
           setShowEquipmentModal(false);
         }}
-      />
-
-      <MuscleGroupModal
-        visible={showMuscleGroupsModal}
-        onClose={() => setShowMuscleGroupsModal(false)}
-        role={role}
-        loading={muscleGroupLoading}
-        muscleGroups={muscleGroupList}
-        onSelect={(id) => {
-          setFilter((f) => ({ ...f, muscleGroupId: id }));
-          setShowMuscleGroupsModal(false);
+        onLongPress={(item) => {
+          if (role !== roles.systemAdmin) return;
+          setShowEquipmentModal(false);
+          router.push(`/equipment/${item.id}`);
         }}
       />
 
-      {/* Delete exercise */}
+      {/* Muscle group modal */}
+      <MuscleGroupModal
+        visible={showMuscleGroupsModal}
+        loading={muscleGroupLoading}
+        muscleGroups={muscleGroupList}
+        onClose={() => setShowMuscleGroupsModal(false)}
+        onSelect={(item) => {
+          setFilter((f) => ({ ...f, muscleGroupId: item.id }));
+          setShowMuscleGroupsModal(false);
+        }}
+        onLongPress={(item) => {
+          if (role !== roles.systemAdmin) return;
+          setShowMuscleGroupsModal(false);
+          router.push(`/muscle-groups/${item.id}`);
+        }}
+      />
+
+      {/* Delete confirmation */}
       {deleteExerciseId && (
         <DeleteConfirmModal
           visible
