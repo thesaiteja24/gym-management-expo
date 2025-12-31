@@ -11,10 +11,11 @@ import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { useWorkout } from "@/stores/workoutStore";
 
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import Fuse from "fuse.js";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Text,
   TextInput,
@@ -60,8 +61,14 @@ export default function Exercises() {
   const { exerciseList, exerciseLoading, getAllExercises, deleteExercise } =
     useExercise();
 
-  const { exerciseSelection, activeWorkout, toggleExerciseInActiveWorkout } =
-    useWorkout();
+  const {
+    exerciseSelection,
+    activeWorkout,
+    toggleExerciseInActiveWorkout,
+    setExerciseSelection,
+  } = useWorkout();
+
+  const selectedCount = activeWorkout?.exercises.length || 0;
 
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [showMuscleGroupsModal, setShowMuscleGroupsModal] = useState(false);
@@ -127,11 +134,12 @@ export default function Exercises() {
     return data.filter((e) => resultIds.has(e.id));
   }, [exerciseList, filter, fuse, query]);
 
-  const selectedExerciseIds = useMemo(() => {
-    if (!activeWorkout) return new Set<string>();
-
-    return new Set(activeWorkout.exercises.map((e) => e.exerciseId));
-  }, [activeWorkout]);
+  const isExerciseSelected = useCallback(
+    (id: string) => {
+      return !!activeWorkout?.exercises.some((e) => e.exerciseId === id);
+    },
+    [activeWorkout],
+  );
 
   //  Clear search when modal opens
   useEffect(() => {
@@ -147,11 +155,12 @@ export default function Exercises() {
       return;
     }
 
+    Haptics.selectionAsync();
     toggleExerciseInActiveWorkout(exercise.id);
   };
 
   return (
-    <View className="flex-1 bg-white p-4 dark:bg-black">
+    <View className="flex-1 bg-white px-4 pt-4 dark:bg-black">
       {/* Search */}
       <View className="mb-4">
         <TextInput
@@ -213,7 +222,7 @@ export default function Exercises() {
         exerciseSelection={exerciseSelection}
         loading={exerciseLoading}
         exercises={filteredExercises}
-        selectedExerciseIds={selectedExerciseIds}
+        isSelected={isExerciseSelected}
         onPress={handleExercisePress}
         onLongPress={(exercise) => {
           if (role !== roles.systemAdmin) return;
@@ -223,6 +232,44 @@ export default function Exercises() {
           });
         }}
       />
+
+      {exerciseSelection && !exerciseLoading && (
+        <View className="mb-4 flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900">
+          {/* Cancel */}
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setExerciseSelection(false);
+              router.replace("/(app)/workout");
+            }}
+          >
+            <Text className="text-lg font-semibold text-red-500">Cancel</Text>
+          </TouchableOpacity>
+
+          {/* Count */}
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            {selectedCount} selected
+          </Text>
+
+          {/* Done */}
+          <TouchableOpacity
+            disabled={selectedCount === 0}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setExerciseSelection(false);
+              router.replace("/(app)/workout");
+            }}
+          >
+            <Text
+              className={`text-lg font-semibold ${
+                selectedCount === 0 ? "text-neutral-400" : "text-green-500"
+              }`}
+            >
+              Done
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Equipment modal */}
       <EquipmentModal
