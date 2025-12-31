@@ -134,11 +134,13 @@ export default function Exercises() {
     return data.filter((e) => resultIds.has(e.id));
   }, [exerciseList, filter, fuse, query]);
 
+  const selectedExerciseIds = useMemo(() => {
+    return new Set(activeWorkout?.exercises.map((e) => e.exerciseId) ?? []);
+  }, [activeWorkout?.exercises]);
+
   const isExerciseSelected = useCallback(
-    (id: string) => {
-      return !!activeWorkout?.exercises.some((e) => e.exerciseId === id);
-    },
-    [activeWorkout],
+    (id: string) => selectedExerciseIds.has(id),
+    [selectedExerciseIds],
   );
 
   //  Clear search when modal opens

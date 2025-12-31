@@ -1,3 +1,4 @@
+import * as Crypto from "expo-crypto";
 import { create } from "zustand";
 
 type Workout = {
@@ -10,33 +11,35 @@ type Workout = {
 type WorkoutLogExercise = {
   exerciseId: string;
   exerciseIndex: number;
-  sets: Array<WorkoutLogSets>;
+  sets: WorkoutLogSet[];
 };
 
-type WorkoutLogSets = {
-  setIndex: number;
+type WorkoutLogSet = {
+  id: string;
   weight?: number;
-  reps: number;
-  rpe: number;
+  reps?: number;
+  rpe?: number;
   durationSeconds?: number;
   notes?: string;
 };
 
 type WorkoutState = {
-  workoutLoading: boolean;
-  workoutList?: Array<Workout>;
   activeWorkout: Workout | null;
   exerciseSelection: boolean;
 
-  // actions can be added here as needed
   startWorkout: () => void;
   endWorkout: () => void;
   setExerciseSelection: (select: boolean) => void;
   toggleExerciseInActiveWorkout: (exerciseId: string) => void;
+  addSetToExercise: (exerciseId: string) => void;
+  updateSet: (
+    exerciseId: string,
+    setId: string,
+    patch: Partial<WorkoutLogSet>,
+  ) => void;
 };
 
 const initialState = {
-  workoutLoading: false,
   activeWorkout: null,
   exerciseSelection: false,
 };
@@ -104,6 +107,61 @@ export const useWorkout = create<WorkoutState>((set) => ({
               sets: [],
             },
           ],
+        },
+      };
+    });
+  },
+
+  addSetToExercise: (exerciseId: string) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: workout.exercises.map((ex) =>
+            ex.exerciseId === exerciseId
+              ? {
+                  ...ex,
+                  sets: [
+                    ...ex.sets,
+                    {
+                      id: Crypto.randomUUID(),
+                      weight: 0,
+                      reps: 0,
+                    },
+                  ],
+                }
+              : ex,
+          ),
+        },
+      };
+    });
+  },
+
+  updateSet: (
+    exerciseId: string,
+    setId: string,
+    patch: Partial<WorkoutLogSet>,
+  ) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: workout.exercises.map((ex) =>
+            ex.exerciseId === exerciseId
+              ? {
+                  ...ex,
+                  sets: ex.sets.map((s) =>
+                    s.id === setId ? { ...s, ...patch } : s,
+                  ),
+                }
+              : ex,
+          ),
         },
       };
     });
