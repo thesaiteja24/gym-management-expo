@@ -43,6 +43,7 @@ type WorkoutState = {
   ) => void;
   toggleSetCompletion: (exerciseId: string, setId: string) => void;
   removeSetFromExercise: (exerciseId: string, setId: string) => void;
+  reorderExercises: (ordered: WorkoutLogExercise[]) => void;
 };
 
 const initialState = {
@@ -226,6 +227,22 @@ export const useWorkout = create<WorkoutState>((set) => ({
 
             return { ...ex, sets: filtered };
           }),
+        },
+      };
+    });
+  },
+
+  reorderExercises: (ordered) => {
+    set((state) => {
+      if (!state.activeWorkout) return state;
+
+      return {
+        activeWorkout: {
+          ...state.activeWorkout,
+          exercises: ordered.map((ex, index) => ({
+            ...ex,
+            exerciseIndex: index,
+          })),
         },
       };
     });

@@ -1,160 +1,115 @@
 import { DisplayDuration } from "@/components/DisplayDuration";
-import SetRow from "@/components/workout/SetRow";
+import ExerciseRow from "@/components/workout/ExerciseRow";
 import { useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
-import { Entypo, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useMemo } from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from "react-native";
+import React, { useEffect, useMemo, useRef } from "react";
+import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import DraggableFlatList from "react-native-draggable-flatlist";
 
-export default function index() {
+export default function WorkoutScreen() {
   const isDark = useColorScheme() === "dark";
   const exerciseList = useExercise((s) => s.exerciseList);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const lastIndexRef = useRef<number | null>(null);
+
   const {
     activeWorkout,
+    startWorkout,
     setExerciseSelection,
     addSetToExercise,
     updateSet,
     toggleSetCompletion,
     removeSetFromExercise,
+    reorderExercises,
   } = useWorkout();
 
-  const exerciseMap = useMemo(() => {
-    return new Map(exerciseList.map((ex) => [ex.id, ex]));
-  }, [exerciseList]);
+  const exerciseMap = useMemo(
+    () => new Map(exerciseList.map((e) => [e.id, e])),
+    [exerciseList],
+  );
+
+  useEffect(() => {
+    if (!activeWorkout) startWorkout();
+  }, [activeWorkout, startWorkout]);
+
+  if (!activeWorkout) return null;
 
   return (
     <View className="flex-1 bg-white dark:bg-black">
-      {/* Top Section displays duration, volume and muscle heatmap */}
-      <View className="flex flex-row gap-2 border-b border-neutral-200 p-4 dark:border-neutral-800">
+      {/* Top bar */}
+      <View className="flex-row gap-2 border-b border-neutral-200 p-4 dark:border-neutral-800">
         <Ionicons
           name="hourglass-outline"
           size={24}
           color={isDark ? "white" : "black"}
         />
-
-        {activeWorkout && (
-          <DisplayDuration startTime={activeWorkout.startTime} />
-        )}
+        <DisplayDuration startTime={activeWorkout.startTime} />
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {activeWorkout?.exercises.length ? (
-          activeWorkout.exercises.map((exercise, index) => {
-            const exerciseDetails = exerciseMap.get(exercise.exerciseId);
+      <DraggableFlatList
+        data={activeWorkout.exercises}
+        keyExtractor={(item) => `${item.exerciseId}-${item.exerciseIndex}`} // MUST be unique per row
+        activationDistance={12}
+        onPlaceholderIndexChange={(index) => {
+          if (lastIndexRef.current !== index) {
+            lastIndexRef.current = index;
 
-            return (
-              <View
-                key={exerciseDetails?.id}
-                className="mb-4 flex justify-center gap-4 p-4"
-              >
-                {/* Header */}
-                <View className="flex-row items-center gap-4">
-                  <Image
-                    source={exerciseDetails?.thumbnailUrl}
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 100,
-                      borderWidth: 1,
-                      borderColor: "gray",
-                      backgroundColor: "white",
-                    }}
-                    contentFit="cover"
-                  />
-                  <Text className="text-xl font-semibold text-black dark:text-white">
-                    {exerciseDetails?.title}
-                  </Text>
-                </View>
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        }}
+        onDragBegin={(index) => {
+          setIsDragging(true);
+          lastIndexRef.current = index;
 
-                {/* Sets Header */}
-                <View className="flex-row items-center px-2">
-                  <Text className="w-10 text-lg font-semibold text-black dark:text-white">
-                    Set
-                  </Text>
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }}
+        onScrollEndDrag={() => setIsDragging(false)}
+        onDragEnd={({ data }) => {
+          setIsDragging(false);
+          reorderExercises(data);
+        }}
+        renderItem={({ item, drag, isActive }) => {
+          const details = exerciseMap.get(item.exerciseId);
 
-                  <Text className="flex-1 text-center text-lg font-semibold text-black dark:text-white">
-                    Previous
-                  </Text>
-
-                  <View className="w-16 items-center">
-                    <MaterialCommunityIcons
-                      name="weight-kilogram"
-                      size={22}
-                      color={isDark ? "white" : "black"}
-                    />
-                  </View>
-
-                  <View className="w-16 items-center">
-                    <Entypo
-                      name="cycle"
-                      size={22}
-                      color={isDark ? "white" : "black"}
-                    />
-                  </View>
-                </View>
-
-                {/* Sets Details */}
-                {exercise.sets.map((set) => (
-                  <SetRow
-                    key={set.id}
-                    set={set}
-                    onUpdate={(patch) =>
-                      updateSet(exercise.exerciseId, set.id, patch)
-                    }
-                    onToggleComplete={() =>
-                      toggleSetCompletion(exercise.exerciseId, set.id)
-                    }
-                    onDelete={() =>
-                      removeSetFromExercise(exercise.exerciseId, set.id)
-                    }
-                  />
-                ))}
-
-                {/* Add set button */}
-                <TouchableOpacity
-                  onPress={() => {
-                    addSetToExercise(exercise.exerciseId);
-                  }}
-                  className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
-                >
-                  <Text className="text-center text-xl font-semibold text-black dark:text-white">
-                    Add Set
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            );
-          })
-        ) : (
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-center text-lg text-neutral-500 dark:text-neutral-400">
-              No exercises added yet. Tap "Add an Exercise" to get started!
-            </Text>
+          return (
+            <ExerciseRow
+              exercise={item}
+              exerciseDetails={details}
+              drag={drag}
+              isActive={isActive}
+              isDragging={isDragging}
+              onAddSet={() => addSetToExercise(item.exerciseId)}
+              onUpdateSet={(setId, patch) =>
+                updateSet(item.exerciseId, setId, patch)
+              }
+              onToggleSet={(setId) =>
+                toggleSetCompletion(item.exerciseId, setId)
+              }
+              onDeleteSet={(setId) =>
+                removeSetFromExercise(item.exerciseId, setId)
+              }
+            />
+          );
+        }}
+        ListFooterComponent={
+          <View className="mb-16 p-4">
+            <TouchableOpacity
+              onPress={() => {
+                setExerciseSelection(true);
+                router.push("/(app)/(tabs)/exercises");
+              }}
+              className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+            >
+              <Text className="text-center text-xl font-semibold text-black dark:text-white">
+                Add an Exercise
+              </Text>
+            </TouchableOpacity>
           </View>
-        )}
-
-        {/* Add Exercise Button */}
-        <View className="mb-16 flex-1 p-4">
-          <TouchableOpacity
-            onPress={() => {
-              setExerciseSelection(true); // setting exercise selection true
-              router.push("/(app)/(tabs)/exercises");
-            }}
-            className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
-          >
-            <Text className="text-center text-xl font-semibold text-black dark:text-white">
-              Add an Exercise
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        }
+      />
     </View>
   );
 }
