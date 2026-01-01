@@ -1,26 +1,30 @@
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
 
-type Workout = {
+export type Workout = {
   title: string;
   startTime: Date;
   endTime: Date;
   exercises: Array<WorkoutLogExercise>;
 };
 
-type WorkoutLogExercise = {
+export type WorkoutLogExercise = {
   exerciseId: string;
   exerciseIndex: number;
   sets: WorkoutLogSet[];
 };
 
-type WorkoutLogSet = {
+export type WorkoutLogSet = {
   id: string;
+  setIndex: number;
   weight?: number;
   reps?: number;
   rpe?: number;
   durationSeconds?: number;
   notes?: string;
+  completed: boolean;
+
+  hasSeenSwipeHint?: boolean;
 };
 
 type WorkoutState = {
@@ -37,6 +41,8 @@ type WorkoutState = {
     setId: string,
     patch: Partial<WorkoutLogSet>,
   ) => void;
+  toggleSetCompletion: (exerciseId: string, setId: string) => void;
+  removeSetFromExercise: (exerciseId: string, setId: string) => void;
 };
 
 const initialState = {
@@ -120,21 +126,31 @@ export const useWorkout = create<WorkoutState>((set) => ({
       return {
         activeWorkout: {
           ...workout,
-          exercises: workout.exercises.map((ex) =>
-            ex.exerciseId === exerciseId
-              ? {
-                  ...ex,
-                  sets: [
-                    ...ex.sets,
-                    {
-                      id: Crypto.randomUUID(),
-                      weight: 0,
-                      reps: 0,
-                    },
-                  ],
-                }
-              : ex,
-          ),
+          exercises: workout.exercises.map((ex) => {
+            if (ex.exerciseId !== exerciseId) return ex;
+
+            const isAddingSecondSet = ex.sets.length === 1;
+
+            const updatedSets = ex.sets.map((s, index) =>
+              isAddingSecondSet && index === 0
+                ? { ...s, hasSeenSwipeHint: false } // 👈 arm hint
+                : s,
+            );
+
+            return {
+              ...ex,
+              sets: [
+                ...updatedSets,
+                {
+                  id: Crypto.randomUUID(),
+                  setIndex: ex.sets.length,
+                  weight: 0,
+                  reps: 0,
+                  completed: false,
+                },
+              ],
+            };
+          }),
         },
       };
     });
@@ -162,6 +178,54 @@ export const useWorkout = create<WorkoutState>((set) => ({
                 }
               : ex,
           ),
+        },
+      };
+    });
+  },
+
+  toggleSetCompletion: (exerciseId: string, setId: string) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: workout.exercises.map((ex) =>
+            ex.exerciseId === exerciseId
+              ? {
+                  ...ex,
+                  sets: ex.sets.map((s) =>
+                    s.id === setId ? { ...s, completed: !s.completed } : s,
+                  ),
+                }
+              : ex,
+          ),
+        },
+      };
+    });
+  },
+
+  removeSetFromExercise: (exerciseId: string, setId: string) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: workout.exercises.map((ex) => {
+            if (ex.exerciseId !== exerciseId) return ex;
+
+            const filtered = ex.sets
+              .filter((s) => s.id !== setId)
+              .map((s, index) => ({
+                ...s,
+                setIndex: index,
+              }));
+
+            return { ...ex, sets: filtered };
+          }),
         },
       };
     });

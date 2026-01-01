@@ -1,4 +1,5 @@
 import { DisplayDuration } from "@/components/DisplayDuration";
+import SetRow from "@/components/workout/SetRow";
 import { useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { Entypo, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -8,7 +9,6 @@ import React, { useMemo } from "react";
 import {
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   useColorScheme,
   View,
@@ -17,10 +17,14 @@ import {
 export default function index() {
   const isDark = useColorScheme() === "dark";
   const exerciseList = useExercise((s) => s.exerciseList);
-  const activeWorkout = useWorkout((s) => s.activeWorkout);
-  const setExerciseSelection = useWorkout((s) => s.setExerciseSelection);
-  const addSetToExercise = useWorkout((s) => s.addSetToExercise);
-  const updateSet = useWorkout((s) => s.updateSet);
+  const {
+    activeWorkout,
+    setExerciseSelection,
+    addSetToExercise,
+    updateSet,
+    toggleSetCompletion,
+    removeSetFromExercise,
+  } = useWorkout();
 
   const exerciseMap = useMemo(() => {
     return new Map(exerciseList.map((ex) => [ex.id, ex]));
@@ -76,7 +80,7 @@ export default function index() {
                     Set
                   </Text>
 
-                  <Text className="flex-1 text-lg font-semibold text-black dark:text-white">
+                  <Text className="flex-1 text-center text-lg font-semibold text-black dark:text-white">
                     Previous
                   </Text>
 
@@ -98,47 +102,20 @@ export default function index() {
                 </View>
 
                 {/* Sets Details */}
-                {exercise.sets.map((set, index) => (
-                  <View
+                {exercise.sets.map((set) => (
+                  <SetRow
                     key={set.id}
-                    className="flex-row items-center px-2 py-1"
-                  >
-                    {/* Set number */}
-                    <Text className="w-10 text-blue-500">{index + 1}</Text>
-
-                    {/* Previous */}
-                    <Text className="flex-1 text-blue-500">--</Text>
-
-                    {/* Weight */}
-                    <TextInput
-                      value={set.weight?.toString()}
-                      placeholder="0"
-                      selectTextOnFocus={true}
-                      keyboardType="numeric"
-                      className="w-16 text-center font-mono text-lg text-blue-500"
-                      placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-                      onChangeText={(text) =>
-                        updateSet(exercise.exerciseId, set.id, {
-                          weight: Number(text),
-                        })
-                      }
-                    />
-
-                    {/* Reps */}
-                    <TextInput
-                      value={set.reps?.toString()}
-                      placeholder="0"
-                      selectTextOnFocus={true}
-                      keyboardType="numeric"
-                      className="w-16 text-center font-mono text-lg text-blue-500"
-                      placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-                      onChangeText={(text) =>
-                        updateSet(exercise.exerciseId, set.id, {
-                          reps: Number(text),
-                        })
-                      }
-                    />
-                  </View>
+                    set={set}
+                    onUpdate={(patch) =>
+                      updateSet(exercise.exerciseId, set.id, patch)
+                    }
+                    onToggleComplete={() =>
+                      toggleSetCompletion(exercise.exerciseId, set.id)
+                    }
+                    onDelete={() =>
+                      removeSetFromExercise(exercise.exerciseId, set.id)
+                    }
+                  />
                 ))}
 
                 {/* Add set button */}

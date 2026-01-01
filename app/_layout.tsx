@@ -11,6 +11,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import "./globals.css";
 
@@ -82,7 +83,7 @@ export default function RootLayout() {
   // 4️⃣ Fallback loader (normally never visible)
   if (!fontsLoaded || !hasRestored || !otaChecked) {
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
         <ActivityIndicator />
       </View>
     );
@@ -90,47 +91,49 @@ export default function RootLayout() {
 
   // 5️⃣ App UI
   return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(app)" />
-      </Stack>
+    <GestureHandlerRootView>
+      <>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(app)" />
+        </Stack>
 
-      <StatusBar
-        barStyle={theme === "dark" ? "light-content" : "dark-content"}
-      />
+        <StatusBar
+          barStyle={theme === "dark" ? "light-content" : "dark-content"}
+        />
 
-      <Toast
-        config={{
-          success: (props) => <CustomToast {...props} type="success" />,
-          error: (props) => <CustomToast {...props} type="error" />,
-          info: (props) => <CustomToast {...props} type="info" />,
-        }}
-        topOffset={60}
-      />
+        <Toast
+          config={{
+            success: (props) => <CustomToast {...props} type="success" />,
+            error: (props) => <CustomToast {...props} type="error" />,
+            info: (props) => <CustomToast {...props} type="info" />,
+          }}
+          topOffset={60}
+        />
 
-      {/* OTA Modal */}
-      <OtaUpdateModal
-        visible={showOtaModal}
-        state={updateState}
-        onLater={() => {
-          if (updateState !== "idle") return;
-          setShowOtaModal(false);
-        }}
-        onRestart={async () => {
-          try {
-            setUpdateState("downloading");
-            await Updates.fetchUpdateAsync();
+        {/* OTA Modal */}
+        <OtaUpdateModal
+          visible={showOtaModal}
+          state={updateState}
+          onLater={() => {
+            if (updateState !== "idle") return;
+            setShowOtaModal(false);
+          }}
+          onRestart={async () => {
+            try {
+              setUpdateState("downloading");
+              await Updates.fetchUpdateAsync();
 
-            setUpdateState("restarting");
-            await Updates.reloadAsync();
-          } catch (e) {
-            console.log("OTA update failed:", e);
-            setUpdateState("idle");
-          }
-        }}
-      />
-    </>
+              setUpdateState("restarting");
+              await Updates.reloadAsync();
+            } catch (e) {
+              console.log("OTA update failed:", e);
+              setUpdateState("idle");
+            }
+          }}
+        />
+      </>
+    </GestureHandlerRootView>
   );
 }
