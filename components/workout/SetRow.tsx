@@ -4,6 +4,7 @@ import * as Haptics from "expo-haptics";
 import React, { memo, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
+  Platform,
   Text,
   TextInput,
   TouchableOpacity,
@@ -34,6 +35,8 @@ const DELETE_REVEAL_WIDTH = SCREEN_WIDTH * 0.25; // 25% width for delete button
 
 function SetRow({ set, onUpdate, onDelete, onToggleComplete }: Props) {
   const isDark = useColorScheme() === "dark";
+  const lineHeight = Platform.OS === "ios" ? 0 : 30;
+  const isAndroid = Platform.OS === "android";
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const swipeableRef = useRef<SwipeableMethods>(null);
@@ -57,11 +60,11 @@ function SetRow({ set, onUpdate, onDelete, onToggleComplete }: Props) {
     if (set.hasSeenSwipeHint) return;
 
     hintTranslateX.value = withDelay(
-      300,
+      500,
       withSequence(
-        withTiming(24, { duration: 250 }),
-        withTiming(-24, { duration: 250 }),
-        withTiming(0, { duration: 250 }),
+        withTiming(50, { duration: 500 }),
+        withTiming(-50, { duration: 500 }),
+        withTiming(0, { duration: 500 }),
       ),
     );
 
@@ -119,54 +122,76 @@ function SetRow({ set, onUpdate, onDelete, onToggleComplete }: Props) {
         hasTriggeredHaptic.current = false;
       }}
     >
-      <Animated.View
-        entering={FadeIn}
-        exiting={FadeOut.duration(400)}
-        style={hintStyle}
-        className={`flex-row items-center justify-around rounded-md bg-white px-2 py-1 dark:bg-black ${
-          set.completed ? "bg-green-600 dark:bg-green-600" : ""
-        }`}
-      >
-        {/* Set number */}
-        <Text
-          className={`w-10 text-center text-blue-500 ${set.completed ? "text-white" : ""}`}
+      <View className="relative overflow-hidden rounded-md">
+        {/* LEFT (complete) */}
+        <Animated.View
+          entering={FadeIn.duration(1000)}
+          className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-green-600 px-4"
         >
-          {set.setIndex + 1}
-        </Text>
+          <Ionicons name="checkmark-circle" size={22} color="white" />
+        </Animated.View>
 
-        {/* Previous */}
-        <Text
-          className={`flex-1 text-center text-blue-500 ${set.completed ? "text-white" : ""}`}
+        {/* RIGHT (delete) */}
+        <Animated.View
+          entering={FadeIn.duration(1000)}
+          className="absolute inset-y-0 right-0 w-20 items-end justify-center bg-red-600 px-4"
         >
-          --
-        </Text>
+          <Ionicons name="trash" size={20} color="white" />
+        </Animated.View>
 
-        {/* Weight */}
-        <TextInput
-          value={set.weight?.toString()}
-          keyboardType="numeric"
-          selectTextOnFocus
-          onFocus={() => setIsEditing(true)}
-          onBlur={() => setIsEditing(false)}
-          className={`w-16 text-center text-lg ${set.completed ? "text-white" : "text-blue-500"}`}
-          placeholder="0"
-          placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-          onChangeText={(text) => onUpdate({ weight: Number(text) })}
-        />
+        <Animated.View
+          entering={FadeIn}
+          exiting={FadeOut.duration(400)}
+          style={hintStyle}
+          className={`flex-row items-center justify-around rounded-md ${
+            set.completed
+              ? "bg-green-600 dark:bg-green-600"
+              : "bg-white dark:bg-black"
+          } ${isAndroid ? "px-2" : "p-2"} `}
+        >
+          {/* Set number */}
+          <Text
+            className={`w-10 text-center text-blue-500 ${set.completed ? "text-white" : ""}`}
+          >
+            {set.setIndex + 1}
+          </Text>
 
-        {/* Reps */}
-        <TextInput
-          value={set.reps?.toString()}
-          keyboardType="numeric"
-          selectTextOnFocus
-          onFocus={() => setIsEditing(true)}
-          onBlur={() => setIsEditing(false)}
-          className={`w-16 text-center text-lg ${set.completed ? "text-white" : "text-blue-500"}`}
-          placeholder="0"
-          placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-          onChangeText={(text) => onUpdate({ reps: Number(text) })}
-        />
-      </Animated.View>
+          {/* Previous */}
+          <Text
+            className={`flex-1 text-center text-blue-500 ${set.completed ? "text-white" : ""}`}
+          >
+            --
+          </Text>
+
+          {/* Weight */}
+          <TextInput
+            value={set.weight?.toString()}
+            keyboardType="numeric"
+            selectTextOnFocus
+            onFocus={() => setIsEditing(true)}
+            onBlur={() => setIsEditing(false)}
+            className={`w-16 text-center text-lg ${set.completed ? "text-white" : "text-blue-500"}`}
+            placeholder="0"
+            placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+            onChangeText={(text) => onUpdate({ weight: Number(text) })}
+            style={{ lineHeight }}
+          />
+
+          {/* Reps */}
+          <TextInput
+            value={set.reps?.toString()}
+            keyboardType="numeric"
+            selectTextOnFocus
+            onFocus={() => setIsEditing(true)}
+            onBlur={() => setIsEditing(false)}
+            className={`w-16 text-center text-lg ${set.completed ? "text-white" : "text-blue-500"}`}
+            placeholder="0"
+            placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+            onChangeText={(text) => onUpdate({ reps: Number(text) })}
+            style={{ lineHeight }}
+          />
+        </Animated.View>
+      </View>
     </Swipeable>
   );
 }

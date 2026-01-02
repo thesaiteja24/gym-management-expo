@@ -91,9 +91,21 @@ export default function RootLayout() {
 
   // 5️⃣ App UI
   return (
-    <GestureHandlerRootView>
+    <GestureHandlerRootView
+      style={{
+        flex: 1,
+        backgroundColor: theme === "dark" ? "#000000" : "#ffffff",
+      }}
+    >
       <>
-        <Stack screenOptions={{ headerShown: false }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: {
+              backgroundColor: theme === "dark" ? "#000000" : "#ffffff",
+            },
+          }}
+        >
           <Stack.Screen name="index" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(app)" />
@@ -101,6 +113,7 @@ export default function RootLayout() {
 
         <StatusBar
           barStyle={theme === "dark" ? "light-content" : "dark-content"}
+          backgroundColor={theme === "dark" ? "#000000" : "#ffffff"}
         />
 
         <Toast

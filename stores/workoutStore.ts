@@ -74,7 +74,7 @@ export const useWorkout = create<WorkoutState>((set) => ({
   },
 
   endWorkout: () => {
-    set({ activeWorkout: null });
+    set({ ...initialState });
   },
 
   setExerciseSelection: (select: boolean) => {

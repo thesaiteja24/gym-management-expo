@@ -253,7 +253,7 @@ export default function ExercisesScreen() {
 
       {exerciseSelection && !exerciseLoading && (
         <View
-          style={{ paddingBottom: safeAreaInsets.bottom }}
+          style={{ marginBottom: safeAreaInsets.bottom }}
           className="flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900"
         >
           {/* Cancel */}

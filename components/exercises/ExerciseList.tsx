@@ -83,7 +83,7 @@ export default function ExerciseList({
 
   if (!exercises.length) {
     return (
-      <View className="mt-8 px-4">
+      <View className="my-8 px-4">
         <Text className="text-center text-black dark:text-white">
           No exercises found.
         </Text>

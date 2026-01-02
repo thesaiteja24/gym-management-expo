@@ -108,6 +108,23 @@ export default function StartWorkout() {
             />
           );
         }}
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center px-6 py-20">
+            <Ionicons
+              name="accessibility-outline"
+              size={48}
+              color={isDark ? "#9ca3af" : "#6b7280"}
+            />
+
+            <Text className="mt-4 text-lg font-semibold text-neutral-700 dark:text-neutral-300">
+              No exercises yet
+            </Text>
+
+            <Text className="mt-2 text-center text-neutral-500 dark:text-neutral-400">
+              Add an exercise to start your workout
+            </Text>
+          </View>
+        }
         ListFooterComponent={
           <View className="mb-16 p-4">
             <TouchableOpacity
