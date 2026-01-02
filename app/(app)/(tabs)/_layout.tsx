@@ -55,13 +55,13 @@ export default function TabsLayout() {
 
       {/* EXERCISES (stacked section → disable tab header) */}
       <Tabs.Screen
-        name="exercises"
+        name="workout"
         options={{
-          title: "Exercises",
+          title: "Workout",
           headerShown: false,
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons
-              name={focused ? "barbell" : "barbell-outline"}
+              name={focused ? "accessibility-sharp" : "accessibility-outline"}
               size={size ?? 22}
               color={color}
             />

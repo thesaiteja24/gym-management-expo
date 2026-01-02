@@ -13,7 +13,7 @@ const InfoRow = memo(function InfoRow({
   value?: string | number | null;
 }) {
   return (
-    <View className="flex-row items-center justify-between py-3 border-b border-neutral-200/60 dark:border-neutral-800 last:border-b-0">
+    <View className="flex-row items-center justify-between border-b border-neutral-200/60 py-3 last:border-b-0 dark:border-neutral-800">
       <Text className="text-sm text-neutral-500 dark:text-neutral-400">
         {label}
       </Text>
@@ -24,7 +24,7 @@ const InfoRow = memo(function InfoRow({
   );
 });
 
-export default function Profile() {
+export default function ProfileScreen() {
   const user = useAuth((state) => state.user);
   const dob = new Date(user?.dateOfBirth ?? "");
 
@@ -43,7 +43,7 @@ export default function Profile() {
       className="bg-white dark:bg-black"
     >
       {/* Avatar */}
-      <View className="items-center mb-6">
+      <View className="mb-6 items-center">
         <ProfilePic
           uri={user?.profilePicUrl ? user.profilePicUrl : null}
           size={132}
@@ -58,14 +58,14 @@ export default function Profile() {
             (user?.lastName ? ` ${user.lastName}` : "")}
         </Text>
         {user?.phoneE164 ? (
-          <Text className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+          <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             {user.phoneE164}
           </Text>
         ) : null}
       </View>
 
       {/* Info Card */}
-      <View className="rounded-2xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm">
+      <View className="rounded-2xl border border-neutral-200/60 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <InfoRow label="Date of Birth" value={dob.toDateString() ?? ""} />
         <InfoRow label="Height" value={user?.height ? `${user.height}` : ""} />
         <InfoRow label="Weight" value={user?.weight ? `${user.weight}` : ""} />

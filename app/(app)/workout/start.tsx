@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
 
-export default function WorkoutScreen() {
+export default function StartWorkout() {
   const isDark = useColorScheme() === "dark";
   const exerciseList = useExercise((s) => s.exerciseList);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -30,7 +30,7 @@ export default function WorkoutScreen() {
 
   const handleReplaceExercise = (oldExerciseId: string) => {
     setExerciseReplacementId(oldExerciseId);
-    router.push("/(app)/(tabs)/exercises");
+    router.push("/(app)/exercises");
   };
 
   const exerciseMap = useMemo(
@@ -87,7 +87,7 @@ export default function WorkoutScreen() {
               exerciseDetails={details}
               drag={drag}
               onPress={() =>
-                router.navigate(`/(app)/(tabs)/exercises/${item.exerciseId}`)
+                router.navigate(`/(app)/exercises/${item.exerciseId}`)
               }
               isActive={isActive}
               isDragging={isDragging}
@@ -113,9 +113,9 @@ export default function WorkoutScreen() {
             <TouchableOpacity
               onPress={() => {
                 setExerciseSelection(true);
-                router.push("/(app)/(tabs)/exercises");
+                router.push("/(app)/exercises");
               }}
-              className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+              className="mb-24 h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
             >
               <Text className="text-center text-xl font-semibold text-black dark:text-white">
                 Add an Exercise

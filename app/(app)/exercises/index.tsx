@@ -23,6 +23,7 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 // Chip (pure UI)
@@ -52,8 +53,9 @@ function Chip({ label, onRemove }: ChipProps) {
 }
 
 // Screen
-export default function Exercises() {
+export default function ExercisesScreen() {
   const role = useAuth((s) => s.user?.role);
+  const safeAreaInsets = useSafeAreaInsets();
 
   const { equipmentList, equipmentLoading, getAllEquipment } = useEquipment();
   const { muscleGroupList, muscleGroupLoading, getAllMuscleGroups } =
@@ -159,7 +161,7 @@ export default function Exercises() {
       Haptics.selectionAsync();
       replaceExercise(exerciseReplacementId, exercise.id);
       setExerciseReplacementId(null);
-      router.replace("/(app)/workout");
+      router.replace("/(app)/workout/start");
       return;
     }
 
@@ -169,11 +171,14 @@ export default function Exercises() {
       return;
     }
 
-    router.push(`/exercises/${exercise.id}`);
+    router.push(`/(app)/exercises/${exercise.id}`);
   };
 
   return (
-    <View className="flex-1 bg-white px-4 pt-4 dark:bg-black">
+    <View
+      style={{ paddingBottom: safeAreaInsets.bottom }}
+      className="flex-1 bg-white px-4 pt-4 dark:bg-black"
+    >
       {/* Search */}
       <View className="mb-4">
         <TextInput
@@ -247,13 +252,16 @@ export default function Exercises() {
       />
 
       {exerciseSelection && !exerciseLoading && (
-        <View className="mb-4 flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900">
+        <View
+          style={{ paddingBottom: safeAreaInsets.bottom }}
+          className="flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900"
+        >
           {/* Cancel */}
           <TouchableOpacity
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setExerciseSelection(false);
-              router.replace("/(app)/workout");
+              router.replace("/(app)/workout/start");
             }}
           >
             <Text className="text-lg font-semibold text-red-500">Cancel</Text>
@@ -270,7 +278,7 @@ export default function Exercises() {
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               setExerciseSelection(false);
-              router.replace("/(app)/workout");
+              router.replace("/(app)/workout/start");
             }}
           >
             <Text

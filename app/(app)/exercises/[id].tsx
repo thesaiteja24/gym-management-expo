@@ -5,7 +5,7 @@ import { Dimensions, ScrollView, Text, View } from "react-native";
 
 const { width } = Dimensions.get("window");
 
-export default function ViewExercise() {
+export default function ViewExerciseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const exerciseList = useExercise((s) => s.exerciseList);
   const exercise = exerciseList.find((e) => e.id === id);
@@ -18,11 +18,11 @@ export default function ViewExercise() {
       player.volume = 0;
       player.audioMixingMode = "mixWithOthers";
       player.play();
-    }
+    },
   );
 
   return (
-    <View className="flex-1 items-center justify-center bg-white dark:bg-black p-4">
+    <View className="flex-1 items-center justify-center bg-white dark:bg-black">
       <VideoView
         style={{
           width: width,
@@ -35,12 +35,12 @@ export default function ViewExercise() {
         nativeControls={false}
       />
 
-      <Text className="text-xl font-semibold text-black dark:text-white py-4 self-start">
+      <Text className="self-start p-4 text-xl font-semibold text-black dark:text-white">
         {exercise?.title}
       </Text>
 
       <ScrollView>
-        <Text className="text-lg font-normal text-black dark:text-white">
+        <Text className="p-4 text-lg font-normal text-black dark:text-white">
           {exercise?.instructions}
         </Text>
       </ScrollView>
