@@ -2,15 +2,14 @@ import CustomHeader from "@/components/CustomHeader";
 import { router, Stack } from "expo-router";
 import React from "react";
 
-export default function ExercisesLayout() {
+export default function WorkoutLayout() {
   return (
     <Stack
       screenOptions={{
         header: (props) => {
           const { options } = props;
-          const custom = options as any;
 
-          if (options.headerShown === false) return null;
+          const custom = options as any;
 
           return (
             <CustomHeader
@@ -23,22 +22,17 @@ export default function ExercisesLayout() {
         },
       }}
     >
-      {/* EXERCISES LIST */}
       <Stack.Screen
         name="index"
-        options={{
-          title: "Exercises",
-        }}
-      />
-
-      {/* EXERCISE DETAIL */}
-      <Stack.Screen
-        name="[id]"
         options={
           {
-            title: "Exercise",
-            leftIcon: "chevron-back-outline",
-            onLeftPress: () => router.back(),
+            title: "Workout",
+            rightIcons: [
+              {
+                name: "settings-outline",
+                onPress: () => router.push("/profile/settings"),
+              },
+            ],
           } as any
         }
       />

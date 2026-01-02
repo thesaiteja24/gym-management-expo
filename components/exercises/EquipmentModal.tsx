@@ -1,7 +1,5 @@
-import { ROLES as roles } from "@/constants/roles";
 import { ActivityIndicator } from "@react-native-blossom-ui/components";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import React from "react";
 import {
   Modal,
@@ -14,47 +12,31 @@ import {
 
 type Props = {
   visible: boolean;
-  role?: string;
   loading: boolean;
   equipment: any[];
+
   onClose: () => void;
-  onSelect: (id: string) => void;
+  onSelect: (equipment: any) => void;
+  onLongPress?: (equipment: any) => void;
 };
 
 export default function EquipmentModal({
   visible,
-  role,
   loading,
   equipment,
   onClose,
   onSelect,
+  onLongPress,
 }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 bg-black/40 justify-end">
+      <View className="flex-1 justify-end bg-black/40">
         <Pressable className="absolute inset-0" onPress={onClose} />
 
-        <View className="h-[80%] bg-white dark:bg-[#111] rounded-t-3xl p-6">
-          <View
-            className={`flex-row ${
-              role === roles.systemAdmin ? "justify-between" : "justify-center"
-            } mb-6`}
-          >
-            <Text className="text-xl font-bold text-black dark:text-white">
-              Equipment
-            </Text>
-
-            {role === roles.systemAdmin && (
-              <TouchableOpacity
-                onPress={() => {
-                  onClose();
-                  router.push("/equipment/create");
-                }}
-              >
-                <Text className="text-blue-500 text-xl">Create</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+        <View className="h-[80%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">
+          <Text className="mb-6 text-center text-xl font-bold text-black dark:text-white">
+            Equipment
+          </Text>
 
           {loading ? (
             <ActivityIndicator animating size="large" />
@@ -63,15 +45,9 @@ export default function EquipmentModal({
               {equipment.map((item) => (
                 <TouchableOpacity
                   key={item.id}
-                  className="flex-row justify-between items-center pb-4"
-                  onPress={() => {
-                    onSelect(item.id);
-                  }}
-                  onLongPress={() => {
-                    if (role !== roles.systemAdmin) return;
-                    onClose();
-                    router.push(`/equipment/${item.id}`);
-                  }}
+                  className="flex-row items-center justify-between pb-4"
+                  onPress={() => onSelect(item)}
+                  onLongPress={() => onLongPress?.(item)}
                   delayLongPress={700}
                 >
                   <Text className="text-xl font-semibold text-black dark:text-white">
@@ -86,7 +62,6 @@ export default function EquipmentModal({
                       borderRadius: 100,
                       borderWidth: 1,
                       borderColor: "gray",
-                      backgroundColor: "white",
                     }}
                     contentFit="contain"
                   />

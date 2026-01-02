@@ -22,7 +22,7 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 
-export default function EditProfile() {
+export default function EditProfileScreen() {
   const navigation = useNavigation();
 
   // global state (stores)
@@ -158,7 +158,7 @@ export default function EditProfile() {
           fileName: "profile.jpg", // safe default
           type: "image/jpeg",
         },
-        "avatar"
+        "avatar",
       );
 
       // 2️⃣ Build FormData
@@ -195,7 +195,7 @@ export default function EditProfile() {
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       className="bg-white dark:bg-black"
     >
-      <View className="items-center mb-6">
+      <View className="mb-6 items-center">
         <ProfilePic
           uri={user?.profilePicUrl ? user.profilePicUrl : null}
           size={132}
@@ -208,7 +208,7 @@ export default function EditProfile() {
       <View className="flex flex-col gap-2">
         {/* first name */}
         <View className="flex flex-row items-center gap-8">
-          <Text className="font-semibold text-lg text-black dark:text-white">
+          <Text className="text-lg font-semibold text-black dark:text-white">
             First Name
           </Text>
           <TextInput
@@ -226,7 +226,7 @@ export default function EditProfile() {
 
         {/* last name */}
         <View className="flex flex-row items-center gap-8">
-          <Text className="font-semibold text-lg text-black dark:text-white">
+          <Text className="text-lg font-semibold text-black dark:text-white">
             Last Name
           </Text>
           <TextInput
@@ -243,9 +243,9 @@ export default function EditProfile() {
         </View>
 
         {/* details card */}
-        <View className="rounded-2xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-sm mt-4">
+        <View className="mt-4 rounded-2xl border border-neutral-200/60 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
           {/* date of birth */}
-          <View className="flex-row items-center justify-between py-3 border-b border-neutral-200/60 dark:border-neutral-800">
+          <View className="flex-row items-center justify-between border-b border-neutral-200/60 py-3 dark:border-neutral-800">
             <Text className="text-sm text-neutral-500 dark:text-neutral-400">
               Date of Birth
             </Text>
@@ -253,7 +253,7 @@ export default function EditProfile() {
           </View>
 
           {/* height */}
-          <View className="flex-row items-center justify-between py-3 border-b border-neutral-200/60 dark:border-neutral-800">
+          <View className="flex-row items-center justify-between border-b border-neutral-200/60 py-3 dark:border-neutral-800">
             <Text className="text-sm text-neutral-500 dark:text-neutral-400">
               Height (cm)
             </Text>
@@ -275,7 +275,7 @@ export default function EditProfile() {
           </View>
 
           {/* weight */}
-          <View className="flex-row items-center justify-between py-3 border-neutral-200/60 dark:border-neutral-800">
+          <View className="flex-row items-center justify-between border-neutral-200/60 py-3 dark:border-neutral-800">
             <Text className="text-sm text-neutral-500 dark:text-neutral-400">
               Weight (kg)
             </Text>
