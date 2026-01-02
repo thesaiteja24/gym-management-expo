@@ -30,11 +30,7 @@ export default function WorkoutLayout() {
             title: "Log Your Pump",
             leftIcon: "chevron-back-outline",
             onLeftPress: () => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace("/home");
-              }
+              router.replace("/home");
             },
             rightIcons: [
               {

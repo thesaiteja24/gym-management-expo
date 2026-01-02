@@ -63,9 +63,12 @@ export default function Exercises() {
 
   const {
     exerciseSelection,
+    exerciseReplacementId,
     activeWorkout,
-    toggleExerciseInActiveWorkout,
+    selectExercise,
+    replaceExercise,
     setExerciseSelection,
+    setExerciseReplacementId,
   } = useWorkout();
 
   const selectedCount = activeWorkout?.exercises.length || 0;
@@ -152,13 +155,21 @@ export default function Exercises() {
 
   // handler for exercise selection mode
   const handleExercisePress = (exercise: Exercise) => {
-    if (!exerciseSelection) {
-      router.push(`/exercises/${exercise.id}`);
+    if (exerciseReplacementId) {
+      Haptics.selectionAsync();
+      replaceExercise(exerciseReplacementId, exercise.id);
+      setExerciseReplacementId(null);
+      router.replace("/(app)/workout");
       return;
     }
 
-    Haptics.selectionAsync();
-    toggleExerciseInActiveWorkout(exercise.id);
+    if (exerciseSelection) {
+      Haptics.selectionAsync();
+      selectExercise(exercise.id);
+      return;
+    }
+
+    router.push(`/exercises/${exercise.id}`);
   };
 
   return (

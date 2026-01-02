@@ -30,11 +30,15 @@ export type WorkoutLogSet = {
 type WorkoutState = {
   activeWorkout: Workout | null;
   exerciseSelection: boolean;
+  exerciseReplacementId: string | null;
 
   startWorkout: () => void;
   endWorkout: () => void;
   setExerciseSelection: (select: boolean) => void;
-  toggleExerciseInActiveWorkout: (exerciseId: string) => void;
+  setExerciseReplacementId: (oldExerciseId: string | null) => void;
+  selectExercise: (exerciseId: string) => void;
+  removeExercise: (exerciseId: string) => void;
+  replaceExercise: (oldExerciseId: string, newExerciseId: string) => void;
   addSetToExercise: (exerciseId: string) => void;
   updateSet: (
     exerciseId: string,
@@ -49,6 +53,7 @@ type WorkoutState = {
 const initialState = {
   activeWorkout: null,
   exerciseSelection: false,
+  exerciseReplacementId: null,
 };
 
 export const useWorkout = create<WorkoutState>((set) => ({
@@ -76,7 +81,7 @@ export const useWorkout = create<WorkoutState>((set) => ({
     set({ exerciseSelection: select });
   },
 
-  toggleExerciseInActiveWorkout: (exerciseId) => {
+  selectExercise: (exerciseId) => {
     set((state) => {
       const workout = state.activeWorkout;
       if (!workout) return state;
@@ -114,6 +119,67 @@ export const useWorkout = create<WorkoutState>((set) => ({
               sets: [],
             },
           ],
+        },
+      };
+    });
+  },
+
+  removeExercise: (exerciseId) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      const updated = workout.exercises
+        .filter((e) => e.exerciseId !== exerciseId)
+        .map((e, index) => ({
+          ...e,
+          exerciseIndex: index,
+        }));
+
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: updated,
+        },
+      };
+    });
+  },
+
+  reorderExercises: (ordered) => {
+    set((state) => {
+      if (!state.activeWorkout) return state;
+
+      return {
+        activeWorkout: {
+          ...state.activeWorkout,
+          exercises: ordered.map((ex, index) => ({
+            ...ex,
+            exerciseIndex: index,
+          })),
+        },
+      };
+    });
+  },
+
+  setExerciseReplacementId: (oldExerciseId: string | null) => {
+    set({ exerciseReplacementId: oldExerciseId });
+  },
+
+  replaceExercise: (oldExerciseId: string, newExerciseId: string) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      const updated = workout.exercises.map((e) =>
+        e.exerciseId === oldExerciseId
+          ? { ...e, exerciseId: newExerciseId }
+          : e,
+      );
+
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: updated,
         },
       };
     });
@@ -227,22 +293,6 @@ export const useWorkout = create<WorkoutState>((set) => ({
 
             return { ...ex, sets: filtered };
           }),
-        },
-      };
-    });
-  },
-
-  reorderExercises: (ordered) => {
-    set((state) => {
-      if (!state.activeWorkout) return state;
-
-      return {
-        activeWorkout: {
-          ...state.activeWorkout,
-          exercises: ordered.map((ex, index) => ({
-            ...ex,
-            exerciseIndex: index,
-          })),
         },
       };
     });

@@ -19,12 +19,19 @@ export default function WorkoutScreen() {
     activeWorkout,
     startWorkout,
     setExerciseSelection,
+    setExerciseReplacementId,
+    removeExercise,
+    reorderExercises,
     addSetToExercise,
     updateSet,
     toggleSetCompletion,
     removeSetFromExercise,
-    reorderExercises,
   } = useWorkout();
+
+  const handleReplaceExercise = (oldExerciseId: string) => {
+    setExerciseReplacementId(oldExerciseId);
+    router.push("/(app)/(tabs)/exercises");
+  };
 
   const exerciseMap = useMemo(
     () => new Map(exerciseList.map((e) => [e.id, e])),
@@ -79,13 +86,20 @@ export default function WorkoutScreen() {
               exercise={item}
               exerciseDetails={details}
               drag={drag}
+              onPress={() =>
+                router.navigate(`/(app)/(tabs)/exercises/${item.exerciseId}`)
+              }
               isActive={isActive}
               isDragging={isDragging}
+              onReplaceExercise={() => {
+                handleReplaceExercise(item.exerciseId);
+              }}
+              onDeleteExercise={() => removeExercise(item.exerciseId)}
               onAddSet={() => addSetToExercise(item.exerciseId)}
               onUpdateSet={(setId, patch) =>
                 updateSet(item.exerciseId, setId, patch)
               }
-              onToggleSet={(setId) =>
+              onToggleCompleteSet={(setId) =>
                 toggleSetCompletion(item.exerciseId, setId)
               }
               onDeleteSet={(setId) =>
