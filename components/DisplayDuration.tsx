@@ -1,46 +1,75 @@
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
 
-type DisplayDurationProps = {
+/* --------------------------------------------------
+   Types
+-------------------------------------------------- */
+
+type WallClockProps = {
   startTime: Date;
+  textColor?: string;
 };
 
-function formatDuration(ms: number) {
-  const totalSeconds = Math.floor(ms / 1000);
+type AccumulatedProps = {
+  baseSeconds?: number;
+  runningSince?: number | null;
+  textColor?: string;
+};
 
+type DisplayDurationProps = WallClockProps | AccumulatedProps;
+
+/* --------------------------------------------------
+   Helpers
+-------------------------------------------------- */
+
+function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
   const pad = (n: number) => String(n).padStart(2, "0");
 
-  if (hours > 0) {
-    return `${pad(hours)}h:${pad(minutes)}m:${pad(seconds)}s`;
-  }
-
-  if (minutes > 0) {
-    return `${pad(minutes)}m:${pad(seconds)}s`;
-  }
-
+  if (hours > 0) return `${pad(hours)}h:${pad(minutes)}m:${pad(seconds)}s`;
+  if (minutes > 0) return `${pad(minutes)}m:${pad(seconds)}s`;
   return `${pad(seconds)}s`;
 }
 
-export function DisplayDuration({ startTime }: DisplayDurationProps) {
-  const [now, setNow] = useState(() => Date.now());
+/* --------------------------------------------------
+   Component
+-------------------------------------------------- */
+
+export function DisplayDuration(props: DisplayDurationProps) {
+  const [now, setNow] = useState(Date.now());
+
+  const isWallClock = "startTime" in props;
+  const runningSince = !isWallClock ? props.runningSince : null;
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    // Tick only when needed
+    if (!isWallClock && !runningSince) return;
+
+    const id = setInterval(() => {
       setNow(Date.now());
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(id);
+  }, [isWallClock, runningSince]);
 
-  const elapsedMs = now - startTime.getTime();
+  let totalSeconds = 0;
+
+  if (isWallClock) {
+    totalSeconds = Math.floor((now - props.startTime.getTime()) / 1000);
+  } else {
+    const base = props.baseSeconds ?? 0;
+    const running =
+      runningSince != null ? Math.floor((now - runningSince) / 1000) : 0;
+
+    totalSeconds = base + running;
+  }
 
   return (
-    <Text className="text-lg font-semibold text-blue-500">
-      {formatDuration(elapsedMs)}
+    <Text className={`text-lg font-semibold ${props.textColor ?? ""}`}>
+      {formatDuration(totalSeconds)}
     </Text>
   );
 }
