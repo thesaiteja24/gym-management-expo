@@ -35,6 +35,8 @@ type Props = {
   onToggleComplete: () => void;
   onStartTimer: () => void;
   onStopTimer: () => void;
+  onStartRest: (seconds: number) => void;
+  onOpenRestPicker: () => void;
 };
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -50,10 +52,11 @@ function SetRow({
   onToggleComplete,
   onStartTimer,
   onStopTimer,
+  onStartRest,
+  onOpenRestPicker,
 }: Props) {
   const isDark = useColorScheme() === "dark";
-  const lineHeight = Platform.OS === "ios" ? 0 : 30;
-  const isAndroid = Platform.OS === "android";
+  const lineHeight = Platform.OS === "ios" ? 0 : 18;
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const swipeableRef = useRef<SwipeableMethods>(null);
@@ -180,6 +183,25 @@ function SetRow({
             --
           </Text>
 
+          <View className="w-16 items-center">
+            <TouchableOpacity
+              onPress={() => {
+                if (set.restSeconds != null) {
+                  onStartRest(set.restSeconds);
+                } else {
+                  onOpenRestPicker();
+                }
+              }}
+              onLongPress={onOpenRestPicker}
+              className="flex w-8 items-center justify-center"
+            >
+              <MaterialCommunityIcons
+                name="timer-outline"
+                size={20}
+                color={set.restSeconds ? "#22c55e" : "#9ca3af"}
+              />
+            </TouchableOpacity>
+          </View>
           {hasWeight && (
             <TextInput
               value={set.weight?.toString()}

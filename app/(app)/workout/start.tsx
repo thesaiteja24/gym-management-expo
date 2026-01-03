@@ -1,23 +1,25 @@
 import { DisplayDuration } from "@/components/DisplayDuration";
 import ExerciseRow from "@/components/workout/ExerciseRow";
+import RestTimerSnack from "@/components/workout/RestTimerSnack";
 import { Exercise, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function StartWorkout() {
   const isDark = useColorScheme() === "dark";
+  const safeAreaInsets = useSafeAreaInsets();
   const exerciseList = useExercise((s) => s.exerciseList);
   const [isDragging, setIsDragging] = React.useState(false);
   const lastIndexRef = useRef<number | null>(null);
 
   const {
     activeWorkout,
-    startWorkout,
     setExerciseSelection,
     setExerciseReplacementId,
     removeExercise,
@@ -28,6 +30,8 @@ export default function StartWorkout() {
     removeSetFromExercise,
     startSetTimer,
     stopSetTimer,
+    startRestTimer,
+    setRestForSet,
   } = useWorkout();
 
   const handleReplaceExercise = (oldExerciseId: string) => {
@@ -40,14 +44,13 @@ export default function StartWorkout() {
     [exerciseList],
   );
 
-  useEffect(() => {
-    if (!activeWorkout) startWorkout();
-  }, [activeWorkout, startWorkout]);
-
   if (!activeWorkout) return null;
 
   return (
-    <View className="flex-1 bg-white dark:bg-black">
+    <View
+      style={{ paddingBottom: safeAreaInsets.bottom }}
+      className="flex-1 bg-white px-4 pt-4 dark:bg-black"
+    >
       {/* Top bar */}
       <View className="flex-row gap-2 border-b border-neutral-200 p-4 dark:border-neutral-800">
         <Ionicons
@@ -65,6 +68,7 @@ export default function StartWorkout() {
         data={activeWorkout.exercises}
         keyExtractor={(item) => `${item.exerciseId}-${item.exerciseIndex}`} // MUST be unique per row
         activationDistance={12}
+        contentContainerStyle={{ marginBottom: safeAreaInsets.bottom }}
         onPlaceholderIndexChange={(index) => {
           if (lastIndexRef.current !== index) {
             lastIndexRef.current = index;
@@ -114,6 +118,10 @@ export default function StartWorkout() {
               }
               onStartSetTimer={(setId) => startSetTimer(item.exerciseId, setId)}
               onStopSetTimer={(setId) => stopSetTimer(item.exerciseId, setId)}
+              onStartRest={(seconds) => startRestTimer(seconds)}
+              onSaveRestPreset={(setId, seconds) => {
+                setRestForSet(item.exerciseId, setId, seconds);
+              }}
             />
           );
         }}
@@ -150,6 +158,8 @@ export default function StartWorkout() {
           </View>
         }
       />
+
+      <RestTimerSnack />
     </View>
   );
 }

@@ -60,12 +60,25 @@ type WorkoutState = {
   removeSetFromExercise: (exerciseId: string, setId: string) => void;
   startSetTimer: (exerciseId: string, setId: string) => void;
   stopSetTimer: (exerciseId: string, setId: string) => void;
+
+  restSeconds: number | null;
+  restStartedAt: number | null;
+  restRunning: boolean;
+
+  startRestTimer: (seconds: number) => void;
+  stopRestTimer: () => void;
+  adjustRestTimer: (deltaSeconds: number) => void;
+  setRestForSet: (exerciseId: string, setId: string, seconds: number) => void;
 };
 
 const initialState = {
   activeWorkout: null,
   exerciseSelection: false,
   exerciseReplacementId: null,
+
+  restSeconds: null,
+  restStartedAt: null,
+  restRunning: false,
 };
 
 export const useWorkout = create<WorkoutState>((set) => ({
@@ -88,7 +101,29 @@ export const useWorkout = create<WorkoutState>((set) => ({
   },
 
   endWorkout: () => {
-    set({ ...initialState });
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return initialState;
+
+      const finalizedExercises = workout.exercises.map((ex) => ({
+        ...ex,
+        sets: ex.sets.map((s) => {
+          if (!s.durationStartedAt) return s;
+
+          const elapsed = Math.floor((Date.now() - s.durationStartedAt) / 1000);
+
+          return {
+            ...s,
+            durationSeconds: (s.durationSeconds ?? 0) + elapsed,
+            durationStartedAt: null,
+          };
+        }),
+      }));
+
+      // If you later persist, you'd do it here
+
+      return initialState;
+    });
   },
 
   // Exercise Controls
@@ -364,6 +399,55 @@ export const useWorkout = create<WorkoutState>((set) => ({
                       durationStartedAt: null,
                     };
                   }),
+                }
+              : ex,
+          ),
+        },
+      };
+    });
+  },
+
+  startRestTimer: (seconds) => {
+    set({
+      restSeconds: seconds,
+      restStartedAt: Date.now(),
+      restRunning: true,
+    });
+  },
+
+  stopRestTimer: () => {
+    set({
+      restSeconds: null,
+      restStartedAt: null,
+      restRunning: false,
+    });
+  },
+
+  adjustRestTimer: (deltaSeconds) => {
+    set((state) => {
+      if (!state.restRunning || state.restSeconds == null) return state;
+
+      return {
+        restSeconds: Math.max(0, state.restSeconds + deltaSeconds),
+      };
+    });
+  },
+
+  setRestForSet: (exerciseId, setId, seconds) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: workout.exercises.map((ex) =>
+            ex.exerciseId === exerciseId
+              ? {
+                  ...ex,
+                  sets: ex.sets.map((s) =>
+                    s.id === setId ? { ...s, restSeconds: seconds } : s,
+                  ),
                 }
               : ex,
           ),

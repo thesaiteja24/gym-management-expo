@@ -1,7 +1,11 @@
 import SetRow from "@/components/workout/SetRow";
 import { Exercise, ExerciseType } from "@/stores/exerciseStore";
 import { WorkoutLogExercise } from "@/stores/workoutStore";
-import { Entypo, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  Entypo,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -12,6 +16,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import RestTimerPickerModal from "./RestTimerPickerModal";
 
 const EXERCISE_CAPABILITIES: Record<
   ExerciseType,
@@ -39,6 +44,8 @@ type Props = {
   onDeleteSet: (setId: string) => void;
   onStartSetTimer: (setId: string) => void;
   onStopSetTimer: (setId: string) => void;
+  onStartRest: (seconds: number) => void;
+  onSaveRestPreset: (setId: string, seconds: number) => void;
 };
 
 function ExerciseRow({
@@ -56,9 +63,14 @@ function ExerciseRow({
   onDeleteSet,
   onStartSetTimer,
   onStopSetTimer,
+  onStartRest,
+  onSaveRestPreset,
 }: Props) {
   const { hasWeight, hasReps, hasDuration } =
     EXERCISE_CAPABILITIES[exerciseDetails.exerciseType];
+
+  const [restPickerVisible, setRestPickerVisible] = useState(false);
+  const [activeRestSetId, setActiveRestSetId] = useState<string | null>(null);
   const isDark = useColorScheme() === "dark";
   const menuRef = useRef<View>(null);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -138,6 +150,14 @@ function ExerciseRow({
           Previous
         </Text>
 
+        <View className="w-16 items-center">
+          <MaterialIcons
+            name="restore"
+            size={22}
+            color={isDark ? "white" : "black"}
+          />
+        </View>
+
         {hasWeight && (
           <View className="w-16 items-center">
             <MaterialCommunityIcons
@@ -155,7 +175,7 @@ function ExerciseRow({
         )}
 
         {hasDuration && (
-          <View className="w-16 items-center">
+          <View className="w-20 items-center">
             <MaterialCommunityIcons
               name="timer-outline"
               size={22}
@@ -177,6 +197,11 @@ function ExerciseRow({
           onDelete={() => onDeleteSet(set.id)}
           onStartTimer={() => onStartSetTimer(set.id)}
           onStopTimer={() => onStopSetTimer(set.id)}
+          onStartRest={(seconds) => onStartRest(seconds)}
+          onOpenRestPicker={() => {
+            setActiveRestSetId(set.id);
+            setRestPickerVisible(true);
+          }}
         />
       ))}
 
@@ -233,6 +258,22 @@ function ExerciseRow({
           </TouchableOpacity>
         </View>
       </Modal>
+
+      <RestTimerPickerModal
+        visible={restPickerVisible}
+        onClose={() => {
+          setRestPickerVisible(false);
+          setActiveRestSetId(null);
+        }}
+        onConfirm={(seconds) => {
+          if (!activeRestSetId) return;
+
+          onSaveRestPreset(activeRestSetId, seconds);
+          onStartRest(seconds);
+          setRestPickerVisible(false);
+          setActiveRestSetId(null);
+        }}
+      />
     </View>
   );
 }
