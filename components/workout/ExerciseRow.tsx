@@ -1,4 +1,5 @@
 import SetRow from "@/components/workout/SetRow";
+import { Exercise, ExerciseType } from "@/stores/exerciseStore";
 import { WorkoutLogExercise } from "@/stores/workoutStore";
 import { Entypo, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -12,9 +13,19 @@ import {
   useColorScheme,
 } from "react-native";
 
+const EXERCISE_CAPABILITIES: Record<
+  ExerciseType,
+  { hasWeight: boolean; hasReps: boolean; hasDuration: boolean }
+> = {
+  weighted: { hasWeight: true, hasReps: true, hasDuration: false },
+  repsOnly: { hasWeight: false, hasReps: true, hasDuration: false },
+  assisted: { hasWeight: false, hasReps: true, hasDuration: false },
+  durationOnly: { hasWeight: false, hasReps: false, hasDuration: true },
+};
+
 type Props = {
   exercise: WorkoutLogExercise;
-  exerciseDetails: any;
+  exerciseDetails: Exercise;
   isActive: boolean;
   isDragging: boolean;
 
@@ -26,6 +37,8 @@ type Props = {
   onUpdateSet: (setId: string, patch: any) => void;
   onToggleCompleteSet: (setId: string) => void;
   onDeleteSet: (setId: string) => void;
+  onStartSetTimer: (setId: string) => void;
+  onStopSetTimer: (setId: string) => void;
 };
 
 function ExerciseRow({
@@ -41,7 +54,11 @@ function ExerciseRow({
   onUpdateSet,
   onToggleCompleteSet,
   onDeleteSet,
+  onStartSetTimer,
+  onStopSetTimer,
 }: Props) {
+  const { hasWeight, hasReps, hasDuration } =
+    EXERCISE_CAPABILITIES[exerciseDetails.exerciseType];
   const isDark = useColorScheme() === "dark";
   const menuRef = useRef<View>(null);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -117,31 +134,49 @@ function ExerciseRow({
         <Text className="w-10 text-lg font-semibold text-black dark:text-white">
           Set
         </Text>
-
         <Text className="flex-1 text-center text-lg font-semibold text-black dark:text-white">
           Previous
         </Text>
 
-        <View className="w-16 items-center">
-          <MaterialCommunityIcons
-            name="weight-kilogram"
-            size={22}
-            color={isDark ? "white" : "black"}
-          />
-        </View>
+        {hasWeight && (
+          <View className="w-16 items-center">
+            <MaterialCommunityIcons
+              name="weight-kilogram"
+              size={22}
+              color={isDark ? "white" : "black"}
+            />
+          </View>
+        )}
 
-        <View className="w-16 items-center">
-          <Entypo name="cycle" size={22} color={isDark ? "white" : "black"} />
-        </View>
+        {hasReps && (
+          <View className="w-16 items-center">
+            <Entypo name="cycle" size={22} color={isDark ? "white" : "black"} />
+          </View>
+        )}
+
+        {hasDuration && (
+          <View className="w-16 items-center">
+            <MaterialCommunityIcons
+              name="timer-outline"
+              size={22}
+              color={isDark ? "white" : "black"}
+            />
+          </View>
+        )}
       </View>
 
       {exercise.sets.map((set) => (
         <SetRow
           key={set.id}
           set={set}
+          hasWeight={hasWeight}
+          hasDuration={hasDuration}
+          hasReps={hasReps}
           onUpdate={(patch) => onUpdateSet(set.id, patch)}
           onToggleComplete={() => onToggleCompleteSet(set.id)}
           onDelete={() => onDeleteSet(set.id)}
+          onStartTimer={() => onStartSetTimer(set.id)}
+          onStopTimer={() => onStopSetTimer(set.id)}
         />
       ))}
 

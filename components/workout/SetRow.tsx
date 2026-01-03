@@ -1,5 +1,5 @@
 import { WorkoutLogSet } from "@/stores/workoutStore";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { memo, useEffect, useRef, useState } from "react";
 import {
@@ -22,18 +22,35 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
+import { DisplayDuration } from "../DisplayDuration";
 
 type Props = {
   set: WorkoutLogSet;
+  hasWeight: boolean;
+  hasReps: boolean;
+  hasDuration: boolean;
+
   onUpdate: (patch: Partial<WorkoutLogSet>) => void;
   onDelete: () => void;
   onToggleComplete: () => void;
+  onStartTimer: () => void;
+  onStopTimer: () => void;
 };
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const DELETE_REVEAL_WIDTH = SCREEN_WIDTH * 0.25; // 25% width for delete button
 
-function SetRow({ set, onUpdate, onDelete, onToggleComplete }: Props) {
+function SetRow({
+  set,
+  hasWeight,
+  hasReps,
+  hasDuration,
+  onUpdate,
+  onDelete,
+  onToggleComplete,
+  onStartTimer,
+  onStopTimer,
+}: Props) {
   const isDark = useColorScheme() === "dark";
   const lineHeight = Platform.OS === "ios" ? 0 : 30;
   const isAndroid = Platform.OS === "android";
@@ -57,7 +74,7 @@ function SetRow({ set, onUpdate, onDelete, onToggleComplete }: Props) {
   };
 
   useEffect(() => {
-    if (set.hasSeenSwipeHint) return;
+    if (set.hasSeenSwipeHint || set.setIndex !== 0) return;
 
     hintTranslateX.value = withDelay(
       500,
@@ -142,12 +159,12 @@ function SetRow({ set, onUpdate, onDelete, onToggleComplete }: Props) {
         <Animated.View
           entering={FadeIn}
           exiting={FadeOut.duration(400)}
-          style={hintStyle}
+          style={[hintStyle, { height: 42 }]}
           className={`flex-row items-center justify-around rounded-md ${
             set.completed
               ? "bg-green-600 dark:bg-green-600"
               : "bg-white dark:bg-black"
-          } ${isAndroid ? "px-2" : "p-2"} `}
+          } px-2`}
         >
           {/* Set number */}
           <Text
@@ -163,33 +180,61 @@ function SetRow({ set, onUpdate, onDelete, onToggleComplete }: Props) {
             --
           </Text>
 
-          {/* Weight */}
-          <TextInput
-            value={set.weight?.toString()}
-            keyboardType="numeric"
-            selectTextOnFocus
-            onFocus={() => setIsEditing(true)}
-            onBlur={() => setIsEditing(false)}
-            className={`w-16 text-center text-lg ${set.completed ? "text-white" : "text-blue-500"}`}
-            placeholder="0"
-            placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-            onChangeText={(text) => onUpdate({ weight: Number(text) })}
-            style={{ lineHeight }}
-          />
+          {hasWeight && (
+            <TextInput
+              value={set.weight?.toString()}
+              keyboardType="numeric"
+              selectTextOnFocus
+              onFocus={() => setIsEditing(true)}
+              onBlur={() => setIsEditing(false)}
+              className={`w-16 text-center text-lg ${
+                set.completed ? "text-white" : "text-blue-500"
+              }`}
+              placeholder="0"
+              placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+              style={{ lineHeight }} // match row height minus inner padding
+              onChangeText={(text) => onUpdate({ weight: Number(text) })}
+            />
+          )}
 
-          {/* Reps */}
-          <TextInput
-            value={set.reps?.toString()}
-            keyboardType="numeric"
-            selectTextOnFocus
-            onFocus={() => setIsEditing(true)}
-            onBlur={() => setIsEditing(false)}
-            className={`w-16 text-center text-lg ${set.completed ? "text-white" : "text-blue-500"}`}
-            placeholder="0"
-            placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-            onChangeText={(text) => onUpdate({ reps: Number(text) })}
-            style={{ lineHeight }}
-          />
+          {hasReps && (
+            <TextInput
+              value={set.reps?.toString()}
+              keyboardType="numeric"
+              selectTextOnFocus
+              onFocus={() => setIsEditing(true)}
+              onBlur={() => setIsEditing(false)}
+              className={`w-16 text-center text-lg ${
+                set.completed ? "text-white" : "text-blue-500"
+              }`}
+              placeholder="0"
+              placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+              style={{ lineHeight }}
+              onChangeText={(text) => onUpdate({ reps: Number(text) })}
+            />
+          )}
+
+          {hasDuration && (
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                set.durationStartedAt ? onStopTimer() : onStartTimer();
+              }}
+              className="flex w-20 flex-row items-center justify-center gap-x-1"
+            >
+              <MaterialCommunityIcons
+                name={set.durationStartedAt ? "stop" : "play"}
+                size={24}
+                color={set.completed ? "white" : "#3b82f6"}
+              />
+
+              <DisplayDuration
+                baseSeconds={set.durationSeconds}
+                runningSince={set.durationStartedAt}
+                textColor={set.completed ? "text-white" : "text-blue-500"}
+              />
+            </TouchableOpacity>
+          )}
         </Animated.View>
       </View>
     </Swipeable>

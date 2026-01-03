@@ -1,6 +1,6 @@
 import { DisplayDuration } from "@/components/DisplayDuration";
 import ExerciseRow from "@/components/workout/ExerciseRow";
-import { useExercise } from "@/stores/exerciseStore";
+import { Exercise, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -26,6 +26,8 @@ export default function StartWorkout() {
     updateSet,
     toggleSetCompletion,
     removeSetFromExercise,
+    startSetTimer,
+    stopSetTimer,
   } = useWorkout();
 
   const handleReplaceExercise = (oldExerciseId: string) => {
@@ -33,7 +35,7 @@ export default function StartWorkout() {
     router.push("/(app)/exercises");
   };
 
-  const exerciseMap = useMemo(
+  const exerciseMap = useMemo<Map<string, Exercise>>(
     () => new Map(exerciseList.map((e) => [e.id, e])),
     [exerciseList],
   );
@@ -53,7 +55,10 @@ export default function StartWorkout() {
           size={24}
           color={isDark ? "white" : "black"}
         />
-        <DisplayDuration startTime={activeWorkout.startTime} />
+        <DisplayDuration
+          startTime={activeWorkout.startTime}
+          textColor="text-blue-500"
+        />
       </View>
 
       <DraggableFlatList
@@ -81,6 +86,8 @@ export default function StartWorkout() {
         renderItem={({ item, drag, isActive }) => {
           const details = exerciseMap.get(item.exerciseId);
 
+          if (!details) return null;
+
           return (
             <ExerciseRow
               exercise={item}
@@ -105,6 +112,8 @@ export default function StartWorkout() {
               onDeleteSet={(setId) =>
                 removeSetFromExercise(item.exerciseId, setId)
               }
+              onStartSetTimer={(setId) => startSetTimer(item.exerciseId, setId)}
+              onStopSetTimer={(setId) => stopSetTimer(item.exerciseId, setId)}
             />
           );
         }}

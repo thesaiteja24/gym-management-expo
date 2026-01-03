@@ -1,44 +1,55 @@
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
 
-export type Workout = {
+export type WorkoutLog = {
   title: string;
   startTime: Date;
   endTime: Date;
+
   exercises: Array<WorkoutLogExercise>;
 };
 
 export type WorkoutLogExercise = {
   exerciseId: string;
   exerciseIndex: number;
+
   sets: WorkoutLogSet[];
 };
 
 export type WorkoutLogSet = {
-  id: string;
   setIndex: number;
   weight?: number;
   reps?: number;
   rpe?: number;
   durationSeconds?: number;
-  notes?: string;
+  note?: string;
+  restSeconds?: number;
   completed: boolean;
 
+  // client-only fields
+  id: string;
   hasSeenSwipeHint?: boolean;
+  durationStartedAt?: number | null;
 };
 
 type WorkoutState = {
-  activeWorkout: Workout | null;
+  activeWorkout: WorkoutLog | null;
   exerciseSelection: boolean;
   exerciseReplacementId: string | null;
 
+  // Workout controls
   startWorkout: () => void;
   endWorkout: () => void;
+
+  // Exercise Controls
   setExerciseSelection: (select: boolean) => void;
-  setExerciseReplacementId: (oldExerciseId: string | null) => void;
   selectExercise: (exerciseId: string) => void;
+  setExerciseReplacementId: (oldExerciseId: string | null) => void;
   removeExercise: (exerciseId: string) => void;
   replaceExercise: (oldExerciseId: string, newExerciseId: string) => void;
+  reorderExercises: (ordered: WorkoutLogExercise[]) => void;
+
+  // Set Controls
   addSetToExercise: (exerciseId: string) => void;
   updateSet: (
     exerciseId: string,
@@ -47,7 +58,8 @@ type WorkoutState = {
   ) => void;
   toggleSetCompletion: (exerciseId: string, setId: string) => void;
   removeSetFromExercise: (exerciseId: string, setId: string) => void;
-  reorderExercises: (ordered: WorkoutLogExercise[]) => void;
+  startSetTimer: (exerciseId: string, setId: string) => void;
+  stopSetTimer: (exerciseId: string, setId: string) => void;
 };
 
 const initialState = {
@@ -58,13 +70,15 @@ const initialState = {
 
 export const useWorkout = create<WorkoutState>((set) => ({
   ...initialState,
+
+  // Workout controls
   startWorkout: () => {
     if (useWorkout.getState().activeWorkout) {
       return; // A workout is already active
     }
 
     // Initalize a new workout
-    const workout: Workout = {
+    const workout: WorkoutLog = {
       title: "New Workout",
       startTime: new Date(),
       endTime: new Date(),
@@ -77,6 +91,7 @@ export const useWorkout = create<WorkoutState>((set) => ({
     set({ ...initialState });
   },
 
+  // Exercise Controls
   setExerciseSelection: (select: boolean) => {
     set({ exerciseSelection: select });
   },
@@ -185,6 +200,7 @@ export const useWorkout = create<WorkoutState>((set) => ({
     });
   },
 
+  // Set Controls
   addSetToExercise: (exerciseId: string) => {
     set((state) => {
       const workout = state.activeWorkout;
@@ -293,6 +309,64 @@ export const useWorkout = create<WorkoutState>((set) => ({
 
             return { ...ex, sets: filtered };
           }),
+        },
+      };
+    });
+  },
+
+  startSetTimer: (exerciseId, setId) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: workout.exercises.map((ex) =>
+            ex.exerciseId === exerciseId
+              ? {
+                  ...ex,
+                  sets: ex.sets.map((s) =>
+                    s.id === setId && !s.durationStartedAt
+                      ? { ...s, durationStartedAt: Date.now() }
+                      : s,
+                  ),
+                }
+              : ex,
+          ),
+        },
+      };
+    });
+  },
+
+  stopSetTimer: (exerciseId, setId) => {
+    set((state) => {
+      const workout = state.activeWorkout;
+      if (!workout) return state;
+
+      return {
+        activeWorkout: {
+          ...workout,
+          exercises: workout.exercises.map((ex) =>
+            ex.exerciseId === exerciseId
+              ? {
+                  ...ex,
+                  sets: ex.sets.map((s) => {
+                    if (s.id !== setId || !s.durationStartedAt) return s;
+
+                    const elapsed = Math.floor(
+                      (Date.now() - s.durationStartedAt) / 1000,
+                    );
+
+                    return {
+                      ...s,
+                      durationSeconds: (s.durationSeconds ?? 0) + elapsed,
+                      durationStartedAt: null,
+                    };
+                  }),
+                }
+              : ex,
+          ),
         },
       };
     });
