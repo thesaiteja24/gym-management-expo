@@ -11,6 +11,9 @@ export default function WorkoutScreen() {
         <View className="flex-1">
           <TouchableOpacity
             onPress={() => {
+              if (!activeWorkout) {
+                useWorkout.getState().startWorkout();
+              }
               router.push("/(app)/workout/start");
             }}
             className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"

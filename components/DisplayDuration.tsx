@@ -58,11 +58,16 @@ export function DisplayDuration(props: DisplayDurationProps) {
   let totalSeconds = 0;
 
   if (isWallClock) {
-    totalSeconds = Math.floor((now - props.startTime.getTime()) / 1000);
+    totalSeconds = Math.max(
+      0,
+      Math.floor((now - props.startTime.getTime()) / 1000),
+    );
   } else {
     const base = props.baseSeconds ?? 0;
     const running =
-      runningSince != null ? Math.floor((now - runningSince) / 1000) : 0;
+      runningSince != null
+        ? Math.max(0, Math.floor((now - runningSince) / 1000))
+        : 0;
 
     totalSeconds = base + running;
   }

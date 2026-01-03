@@ -12,7 +12,7 @@ import { useWorkout } from "@/stores/workoutStore";
 
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import Fuse from "fuse.js";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -174,6 +174,18 @@ export default function ExercisesScreen() {
     router.push(`/(app)/exercises/${exercise.id}`);
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      // screen focused → do nothing
+
+      return () => {
+        // screen unfocused (back, replace, tab switch)
+        setExerciseSelection(false);
+        setExerciseReplacementId(null);
+      };
+    }, []),
+  );
+
   return (
     <View
       style={{ paddingBottom: safeAreaInsets.bottom }}
@@ -252,10 +264,7 @@ export default function ExercisesScreen() {
       />
 
       {exerciseSelection && !exerciseLoading && (
-        <View
-          style={{ marginBottom: safeAreaInsets.bottom }}
-          className="flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900"
-        >
+        <View className="flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900">
           {/* Cancel */}
           <TouchableOpacity
             onPress={() => {
