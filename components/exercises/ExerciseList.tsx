@@ -4,25 +4,28 @@ import { Image } from "expo-image";
 import React, { useCallback } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 
-type Props = {
-  exerciseSelection: boolean;
-  loading: boolean;
-  exercises: Array<Exercise>;
+/* ───────────────── Types ───────────────── */
 
-  isSelected: (id: string) => boolean;
-  onPress: (exercise: any) => void;
-  onLongPress?: (exercise: any) => void;
+type Props = {
+  loading: boolean;
+  exercises: Exercise[];
+
+  isSelected?: (id: string) => boolean;
+  onPress: (exercise: Exercise) => void;
+  onLongPress?: (exercise: Exercise) => void;
 };
+
+/* ───────────────── Row ───────────────── */
 
 const ExerciseRow = React.memo(
   ({
     item,
-    isSelected,
+    selected,
     onPress,
     onLongPress,
   }: {
     item: Exercise;
-    isSelected: boolean;
+    selected: boolean;
     onPress: (e: Exercise) => void;
     onLongPress?: (e: Exercise) => void;
   }) => {
@@ -30,7 +33,7 @@ const ExerciseRow = React.memo(
       <TouchableOpacity
         activeOpacity={1}
         className={`mb-4 h-20 flex-row items-center justify-between px-4 ${
-          isSelected ? "rounded-l-lg border-l-4 border-l-amber-500" : ""
+          selected ? "rounded-l-lg border-l-4 border-l-amber-500" : ""
         }`}
         onPress={() => onPress(item)}
         onLongPress={() => onLongPress?.(item)}
@@ -42,12 +45,18 @@ const ExerciseRow = React.memo(
           </Text>
 
           <View className="mt-1 flex-row gap-4">
-            <Text className="text-sm font-semibold text-blue-500">
-              {item.equipment.title}
-            </Text>
-            <Text className="text-sm font-semibold text-blue-500">
-              {item.primaryMuscleGroup.title}
-            </Text>
+            {item.equipment && (
+              <Text className="text-sm font-semibold text-blue-500">
+                {item.equipment.title}
+              </Text>
+            )}
+
+            {item.primaryMuscleGroup && (
+              <Text className="text-sm font-semibold text-blue-500">
+                {item.primaryMuscleGroup.title}
+              </Text>
+            )}
+
             <Text className="text-sm font-semibold text-red-500">PR</Text>
           </View>
         </View>
@@ -69,8 +78,9 @@ const ExerciseRow = React.memo(
   },
 );
 
+/* ───────────────── List ───────────────── */
+
 export default function ExerciseList({
-  exerciseSelection = false,
   loading,
   exercises,
   isSelected,
@@ -95,12 +105,12 @@ export default function ExerciseList({
     ({ item }: { item: Exercise }) => (
       <ExerciseRow
         item={item}
-        isSelected={exerciseSelection && isSelected(item.id)}
+        selected={isSelected?.(item.id) ?? false}
         onPress={onPress}
         onLongPress={onLongPress}
       />
     ),
-    [exerciseSelection, isSelected, onPress, onLongPress],
+    [isSelected, onPress, onLongPress],
   );
 
   return (

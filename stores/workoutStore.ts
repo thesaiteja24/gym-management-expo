@@ -1,292 +1,241 @@
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
 
+/* ───────────────── Types ───────────────── */
+
 export type WorkoutLog = {
   title: string;
   startTime: Date;
   endTime: Date;
-
-  exercises: Array<WorkoutLogExercise>;
+  exercises: WorkoutLogExercise[];
 };
 
 export type WorkoutLogExercise = {
   exerciseId: string;
   exerciseIndex: number;
-
   sets: WorkoutLogSet[];
 };
 
 export type WorkoutLogSet = {
+  id: string;
   setIndex: number;
+
   weight?: number;
   reps?: number;
   rpe?: number;
   durationSeconds?: number;
-  note?: string;
   restSeconds?: number;
+  note?: string;
+
   completed: boolean;
 
-  // client-only fields
-  id: string;
-  hasSeenSwipeHint?: boolean;
+  // runtime-only
   durationStartedAt?: number | null;
 };
 
-type WorkoutState = {
-  activeWorkout: WorkoutLog | null;
-  exerciseSelection: boolean;
-  exerciseReplacementId: string | null;
+/* ───────────────── State ───────────────── */
 
-  // Workout controls
+type WorkoutState = {
+  workout: WorkoutLog | null;
+
+  rest: {
+    seconds: number | null;
+    startedAt: number | null;
+    running: boolean;
+  };
+
+  /* Workout */
   startWorkout: () => void;
   endWorkout: () => void;
 
-  // Exercise Controls
-  setExerciseSelection: (select: boolean) => void;
-  selectExercise: (exerciseId: string) => void;
-  setExerciseReplacementId: (oldExerciseId: string | null) => void;
+  /* Exercises */
+  addExercise: (exerciseId: string) => void;
   removeExercise: (exerciseId: string) => void;
-  replaceExercise: (oldExerciseId: string, newExerciseId: string) => void;
+  replaceExercise: (oldId: string, newId: string) => void;
   reorderExercises: (ordered: WorkoutLogExercise[]) => void;
 
-  // Set Controls
-  addSetToExercise: (exerciseId: string) => void;
+  /* Sets */
+  addSet: (exerciseId: string) => void;
   updateSet: (
     exerciseId: string,
     setId: string,
     patch: Partial<WorkoutLogSet>,
   ) => void;
-  toggleSetCompletion: (exerciseId: string, setId: string) => void;
-  removeSetFromExercise: (exerciseId: string, setId: string) => void;
+  toggleSetCompleted: (exerciseId: string, setId: string) => void;
+  removeSet: (exerciseId: string, setId: string) => void;
+
+  /* Timers */
   startSetTimer: (exerciseId: string, setId: string) => void;
   stopSetTimer: (exerciseId: string, setId: string) => void;
 
-  restSeconds: number | null;
-  restStartedAt: number | null;
-  restRunning: boolean;
-
+  /* Rest */
   startRestTimer: (seconds: number) => void;
   stopRestTimer: () => void;
   adjustRestTimer: (deltaSeconds: number) => void;
-  setRestForSet: (exerciseId: string, setId: string, seconds: number) => void;
+  saveRestForSet: (exerciseId: string, setId: string, seconds: number) => void;
 };
 
-const initialState = {
-  activeWorkout: null,
-  exerciseSelection: false,
-  exerciseReplacementId: null,
+/* ───────────────── Helpers ───────────────── */
 
-  restSeconds: null,
-  restStartedAt: null,
-  restRunning: false,
+const finalizeSetTimer = (set: WorkoutLogSet): WorkoutLogSet => {
+  if (!set.durationStartedAt) return set;
+
+  const elapsed = Math.floor((Date.now() - set.durationStartedAt) / 1000);
+
+  return {
+    ...set,
+    durationSeconds: (set.durationSeconds ?? 0) + elapsed,
+    durationStartedAt: null,
+  };
 };
 
-export const useWorkout = create<WorkoutState>((set) => ({
-  ...initialState,
+/* ───────────────── Store ───────────────── */
 
-  // Workout controls
-  startWorkout: () => {
-    if (useWorkout.getState().activeWorkout) {
-      return; // A workout is already active
-    }
+export const useWorkout = create<WorkoutState>((set, get) => ({
+  workout: null,
 
-    // Initalize a new workout
-    const workout: WorkoutLog = {
-      title: "New Workout",
-      startTime: new Date(),
-      endTime: new Date(),
-      exercises: [],
-    };
-    set({ activeWorkout: workout });
+  rest: {
+    seconds: null,
+    startedAt: null,
+    running: false,
   },
 
-  endWorkout: () => {
-    set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return initialState;
+  /* ───── Workout ───── */
 
-      const finalizedExercises = workout.exercises.map((ex) => ({
-        ...ex,
-        sets: ex.sets.map((s) => {
-          if (!s.durationStartedAt) return s;
+  startWorkout: () => {
+    if (get().workout) return;
 
-          const elapsed = Math.floor((Date.now() - s.durationStartedAt) / 1000);
-
-          return {
-            ...s,
-            durationSeconds: (s.durationSeconds ?? 0) + elapsed,
-            durationStartedAt: null,
-          };
-        }),
-      }));
-
-      // If you later persist, you'd do it here
-
-      return initialState;
+    set({
+      workout: {
+        title: "New Workout",
+        startTime: new Date(),
+        endTime: new Date(),
+        exercises: [],
+      },
     });
   },
 
-  // Exercise Controls
-  setExerciseSelection: (select: boolean) => {
-    set({ exerciseSelection: select });
+  endWorkout: () => {
+    const workout = get().workout;
+    if (!workout) return;
+
+    set({
+      workout: {
+        ...workout,
+        endTime: new Date(),
+        exercises: workout.exercises.map((ex) => ({
+          ...ex,
+          sets: ex.sets.map(finalizeSetTimer),
+        })),
+      },
+    });
+
+    set({ workout: null });
   },
 
-  selectExercise: (exerciseId) => {
+  /* ───── Exercises ───── */
+
+  addExercise: (exerciseId) =>
     set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
+      if (!state.workout) return state;
 
-      const existsIndex = workout.exercises.findIndex(
-        (e) => e.exerciseId === exerciseId,
-      );
-
-      // remove if exists
-      if (existsIndex !== -1) {
-        const updated = workout.exercises
-          .filter((e) => e.exerciseId !== exerciseId)
-          .map((e, index) => ({
-            ...e,
-            exerciseIndex: index,
-          }));
-
-        return {
-          activeWorkout: {
-            ...workout,
-            exercises: updated,
-          },
-        };
+      if (state.workout.exercises.some((e) => e.exerciseId === exerciseId)) {
+        return state;
       }
 
-      // add if not exists
       return {
-        activeWorkout: {
-          ...workout,
+        workout: {
+          ...state.workout,
           exercises: [
-            ...workout.exercises,
+            ...state.workout.exercises,
             {
               exerciseId,
-              exerciseIndex: workout.exercises.length,
+              exerciseIndex: state.workout.exercises.length,
               sets: [],
             },
           ],
         },
       };
-    });
-  },
+    }),
 
-  removeExercise: (exerciseId) => {
+  removeExercise: (exerciseId) =>
     set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
+      if (!state.workout) return state;
 
-      const updated = workout.exercises
+      const exercises = state.workout.exercises
         .filter((e) => e.exerciseId !== exerciseId)
-        .map((e, index) => ({
-          ...e,
-          exerciseIndex: index,
-        }));
+        .map((e, index) => ({ ...e, exerciseIndex: index }));
 
       return {
-        activeWorkout: {
-          ...workout,
-          exercises: updated,
+        workout: { ...state.workout, exercises },
+      };
+    }),
+
+  replaceExercise: (oldId, newId) =>
+    set((state) => {
+      if (!state.workout) return state;
+
+      return {
+        workout: {
+          ...state.workout,
+          exercises: state.workout.exercises.map((e) =>
+            e.exerciseId === oldId ? { ...e, exerciseId: newId } : e,
+          ),
         },
       };
-    });
-  },
+    }),
 
-  reorderExercises: (ordered) => {
+  reorderExercises: (ordered) =>
     set((state) => {
-      if (!state.activeWorkout) return state;
+      if (!state.workout) return state;
 
       return {
-        activeWorkout: {
-          ...state.activeWorkout,
-          exercises: ordered.map((ex, index) => ({
-            ...ex,
+        workout: {
+          ...state.workout,
+          exercises: ordered.map((e, index) => ({
+            ...e,
             exerciseIndex: index,
           })),
         },
       };
-    });
-  },
+    }),
 
-  setExerciseReplacementId: (oldExerciseId: string | null) => {
-    set({ exerciseReplacementId: oldExerciseId });
-  },
+  /* ───── Sets ───── */
 
-  replaceExercise: (oldExerciseId: string, newExerciseId: string) => {
+  addSet: (exerciseId) =>
     set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
-
-      const updated = workout.exercises.map((e) =>
-        e.exerciseId === oldExerciseId
-          ? { ...e, exerciseId: newExerciseId }
-          : e,
-      );
+      if (!state.workout) return state;
 
       return {
-        activeWorkout: {
-          ...workout,
-          exercises: updated,
+        workout: {
+          ...state.workout,
+          exercises: state.workout.exercises.map((ex) =>
+            ex.exerciseId === exerciseId
+              ? {
+                  ...ex,
+                  sets: [
+                    ...ex.sets,
+                    {
+                      id: Crypto.randomUUID(),
+                      setIndex: ex.sets.length,
+                      completed: false,
+                    },
+                  ],
+                }
+              : ex,
+          ),
         },
       };
-    });
-  },
+    }),
 
-  // Set Controls
-  addSetToExercise: (exerciseId: string) => {
+  updateSet: (exerciseId, setId, patch) =>
     set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
+      if (!state.workout) return state;
 
       return {
-        activeWorkout: {
-          ...workout,
-          exercises: workout.exercises.map((ex) => {
-            if (ex.exerciseId !== exerciseId) return ex;
-
-            const isAddingSecondSet = ex.sets.length === 1;
-
-            const updatedSets = ex.sets.map((s, index) =>
-              isAddingSecondSet && index === 0
-                ? { ...s, hasSeenSwipeHint: false } // 👈 arm hint
-                : s,
-            );
-
-            return {
-              ...ex,
-              sets: [
-                ...updatedSets,
-                {
-                  id: Crypto.randomUUID(),
-                  setIndex: ex.sets.length,
-                  weight: 0,
-                  reps: 0,
-                  completed: false,
-                },
-              ],
-            };
-          }),
-        },
-      };
-    });
-  },
-
-  updateSet: (
-    exerciseId: string,
-    setId: string,
-    patch: Partial<WorkoutLogSet>,
-  ) => {
-    set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
-
-      return {
-        activeWorkout: {
-          ...workout,
-          exercises: workout.exercises.map((ex) =>
+        workout: {
+          ...state.workout,
+          exercises: state.workout.exercises.map((ex) =>
             ex.exerciseId === exerciseId
               ? {
                   ...ex,
@@ -298,18 +247,16 @@ export const useWorkout = create<WorkoutState>((set) => ({
           ),
         },
       };
-    });
-  },
+    }),
 
-  toggleSetCompletion: (exerciseId: string, setId: string) => {
+  toggleSetCompleted: (exerciseId, setId) =>
     set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
+      if (!state.workout) return state;
 
       return {
-        activeWorkout: {
-          ...workout,
-          exercises: workout.exercises.map((ex) =>
+        workout: {
+          ...state.workout,
+          exercises: state.workout.exercises.map((ex) =>
             ex.exerciseId === exerciseId
               ? {
                   ...ex,
@@ -321,43 +268,39 @@ export const useWorkout = create<WorkoutState>((set) => ({
           ),
         },
       };
-    });
-  },
+    }),
 
-  removeSetFromExercise: (exerciseId: string, setId: string) => {
+  removeSet: (exerciseId, setId) =>
     set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
+      if (!state.workout) return state;
 
       return {
-        activeWorkout: {
-          ...workout,
-          exercises: workout.exercises.map((ex) => {
-            if (ex.exerciseId !== exerciseId) return ex;
-
-            const filtered = ex.sets
-              .filter((s) => s.id !== setId)
-              .map((s, index) => ({
-                ...s,
-                setIndex: index,
-              }));
-
-            return { ...ex, sets: filtered };
-          }),
+        workout: {
+          ...state.workout,
+          exercises: state.workout.exercises.map((ex) =>
+            ex.exerciseId === exerciseId
+              ? {
+                  ...ex,
+                  sets: ex.sets
+                    .filter((s) => s.id !== setId)
+                    .map((s, index) => ({ ...s, setIndex: index })),
+                }
+              : ex,
+          ),
         },
       };
-    });
-  },
+    }),
 
-  startSetTimer: (exerciseId, setId) => {
+  /* ───── Set Timers ───── */
+
+  startSetTimer: (exerciseId, setId) =>
     set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
+      if (!state.workout) return state;
 
       return {
-        activeWorkout: {
-          ...workout,
-          exercises: workout.exercises.map((ex) =>
+        workout: {
+          ...state.workout,
+          exercises: state.workout.exercises.map((ex) =>
             ex.exerciseId === exerciseId
               ? {
                   ...ex,
@@ -371,77 +314,69 @@ export const useWorkout = create<WorkoutState>((set) => ({
           ),
         },
       };
-    });
-  },
+    }),
 
-  stopSetTimer: (exerciseId, setId) => {
+  stopSetTimer: (exerciseId, setId) =>
     set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
+      if (!state.workout) return state;
 
       return {
-        activeWorkout: {
-          ...workout,
-          exercises: workout.exercises.map((ex) =>
+        workout: {
+          ...state.workout,
+          exercises: state.workout.exercises.map((ex) =>
             ex.exerciseId === exerciseId
               ? {
                   ...ex,
-                  sets: ex.sets.map((s) => {
-                    if (s.id !== setId || !s.durationStartedAt) return s;
-
-                    const elapsed = Math.floor(
-                      (Date.now() - s.durationStartedAt) / 1000,
-                    );
-
-                    return {
-                      ...s,
-                      durationSeconds: (s.durationSeconds ?? 0) + elapsed,
-                      durationStartedAt: null,
-                    };
-                  }),
+                  sets: ex.sets.map((s) =>
+                    s.id === setId ? finalizeSetTimer(s) : s,
+                  ),
                 }
               : ex,
           ),
         },
       };
-    });
-  },
+    }),
 
-  startRestTimer: (seconds) => {
+  /* ───── Rest ───── */
+
+  startRestTimer: (seconds) =>
     set({
-      restSeconds: seconds,
-      restStartedAt: Date.now(),
-      restRunning: true,
-    });
-  },
+      rest: {
+        seconds,
+        startedAt: Date.now(),
+        running: true,
+      },
+    }),
 
-  stopRestTimer: () => {
+  stopRestTimer: () =>
     set({
-      restSeconds: null,
-      restStartedAt: null,
-      restRunning: false,
-    });
-  },
+      rest: {
+        seconds: null,
+        startedAt: null,
+        running: false,
+      },
+    }),
 
-  adjustRestTimer: (deltaSeconds) => {
+  adjustRestTimer: (deltaSeconds) =>
     set((state) => {
-      if (!state.restRunning || state.restSeconds == null) return state;
+      if (!state.rest.running || state.rest.seconds == null) return state;
 
       return {
-        restSeconds: Math.max(0, state.restSeconds + deltaSeconds),
+        rest: {
+          ...state.rest,
+          seconds: Math.max(0, state.rest.seconds + deltaSeconds),
+        },
       };
-    });
-  },
+    }),
 
-  setRestForSet: (exerciseId, setId, seconds) => {
+  saveRestForSet: (exerciseId, setId, seconds) =>
     set((state) => {
-      const workout = state.activeWorkout;
-      if (!workout) return state;
+      if (!state.workout) return state;
 
       return {
-        activeWorkout: {
-          ...workout,
-          exercises: workout.exercises.map((ex) =>
+        workout: {
+          ...state.workout,
+          exercises: state.workout.exercises.map((ex) =>
             ex.exerciseId === exerciseId
               ? {
                   ...ex,
@@ -453,6 +388,5 @@ export const useWorkout = create<WorkoutState>((set) => ({
           ),
         },
       };
-    });
-  },
+    }),
 }));

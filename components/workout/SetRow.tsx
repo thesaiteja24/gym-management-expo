@@ -24,6 +24,13 @@ import Animated, {
 } from "react-native-reanimated";
 import { DisplayDuration } from "../DisplayDuration";
 
+/* ───────────────── Constants ───────────────── */
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const DELETE_REVEAL_WIDTH = SCREEN_WIDTH * 0.25;
+
+/* ───────────────── Props ───────────────── */
+
 type Props = {
   set: WorkoutLogSet;
   hasWeight: boolean;
@@ -33,14 +40,15 @@ type Props = {
   onUpdate: (patch: Partial<WorkoutLogSet>) => void;
   onDelete: () => void;
   onToggleComplete: () => void;
+
   onStartTimer: () => void;
   onStopTimer: () => void;
+
   onStartRest: (seconds: number) => void;
   onOpenRestPicker: () => void;
 };
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const DELETE_REVEAL_WIDTH = SCREEN_WIDTH * 0.25; // 25% width for delete button
+/* ───────────────── Component ───────────────── */
 
 function SetRow({
   set,
@@ -56,49 +64,58 @@ function SetRow({
   onOpenRestPicker,
 }: Props) {
   const isDark = useColorScheme() === "dark";
-  const lineHeight = Platform.OS === "ios" ? 0 : 18;
+  const lineHeight = Platform.OS === "ios" ? undefined : 18;
+
+  /* ───── Local UI state ───── */
+
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
   const swipeableRef = useRef<SwipeableMethods>(null);
   const hasTriggeredHaptic = useRef(false);
+
+  /* ───── Swipe hint (component-only) ───── */
+
   const hintTranslateX = useSharedValue(0);
+  const hasShownHint = useRef(false);
+
   const hintStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: hintTranslateX.value }],
   }));
+
+  useEffect(() => {
+    if (set.setIndex !== 0 || hasShownHint.current) return;
+
+    hasShownHint.current = true;
+
+    hintTranslateX.value = withDelay(
+      500,
+      withSequence(
+        withTiming(40, { duration: 400 }),
+        withTiming(-40, { duration: 400 }),
+        withTiming(0, { duration: 400 }),
+      ),
+    );
+  }, [set.setIndex]);
+
+  /* ───── Actions ───── */
 
   const handleDelete = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     swipeableRef.current?.close();
     setIsDeleting(true);
 
-    setTimeout(() => {
-      onDelete();
-    }, 400); // match animation duration
+    setTimeout(onDelete, 400);
   };
 
-  useEffect(() => {
-    if (set.hasSeenSwipeHint || set.setIndex !== 0) return;
+  /* ───────────────── Render helpers ───────────────── */
 
-    hintTranslateX.value = withDelay(
-      500,
-      withSequence(
-        withTiming(50, { duration: 500 }),
-        withTiming(-50, { duration: 500 }),
-        withTiming(0, { duration: 500 }),
-      ),
-    );
-
-    onUpdate({ hasSeenSwipeHint: true });
-  }, []);
-
-  // Left swipe → complete
   const renderLeftActions = () => (
     <View className="flex-1 items-start justify-center rounded-md bg-green-700 px-6">
       <Ionicons name="checkmark-circle" size={28} color="white" />
     </View>
   );
 
-  // Right swipe → delete button (fixed width)
   const renderRightActions = () => (
     <TouchableOpacity
       onPress={handleDelete}
@@ -107,6 +124,8 @@ function SetRow({
       <Ionicons name="trash" size={24} color="white" />
     </TouchableOpacity>
   );
+
+  /* ───────────────── Render ───────────────── */
 
   return (
     <Swipeable
@@ -121,16 +140,11 @@ function SetRow({
       renderRightActions={renderRightActions}
       onSwipeableOpen={(direction) => {
         if (hasTriggeredHaptic.current) return;
-
         hasTriggeredHaptic.current = true;
 
         if (direction === "right") {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-          requestAnimationFrame(() => {
-            swipeableRef.current?.close();
-          });
-
+          requestAnimationFrame(() => swipeableRef.current?.close());
           onToggleComplete();
         }
 
@@ -143,7 +157,7 @@ function SetRow({
       }}
     >
       <View className="relative overflow-hidden rounded-md">
-        {/* LEFT (complete) */}
+        {/* Left background */}
         <Animated.View
           entering={FadeIn.duration(1000)}
           className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-green-600 px-4"
@@ -151,7 +165,7 @@ function SetRow({
           <Ionicons name="checkmark-circle" size={22} color="white" />
         </Animated.View>
 
-        {/* RIGHT (delete) */}
+        {/* Right background */}
         <Animated.View
           entering={FadeIn.duration(1000)}
           className="absolute inset-y-0 right-0 w-20 items-end justify-center bg-red-600 px-4"
@@ -159,41 +173,44 @@ function SetRow({
           <Ionicons name="trash" size={20} color="white" />
         </Animated.View>
 
+        {/* Foreground */}
         <Animated.View
           entering={FadeIn}
           exiting={FadeOut.duration(400)}
           style={[hintStyle, { height: 42 }]}
-          className={`flex-row items-center justify-around rounded-md ${
+          className={`flex-row items-center justify-around rounded-md px-2 ${
             set.completed
               ? "bg-green-600 dark:bg-green-600"
               : "bg-white dark:bg-black"
-          } px-2`}
+          }`}
         >
           {/* Set number */}
           <Text
-            className={`w-10 text-center text-blue-500 ${set.completed ? "text-white" : ""}`}
+            className={`w-10 text-center ${
+              set.completed ? "text-white" : "text-blue-500"
+            }`}
           >
             {set.setIndex + 1}
           </Text>
 
           {/* Previous */}
           <Text
-            className={`flex-1 text-center text-blue-500 ${set.completed ? "text-white" : ""}`}
+            className={`flex-1 text-center ${
+              set.completed ? "text-white" : "text-blue-500"
+            }`}
           >
             --
           </Text>
 
+          {/* Rest */}
           <View className="w-16 items-center">
             <TouchableOpacity
-              onPress={() => {
-                if (set.restSeconds != null) {
-                  onStartRest(set.restSeconds);
-                } else {
-                  onOpenRestPicker();
-                }
-              }}
+              onPress={() =>
+                set.restSeconds != null
+                  ? onStartRest(set.restSeconds)
+                  : onOpenRestPicker()
+              }
               onLongPress={onOpenRestPicker}
-              className="flex w-8 items-center justify-center"
             >
               <MaterialCommunityIcons
                 name="timer-outline"
@@ -202,6 +219,8 @@ function SetRow({
               />
             </TouchableOpacity>
           </View>
+
+          {/* Weight */}
           {hasWeight && (
             <TextInput
               value={set.weight?.toString()}
@@ -209,16 +228,17 @@ function SetRow({
               selectTextOnFocus
               onFocus={() => setIsEditing(true)}
               onBlur={() => setIsEditing(false)}
+              onChangeText={(text) => onUpdate({ weight: Number(text) })}
+              placeholder="0"
+              placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+              style={{ lineHeight }}
               className={`w-16 text-center text-lg ${
                 set.completed ? "text-white" : "text-blue-500"
               }`}
-              placeholder="0"
-              placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-              style={{ lineHeight }} // match row height minus inner padding
-              onChangeText={(text) => onUpdate({ weight: Number(text) })}
             />
           )}
 
+          {/* Reps */}
           {hasReps && (
             <TextInput
               value={set.reps?.toString()}
@@ -226,22 +246,22 @@ function SetRow({
               selectTextOnFocus
               onFocus={() => setIsEditing(true)}
               onBlur={() => setIsEditing(false)}
-              className={`w-16 text-center text-lg ${
-                set.completed ? "text-white" : "text-blue-500"
-              }`}
+              onChangeText={(text) => onUpdate({ reps: Number(text) })}
               placeholder="0"
               placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
               style={{ lineHeight }}
-              onChangeText={(text) => onUpdate({ reps: Number(text) })}
+              className={`w-16 text-center text-lg ${
+                set.completed ? "text-white" : "text-blue-500"
+              }`}
             />
           )}
 
+          {/* Duration */}
           {hasDuration && (
             <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                set.durationStartedAt ? onStopTimer() : onStartTimer();
-              }}
+              onPress={() =>
+                set.durationStartedAt ? onStopTimer() : onStartTimer()
+              }
               className="flex w-20 flex-row items-center justify-center gap-x-1"
             >
               <MaterialCommunityIcons
