@@ -12,10 +12,10 @@ import { useWorkout } from "@/stores/workoutStore";
 
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import Fuse from "fuse.js";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Text,
   TextInput,
@@ -26,7 +26,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-// Chip (pure UI)
+/* ───────────────── Chip (UI only) ───────────────── */
+
 type ChipProps = {
   label: string;
   onRemove: () => void;
@@ -52,10 +53,19 @@ function Chip({ label, onRemove }: ChipProps) {
   );
 }
 
-// Screen
+/* ───────────────── Screen ───────────────── */
+
 export default function ExercisesScreen() {
   const role = useAuth((s) => s.user?.role);
   const safeAreaInsets = useSafeAreaInsets();
+  const params = useLocalSearchParams();
+
+  const replaceExerciseId =
+    typeof params.replace === "string" ? params.replace : null;
+
+  const isSelectionMode = params.mode === "select";
+
+  const { addExercise, replaceExercise, workout } = useWorkout();
 
   const { equipmentList, equipmentLoading, getAllEquipment } = useEquipment();
   const { muscleGroupList, muscleGroupLoading, getAllMuscleGroups } =
@@ -63,18 +73,14 @@ export default function ExercisesScreen() {
   const { exerciseList, exerciseLoading, getAllExercises, deleteExercise } =
     useExercise();
 
-  const {
-    exerciseSelection,
-    exerciseReplacementId,
-    activeWorkout,
-    selectExercise,
-    replaceExercise,
-    setExerciseSelection,
-    setExerciseReplacementId,
-  } = useWorkout();
+  const selectedExerciseIds = useMemo(
+    () => new Set(workout?.exercises.map((e) => e.exerciseId) ?? []),
+    [workout?.exercises],
+  );
 
-  const selectedCount = activeWorkout?.exercises.length || 0;
+  const selectedCount = selectedExerciseIds.size;
 
+  const [query, setQuery] = useState("");
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [showMuscleGroupsModal, setShowMuscleGroupsModal] = useState(false);
 
@@ -88,19 +94,15 @@ export default function ExercisesScreen() {
     title: string;
   } | null>(null);
 
-  /* ---------------------------------------------
-     Load data
-  --------------------------------------------- */
+  /* ───────────────── Load data ───────────────── */
+
   useEffect(() => {
     getAllEquipment();
     getAllMuscleGroups();
     getAllExercises();
   }, []);
 
-  /* ---------------------------------------------
-     Fuzzy Search and Filtering
-  --------------------------------------------- */
-  const [query, setQuery] = useState("");
+  /* ───────────────── Fuzzy search ───────────────── */
 
   const fuse = useMemo(() => {
     if (!exerciseList.length) return null;
@@ -134,45 +136,30 @@ export default function ExercisesScreen() {
 
     if (!fuse || query.trim() === "") return data;
 
-    const resultIds = new Set(fuse.search(query).map((r) => r.item.id));
-
-    return data.filter((e) => resultIds.has(e.id));
+    const ids = new Set(fuse.search(query).map((r) => r.item.id));
+    return data.filter((e) => ids.has(e.id));
   }, [exerciseList, filter, fuse, query]);
 
-  const selectedExerciseIds = useMemo(() => {
-    return new Set(activeWorkout?.exercises.map((e) => e.exerciseId) ?? []);
-  }, [activeWorkout?.exercises]);
+  /* ───────────────── Handlers ───────────────── */
 
-  const isExerciseSelected = useCallback(
-    (id: string) => selectedExerciseIds.has(id),
-    [selectedExerciseIds],
-  );
-
-  //  Clear search when modal opens
-  useEffect(() => {
-    if (showEquipmentModal || showMuscleGroupsModal) {
-      setQuery("");
-    }
-  }, [showEquipmentModal, showMuscleGroupsModal]);
-
-  // handler for exercise selection mode
   const handleExercisePress = (exercise: Exercise) => {
-    if (exerciseReplacementId) {
-      Haptics.selectionAsync();
-      replaceExercise(exerciseReplacementId, exercise.id);
-      setExerciseReplacementId(null);
+    Haptics.selectionAsync();
+
+    if (replaceExerciseId) {
+      replaceExercise(replaceExerciseId, exercise.id);
       router.replace("/(app)/workout/start");
       return;
     }
 
-    if (exerciseSelection) {
-      Haptics.selectionAsync();
-      selectExercise(exercise.id);
+    if (isSelectionMode) {
+      addExercise(exercise.id);
       return;
     }
 
     router.push(`/(app)/exercises/${exercise.id}`);
   };
+
+  /* ───────────────── Render ───────────────── */
 
   return (
     <View
@@ -237,49 +224,30 @@ export default function ExercisesScreen() {
 
       {/* Exercise list */}
       <ExerciseList
-        exerciseSelection={exerciseSelection}
         loading={exerciseLoading}
         exercises={filteredExercises}
-        isSelected={isExerciseSelected}
+        isSelected={(id) => selectedExerciseIds.has(id)}
         onPress={handleExercisePress}
         onLongPress={(exercise) => {
           if (role !== roles.systemAdmin) return;
-          setDeleteExerciseId({
-            id: exercise.id,
-            title: exercise.title,
-          });
+          setDeleteExerciseId({ id: exercise.id, title: exercise.title });
         }}
       />
 
-      {exerciseSelection && !exerciseLoading && (
-        <View
-          style={{ paddingBottom: safeAreaInsets.bottom }}
-          className="flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900"
-        >
-          {/* Cancel */}
-          <TouchableOpacity
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setExerciseSelection(false);
-              router.replace("/(app)/workout/start");
-            }}
-          >
+      {/* Bottom bar (selection mode) */}
+      {isSelectionMode && !exerciseLoading && (
+        <View className="flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900">
+          <TouchableOpacity onPress={() => router.back()}>
             <Text className="text-lg font-semibold text-red-500">Cancel</Text>
           </TouchableOpacity>
 
-          {/* Count */}
           <Text className="text-lg font-semibold text-black dark:text-white">
             {selectedCount} selected
           </Text>
 
-          {/* Done */}
           <TouchableOpacity
             disabled={selectedCount === 0}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              setExerciseSelection(false);
-              router.replace("/(app)/workout/start");
-            }}
+            onPress={() => router.replace("/(app)/workout/start")}
           >
             <Text
               className={`text-lg font-semibold ${
@@ -292,7 +260,7 @@ export default function ExercisesScreen() {
         </View>
       )}
 
-      {/* Equipment modal */}
+      {/* Modals */}
       <EquipmentModal
         visible={showEquipmentModal}
         loading={equipmentLoading}
@@ -302,14 +270,8 @@ export default function ExercisesScreen() {
           setFilter((f) => ({ ...f, equipmentId: item.id }));
           setShowEquipmentModal(false);
         }}
-        onLongPress={(item) => {
-          if (role !== roles.systemAdmin) return;
-          setShowEquipmentModal(false);
-          router.push(`/equipment/${item.id}`);
-        }}
       />
 
-      {/* Muscle group modal */}
       <MuscleGroupModal
         visible={showMuscleGroupsModal}
         loading={muscleGroupLoading}
@@ -319,14 +281,8 @@ export default function ExercisesScreen() {
           setFilter((f) => ({ ...f, muscleGroupId: item.id }));
           setShowMuscleGroupsModal(false);
         }}
-        onLongPress={(item) => {
-          if (role !== roles.systemAdmin) return;
-          setShowMuscleGroupsModal(false);
-          router.push(`/muscle-groups/${item.id}`);
-        }}
       />
 
-      {/* Delete confirmation */}
       {deleteExerciseId && (
         <DeleteConfirmModal
           visible

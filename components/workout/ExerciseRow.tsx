@@ -1,6 +1,11 @@
 import SetRow from "@/components/workout/SetRow";
+import { Exercise, ExerciseType } from "@/stores/exerciseStore";
 import { WorkoutLogExercise } from "@/stores/workoutStore";
-import { Entypo, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  Entypo,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -11,50 +16,88 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import RestTimerPickerModal from "./RestTimerPickerModal";
+
+/* ───────────────── Capabilities ───────────────── */
+
+const EXERCISE_CAPABILITIES: Record<
+  ExerciseType,
+  { hasWeight: boolean; hasReps: boolean; hasDuration: boolean }
+> = {
+  weighted: { hasWeight: true, hasReps: true, hasDuration: false },
+  repsOnly: { hasWeight: false, hasReps: true, hasDuration: false },
+  assisted: { hasWeight: false, hasReps: true, hasDuration: false },
+  durationOnly: { hasWeight: false, hasReps: false, hasDuration: true },
+};
+
+/* ───────────────── Props ───────────────── */
 
 type Props = {
   exercise: WorkoutLogExercise;
-  exerciseDetails: any;
+  exerciseDetails: Exercise;
   isActive: boolean;
   isDragging: boolean;
 
   drag: () => void;
   onPress: () => void;
+
   onReplaceExercise: () => void;
   onDeleteExercise: () => void;
+
   onAddSet: () => void;
   onUpdateSet: (setId: string, patch: any) => void;
   onToggleCompleteSet: (setId: string) => void;
   onDeleteSet: (setId: string) => void;
+
+  onStartSetTimer: (setId: string) => void;
+  onStopSetTimer: (setId: string) => void;
+
+  onStartRest: (seconds: number) => void;
+  onSaveRestPreset: (setId: string, seconds: number) => void;
 };
+
+/* ───────────────── Component ───────────────── */
 
 function ExerciseRow({
   exercise,
   exerciseDetails,
   isDragging,
   isActive,
-  onPress,
   drag,
+  onPress,
   onReplaceExercise,
   onDeleteExercise,
   onAddSet,
   onUpdateSet,
   onToggleCompleteSet,
   onDeleteSet,
+  onStartSetTimer,
+  onStopSetTimer,
+  onStartRest,
+  onSaveRestPreset,
 }: Props) {
   const isDark = useColorScheme() === "dark";
-  const menuRef = useRef<View>(null);
+
+  const { hasWeight, hasReps, hasDuration } =
+    EXERCISE_CAPABILITIES[exerciseDetails.exerciseType];
+
+  /* ───── Local UI state only ───── */
+
   const [menuVisible, setMenuVisible] = useState(false);
-  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number }>({
-    x: 0,
-    y: 0,
-  });
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+
+  const [restPickerVisible, setRestPickerVisible] = useState(false);
+  const [activeRestSetId, setActiveRestSetId] = useState<string | null>(null);
+
+  const menuRef = useRef<View>(null);
 
   useEffect(() => {
     if (isDragging) {
       setMenuVisible(false);
     }
   }, [isDragging]);
+
+  /* ───────────────── Render ───────────────── */
 
   return (
     <View
@@ -64,7 +107,7 @@ function ExerciseRow({
         transform: [{ scale: isActive ? 1.02 : 1 }],
       }}
     >
-      {/* Drag handle */}
+      {/* ───── Header / drag handle ───── */}
       <View className="flex-row items-center justify-between">
         <View className="w-8/12">
           <TouchableOpacity
@@ -74,7 +117,7 @@ function ExerciseRow({
             className="flex-row items-center gap-4"
           >
             <Image
-              source={exerciseDetails?.thumbnailUrl}
+              source={exerciseDetails.thumbnailUrl}
               style={{
                 width: 40,
                 height: 40,
@@ -84,35 +127,33 @@ function ExerciseRow({
               }}
             />
 
-            <Text className="text-clip text-xl font-semibold text-black dark:text-white">
-              {exerciseDetails?.title}
+            <Text className="text-xl font-semibold text-black dark:text-white">
+              {exerciseDetails.title}
             </Text>
           </TouchableOpacity>
         </View>
 
-        <View>
-          <TouchableOpacity
-            ref={menuRef}
-            onPress={() => {
-              menuRef.current?.measureInWindow((x, y, width, height) => {
-                setMenuPosition({
-                  x: x + width - 160, // align right
-                  y: y + height + 6, // below button
-                });
-                setMenuVisible(true);
+        <TouchableOpacity
+          ref={menuRef}
+          onPress={() => {
+            menuRef.current?.measureInWindow((x, y, width, height) => {
+              setMenuPosition({
+                x: x + width - 160,
+                y: y + height + 6,
               });
-            }}
-          >
-            <Entypo
-              name="dots-three-horizontal"
-              size={24}
-              color={isDark ? "white" : "black"}
-            />
-          </TouchableOpacity>
-        </View>
+              setMenuVisible(true);
+            });
+          }}
+        >
+          <Entypo
+            name="dots-three-horizontal"
+            size={24}
+            color={isDark ? "white" : "black"}
+          />
+        </TouchableOpacity>
       </View>
 
-      {/* Sets header */}
+      {/* ───── Sets header ───── */}
       <View className="flex-row items-center px-2">
         <Text className="w-10 text-lg font-semibold text-black dark:text-white">
           Set
@@ -123,28 +164,62 @@ function ExerciseRow({
         </Text>
 
         <View className="w-16 items-center">
-          <MaterialCommunityIcons
-            name="weight-kilogram"
+          <MaterialIcons
+            name="restore"
             size={22}
             color={isDark ? "white" : "black"}
           />
         </View>
 
-        <View className="w-16 items-center">
-          <Entypo name="cycle" size={22} color={isDark ? "white" : "black"} />
-        </View>
+        {hasWeight && (
+          <View className="w-16 items-center">
+            <MaterialCommunityIcons
+              name="weight-kilogram"
+              size={22}
+              color={isDark ? "white" : "black"}
+            />
+          </View>
+        )}
+
+        {hasReps && (
+          <View className="w-16 items-center">
+            <Entypo name="cycle" size={22} color={isDark ? "white" : "black"} />
+          </View>
+        )}
+
+        {hasDuration && (
+          <View className="w-20 items-center">
+            <MaterialCommunityIcons
+              name="timer-outline"
+              size={22}
+              color={isDark ? "white" : "black"}
+            />
+          </View>
+        )}
       </View>
 
+      {/* ───── Sets ───── */}
       {exercise.sets.map((set) => (
         <SetRow
           key={set.id}
           set={set}
+          hasWeight={hasWeight}
+          hasReps={hasReps}
+          hasDuration={hasDuration}
           onUpdate={(patch) => onUpdateSet(set.id, patch)}
           onToggleComplete={() => onToggleCompleteSet(set.id)}
           onDelete={() => onDeleteSet(set.id)}
+          onStartTimer={() => onStartSetTimer(set.id)}
+          onStopTimer={() => onStopSetTimer(set.id)}
+          onStartRest={(seconds) => onStartRest(seconds)}
+          onOpenRestPicker={() => {
+            setActiveRestSetId(set.id);
+            setRestPickerVisible(true);
+          }}
         />
       ))}
 
+      {/* ───── Add set ───── */}
       <TouchableOpacity
         onPress={onAddSet}
         className="mt-2 h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
@@ -154,16 +229,15 @@ function ExerciseRow({
         </Text>
       </TouchableOpacity>
 
+      {/* ───── Menu ───── */}
       <Modal
         visible={menuVisible}
         transparent
         animationType="fade"
         onRequestClose={() => setMenuVisible(false)}
       >
-        {/* backdrop */}
         <Pressable className="flex-1" onPress={() => setMenuVisible(false)} />
 
-        {/* menu */}
         <View
           style={{
             position: "absolute",
@@ -198,6 +272,24 @@ function ExerciseRow({
           </TouchableOpacity>
         </View>
       </Modal>
+
+      {/* ───── Rest picker ───── */}
+      <RestTimerPickerModal
+        visible={restPickerVisible}
+        onClose={() => {
+          setRestPickerVisible(false);
+          setActiveRestSetId(null);
+        }}
+        onConfirm={(seconds) => {
+          if (!activeRestSetId) return;
+
+          onSaveRestPreset(activeRestSetId, seconds);
+          onStartRest(seconds);
+
+          setRestPickerVisible(false);
+          setActiveRestSetId(null);
+        }}
+      />
     </View>
   );
 }

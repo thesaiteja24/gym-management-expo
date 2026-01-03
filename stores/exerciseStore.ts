@@ -7,6 +7,25 @@ import {
 } from "@/services/exerciseService";
 import { create } from "zustand";
 
+export type ExerciseType =
+  | "repsOnly"
+  | "assisted"
+  | "weighted"
+  | "durationOnly";
+
+export type MuscleGroup = {
+  id: string;
+  title: string;
+  thumbnailUrl: string;
+  tags: Array<string>;
+};
+
+export type Equipment = {
+  id: string;
+  title: string;
+  thumbnailUrl: string;
+};
+
 export type Exercise = {
   id: string;
   title: string;
@@ -14,27 +33,14 @@ export type Exercise = {
   thumbnailUrl: string;
   videoUrl: string;
   primaryMuscleGroupId: string;
+  primaryMuscleGroup: MuscleGroup;
   equipmentId: string;
-  exerciseType: string;
+  equipment: Equipment;
+  exerciseType: ExerciseType;
   createdAt: string;
   updatedAt: string;
-  primaryMuscleGroup: {
-    id: string;
-    title: string;
-    thumbnailUrl: string;
-    tags: Array<string>;
-  };
-  equipment: {
-    id: string;
-    title: string;
-    thumbnailUrl: string;
-  };
-  otherMuscleGroups: Array<{
-    id: string;
-    title: string;
-    thumbnailUrl: string;
-    tags: Array<string>;
-  }>;
+
+  otherMuscleGroups: Array<MuscleGroup>;
 };
 
 type ExerciseState = {
