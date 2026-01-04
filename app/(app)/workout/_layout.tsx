@@ -22,7 +22,6 @@ export default function WorkoutLayout() {
         },
       }}
     >
-      {/* Muscle Groups */}
       <Stack.Screen
         name="start"
         options={
@@ -35,8 +34,9 @@ export default function WorkoutLayout() {
             rightIcons: [
               {
                 name: "checkmark-done",
-                disabled: true,
-                color: "red",
+                onPress: () => {
+                  // this will be injected from the screen
+                },
               },
             ],
           } as any

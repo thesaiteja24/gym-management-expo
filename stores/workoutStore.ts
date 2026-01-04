@@ -1,3 +1,8 @@
+import {
+  createWokroutService,
+  getAllWokroutsService,
+} from "@/services/workoutServices";
+import { finalizeSetTimer, serializeWorkoutForApi } from "@/utils/workout";
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
 
@@ -33,9 +38,43 @@ export type WorkoutLogSet = {
   durationStartedAt?: number | null;
 };
 
+export type WorkoutHistoryItem = {
+  id: string;
+  title: string | null;
+  startTime: string;
+  endTime: string;
+  createdAt: string;
+  updatedAt: string;
+  exercises: WorkoutHistoryExercise[];
+};
+
+export type WorkoutHistoryExercise = {
+  id: string;
+  exerciseId: string;
+  exerciseIndex: number;
+  exercise: {
+    id: string;
+    title: string;
+    thumbnailUrl: string;
+    exerciseType: string;
+  };
+  sets: WorkoutHistorySet[];
+};
+
+export type WorkoutHistorySet = {
+  id: string;
+  setIndex: number;
+  weight: string | null;
+  reps: number | null;
+  durationSeconds: number | null;
+  restSeconds: number | null;
+};
+
 /* ───────────────── State ───────────────── */
 
 type WorkoutState = {
+  workoutLoading: boolean;
+  workoutHistory: WorkoutHistoryItem[];
   workout: WorkoutLog | null;
 
   rest: {
@@ -45,8 +84,10 @@ type WorkoutState = {
   };
 
   /* Workout */
+  getAllWorkouts: () => Promise<void>;
   startWorkout: () => void;
-  endWorkout: () => void;
+  saveWorkout: () => Promise<{ success: boolean; error?: any }>;
+  discardWorkout: () => void;
 
   /* Exercises */
   addExercise: (exerciseId: string) => void;
@@ -75,24 +116,12 @@ type WorkoutState = {
   saveRestForSet: (exerciseId: string, setId: string, seconds: number) => void;
 };
 
-/* ───────────────── Helpers ───────────────── */
-
-const finalizeSetTimer = (set: WorkoutLogSet): WorkoutLogSet => {
-  if (!set.durationStartedAt) return set;
-
-  const elapsed = Math.floor((Date.now() - set.durationStartedAt) / 1000);
-
-  return {
-    ...set,
-    durationSeconds: (set.durationSeconds ?? 0) + elapsed,
-    durationStartedAt: null,
-  };
-};
-
 /* ───────────────── Store ───────────────── */
 
 export const useWorkout = create<WorkoutState>((set, get) => ({
+  workoutLoading: false,
   workout: null,
+  workoutHistory: [],
 
   rest: {
     seconds: null,
@@ -101,6 +130,19 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
   },
 
   /* ───── Workout ───── */
+  getAllWorkouts: async () => {
+    set({ workoutLoading: true });
+    try {
+      const res = await getAllWokroutsService();
+
+      if (res.success) {
+        set({ workoutHistory: res.data || [] });
+      }
+      set({ workoutLoading: false });
+    } catch (error) {
+      set({ workoutLoading: false });
+    }
+  },
 
   startWorkout: () => {
     if (get().workout) return;
@@ -115,22 +157,57 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
     });
   },
 
-  endWorkout: () => {
-    const workout = get().workout;
-    if (!workout) return;
-
+  discardWorkout: () => {
     set({
-      workout: {
-        ...workout,
-        endTime: new Date(),
-        exercises: workout.exercises.map((ex) => ({
-          ...ex,
-          sets: ex.sets.map(finalizeSetTimer),
-        })),
+      workout: null,
+      rest: {
+        seconds: null,
+        startedAt: null,
+        running: false,
       },
     });
+  },
 
-    set({ workout: null });
+  saveWorkout: async () => {
+    const state = get();
+    const workout = state.workout;
+
+    if (!workout) {
+      return { success: false, error: "No active workout" };
+    }
+
+    const finalizedWorkout: WorkoutLog = {
+      ...workout,
+      endTime: new Date(),
+      exercises: workout.exercises.map((ex) => ({
+        ...ex,
+        sets: ex.sets.map(finalizeSetTimer),
+      })),
+    };
+
+    const payload = serializeWorkoutForApi(finalizedWorkout);
+
+    try {
+      const res = await createWokroutService(payload as any);
+
+      return res;
+    } catch (error) {
+      return {
+        success: false,
+        error,
+      };
+    }
+  },
+
+  resetWorkout: () => {
+    set({
+      workout: null,
+      rest: {
+        seconds: null,
+        startedAt: null,
+        running: false,
+      },
+    });
   },
 
   /* ───── Exercises ───── */

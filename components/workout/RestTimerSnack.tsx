@@ -1,68 +1,74 @@
-import { useWorkout } from "@/stores/workoutStore";
+import { formatSeconds } from "@/utils/time";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function format(seconds: number) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
+type Props = {
+  visible: boolean;
+  remainingSeconds: number;
+  onAddTime: (delta: number) => void;
+  onSkip: () => void;
+};
 
-export default function RestTimerSnack() {
-  const {
-    restRunning,
-    restSeconds,
-    restStartedAt,
-    stopRestTimer,
-    adjustRestTimer,
-  } = useWorkout();
+export default function RestTimerSnack({
+  visible,
+  remainingSeconds,
+  onAddTime,
+  onSkip,
+}: Props) {
+  const isDark = useColorScheme() === "dark";
+  const safeAreaInsets = useSafeAreaInsets();
 
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    if (!restRunning) return;
-
-    const id = setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
-    return () => clearInterval(id);
-  }, [restRunning]);
-
-  if (!restRunning || restSeconds == null || restStartedAt == null) {
-    return null;
-  }
-
-  const elapsed = Math.floor((now - restStartedAt) / 1000);
-  const remaining = Math.max(0, restSeconds - elapsed);
-
-  // Auto stop
-  if (remaining === 0) {
-    stopRestTimer();
-    return null;
-  }
+  if (!visible) return null;
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 bg-black px-4 py-3 dark:bg-neutral-900">
+    <View
+      className="absolute bottom-0 left-0 right-0 mx-4 mb-4 rounded-2xl border border-neutral-200 bg-white px-4 py-2 shadow-lg dark:border-neutral-800 dark:bg-black"
+      style={{ marginBottom: safeAreaInsets.bottom }}
+    >
       <View className="flex-row items-center justify-between">
-        <Text className="text-xl font-bold text-white">
-          Rest • {format(remaining)}
+        <Text className="text-xl font-bold text-black dark:text-white">
+          {formatSeconds(remainingSeconds)}
         </Text>
 
-        <View className="flex-row gap-4">
-          <TouchableOpacity onPress={() => adjustRestTimer(-10)}>
-            <Text className="text-lg text-white">−10</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onAddTime(-10);
+          }}
+          className="rounded-full bg-neutral-100 px-3 py-2 dark:bg-neutral-900"
+        >
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            −10
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => adjustRestTimer(10)}>
-            <Text className="text-lg text-white">+10</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onAddTime(10);
+          }}
+          className="rounded-full bg-neutral-100 px-3 py-2 dark:bg-neutral-900"
+        >
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            +10
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity onPress={stopRestTimer}>
-            <Ionicons name="close-circle" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onSkip();
+          }}
+          className="rounded-full bg-neutral-100 p-2 dark:bg-neutral-900"
+        >
+          <Ionicons
+            name="play-skip-forward"
+            size={24}
+            color={isDark ? "white" : "black"}
+          />
+        </TouchableOpacity>
       </View>
     </View>
   );

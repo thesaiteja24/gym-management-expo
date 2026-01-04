@@ -52,7 +52,6 @@ type Props = {
   onStartSetTimer: (setId: string) => void;
   onStopSetTimer: (setId: string) => void;
 
-  onStartRest: (seconds: number) => void;
   onSaveRestPreset: (setId: string, seconds: number) => void;
 };
 
@@ -73,7 +72,6 @@ function ExerciseRow({
   onDeleteSet,
   onStartSetTimer,
   onStopSetTimer,
-  onStartRest,
   onSaveRestPreset,
 }: Props) {
   const isDark = useColorScheme() === "dark";
@@ -211,7 +209,6 @@ function ExerciseRow({
           onDelete={() => onDeleteSet(set.id)}
           onStartTimer={() => onStartSetTimer(set.id)}
           onStopTimer={() => onStopSetTimer(set.id)}
-          onStartRest={(seconds) => onStartRest(seconds)}
           onOpenRestPicker={() => {
             setActiveRestSetId(set.id);
             setRestPickerVisible(true);
@@ -276,6 +273,12 @@ function ExerciseRow({
       {/* ───── Rest picker ───── */}
       <RestTimerPickerModal
         visible={restPickerVisible}
+        initialSeconds={
+          activeRestSetId
+            ? (exercise.sets.find((s) => s.id === activeRestSetId)
+                ?.restSeconds ?? 60)
+            : 60
+        }
         onClose={() => {
           setRestPickerVisible(false);
           setActiveRestSetId(null);
@@ -284,7 +287,6 @@ function ExerciseRow({
           if (!activeRestSetId) return;
 
           onSaveRestPreset(activeRestSetId, seconds);
-          onStartRest(seconds);
 
           setRestPickerVisible(false);
           setActiveRestSetId(null);

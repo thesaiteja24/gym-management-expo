@@ -1,3 +1,4 @@
+import { formatSeconds } from "@/utils/time";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
 
@@ -17,22 +18,6 @@ type AccumulatedProps = {
 };
 
 type DisplayDurationProps = WallClockProps | AccumulatedProps;
-
-/* --------------------------------------------------
-   Helpers
--------------------------------------------------- */
-
-function formatDuration(totalSeconds: number) {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  const pad = (n: number) => String(n).padStart(2, "0");
-
-  if (hours > 0) return `${pad(hours)}h:${pad(minutes)}m:${pad(seconds)}s`;
-  if (minutes > 0) return `${pad(minutes)}m:${pad(seconds)}s`;
-  return `${pad(seconds)}s`;
-}
 
 /* --------------------------------------------------
    Component
@@ -74,7 +59,7 @@ export function DisplayDuration(props: DisplayDurationProps) {
 
   return (
     <Text className={`text-lg font-semibold ${props.textColor ?? ""}`}>
-      {formatDuration(totalSeconds)}
+      {formatSeconds(totalSeconds)}
     </Text>
   );
 }

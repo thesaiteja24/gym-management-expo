@@ -1,3 +1,4 @@
+import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import {
   Modal,
@@ -40,7 +41,7 @@ export default function RestTimerPickerModal({
   const [seconds, setSeconds] = useState(initialSecs);
 
   /* ---------------------------------------------
-     Reset when modal opens (important!)
+     Reset when modal opens
   --------------------------------------------- */
   useEffect(() => {
     if (!visible) return;
@@ -51,18 +52,29 @@ export default function RestTimerPickerModal({
   }, [visible, initialHours, initialMinutes, initialSecs]);
 
   /* ---------------------------------------------
-     Confirm
+     Actions
   --------------------------------------------- */
+  const handleCancel = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onClose();
+  };
+
   const handleConfirm = () => {
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onConfirm(totalSeconds);
     onClose();
+  };
+
+  const handlePickerFeedback = () => {
+    // Trigger a light haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View className="flex-1 justify-end bg-black/40">
-        <Pressable className="absolute inset-0" onPress={onClose} />
+        <Pressable className="absolute inset-0" onPress={handleCancel} />
 
         <View className="h-[55%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">
           {/* Title */}
@@ -77,6 +89,7 @@ export default function RestTimerPickerModal({
               hourLabel="hr"
               minuteLabel="min"
               secondLabel="sec"
+              pickerFeedback={handlePickerFeedback}
               initialValue={{ hours, minutes, seconds }}
               onDurationChange={({ hours, minutes, seconds }) => {
                 setHours(hours);
@@ -100,7 +113,7 @@ export default function RestTimerPickerModal({
           {/* Actions */}
           <View className="mt-4 flex-row gap-4">
             <TouchableOpacity
-              onPress={onClose}
+              onPress={handleCancel}
               className="h-12 flex-1 justify-center rounded-2xl border border-neutral-300 dark:border-neutral-700"
             >
               <Text className="text-center text-lg font-semibold text-black dark:text-white">
@@ -113,7 +126,7 @@ export default function RestTimerPickerModal({
               className="h-12 flex-1 justify-center rounded-2xl bg-blue-600"
             >
               <Text className="text-center text-lg font-semibold text-white">
-                Start Rest
+                Confirm
               </Text>
             </TouchableOpacity>
           </View>

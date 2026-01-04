@@ -65,7 +65,8 @@ export default function ExercisesScreen() {
 
   const isSelectionMode = params.mode === "select";
 
-  const { addExercise, replaceExercise, workout } = useWorkout();
+  const { addExercise, removeExercise, replaceExercise, workout } =
+    useWorkout();
 
   const { equipmentList, equipmentLoading, getAllEquipment } = useEquipment();
   const { muscleGroupList, muscleGroupLoading, getAllMuscleGroups } =
@@ -73,10 +74,18 @@ export default function ExercisesScreen() {
   const { exerciseList, exerciseLoading, getAllExercises, deleteExercise } =
     useExercise();
 
-  const selectedExerciseIds = useMemo(
+  const initialSelectedIds = useMemo(
     () => new Set(workout?.exercises.map((e) => e.exerciseId) ?? []),
     [workout?.exercises],
   );
+
+  // Local, temporary selection buffer (UI only)
+  const [tempSelectedIds, setTempSelectedIds] =
+    useState<Set<string>>(initialSelectedIds);
+
+  const selectedExerciseIds = isSelectionMode
+    ? tempSelectedIds
+    : new Set(workout?.exercises.map((e) => e.exerciseId) ?? []);
 
   const selectedCount = selectedExerciseIds.size;
 
@@ -152,7 +161,17 @@ export default function ExercisesScreen() {
     }
 
     if (isSelectionMode) {
-      addExercise(exercise.id);
+      setTempSelectedIds((prev) => {
+        const next = new Set(prev);
+
+        if (next.has(exercise.id)) {
+          next.delete(exercise.id);
+        } else {
+          next.add(exercise.id);
+        }
+
+        return next;
+      });
       return;
     }
 
@@ -190,7 +209,10 @@ export default function ExercisesScreen() {
             />
           ) : (
             <TouchableOpacity
-              onPress={() => setShowEquipmentModal(true)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+                setShowEquipmentModal(true);
+              }}
               className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
             >
               <Text className="text-center text-xl font-semibold text-black dark:text-white">
@@ -211,7 +233,10 @@ export default function ExercisesScreen() {
             />
           ) : (
             <TouchableOpacity
-              onPress={() => setShowMuscleGroupsModal(true)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+                setShowMuscleGroupsModal(true);
+              }}
               className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
             >
               <Text className="text-center text-xl font-semibold text-black dark:text-white">
@@ -226,6 +251,7 @@ export default function ExercisesScreen() {
       <ExerciseList
         loading={exerciseLoading}
         exercises={filteredExercises}
+        isSelecting={isSelectionMode}
         isSelected={(id) => selectedExerciseIds.has(id)}
         onPress={handleExercisePress}
         onLongPress={(exercise) => {
@@ -236,8 +262,13 @@ export default function ExercisesScreen() {
 
       {/* Bottom bar (selection mode) */}
       {isSelectionMode && !exerciseLoading && (
-        <View className="flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900">
-          <TouchableOpacity onPress={() => router.back()}>
+        <View className="flex-row items-center justify-between rounded-2xl border border-neutral-200/60 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              router.back();
+            }}
+          >
             <Text className="text-lg font-semibold text-red-500">Cancel</Text>
           </TouchableOpacity>
 
@@ -247,7 +278,25 @@ export default function ExercisesScreen() {
 
           <TouchableOpacity
             disabled={selectedCount === 0}
-            onPress={() => router.replace("/(app)/workout/start")}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+              // Remove exercises that were unselected
+              initialSelectedIds.forEach((id) => {
+                if (!tempSelectedIds.has(id)) {
+                  removeExercise(id);
+                }
+              });
+
+              // Add newly selected exercises
+              tempSelectedIds.forEach((id) => {
+                if (!initialSelectedIds.has(id)) {
+                  addExercise(id);
+                }
+              });
+
+              router.replace("/(app)/workout/start");
+            }}
           >
             <Text
               className={`text-lg font-semibold ${
