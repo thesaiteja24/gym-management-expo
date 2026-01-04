@@ -1,30 +1,9 @@
-import { createWokroutService } from "@/services/workoutServices";
+import {
+  createWokroutService,
+  getAllWokroutsService,
+} from "@/services/workoutServices";
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
-
-/* ───────────────── Types ───────────────── */
-export function serializeWorkoutForApi(workout: WorkoutLog) {
-  return {
-    title: workout.title ?? null,
-    startTime: workout.startTime?.toISOString() ?? null,
-    endTime: workout.endTime?.toISOString() ?? null,
-
-    exercises: workout.exercises.map((exercise) => ({
-      exerciseId: exercise.exerciseId,
-      exerciseIndex: exercise.exerciseIndex,
-
-      sets: exercise.sets.map((set) => ({
-        setIndex: set.setIndex,
-        weight: set.weight ?? null,
-        reps: set.reps ?? null,
-        rpe: set.rpe ?? null,
-        durationSeconds: set.durationSeconds ?? null,
-        restSeconds: set.restSeconds ?? null,
-        note: set.note ?? null,
-      })),
-    })),
-  };
-}
 
 /* ───────────────── Types ───────────────── */
 
@@ -58,9 +37,43 @@ export type WorkoutLogSet = {
   durationStartedAt?: number | null;
 };
 
+export type WorkoutHistoryItem = {
+  id: string;
+  title: string | null;
+  startTime: string;
+  endTime: string;
+  createdAt: string;
+  updatedAt: string;
+  exercises: WorkoutHistoryExercise[];
+};
+
+export type WorkoutHistoryExercise = {
+  id: string;
+  exerciseId: string;
+  exerciseIndex: number;
+  exercise: {
+    id: string;
+    title: string;
+    thumbnailUrl: string;
+    exerciseType: string;
+  };
+  sets: WorkoutHistorySet[];
+};
+
+export type WorkoutHistorySet = {
+  id: string;
+  setIndex: number;
+  weight: string | null;
+  reps: number | null;
+  durationSeconds: number | null;
+  restSeconds: number | null;
+};
+
 /* ───────────────── State ───────────────── */
 
 type WorkoutState = {
+  workoutLoading: boolean;
+  workoutHistory: WorkoutHistoryItem[];
   workout: WorkoutLog | null;
 
   rest: {
@@ -70,6 +83,7 @@ type WorkoutState = {
   };
 
   /* Workout */
+  getAllWorkouts: () => Promise<void>;
   startWorkout: () => void;
   saveWorkout: () => Promise<{ success: boolean; error?: any }>;
   discardWorkout: () => void;
@@ -102,6 +116,28 @@ type WorkoutState = {
 };
 
 /* ───────────────── Helpers ───────────────── */
+export function serializeWorkoutForApi(workout: WorkoutLog) {
+  return {
+    title: workout.title ?? null,
+    startTime: workout.startTime?.toISOString() ?? null,
+    endTime: workout.endTime?.toISOString() ?? null,
+
+    exercises: workout.exercises.map((exercise) => ({
+      exerciseId: exercise.exerciseId,
+      exerciseIndex: exercise.exerciseIndex,
+
+      sets: exercise.sets.map((set) => ({
+        setIndex: set.setIndex,
+        weight: set.weight ?? null,
+        reps: set.reps ?? null,
+        rpe: set.rpe ?? null,
+        durationSeconds: set.durationSeconds ?? null,
+        restSeconds: set.restSeconds ?? null,
+        note: set.note ?? null,
+      })),
+    })),
+  };
+}
 
 const finalizeSetTimer = (set: WorkoutLogSet): WorkoutLogSet => {
   if (!set.durationStartedAt) return set;
@@ -118,7 +154,9 @@ const finalizeSetTimer = (set: WorkoutLogSet): WorkoutLogSet => {
 /* ───────────────── Store ───────────────── */
 
 export const useWorkout = create<WorkoutState>((set, get) => ({
+  workoutLoading: false,
   workout: null,
+  workoutHistory: [],
 
   rest: {
     seconds: null,
@@ -127,6 +165,19 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
   },
 
   /* ───── Workout ───── */
+  getAllWorkouts: async () => {
+    set({ workoutLoading: true });
+    try {
+      const res = await getAllWokroutsService();
+
+      if (res.success) {
+        set({ workoutHistory: res.data || [] });
+      }
+      set({ workoutLoading: false });
+    } catch (error) {
+      set({ workoutLoading: false });
+    }
+  },
 
   startWorkout: () => {
     if (get().workout) return;
@@ -173,11 +224,6 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
 
     try {
       const res = await createWokroutService(payload as any);
-
-      if (res.success) {
-        // cleanup only AFTER successful save
-        state.discardWorkout();
-      }
 
       return res;
     } catch (error) {

@@ -36,6 +36,21 @@ export default function WorkoutLayout() {
           } as any
         }
       />
+
+      <Stack.Screen
+        name="[id]"
+        options={
+          {
+            title: "Workout Details",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.canGoBack()
+                ? router.back()
+                : router.replace("/(app)/(tabs)/home");
+            },
+          } as any
+        }
+      />
     </Stack>
   );
 }

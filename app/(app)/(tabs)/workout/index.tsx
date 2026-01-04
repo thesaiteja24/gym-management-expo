@@ -5,7 +5,7 @@ import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function WorkoutScreen() {
-  const { workout, startWorkout, endWorkout } = useWorkout();
+  const { workout, discardWorkout } = useWorkout();
   return (
     <ScrollView className="flex-1 bg-white p-4 dark:bg-black">
       <View className="flex flex-row gap-4">
@@ -28,7 +28,7 @@ export default function WorkoutScreen() {
             <TouchableOpacity
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                endWorkout();
+                discardWorkout();
               }}
               className="h-12 w-full justify-center rounded-2xl border border-red-200/60 bg-white dark:border-red-800 dark:bg-neutral-900"
             >

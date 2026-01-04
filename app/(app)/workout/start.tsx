@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function StartWorkout() {
   const isDark = useColorScheme() === "dark";
@@ -29,6 +30,7 @@ export default function StartWorkout() {
     rest,
     startWorkout,
     saveWorkout,
+    discardWorkout,
     removeExercise,
     reorderExercises,
     addSet,
@@ -61,13 +63,28 @@ export default function StartWorkout() {
   const handleSaveWorkout = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    const res = await saveWorkout();
+    try {
+      const res = await saveWorkout();
 
-    if (res.success) {
-      router.replace("/(app)/(tabs)/workout");
-    } else {
-      console.error("Failed to save workout", res.error);
-      // later: Toast
+      if (res.success) {
+        router.replace("/(app)/(tabs)/workout");
+        discardWorkout();
+      } else {
+        console.error("Failed to save workout", res.error);
+        Toast.show({
+          type: "error",
+          text1: "Failed to save workout",
+          text2: res.error?.message || "Please try again later.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to save workout", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to save workout",
+        text2:
+          error instanceof Error ? error.message : "Please try again later.",
+      });
     }
   };
 
