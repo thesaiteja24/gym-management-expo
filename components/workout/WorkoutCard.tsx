@@ -16,7 +16,7 @@ export default function WorkoutCard(workout: WorkoutHistoryItem) {
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => router.push(`/(app)/workout/${workout.id}` as any)}
+      onPress={() => router.push(`/(app)/workout/${workout.id}`)}
       className="mb-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
     >
       {/* Header */}
