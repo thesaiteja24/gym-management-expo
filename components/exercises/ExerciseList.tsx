@@ -9,6 +9,7 @@ import { FlatList, Text, TouchableOpacity, View } from "react-native";
 type Props = {
   loading: boolean;
   exercises: Exercise[];
+  isSelecting?: boolean;
 
   isSelected?: (id: string) => boolean;
   onPress: (exercise: Exercise) => void;
@@ -20,11 +21,13 @@ type Props = {
 const ExerciseRow = React.memo(
   ({
     item,
+    isSelecting,
     selected,
     onPress,
     onLongPress,
   }: {
     item: Exercise;
+    isSelecting?: boolean;
     selected: boolean;
     onPress: (e: Exercise) => void;
     onLongPress?: (e: Exercise) => void;
@@ -33,7 +36,9 @@ const ExerciseRow = React.memo(
       <TouchableOpacity
         activeOpacity={1}
         className={`mb-4 h-20 flex-row items-center justify-between px-4 ${
-          selected ? "rounded-l-lg border-l-4 border-l-amber-500" : ""
+          selected && isSelecting
+            ? "rounded-l-lg border-l-4 border-l-amber-500"
+            : ""
         }`}
         onPress={() => onPress(item)}
         onLongPress={() => onLongPress?.(item)}
@@ -83,6 +88,7 @@ const ExerciseRow = React.memo(
 export default function ExerciseList({
   loading,
   exercises,
+  isSelecting,
   isSelected,
   onPress,
   onLongPress,
@@ -105,6 +111,7 @@ export default function ExerciseList({
     ({ item }: { item: Exercise }) => (
       <ExerciseRow
         item={item}
+        isSelecting={isSelecting}
         selected={isSelected?.(item.id) ?? false}
         onPress={onPress}
         onLongPress={onLongPress}
