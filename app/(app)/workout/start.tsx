@@ -7,7 +7,13 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import {
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  Vibration,
+  View,
+} from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -34,6 +40,7 @@ export default function StartWorkout() {
 
   const [isDragging, setIsDragging] = useState(false);
   const lastIndexRef = useRef<number | null>(null);
+  const prevCompletedRef = useRef<Map<string, boolean>>(new Map());
 
   const exerciseMap = useMemo<Map<string, Exercise>>(
     () => new Map(exerciseList.map((e) => [e.id, e])),
@@ -45,6 +52,52 @@ export default function StartWorkout() {
       startWorkout();
     }
   }, []);
+
+  const { rest, stopRestTimer, adjustRestTimer } = useWorkout();
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!rest.running) return;
+
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [rest.running, rest.startedAt]);
+
+  const remainingSeconds =
+    rest.running && rest.startedAt && rest.seconds != null
+      ? Math.max(0, rest.seconds - Math.floor((now - rest.startedAt) / 1000))
+      : 0;
+
+  useEffect(() => {
+    if (rest.running && remainingSeconds === 0) {
+      Vibration.vibrate([0, 500, 200, 500]);
+      stopRestTimer();
+    }
+  }, [rest.running, remainingSeconds]);
+
+  useEffect(() => {
+    if (!workout) return;
+
+    workout.exercises.forEach((exercise) => {
+      exercise.sets.forEach((set) => {
+        const key = `${exercise.exerciseId}:${set.id}`;
+        const prevCompleted = prevCompletedRef.current.get(key) ?? false;
+
+        // just completed → start rest (if preset exists)
+        if (!prevCompleted && set.completed && set.restSeconds) {
+          startRestTimer(set.restSeconds);
+        }
+
+        // just uncompleted → stop rest
+        if (prevCompleted && !set.completed) {
+          stopRestTimer();
+        }
+
+        prevCompletedRef.current.set(key, set.completed);
+      });
+    });
+  }, [workout?.exercises]);
 
   if (!workout) return null;
 
@@ -109,7 +162,10 @@ export default function StartWorkout() {
                 })
               }
               onDeleteExercise={() => removeExercise(item.exerciseId)}
-              onAddSet={() => addSet(item.exerciseId)}
+              onAddSet={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                addSet(item.exerciseId);
+              }}
               onUpdateSet={(setId, patch) =>
                 updateSet(item.exerciseId, setId, patch)
               }
@@ -119,7 +175,6 @@ export default function StartWorkout() {
               onDeleteSet={(setId) => removeSet(item.exerciseId, setId)}
               onStartSetTimer={(setId) => startSetTimer(item.exerciseId, setId)}
               onStopSetTimer={(setId) => stopSetTimer(item.exerciseId, setId)}
-              onStartRest={(seconds) => startRestTimer(seconds)}
               onSaveRestPreset={(setId, seconds) =>
                 saveRestForSet(item.exerciseId, setId, seconds)
               }
@@ -147,6 +202,7 @@ export default function StartWorkout() {
           <View className="mb-16 p-4">
             <TouchableOpacity
               onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 router.push({
                   pathname: "/(app)/exercises",
                   params: { mode: "select" },
@@ -162,7 +218,12 @@ export default function StartWorkout() {
         }
       />
 
-      <RestTimerSnack />
+      <RestTimerSnack
+        visible={rest.running}
+        remainingSeconds={remainingSeconds}
+        onAddTime={adjustRestTimer}
+        onSkip={stopRestTimer}
+      />
     </View>
   );
 }

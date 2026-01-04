@@ -44,7 +44,6 @@ type Props = {
   onStartTimer: () => void;
   onStopTimer: () => void;
 
-  onStartRest: (seconds: number) => void;
   onOpenRestPicker: () => void;
 };
 
@@ -60,7 +59,6 @@ function SetRow({
   onToggleComplete,
   onStartTimer,
   onStopTimer,
-  onStartRest,
   onOpenRestPicker,
 }: Props) {
   const isDark = useColorScheme() === "dark";
@@ -108,6 +106,14 @@ function SetRow({
     setTimeout(onDelete, 400);
   };
 
+  /* ───── Rest icon color ───── */
+
+  const restColor = set.completed
+    ? "#facc15" // yellow → rest running
+    : set.restSeconds != null
+      ? "#22c55e" // green → preset set
+      : "#9ca3af"; // gray → not set
+
   /* ───────────────── Render helpers ───────────────── */
 
   const renderLeftActions = () => (
@@ -143,7 +149,7 @@ function SetRow({
         hasTriggeredHaptic.current = true;
 
         if (direction === "right") {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           requestAnimationFrame(() => swipeableRef.current?.close());
           onToggleComplete();
         }
@@ -204,18 +210,11 @@ function SetRow({
 
           {/* Rest */}
           <View className="w-16 items-center">
-            <TouchableOpacity
-              onPress={() =>
-                set.restSeconds != null
-                  ? onStartRest(set.restSeconds)
-                  : onOpenRestPicker()
-              }
-              onLongPress={onOpenRestPicker}
-            >
+            <TouchableOpacity onPress={onOpenRestPicker}>
               <MaterialCommunityIcons
                 name="timer-outline"
-                size={20}
-                color={set.restSeconds ? "#22c55e" : "#9ca3af"}
+                size={22}
+                color={restColor}
               />
             </TouchableOpacity>
           </View>

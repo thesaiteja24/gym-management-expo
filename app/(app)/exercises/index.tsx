@@ -190,7 +190,10 @@ export default function ExercisesScreen() {
             />
           ) : (
             <TouchableOpacity
-              onPress={() => setShowEquipmentModal(true)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+                setShowEquipmentModal(true);
+              }}
               className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
             >
               <Text className="text-center text-xl font-semibold text-black dark:text-white">
@@ -211,7 +214,10 @@ export default function ExercisesScreen() {
             />
           ) : (
             <TouchableOpacity
-              onPress={() => setShowMuscleGroupsModal(true)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+                setShowMuscleGroupsModal(true);
+              }}
               className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
             >
               <Text className="text-center text-xl font-semibold text-black dark:text-white">
@@ -236,8 +242,13 @@ export default function ExercisesScreen() {
 
       {/* Bottom bar (selection mode) */}
       {isSelectionMode && !exerciseLoading && (
-        <View className="flex-row items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-neutral-900">
-          <TouchableOpacity onPress={() => router.back()}>
+        <View className="flex-row items-center justify-between rounded-2xl border border-neutral-200/60 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              router.back();
+            }}
+          >
             <Text className="text-lg font-semibold text-red-500">Cancel</Text>
           </TouchableOpacity>
 
@@ -247,7 +258,10 @@ export default function ExercisesScreen() {
 
           <TouchableOpacity
             disabled={selectedCount === 0}
-            onPress={() => router.replace("/(app)/workout/start")}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.replace("/(app)/workout/start");
+            }}
           >
             <Text
               className={`text-lg font-semibold ${
