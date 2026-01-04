@@ -1,49 +1,14 @@
 import { useWorkout } from "@/stores/workoutStore";
+import {
+  formatDurationFromDates,
+  formatSeconds,
+  formatTimeAgo,
+} from "@/utils/time";
+import { calculateWorkoutVolume } from "@/utils/workout";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import React, { useMemo } from "react";
 import { ScrollView, Text, View } from "react-native";
-
-function formatDuration(start: string, end: string) {
-  const ms = new Date(end).getTime() - new Date(start).getTime();
-  const minutes = Math.floor(ms / 60000);
-
-  if (minutes < 60) return `${minutes}m`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m ? `${h}h ${m}m` : `${h}h`;
-}
-
-function formatTimeAgo(dateString: string) {
-  const diff = Date.now() - new Date(dateString).getTime();
-  const minutes = Math.floor(diff / 60000);
-
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
-}
-
-function calculateVolume(workout: any) {
-  let volume = 0;
-
-  workout.exercises.forEach((ex: any) => {
-    ex.sets.forEach((set: any) => {
-      if (set.weight && set.reps) {
-        volume += Number(set.weight) * set.reps;
-      }
-    });
-  });
-
-  return volume;
-}
 
 export default function WorkoutDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -62,9 +27,9 @@ export default function WorkoutDetails() {
     );
   }
 
-  const duration = formatDuration(workout.startTime, workout.endTime);
+  const duration = formatDurationFromDates(workout.startTime, workout.endTime);
   const timeAgo = formatTimeAgo(workout.endTime);
-  const volume = calculateVolume(workout);
+  const volume = calculateWorkoutVolume(workout);
 
   return (
     <ScrollView className="flex-1 bg-white p-4 dark:bg-black">
@@ -99,30 +64,24 @@ export default function WorkoutDetails() {
 
           {/* Sets */}
           {ex.sets.map((set: any, index: number) => (
-            <View
-              key={set.id}
-              className="flex-row items-center justify-between py-2"
-            >
-              <Text className="text-base text-neutral-500">
+            <View key={set.id} className="flex-row items-center py-2">
+              {/* Set label */}
+              <Text className="flex-1 text-left text-base text-neutral-500">
                 Set {index + 1}
               </Text>
 
-              {set.weight && set.reps ? (
-                <Text className="text-base font-semibold text-black dark:text-white">
-                  {set.weight} × {set.reps}
-                </Text>
-              ) : set.durationSeconds ? (
-                <Text className="text-base font-semibold text-black dark:text-white">
-                  {set.durationSeconds}s
-                </Text>
-              ) : (
-                <Text className="text-base font-semibold text-black dark:text-white">
-                  {set.reps}
-                </Text>
-              )}
+              {/* Value */}
+              <Text className="flex-1 text-left text-base font-semibold text-black dark:text-white">
+                {set.weight && set.reps
+                  ? `${set.weight} × ${set.reps}`
+                  : set.durationSeconds
+                    ? `${set.durationSeconds}s`
+                    : set.reps}
+              </Text>
 
-              <Text className="text-sm text-neutral-500">
-                Rest {set.restSeconds}s
+              {/* Rest */}
+              <Text className="flex-1 text-left text-sm text-neutral-500">
+                Rest {formatSeconds(set.restSeconds)}
               </Text>
             </View>
           ))}

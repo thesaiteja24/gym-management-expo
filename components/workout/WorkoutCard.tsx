@@ -1,59 +1,14 @@
 import { WorkoutHistoryItem } from "@/stores/workoutStore";
+import { formatDurationFromDates, formatTimeAgo } from "@/utils/time";
+import { calculateWorkoutVolume } from "@/utils/workout";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
-function formatDuration(start: string, end: string) {
-  const ms = new Date(end).getTime() - new Date(start).getTime();
-  const minutes = Math.floor(ms / 60000);
-
-  if (minutes < 60) return `${minutes}m`;
-
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m ? `${h}h ${m}m` : `${h}h`;
-}
-
-function calculateVolume(workout: WorkoutHistoryItem) {
-  let volume = 0;
-
-  workout.exercises.forEach((ex: any) => {
-    ex.sets.forEach((set: any) => {
-      if (set.weight && set.reps) {
-        volume += Number(set.weight) * set.reps;
-      }
-    });
-  });
-
-  return volume;
-}
-
-function formatTimeAgo(dateString: string) {
-  const now = Date.now();
-  const past = new Date(dateString).getTime();
-  const diffMs = now - past;
-
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} day${days > 1 ? "s" : ""} ago`;
-
-  const months = Math.floor(days / 30);
-  if (months < 12) return `${months} month${months > 1 ? "s" : ""} ago`;
-
-  const years = Math.floor(months / 12);
-  return `${years} year${years > 1 ? "s" : ""} ago`;
-}
-
 export default function WorkoutCard(workout: WorkoutHistoryItem) {
-  const duration = formatDuration(workout.startTime, workout.endTime);
+  const duration = formatDurationFromDates(workout.startTime, workout.endTime);
   const timeAgo = formatTimeAgo(workout.endTime);
-  const volume = calculateVolume(workout);
+  const volume = calculateWorkoutVolume(workout);
 
   const previewExercises = workout.exercises.slice(0, 3);
   const remaining = workout.exercises.length - previewExercises.length;

@@ -2,6 +2,7 @@ import {
   createWokroutService,
   getAllWokroutsService,
 } from "@/services/workoutServices";
+import { finalizeSetTimer, serializeWorkoutForApi } from "@/utils/workout";
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
 
@@ -113,42 +114,6 @@ type WorkoutState = {
   stopRestTimer: () => void;
   adjustRestTimer: (deltaSeconds: number) => void;
   saveRestForSet: (exerciseId: string, setId: string, seconds: number) => void;
-};
-
-/* ───────────────── Helpers ───────────────── */
-export function serializeWorkoutForApi(workout: WorkoutLog) {
-  return {
-    title: workout.title ?? null,
-    startTime: workout.startTime?.toISOString() ?? null,
-    endTime: workout.endTime?.toISOString() ?? null,
-
-    exercises: workout.exercises.map((exercise) => ({
-      exerciseId: exercise.exerciseId,
-      exerciseIndex: exercise.exerciseIndex,
-
-      sets: exercise.sets.map((set) => ({
-        setIndex: set.setIndex,
-        weight: set.weight ?? null,
-        reps: set.reps ?? null,
-        rpe: set.rpe ?? null,
-        durationSeconds: set.durationSeconds ?? null,
-        restSeconds: set.restSeconds ?? null,
-        note: set.note ?? null,
-      })),
-    })),
-  };
-}
-
-const finalizeSetTimer = (set: WorkoutLogSet): WorkoutLogSet => {
-  if (!set.durationStartedAt) return set;
-
-  const elapsed = Math.floor((Date.now() - set.durationStartedAt) / 1000);
-
-  return {
-    ...set,
-    durationSeconds: (set.durationSeconds ?? 0) + elapsed,
-    durationStartedAt: null,
-  };
 };
 
 /* ───────────────── Store ───────────────── */

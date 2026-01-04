@@ -104,7 +104,7 @@ export default function StartWorkout() {
 
   useEffect(() => {
     if (rest.running && remainingSeconds === 0) {
-      Vibration.vibrate([0, 500, 200, 500, 200, 500, 200, 500]);
+      Vibration.vibrate([0, 500, 200, 500, 200, 500]);
       stopRestTimer();
     }
   }, [rest.running, remainingSeconds]);

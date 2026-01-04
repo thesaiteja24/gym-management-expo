@@ -1,19 +1,8 @@
+import { formatSeconds } from "@/utils/time";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-function formatDuration(totalSeconds: number) {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-
-  if (h > 0) {
-    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  }
-
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
 
 type Props = {
   visible: boolean;
@@ -40,7 +29,7 @@ export default function RestTimerSnack({
     >
       <View className="flex-row items-center justify-between">
         <Text className="text-xl font-bold text-black dark:text-white">
-          {formatDuration(remainingSeconds)}
+          {formatSeconds(remainingSeconds)}
         </Text>
 
         <TouchableOpacity
