@@ -23,3 +23,6 @@ export const MUSCLE_GROUP_ITEM_ENDPOINT = (id: string) =>
 // Exercise Endpoints
 export const EXERCISES_ENDPOINT = `/exercises`;
 export const EXERCISE_ITEM_ENDPOINT = (id: string) => `/exercises/${id}`;
+
+export const WORKOUTS_ENDPONT = `/workouts`;
+export const WORKOUT_ITEM_ENDPOINT = (id: string) => `/workouts/${id}`;

@@ -273,6 +273,12 @@ function ExerciseRow({
       {/* ───── Rest picker ───── */}
       <RestTimerPickerModal
         visible={restPickerVisible}
+        initialSeconds={
+          activeRestSetId
+            ? (exercise.sets.find((s) => s.id === activeRestSetId)
+                ?.restSeconds ?? 60)
+            : 60
+        }
         onClose={() => {
           setRestPickerVisible(false);
           setActiveRestSetId(null);

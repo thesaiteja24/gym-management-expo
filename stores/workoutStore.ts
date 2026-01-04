@@ -1,5 +1,30 @@
+import { createWokroutService } from "@/services/workoutServices";
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
+
+/* ───────────────── Types ───────────────── */
+export function serializeWorkoutForApi(workout: WorkoutLog) {
+  return {
+    title: workout.title ?? null,
+    startTime: workout.startTime?.toISOString() ?? null,
+    endTime: workout.endTime?.toISOString() ?? null,
+
+    exercises: workout.exercises.map((exercise) => ({
+      exerciseId: exercise.exerciseId,
+      exerciseIndex: exercise.exerciseIndex,
+
+      sets: exercise.sets.map((set) => ({
+        setIndex: set.setIndex,
+        weight: set.weight ?? null,
+        reps: set.reps ?? null,
+        rpe: set.rpe ?? null,
+        durationSeconds: set.durationSeconds ?? null,
+        restSeconds: set.restSeconds ?? null,
+        note: set.note ?? null,
+      })),
+    })),
+  };
+}
 
 /* ───────────────── Types ───────────────── */
 
@@ -46,7 +71,8 @@ type WorkoutState = {
 
   /* Workout */
   startWorkout: () => void;
-  endWorkout: () => void;
+  saveWorkout: () => Promise<{ success: boolean; error?: any }>;
+  discardWorkout: () => void;
 
   /* Exercises */
   addExercise: (exerciseId: string) => void;
@@ -115,22 +141,62 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
     });
   },
 
-  endWorkout: () => {
-    const workout = get().workout;
-    if (!workout) return;
-
+  discardWorkout: () => {
     set({
-      workout: {
-        ...workout,
-        endTime: new Date(),
-        exercises: workout.exercises.map((ex) => ({
-          ...ex,
-          sets: ex.sets.map(finalizeSetTimer),
-        })),
+      workout: null,
+      rest: {
+        seconds: null,
+        startedAt: null,
+        running: false,
       },
     });
+  },
 
-    set({ workout: null });
+  saveWorkout: async () => {
+    const state = get();
+    const workout = state.workout;
+
+    if (!workout) {
+      return { success: false, error: "No active workout" };
+    }
+
+    const finalizedWorkout: WorkoutLog = {
+      ...workout,
+      endTime: new Date(),
+      exercises: workout.exercises.map((ex) => ({
+        ...ex,
+        sets: ex.sets.map(finalizeSetTimer),
+      })),
+    };
+
+    const payload = serializeWorkoutForApi(finalizedWorkout);
+
+    try {
+      const res = await createWokroutService(payload as any);
+
+      if (res.success) {
+        // cleanup only AFTER successful save
+        state.discardWorkout();
+      }
+
+      return res;
+    } catch (error) {
+      return {
+        success: false,
+        error,
+      };
+    }
+  },
+
+  resetWorkout: () => {
+    set({
+      workout: null,
+      rest: {
+        seconds: null,
+        startedAt: null,
+        running: false,
+      },
+    });
   },
 
   /* ───── Exercises ───── */

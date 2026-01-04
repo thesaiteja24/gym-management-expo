@@ -5,7 +5,7 @@ import { Exercise, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Text,
@@ -20,12 +20,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function StartWorkout() {
   const isDark = useColorScheme() === "dark";
   const safeAreaInsets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   const exerciseList = useExercise((s) => s.exerciseList);
 
   const {
     workout,
+    rest,
     startWorkout,
+    saveWorkout,
     removeExercise,
     reorderExercises,
     addSet,
@@ -36,9 +39,12 @@ export default function StartWorkout() {
     stopSetTimer,
     startRestTimer,
     saveRestForSet,
+    stopRestTimer,
+    adjustRestTimer,
   } = useWorkout();
 
   const [isDragging, setIsDragging] = useState(false);
+  const [now, setNow] = useState(Date.now());
   const lastIndexRef = useRef<number | null>(null);
   const prevCompletedRef = useRef<Map<string, boolean>>(new Map());
 
@@ -47,14 +53,29 @@ export default function StartWorkout() {
     [exerciseList],
   );
 
+  const remainingSeconds =
+    rest.running && rest.startedAt && rest.seconds != null
+      ? Math.max(0, rest.seconds - Math.floor((now - rest.startedAt) / 1000))
+      : 0;
+
+  const handleSaveWorkout = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    const res = await saveWorkout();
+
+    if (res.success) {
+      router.replace("/(app)/(tabs)/workout");
+    } else {
+      console.error("Failed to save workout", res.error);
+      // later: Toast
+    }
+  };
+
   useEffect(() => {
     if (!workout) {
       startWorkout();
     }
   }, []);
-
-  const { rest, stopRestTimer, adjustRestTimer } = useWorkout();
-  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     if (!rest.running) return;
@@ -64,14 +85,9 @@ export default function StartWorkout() {
     return () => clearInterval(id);
   }, [rest.running, rest.startedAt]);
 
-  const remainingSeconds =
-    rest.running && rest.startedAt && rest.seconds != null
-      ? Math.max(0, rest.seconds - Math.floor((now - rest.startedAt) / 1000))
-      : 0;
-
   useEffect(() => {
     if (rest.running && remainingSeconds === 0) {
-      Vibration.vibrate([0, 500, 200, 500]);
+      Vibration.vibrate([0, 500, 200, 500, 200, 500, 200, 500]);
       stopRestTimer();
     }
   }, [rest.running, remainingSeconds]);
@@ -98,6 +114,17 @@ export default function StartWorkout() {
       });
     });
   }, [workout?.exercises]);
+
+  useEffect(() => {
+    navigation.setOptions({
+      rightIcons: [
+        {
+          name: "checkmark-done",
+          onPress: handleSaveWorkout,
+        },
+      ],
+    });
+  }, [handleSaveWorkout]);
 
   if (!workout) return null;
 
