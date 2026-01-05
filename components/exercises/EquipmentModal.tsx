@@ -13,8 +13,8 @@ import {
 type Props = {
   visible: boolean;
   loading: boolean;
-  equipment: any[];
   enableCreate?: boolean;
+  equipment: any[];
 
   onClose: () => void;
   onSelect: (equipment: any) => void;
@@ -25,6 +25,7 @@ type Props = {
 export default function EquipmentModal({
   visible,
   loading,
+  enableCreate,
   equipment,
   onClose,
   onSelect,
@@ -38,15 +39,17 @@ export default function EquipmentModal({
 
         <View className="h-[80%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">
           <View
-            className={`flex-row ${
-              onCreatePress ? "justify-between" : "justify-center"
+            className={`flex-row items-center ${
+              onCreatePress && enableCreate
+                ? "justify-between"
+                : "justify-center"
             } mb-6`}
           >
             <Text className="text-xl font-bold text-black dark:text-white">
               Equipment
             </Text>
 
-            {onCreatePress && (
+            {onCreatePress && enableCreate && (
               <TouchableOpacity onPress={onCreatePress}>
                 <Text className="text-xl text-blue-500">Create</Text>
               </TouchableOpacity>

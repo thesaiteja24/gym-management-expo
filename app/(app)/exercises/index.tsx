@@ -313,6 +313,7 @@ export default function ExercisesScreen() {
       <EquipmentModal
         visible={showEquipmentModal}
         loading={equipmentLoading}
+        enableCreate={role === roles.systemAdmin}
         equipment={equipmentList}
         onClose={() => setShowEquipmentModal(false)}
         onSelect={(item) => {
@@ -336,6 +337,7 @@ export default function ExercisesScreen() {
       <MuscleGroupModal
         visible={showMuscleGroupsModal}
         loading={muscleGroupLoading}
+        enableCreate={role === roles.systemAdmin}
         muscleGroups={muscleGroupList}
         onClose={() => setShowMuscleGroupsModal(false)}
         onSelect={(item) => {

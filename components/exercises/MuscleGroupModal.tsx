@@ -13,6 +13,7 @@ import {
 type Props = {
   visible: boolean;
   loading: boolean;
+  enableCreate?: boolean;
   muscleGroups: any[];
 
   onClose: () => void;
@@ -24,6 +25,7 @@ type Props = {
 export default function MuscleGroupModal({
   visible,
   loading,
+  enableCreate,
   muscleGroups,
   onClose,
   onSelect,
@@ -37,15 +39,17 @@ export default function MuscleGroupModal({
 
         <View className="h-[80%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">
           <View
-            className={`flex-row ${
-              onCreatePress ? "justify-between" : "justify-center"
+            className={`flex-row items-center ${
+              onCreatePress && enableCreate
+                ? "justify-between"
+                : "justify-center"
             } mb-6`}
           >
             <Text className="text-xl font-bold text-black dark:text-white">
               Muscle Groups
             </Text>
 
-            {onCreatePress && (
+            {onCreatePress && enableCreate && (
               <TouchableOpacity onPress={onCreatePress}>
                 <Text className="text-xl text-blue-500">Create</Text>
               </TouchableOpacity>
