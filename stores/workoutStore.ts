@@ -74,6 +74,7 @@ export type WorkoutHistorySet = {
 
 type WorkoutState = {
   workoutLoading: boolean;
+  workoutSaving: boolean;
   workoutHistory: WorkoutHistoryItem[];
   workout: WorkoutLog | null;
 
@@ -120,6 +121,7 @@ type WorkoutState = {
 
 export const useWorkout = create<WorkoutState>((set, get) => ({
   workoutLoading: false,
+  workoutSaving: false,
   workout: null,
   workoutHistory: [],
 
@@ -176,6 +178,12 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
       return { success: false, error: "No active workout" };
     }
 
+    if (state.workoutSaving) {
+      return { success: false };
+    }
+
+    set({ workoutSaving: true });
+
     const finalizedWorkout: WorkoutLog = {
       ...workout,
       endTime: new Date(),
@@ -190,8 +198,12 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
     try {
       const res = await createWokroutService(payload as any);
 
+      set({ workoutSaving: false });
+
       return res;
     } catch (error) {
+      set({ workoutSaving: false });
+
       return {
         success: false,
         error,

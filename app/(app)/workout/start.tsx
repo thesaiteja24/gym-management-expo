@@ -32,6 +32,7 @@ export default function StartWorkout() {
     useAuth((s) => s.user?.preferredWeightUnit) ?? "kg";
 
   const {
+    workoutSaving,
     workout,
     rest,
     startWorkout,
@@ -142,12 +143,14 @@ export default function StartWorkout() {
     navigation.setOptions({
       rightIcons: [
         {
-          name: "checkmark-done",
-          onPress: handleSaveWorkout,
+          name: workoutSaving ? "hourglass-outline" : "checkmark-done",
+          onPress: workoutSaving ? undefined : handleSaveWorkout,
+          disabled: workoutSaving || !workout?.exercises.length,
+          color: "green",
         },
       ],
     });
-  }, [handleSaveWorkout]);
+  }, [handleSaveWorkout, workoutSaving]);
 
   if (!workout) return null;
 
