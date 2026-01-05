@@ -2,9 +2,14 @@ import {
   createWokroutService,
   getAllWokroutsService,
 } from "@/services/workoutServices";
-import { finalizeSetTimer, serializeWorkoutForApi } from "@/utils/workout";
+import {
+  finalizeSetTimer,
+  isValidCompletedSet,
+  serializeWorkoutForApi,
+} from "@/utils/workout";
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
+import { useExercise } from "./exerciseStore";
 
 /* ───────────────── Types ───────────────── */
 
@@ -184,30 +189,38 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
 
     set({ workoutSaving: true });
 
+    const exerciseList = useExercise.getState().exerciseList;
+    const exerciseMap = new Map(
+      exerciseList.map((e) => [e.id, e.exerciseType]),
+    );
+
     const finalizedWorkout: WorkoutLog = {
       ...workout,
       endTime: new Date(),
-      exercises: workout.exercises.map((ex) => ({
-        ...ex,
-        sets: ex.sets.map(finalizeSetTimer),
-      })),
+      exercises: workout.exercises
+        .map((ex) => {
+          const exerciseType = exerciseMap.get(ex.exerciseId);
+          if (!exerciseType) return null;
+
+          return {
+            ...ex,
+            sets: ex.sets
+              .map(finalizeSetTimer)
+              .filter((set) => isValidCompletedSet(set, exerciseType)),
+          };
+        })
+        .filter((ex): ex is WorkoutLogExercise => !!ex && ex.sets.length > 0),
     };
 
     const payload = serializeWorkoutForApi(finalizedWorkout);
 
     try {
       const res = await createWokroutService(payload as any);
-
       set({ workoutSaving: false });
-
       return res;
     } catch (error) {
       set({ workoutSaving: false });
-
-      return {
-        success: false,
-        error,
-      };
+      return { success: false, error };
     }
   },
 

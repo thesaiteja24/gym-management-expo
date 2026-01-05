@@ -1,8 +1,11 @@
+import { ExerciseType } from "@/stores/exerciseStore";
 import {
   WorkoutHistoryItem,
   WorkoutLog,
   WorkoutLogSet,
 } from "@/stores/workoutStore";
+
+/* ───────────────── Helpers ───────────────── */
 
 function isWorkoutLog(
   workout: WorkoutHistoryItem | WorkoutLog,
@@ -10,17 +13,19 @@ function isWorkoutLog(
   return workout.startTime instanceof Date;
 }
 
+/* ───────────────── Volume ───────────────── */
+
 export function calculateWorkoutVolume(
   workout: WorkoutHistoryItem | WorkoutLog,
 ) {
   let volume = 0;
   let sets = 0;
 
-  const isLog = workout.startTime instanceof Date;
+  const isLog = isWorkoutLog(workout);
 
   workout.exercises.forEach((ex) => {
     ex.sets.forEach((set) => {
-      // Live workout → only completed sets
+      // live workout → only completed sets
       if (isLog && "completed" in set && !set.completed) return;
 
       sets += 1;
@@ -28,7 +33,7 @@ export function calculateWorkoutVolume(
       const weight =
         typeof set.weight === "string" ? Number(set.weight) : set.weight;
 
-      if (weight != null && set.reps != null) {
+      if (weight != null && weight > 0 && set.reps != null && set.reps > 0) {
         volume += weight * set.reps;
       }
     });
@@ -36,6 +41,8 @@ export function calculateWorkoutVolume(
 
   return { volume, sets };
 }
+
+/* ───────────────── Timers ───────────────── */
 
 export function finalizeSetTimer(set: WorkoutLogSet): WorkoutLogSet {
   if (!set.durationStartedAt) return set;
@@ -48,6 +55,8 @@ export function finalizeSetTimer(set: WorkoutLogSet): WorkoutLogSet {
     durationStartedAt: null,
   };
 }
+
+/* ───────────────── Serialization ───────────────── */
 
 export function serializeWorkoutForApi(workout: WorkoutLog) {
   return {
@@ -69,4 +78,32 @@ export function serializeWorkoutForApi(workout: WorkoutLog) {
       })),
     })),
   };
+}
+
+/* ───────────────── Validation ───────────────── */
+
+export function isValidCompletedSet(
+  set: WorkoutLogSet,
+  exerciseType: ExerciseType,
+): boolean {
+  if (!set.completed) return false;
+
+  const reps = set.reps ?? 0;
+  const weight = set.weight ?? 0;
+  const duration = set.durationSeconds ?? 0;
+
+  switch (exerciseType) {
+    case "repsOnly":
+      return reps > 0;
+
+    case "durationOnly":
+      return duration > 0;
+
+    case "weighted":
+    case "assisted":
+      return reps > 0 && weight > 0;
+
+    default:
+      return false;
+  }
 }

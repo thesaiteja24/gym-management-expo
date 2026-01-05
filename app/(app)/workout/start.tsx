@@ -67,17 +67,98 @@ export default function StartWorkout() {
       ? Math.max(0, rest.seconds - Math.floor((now - rest.startedAt) / 1000))
       : 0;
 
+  function getSetValidationStats() {
+    if (!workout) return { valid: 0, invalid: 0 };
+
+    let valid = 0;
+    let invalid = 0;
+
+    workout.exercises.forEach((ex) => {
+      const exerciseType = exerciseMap.get(ex.exerciseId)?.exerciseType;
+      if (!exerciseType) return;
+
+      ex.sets.forEach((set) => {
+        if (!set.completed) {
+          invalid += 1;
+          return;
+        }
+
+        const reps = set.reps ?? 0;
+        const weight = set.weight ?? 0;
+        const duration = set.durationSeconds ?? 0;
+
+        let isValid = false;
+
+        switch (exerciseType) {
+          case "repsOnly":
+            isValid = reps > 0;
+            break;
+          case "durationOnly":
+            isValid = duration > 0;
+            break;
+          case "weighted":
+          case "assisted":
+            isValid = reps > 0 && weight > 0;
+            break;
+        }
+
+        if (isValid) valid += 1;
+        else invalid += 1;
+      });
+    });
+
+    return { valid, invalid };
+  }
+
   const handleSaveWorkout = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    if (!workout) return;
+
+    // 1️⃣ No exercises
+    if (workout.exercises.length === 0) {
+      Toast.show({
+        type: "error",
+        text1: "No exercises added",
+        text2: "Add at least one exercise to save the workout.",
+      });
+      return;
+    }
+
+    const { valid, invalid } = getSetValidationStats();
+
+    // 2️⃣ No valid sets
+    if (valid === 0) {
+      Toast.show({
+        type: "error",
+        text1: "No valid sets added",
+        text2: "Add at least one valid set to save the workout.",
+        onPress: () => Toast.hide(), // interactive
+      });
+      return;
+    }
 
     try {
       const res = await saveWorkout();
 
       if (res.success) {
+        // 3️⃣ Inform about ignored sets
+        if (invalid > 0) {
+          Toast.show({
+            type: "info",
+            text1: `${invalid} incomplete set${invalid > 1 ? "s" : ""} ignored`,
+          });
+        }
+
+        // 4️⃣ Success toast
+        Toast.show({
+          type: "success",
+          text1: "Workout saved successfully",
+        });
+
         router.replace("/(app)/(tabs)/workout");
         discardWorkout();
       } else {
-        console.error("Failed to save workout", res.error);
         Toast.show({
           type: "error",
           text1: "Failed to save workout",
@@ -85,7 +166,6 @@ export default function StartWorkout() {
         });
       }
     } catch (error) {
-      console.error("Failed to save workout", error);
       Toast.show({
         type: "error",
         text1: "Failed to save workout",
@@ -145,7 +225,7 @@ export default function StartWorkout() {
         {
           name: workoutSaving ? "hourglass-outline" : "checkmark-done",
           onPress: workoutSaving ? undefined : handleSaveWorkout,
-          disabled: workoutSaving || !workout?.exercises.length,
+          disabled: workoutSaving,
           color: "green",
         },
       ],
