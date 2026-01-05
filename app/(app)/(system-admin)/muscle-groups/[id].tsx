@@ -93,7 +93,7 @@ export default function EditMuscleGroup() {
             fileName: "muscle-group.jpg",
             type: "image/jpeg",
           },
-          "equipment"
+          "equipment",
         );
 
         formData.append("image", prepared as any);
@@ -164,7 +164,11 @@ export default function EditMuscleGroup() {
   }, [navigation, isDirty, onSave, muscleGroupLoading]);
 
   if (muscleGroupLoading) {
-    return <ActivityIndicator className="mt-10" />;
+    return (
+      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
+        <ActivityIndicator animating size={"large"} />
+      </View>
+    );
   }
 
   return (
@@ -173,7 +177,7 @@ export default function EditMuscleGroup() {
       className="bg-white dark:bg-black"
     >
       {/* Image picker */}
-      <View className="items-center mb-6">
+      <View className="mb-6 items-center">
         <ProfilePic
           uri={thumbnailUri}
           size={132}

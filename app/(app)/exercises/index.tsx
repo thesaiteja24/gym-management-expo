@@ -319,6 +319,18 @@ export default function ExercisesScreen() {
           setFilter((f) => ({ ...f, equipmentId: item.id }));
           setShowEquipmentModal(false);
         }}
+        onLongPress={(item) => {
+          if (role !== roles.systemAdmin) return;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          setShowEquipmentModal(false);
+          router.push(`/(app)/(system-admin)/equipment/${item.id}`);
+        }}
+        onCreatePress={() => {
+          if (role !== roles.systemAdmin) return;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          setShowEquipmentModal(false);
+          router.push(`/(app)/(system-admin)/equipment/create`);
+        }}
       />
 
       <MuscleGroupModal
@@ -329,6 +341,18 @@ export default function ExercisesScreen() {
         onSelect={(item) => {
           setFilter((f) => ({ ...f, muscleGroupId: item.id }));
           setShowMuscleGroupsModal(false);
+        }}
+        onLongPress={(item) => {
+          if (role !== roles.systemAdmin) return;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          setShowMuscleGroupsModal(false);
+          router.push(`/(app)/(system-admin)/muscle-groups/${item.id}`);
+        }}
+        onCreatePress={() => {
+          if (role !== roles.systemAdmin) return;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          setShowMuscleGroupsModal(false);
+          router.push(`/(app)/(system-admin)/muscle-groups/create`);
         }}
       />
 

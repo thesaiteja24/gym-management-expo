@@ -104,7 +104,7 @@ export default function SystemAdminLayout() {
 
       {/* Exercises */}
       <Stack.Screen
-        name="exercises/create"
+        name="exercise/create"
         options={
           {
             title: "Create Exercise",
@@ -123,7 +123,7 @@ export default function SystemAdminLayout() {
         }
       />
       <Stack.Screen
-        name="exercises/[id]"
+        name="exercise/[id]"
         options={
           {
             title: "Edit Exercise",

@@ -18,6 +18,7 @@ type Props = {
   onClose: () => void;
   onSelect: (muscleGroup: any) => void;
   onLongPress?: (muscleGroup: any) => void;
+  onCreatePress?: () => void;
 };
 
 export default function MuscleGroupModal({
@@ -27,6 +28,7 @@ export default function MuscleGroupModal({
   onClose,
   onSelect,
   onLongPress,
+  onCreatePress,
 }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -34,9 +36,21 @@ export default function MuscleGroupModal({
         <Pressable className="absolute inset-0" onPress={onClose} />
 
         <View className="h-[80%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">
-          <Text className="mb-6 text-center text-xl font-bold text-black dark:text-white">
-            Muscle Groups
-          </Text>
+          <View
+            className={`flex-row ${
+              onCreatePress ? "justify-between" : "justify-center"
+            } mb-6`}
+          >
+            <Text className="text-xl font-bold text-black dark:text-white">
+              Muscle Groups
+            </Text>
+
+            {onCreatePress && (
+              <TouchableOpacity onPress={onCreatePress}>
+                <Text className="text-xl text-blue-500">Create</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {loading ? (
             <ActivityIndicator animating size="large" />

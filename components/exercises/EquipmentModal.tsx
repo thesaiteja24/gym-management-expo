@@ -14,10 +14,12 @@ type Props = {
   visible: boolean;
   loading: boolean;
   equipment: any[];
+  enableCreate?: boolean;
 
   onClose: () => void;
   onSelect: (equipment: any) => void;
   onLongPress?: (equipment: any) => void;
+  onCreatePress?: () => void;
 };
 
 export default function EquipmentModal({
@@ -27,6 +29,7 @@ export default function EquipmentModal({
   onClose,
   onSelect,
   onLongPress,
+  onCreatePress,
 }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -34,9 +37,21 @@ export default function EquipmentModal({
         <Pressable className="absolute inset-0" onPress={onClose} />
 
         <View className="h-[80%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">
-          <Text className="mb-6 text-center text-xl font-bold text-black dark:text-white">
-            Equipment
-          </Text>
+          <View
+            className={`flex-row ${
+              onCreatePress ? "justify-between" : "justify-center"
+            } mb-6`}
+          >
+            <Text className="text-xl font-bold text-black dark:text-white">
+              Equipment
+            </Text>
+
+            {onCreatePress && (
+              <TouchableOpacity onPress={onCreatePress}>
+                <Text className="text-xl text-blue-500">Create</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {loading ? (
             <ActivityIndicator animating size="large" />
@@ -62,6 +77,7 @@ export default function EquipmentModal({
                       borderRadius: 100,
                       borderWidth: 1,
                       borderColor: "gray",
+                      backgroundColor: "white",
                     }}
                     contentFit="contain"
                   />
