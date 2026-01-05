@@ -1,5 +1,6 @@
 import SetRow from "@/components/workout/SetRow";
 import { Exercise, ExerciseType } from "@/stores/exerciseStore";
+import { WeightUnits } from "@/stores/userStore";
 import { WorkoutLogExercise } from "@/stores/workoutStore";
 import {
   Entypo,
@@ -37,6 +38,7 @@ type Props = {
   exerciseDetails: Exercise;
   isActive: boolean;
   isDragging: boolean;
+  preferredWeightUnit: WeightUnits;
 
   drag: () => void;
   onPress: () => void;
@@ -62,6 +64,7 @@ function ExerciseRow({
   exerciseDetails,
   isDragging,
   isActive,
+  preferredWeightUnit,
   drag,
   onPress,
   onReplaceExercise,
@@ -170,9 +173,13 @@ function ExerciseRow({
         </View>
 
         {hasWeight && (
-          <View className="w-16 items-center">
+          <View className="w-20 items-center">
             <MaterialCommunityIcons
-              name="weight-kilogram"
+              name={
+                preferredWeightUnit === "kg"
+                  ? "weight-kilogram"
+                  : "weight-pound"
+              }
               size={22}
               color={isDark ? "white" : "black"}
             />
@@ -204,6 +211,7 @@ function ExerciseRow({
           hasWeight={hasWeight}
           hasReps={hasReps}
           hasDuration={hasDuration}
+          preferredWeightUnit={preferredWeightUnit}
           onUpdate={(patch) => onUpdateSet(set.id, patch)}
           onToggleComplete={() => onToggleCompleteSet(set.id)}
           onDelete={() => onDeleteSet(set.id)}

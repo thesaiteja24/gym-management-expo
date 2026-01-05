@@ -1,6 +1,7 @@
 import { sendOtpService, verifyOtpService } from "@/services/authService";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
+import { LengthUnits, WeightUnits } from "./userStore";
 
 type User = {
   userId?: string;
@@ -10,8 +11,8 @@ type User = {
   firstName?: string;
   lastName?: string;
   dateOfBirth?: string | null;
-  preferredWeightUnit?: "kg" | "lbs";
-  preferredLengthUnit?: "cm" | "inches";
+  preferredWeightUnit?: WeightUnits;
+  preferredLengthUnit?: LengthUnits;
   height?: number | null;
   weight?: number | null;
   profilePicUrl?: string | null;

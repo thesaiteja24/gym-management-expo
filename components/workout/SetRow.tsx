@@ -1,4 +1,6 @@
+import { WeightUnits } from "@/stores/userStore";
 import { WorkoutLogSet } from "@/stores/workoutStore";
+import { convertWeight } from "@/utils/converter";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { memo, useEffect, useRef, useState } from "react";
@@ -36,6 +38,7 @@ type Props = {
   hasWeight: boolean;
   hasReps: boolean;
   hasDuration: boolean;
+  preferredWeightUnit: WeightUnits;
 
   onUpdate: (patch: Partial<WorkoutLogSet>) => void;
   onDelete: () => void;
@@ -54,6 +57,7 @@ function SetRow({
   hasWeight,
   hasReps,
   hasDuration,
+  preferredWeightUnit,
   onUpdate,
   onDelete,
   onToggleComplete,
@@ -69,10 +73,35 @@ function SetRow({
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [weightText, setWeightText] = useState("");
+  const [repsText, setRepsText] = useState("");
+
   const swipeableRef = useRef<SwipeableMethods>(null);
   const hasTriggeredHaptic = useRef(false);
 
-  /* ───── Swipe hint (component-only) ───── */
+  /* ───── Sync inputs when NOT editing ───── */
+
+  useEffect(() => {
+    if (!isEditing && hasWeight) {
+      setWeightText(
+        set.weight != null
+          ? convertWeight(set.weight, {
+              from: "kg",
+              to: preferredWeightUnit,
+              precision: 2,
+            }).toString()
+          : "",
+      );
+    }
+  }, [set.weight, preferredWeightUnit, isEditing, hasWeight]);
+
+  useEffect(() => {
+    if (!isEditing && hasReps) {
+      setRepsText(set.reps != null ? set.reps.toString() : "");
+    }
+  }, [set.reps, isEditing, hasReps]);
+
+  /* ───── Swipe hint ───── */
 
   const hintTranslateX = useSharedValue(0);
   const hasShownHint = useRef(false);
@@ -102,17 +131,16 @@ function SetRow({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     swipeableRef.current?.close();
     setIsDeleting(true);
-
     setTimeout(onDelete, 400);
   };
 
   /* ───── Rest icon color ───── */
 
   const restColor = set.completed
-    ? "#facc15" // yellow → rest running
+    ? "#facc15"
     : set.restSeconds != null
-      ? "#22c55e" // green → preset set
-      : "#9ca3af"; // gray → not set
+      ? "#22c55e"
+      : "#9ca3af";
 
   /* ───────────────── Render helpers ───────────────── */
 
@@ -222,16 +250,27 @@ function SetRow({
           {/* Weight */}
           {hasWeight && (
             <TextInput
-              value={set.weight?.toString()}
-              keyboardType="numeric"
+              value={weightText}
+              keyboardType="decimal-pad"
               selectTextOnFocus
               onFocus={() => setIsEditing(true)}
-              onBlur={() => setIsEditing(false)}
-              onChangeText={(text) => onUpdate({ weight: Number(text) })}
+              onBlur={() => {
+                setIsEditing(false);
+                const num = Number(weightText);
+                if (!isNaN(num)) {
+                  onUpdate({
+                    weight: convertWeight(num, {
+                      from: preferredWeightUnit,
+                      to: "kg",
+                    }),
+                  });
+                }
+              }}
+              onChangeText={setWeightText}
               placeholder="0"
               placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
               style={{ lineHeight }}
-              className={`w-16 text-center text-lg ${
+              className={`w-20 text-center text-lg ${
                 set.completed ? "text-white" : "text-blue-500"
               }`}
             />
@@ -240,12 +279,16 @@ function SetRow({
           {/* Reps */}
           {hasReps && (
             <TextInput
-              value={set.reps?.toString()}
-              keyboardType="numeric"
+              value={repsText}
+              keyboardType="number-pad"
               selectTextOnFocus
               onFocus={() => setIsEditing(true)}
-              onBlur={() => setIsEditing(false)}
-              onChangeText={(text) => onUpdate({ reps: Number(text) })}
+              onBlur={() => {
+                setIsEditing(false);
+                const num = Number(repsText);
+                if (!isNaN(num)) onUpdate({ reps: num });
+              }}
+              onChangeText={setRepsText}
               placeholder="0"
               placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
               style={{ lineHeight }}

@@ -6,9 +6,12 @@ import {
 import { create } from "zustand";
 import { useAuth } from "./authStore";
 
+export type WeightUnits = "kg" | "lbs";
+export type LengthUnits = "cm" | "inches";
+
 type Preferences = {
-  preferredWeightUnit?: "kg" | "lbs";
-  preferredLengthUnit?: "cm" | "inches";
+  preferredWeightUnit?: WeightUnits;
+  preferredLengthUnit?: LengthUnits;
 };
 
 type UserState = {

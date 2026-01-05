@@ -4,16 +4,32 @@ import {
   WorkoutLogSet,
 } from "@/stores/workoutStore";
 
+function isWorkoutLog(
+  workout: WorkoutHistoryItem | WorkoutLog,
+): workout is WorkoutLog {
+  return workout.startTime instanceof Date;
+}
+
 export function calculateWorkoutVolume(
   workout: WorkoutHistoryItem | WorkoutLog,
 ) {
   let volume = 0;
   let sets = 0;
+
+  const isLog = workout.startTime instanceof Date;
+
   workout.exercises.forEach((ex) => {
     ex.sets.forEach((set) => {
+      // Live workout → only completed sets
+      if (isLog && "completed" in set && !set.completed) return;
+
       sets += 1;
-      if (set.weight && set.reps) {
-        volume += Number(set.weight) * set.reps;
+
+      const weight =
+        typeof set.weight === "string" ? Number(set.weight) : set.weight;
+
+      if (weight != null && set.reps != null) {
+        volume += weight * set.reps;
       }
     });
   });

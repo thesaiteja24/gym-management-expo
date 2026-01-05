@@ -1,8 +1,10 @@
 import { DisplayDuration } from "@/components/DisplayDuration";
 import ExerciseRow from "@/components/workout/ExerciseRow";
 import RestTimerSnack from "@/components/workout/RestTimerSnack";
+import { useAuth } from "@/stores/authStore";
 import { Exercise, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
+import { convertWeight } from "@/utils/converter";
 import { calculateWorkoutVolume } from "@/utils/workout";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -25,6 +27,9 @@ export default function StartWorkout() {
   const navigation = useNavigation();
 
   const exerciseList = useExercise((s) => s.exerciseList);
+
+  const preferredWeightUnit =
+    useAuth((s) => s.user?.preferredWeightUnit) ?? "kg";
 
   const {
     workout,
@@ -166,12 +171,18 @@ export default function StartWorkout() {
           />
         </View>
         <View className="flex flex-row gap-2">
-          <Text>Volume: </Text>
-          <Text>{calculateWorkoutVolume(workout).volume}</Text>
+          <Text className="text-black dark:text-white">Volume: </Text>
+          <Text className="text-black dark:text-white">
+            {/* converts from KG to User preferred unit as we by default store as kg */}
+            {convertWeight(calculateWorkoutVolume(workout).volume)}{" "}
+            {preferredWeightUnit}
+          </Text>
         </View>
         <View className="flex flex-row gap-2">
-          <Text>Sets: </Text>
-          <Text>{calculateWorkoutVolume(workout).sets}</Text>
+          <Text className="text-black dark:text-white">Sets: </Text>
+          <Text className="text-black dark:text-white">
+            {calculateWorkoutVolume(workout).sets}
+          </Text>
         </View>
       </View>
 
@@ -207,6 +218,7 @@ export default function StartWorkout() {
               isActive={isActive}
               isDragging={isDragging}
               drag={drag}
+              preferredWeightUnit={preferredWeightUnit}
               onPress={() =>
                 router.navigate(`/(app)/exercises/${item.exerciseId}`)
               }
