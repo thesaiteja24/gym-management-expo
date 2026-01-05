@@ -4,18 +4,21 @@ import {
   WorkoutLogSet,
 } from "@/stores/workoutStore";
 
-export function calculateWorkoutVolume(workout: WorkoutHistoryItem) {
+export function calculateWorkoutVolume(
+  workout: WorkoutHistoryItem | WorkoutLog,
+) {
   let volume = 0;
-
+  let sets = 0;
   workout.exercises.forEach((ex) => {
     ex.sets.forEach((set) => {
+      sets += 1;
       if (set.weight && set.reps) {
         volume += Number(set.weight) * set.reps;
       }
     });
   });
 
-  return volume;
+  return { volume, sets };
 }
 
 export function finalizeSetTimer(set: WorkoutLogSet): WorkoutLogSet {

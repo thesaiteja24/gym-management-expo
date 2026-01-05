@@ -34,10 +34,14 @@ export default function WorkoutDetails() {
 
   const duration = formatDurationFromDates(workout.startTime, workout.endTime);
   const timeAgo = formatTimeAgo(workout.endTime);
-  const volume = calculateWorkoutVolume(workout);
+  const volume = calculateWorkoutVolume(workout).volume;
 
   return (
-    <SafeAreaView style={{ flex: 1 }} className="bg-white dark:bg-black">
+    <SafeAreaView
+      style={{ flex: 1 }}
+      edges={["bottom"]}
+      className="bg-white dark:bg-black"
+    >
       <ScrollView
         className="flex-1 bg-white p-4 dark:bg-black"
         style={{ paddingBottom: safeAreaInsets.bottom }}

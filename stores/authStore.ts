@@ -4,15 +4,20 @@ import { create } from "zustand";
 
 type User = {
   userId?: string;
-  name?: string;
+  countryCode?: string;
+  phone?: string;
   phoneE164?: string;
   firstName?: string;
   lastName?: string;
   dateOfBirth?: string | null;
+  preferredWeightUnit?: "kg" | "lbs";
+  preferredLengthUnit?: "cm" | "inches";
   height?: number | null;
   weight?: number | null;
   profilePicUrl?: string | null;
   role?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 type AuthState = {

@@ -3,6 +3,7 @@ import ExerciseRow from "@/components/workout/ExerciseRow";
 import RestTimerSnack from "@/components/workout/RestTimerSnack";
 import { Exercise, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
+import { calculateWorkoutVolume } from "@/utils/workout";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useNavigation } from "expo-router";
@@ -151,17 +152,27 @@ export default function StartWorkout() {
       className="flex-1 bg-white dark:bg-black"
     >
       {/* ───── Top bar ───── */}
-      <View className="flex-row gap-2 border-b border-neutral-200 p-4 dark:border-neutral-800">
-        <Ionicons
-          name="hourglass-outline"
-          size={24}
-          color={isDark ? "white" : "black"}
-        />
+      <View className="flex-row items-center justify-between gap-2 border-b border-neutral-200 p-4 dark:border-neutral-800">
+        <View className="flex flex-row gap-2">
+          <Ionicons
+            name="hourglass-outline"
+            size={24}
+            color={isDark ? "white" : "black"}
+          />
 
-        <DisplayDuration
-          startTime={workout.startTime}
-          textColor="text-blue-500"
-        />
+          <DisplayDuration
+            startTime={workout.startTime}
+            textColor="text-blue-500"
+          />
+        </View>
+        <View className="flex flex-row gap-2">
+          <Text>Volume: </Text>
+          <Text>{calculateWorkoutVolume(workout).volume}</Text>
+        </View>
+        <View className="flex flex-row gap-2">
+          <Text>Sets: </Text>
+          <Text>{calculateWorkoutVolume(workout).sets}</Text>
+        </View>
       </View>
 
       {/* ───── Exercises list ───── */}

@@ -8,7 +8,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 export default function WorkoutCard(workout: WorkoutHistoryItem) {
   const duration = formatDurationFromDates(workout.startTime, workout.endTime);
   const timeAgo = formatTimeAgo(workout.endTime);
-  const volume = calculateWorkoutVolume(workout);
+  const volume = calculateWorkoutVolume(workout).volume;
 
   const previewExercises = workout.exercises.slice(0, 3);
   const remaining = workout.exercises.length - previewExercises.length;
