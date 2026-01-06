@@ -1,4 +1,4 @@
-import InputField from "@/components/InputField";
+import PhoneInputField from "@/components/auth/PhoneInputField";
 import { useAuth } from "@/stores/authStore";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -58,8 +58,8 @@ export default function Login() {
       <View
         style={{ flex: 2, paddingHorizontal: 24, justifyContent: "center" }}
       >
-        <View className="flex flex-row gap-2 items-center">
-          <Text className="text-3xl font-extrabold text-black dark:text-white mb-2">
+        <View className="flex flex-row items-center gap-2">
+          <Text className="mb-2 text-3xl font-extrabold text-black dark:text-white">
             Welcome to
           </Text>
           <Text
@@ -80,11 +80,11 @@ export default function Login() {
       <View
         style={{ flex: 2, paddingHorizontal: 24, justifyContent: "center" }}
       >
-        <Text className="text-sm text-gray-400 dark:text-gray-500 mb-4">
+        <Text className="mb-4 text-sm text-gray-400 dark:text-gray-500">
           Enter your mobile number to continue.
         </Text>
 
-        <InputField
+        <PhoneInputField
           value={phone}
           onChangeText={setPhone}
           initialCountry={country.code}
@@ -102,13 +102,13 @@ export default function Login() {
         }}
       >
         <TouchableOpacity
-          className="w-full bg-blue-600 py-2 rounded-full items-center"
+          className="w-full items-center rounded-full bg-blue-600 py-2"
           onPress={onContinue}
         >
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text className="text-white font-semibold text-lg">Continue</Text>
+            <Text className="text-lg font-semibold text-white">Continue</Text>
           )}
         </TouchableOpacity>
       </KeyboardAvoidingView>

@@ -24,7 +24,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { DisplayDuration } from "../DisplayDuration";
+import { DisplayDuration } from "./DisplayDuration";
 
 /* ───────────────── Constants ───────────────── */
 

@@ -1,5 +1,5 @@
 import { CustomToast } from "@/components/CustomToast";
-import { OtaUpdateModal } from "@/components/OtaUpdateModal";
+import { OtaUpdateModal } from "@/components/auth/OtaUpdateModal";
 import { useAuth } from "@/stores/authStore";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack, useSegments } from "expo-router";

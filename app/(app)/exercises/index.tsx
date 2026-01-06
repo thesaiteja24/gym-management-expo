@@ -17,6 +17,7 @@ import Fuse from "fuse.js";
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Platform,
   Text,
   TextInput,
   TouchableOpacity,
@@ -56,6 +57,7 @@ function Chip({ label, onRemove }: ChipProps) {
 /* ───────────────── Screen ───────────────── */
 
 export default function ExercisesScreen() {
+  const lineHeight = Platform.OS === "ios" ? 0 : 30;
   const role = useAuth((s) => s.user?.role);
   const safeAreaInsets = useSafeAreaInsets();
   const params = useLocalSearchParams();
@@ -193,6 +195,7 @@ export default function ExercisesScreen() {
           placeholder="Search exercises, equipment, muscles…"
           placeholderTextColor="#9CA3AF"
           className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-lg text-black dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+          style={{ lineHeight: lineHeight }}
         />
       </View>
 

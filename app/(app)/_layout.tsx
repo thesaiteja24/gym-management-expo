@@ -1,4 +1,4 @@
-import AuthGuard from "@/components/AuthGuard";
+import AuthGuard from "@/components/auth/AuthGuard";
 import { Stack } from "expo-router";
 import React from "react";
 

@@ -37,7 +37,7 @@ type Props = {
   onCountryChange?: (country: Country) => void;
 };
 
-export default function InputField({
+export default function PhoneInputField({
   value = "",
   onChangeText,
   style,
@@ -48,7 +48,7 @@ export default function InputField({
   const [modalVisible, setModalVisible] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Country>(
-    () => COUNTRIES.find((c) => c.code === initialCountry) ?? COUNTRIES[0]
+    () => COUNTRIES.find((c) => c.code === initialCountry) ?? COUNTRIES[0],
   );
 
   const results = useMemo(() => {
@@ -58,7 +58,7 @@ export default function InputField({
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.dial_code.includes(q) ||
-        c.code.toLowerCase().includes(q)
+        c.code.toLowerCase().includes(q),
     );
   }, [query]);
 
@@ -70,22 +70,22 @@ export default function InputField({
 
   return (
     <View style={style} className="w-full">
-      <View className="flex-row items-center bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <View className="flex-row items-center overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-black">
         {/* Country selector */}
         <TouchableOpacity
           activeOpacity={0.8}
-          className="flex-row items-center px-3 py-3 bg-transparent"
+          className="flex-row items-center bg-transparent px-3 py-3"
           onPress={() => setModalVisible(true)}
         >
-          <Text className="text-lg mr-2">
+          <Text className="mr-2 text-lg">
             {countryCodeToFlag(selected.code)}
           </Text>
-          <Text className="text-base text-black dark:text-white mr-1">
+          <Text className="mr-1 text-base text-black dark:text-white">
             {selected.dial_code}
           </Text>
           {/* show chevron; if react-native-heroicons not installed, replace with simple text */}
           {Platform.OS === "web" ? (
-            <Text className="text-black dark:text-white ml-1">▾</Text>
+            <Text className="ml-1 text-black dark:text-white">▾</Text>
           ) : (
             <ChevronDownIcon
               size={18}
@@ -95,7 +95,7 @@ export default function InputField({
         </TouchableOpacity>
 
         {/* Divider */}
-        <View className="w-px h-8 bg-gray-200 dark:bg-gray-800" />
+        <View className="h-8 w-px bg-gray-200 dark:bg-gray-800" />
 
         {/* Phone input */}
         <TextInput
@@ -117,12 +117,12 @@ export default function InputField({
         onRequestClose={() => setModalVisible(false)}
       >
         <Pressable
-          className="flex-1 bg-black/40 justify-end"
+          className="flex-1 justify-end bg-black/40"
           onPress={() => setModalVisible(false)}
         >
-          <Pressable className="bg-white dark:bg-black rounded-t-2xl p-4 max-h-[70%]">
+          <Pressable className="max-h-[70%] rounded-t-2xl bg-white p-4 dark:bg-black">
             {/* Search */}
-            <View className="flex-row items-center border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 mb-4">
+            <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-800">
               {/* optional icon */}
               {Platform.OS === "web" ? (
                 <Text className="mr-2">🔍</Text>
@@ -146,10 +146,10 @@ export default function InputField({
               renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={() => selectCountry(item)}
-                  className="flex-row items-center justify-between py-3 px-2"
+                  className="flex-row items-center justify-between px-2 py-3"
                 >
                   <View className="flex-row items-center">
-                    <Text className="text-xl mr-3">
+                    <Text className="mr-3 text-xl">
                       {countryCodeToFlag(item.code)}
                     </Text>
                     <Text className="text-base text-black dark:text-white">
