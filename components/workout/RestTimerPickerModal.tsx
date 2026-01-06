@@ -10,39 +10,65 @@ import {
 } from "react-native";
 import { TimerPicker } from "react-native-timer-picker";
 
+/* --------------------------------------------------
+   Types
+-------------------------------------------------- */
+
 /**
- * Props for RestTimerPickerModal
+ * Props for RestTimerPickerModal.
  */
-export type RestTimerPickerModalProps = {
+export interface RestTimerPickerModalProps {
   /**
-   * Whether the modal is visible
-   * @default false
+   * Whether the modal is visible.
+   *
+   * Controls the presentation of the bottom-sheet modal.
    */
   visible: boolean;
 
   /**
-   * Initial duration in seconds
+   * Initial duration (in seconds) shown when the modal opens.
+   *
    * @default 60
    */
   initialSeconds?: number;
 
   /**
-   * Called when the modal is closed without confirming
+   * Called when the modal is dismissed without confirming.
    */
   onClose: () => void;
 
   /**
-   * Called when the user confirms a duration
-   * @param seconds Total duration in seconds
+   * Called when the user confirms a duration.
+   *
+   * @param seconds Total selected duration in seconds
    */
   onConfirm: (seconds: number) => void;
-};
+}
+
+/* --------------------------------------------------
+   Component
+-------------------------------------------------- */
 
 /**
  * RestTimerPickerModal
  *
- * A modal picker for hours, minutes, and seconds.
- * Converts selected duration to total seconds and passes it to `onConfirm`.
+ * A bottom-sheet modal for selecting a rest duration using
+ * hours, minutes, and seconds.
+ *
+ * The picker state is reset every time the modal opens.
+ * On confirmation, the selected duration is converted to
+ * total seconds and passed to `onConfirm`.
+ *
+ * Haptic feedback is triggered on picker interaction,
+ * cancellation, and confirmation.
+ *
+ * @example
+ * <RestTimerPickerModal
+ *   visible={showTimer}
+ *   initialSeconds={90}
+ *   onClose={() => setShowTimer(false)}
+ *   onConfirm={(seconds) => setRestTime(seconds)}
+ * />
  */
 export default function RestTimerPickerModal({
   visible,
@@ -55,6 +81,7 @@ export default function RestTimerPickerModal({
   /* ---------------------------------------------
      Derive initial values
   --------------------------------------------- */
+
   const initialHours = Math.floor(initialSeconds / 3600);
   const remainingAfterHours = initialSeconds % 3600;
   const initialMinutes = Math.floor(remainingAfterHours / 60);
@@ -63,6 +90,7 @@ export default function RestTimerPickerModal({
   /* ---------------------------------------------
      State
   --------------------------------------------- */
+
   const [hours, setHours] = useState(initialHours);
   const [minutes, setMinutes] = useState(initialMinutes);
   const [seconds, setSeconds] = useState(initialSecs);
@@ -70,6 +98,7 @@ export default function RestTimerPickerModal({
   /* ---------------------------------------------
      Reset when modal opens
   --------------------------------------------- */
+
   useEffect(() => {
     if (!visible) return;
 
@@ -81,6 +110,7 @@ export default function RestTimerPickerModal({
   /* ---------------------------------------------
      Actions
   --------------------------------------------- */
+
   const handleCancel = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onClose();
@@ -94,7 +124,6 @@ export default function RestTimerPickerModal({
   };
 
   const handlePickerFeedback = () => {
-    // Trigger a light haptic feedback
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 

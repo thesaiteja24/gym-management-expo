@@ -7,6 +7,10 @@ import {
   TouchableOpacityProps,
 } from "react-native";
 
+/* --------------------------------------------------
+   Types
+-------------------------------------------------- */
+
 /**
  * Visual variants supported by the Button component.
  */
@@ -15,7 +19,7 @@ export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 /**
  * Props for the Button component.
  */
-export type ButtonProps = {
+export interface ButtonProps extends TouchableOpacityProps {
   /**
    * Button label text.
    */
@@ -23,6 +27,7 @@ export type ButtonProps = {
 
   /**
    * Visual style of the button.
+   *
    * @default "secondary"
    */
   variant?: ButtonVariant;
@@ -30,19 +35,22 @@ export type ButtonProps = {
   /**
    * Disable interaction and dim the button.
    * Automatically true when `loading` is true.
+   *
    * @default false
    */
   disabled?: boolean;
 
   /**
-   * Show loading spinner instead of text.
+   * Show a loading spinner instead of the label.
    * Automatically disables the button.
+   *
    * @default false
    */
   loading?: boolean;
 
   /**
    * Trigger haptic feedback on press.
+   *
    * @default true
    */
   haptic?: boolean;
@@ -63,21 +71,40 @@ export type ButtonProps = {
   className?: string;
 
   /**
-   * Additional Tailwind classes for the text.
+   * Additional Tailwind classes for the button text.
    */
   textClassName?: string;
-} & TouchableOpacityProps;
+}
+
+/* --------------------------------------------------
+   Component
+-------------------------------------------------- */
 
 /**
+ * Button
+ *
  * A reusable, consistent button component used across the app.
  *
  * Features:
- * - Variants: primary, secondary, danger, ghost
- * - Loading state (spinner replaces text)
- * - Optional haptics
- * - Disabled handling
- * - Full-width by default
- * - Rounded, accessible, and predictable
+ * - Multiple visual variants
+ * - Built-in loading & disabled handling
+ * - Optional haptic feedback
+ * - Icon support
+ * - Full-width, rounded, accessible by default
+ *
+ * @example
+ * <Button
+ *   title="Save"
+ *   variant="primary"
+ *   onPress={handleSave}
+ * />
+ *
+ * @example
+ * <Button
+ *   title="Delete"
+ *   variant="danger"
+ *   loading={isDeleting}
+ * />
  */
 export function Button({
   title,
@@ -93,10 +120,6 @@ export function Button({
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-
-  /* ---------------------------------------------
-     Base + Variant styles
-  --------------------------------------------- */
 
   const baseClass =
     "h-12 w-full flex-row items-center justify-center gap-2 rounded-2xl";
@@ -116,10 +139,6 @@ export function Button({
     danger: "text-red-600",
     ghost: "text-blue-500",
   };
-
-  /* ---------------------------------------------
-     Render
-  --------------------------------------------- */
 
   return (
     <TouchableOpacity

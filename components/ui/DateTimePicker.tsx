@@ -10,78 +10,155 @@ import {
 } from "react-native";
 import DatePicker from "react-native-date-picker";
 
-/* ───────────────── Types ───────────────── */
+/* --------------------------------------------------
+   Types
+-------------------------------------------------- */
 
 /**
- * Props for DateTimePicker
+ * Props shared between modal and inline modes.
  */
-export interface DateTimePickerProps {
+interface BaseDateTimePickerProps {
   /**
-   * Current value. Defaults to today if not provided.
+   * Current value of the picker.
+   * If omitted, defaults to the current date/time.
    */
   value?: Date;
 
   /**
-   * Called with the final confirmed date.
+   * Called when the date changes.
+   *
+   * - In modal mode: called only after confirmation
+   * - In inline mode: called immediately on change
    */
   onUpdate: (date: Date) => void;
 
   /**
-   * If true, only date is selectable (no time).
+   * Disable time selection and allow date-only picking.
+   *
    * @default false
    */
   dateOnly?: boolean;
 
   /**
-   * If true, picker opens in a modal.
-   * If false, picker renders inline.
-   * @default true
-   */
-  isModal?: boolean;
-
-  /**
-   * Force 24h or 12h format.
-   * Defaults to device preference.
+   * Force 24-hour or 12-hour time format.
+   * Uses device preference if omitted.
    */
   is24Hour?: boolean;
-
-  /**
-   * NativeWind className for displayed value.
-   */
-  textClassName?: string;
-
-  /**
-   * Optional modal title.
-   */
-  title?: string;
 }
 
-/* ───────────────── Component ───────────────── */
+/**
+ * Props for modal mode.
+ */
+export interface DateTimePickerModalProps extends BaseDateTimePickerProps {
+  /**
+   * Render the picker inside a confirmation modal.
+   *
+   * @default true
+   */
+  isModal?: true;
 
-export default function DateTimePicker({
-  value,
-  onUpdate,
-  dateOnly = false,
-  isModal = true,
-  is24Hour,
-  textClassName,
-  title = "Select date",
-}: DateTimePickerProps) {
+  /**
+   * Title displayed at the top of the modal.
+   *
+   * @default "Select date"
+   */
+  title?: string;
+
+  /**
+   * Styling for the displayed value text.
+   */
+  textClassName?: string;
+}
+
+/**
+ * Props for inline mode.
+ */
+export interface DateTimePickerInlineProps extends BaseDateTimePickerProps {
+  /**
+   * Render the picker inline without a modal.
+   */
+  isModal: false;
+}
+
+/**
+ * Props for the DateTimePicker component.
+ */
+export type DateTimePickerProps =
+  | DateTimePickerModalProps
+  | DateTimePickerInlineProps;
+
+/* --------------------------------------------------
+   Component
+-------------------------------------------------- */
+
+/**
+ * DateTimePicker
+ *
+ * A flexible date / date-time picker component with **modal**
+ * and **inline** rendering modes.
+ *
+ * Features:
+ * - Date-only or date + time selection
+ * - Modal confirmation or inline immediate updates
+ * - Optional 12h / 24h time formatting
+ * - Dark mode support
+ * - Draft state in modal mode
+ *
+ * ### Modes
+ *
+ * **Modal mode (default)**
+ * - Displays the current value as text
+ * - Opens a bottom-sheet modal on press
+ * - Changes are staged until confirmed
+ *
+ * **Inline mode**
+ * - Renders the native picker directly
+ * - Updates immediately on change
+ *
+ * @example
+ * // Modal date + time picker
+ * <DateTimePicker
+ *   value={new Date()}
+ *   onUpdate={setDate}
+ * />
+ *
+ * @example
+ * // Date-only picker
+ * <DateTimePicker
+ *   dateOnly
+ *   value={new Date()}
+ *   onUpdate={setDate}
+ * />
+ *
+ * @example
+ * // Inline picker
+ * <DateTimePicker
+ *   isModal={false}
+ *   onUpdate={setDate}
+ * />
+ */
+export default function DateTimePicker(props: DateTimePickerProps) {
   const isDark = useColorScheme() === "dark";
+
+  const { value, onUpdate, dateOnly = false, is24Hour } = props;
+
+  const isModal = props.isModal !== false;
 
   const initialDate = value ?? new Date();
 
   const [visible, setVisible] = useState(false);
   const [draft, setDraft] = useState<Date>(initialDate);
 
-  /* Reset draft when opened */
+  /* Reset draft when modal opens */
   useEffect(() => {
     if (visible) {
       setDraft(initialDate);
     }
   }, [visible, initialDate]);
 
-  /* ───────────── Display string ───────────── */
+  /* ---------------------------------------------
+     Display string (modal mode)
+  --------------------------------------------- */
 
   const displayValue = useMemo(() => {
     const d = value ?? initialDate;
@@ -95,18 +172,9 @@ export default function DateTimePicker({
     });
   }, [value, dateOnly, is24Hour]);
 
-  /* ───────────── Handlers ───────────── */
-
-  const open = () => setVisible(true);
-  const close = () => setVisible(false);
-
-  const confirm = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onUpdate(draft);
-    close();
-  };
-
-  /* ───────────── Inline mode ───────────── */
+  /* ---------------------------------------------
+     Inline mode
+  --------------------------------------------- */
 
   if (!isModal) {
     return (
@@ -122,7 +190,20 @@ export default function DateTimePicker({
     );
   }
 
-  /* ───────────── Modal mode ───────────── */
+  /* ---------------------------------------------
+     Modal mode
+  --------------------------------------------- */
+
+  const { textClassName, title = "Select date" } = props;
+
+  const open = () => setVisible(true);
+  const close = () => setVisible(false);
+
+  const confirm = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onUpdate(draft);
+    close();
+  };
 
   return (
     <>
@@ -139,12 +220,10 @@ export default function DateTimePicker({
           <Pressable className="absolute inset-0" onPress={close} />
 
           <View className="rounded-t-3xl bg-white p-6 dark:bg-[#111]">
-            {/* Title */}
             <Text className="mb-4 text-center text-xl font-bold text-black dark:text-white">
               {title}
             </Text>
 
-            {/* Picker */}
             <DatePicker
               date={draft}
               onDateChange={setDraft}
@@ -160,7 +239,6 @@ export default function DateTimePicker({
               style={{ alignSelf: "center" }}
             />
 
-            {/* Actions */}
             <View className="mt-6 flex-row gap-4">
               <TouchableOpacity
                 onPress={close}
