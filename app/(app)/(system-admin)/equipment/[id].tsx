@@ -1,5 +1,5 @@
-import { DeleteConfirmModal } from "@/components/DeleteConfrimModal";
-import ProfilePic from "@/components/ProfilePic";
+import EditableAvatar from "@/components/EditableAvatar";
+import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
 import { useEquipment } from "@/stores/equipmentStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import { useLocalSearchParams, useNavigation } from "expo-router";
@@ -180,7 +180,7 @@ export default function EditEquipment() {
     >
       {/* Image picker */}
       <View className="mb-6 items-center">
-        <ProfilePic
+        <EditableAvatar
           uri={thumbnailUri}
           size={132}
           editable={!equipmentLoading}

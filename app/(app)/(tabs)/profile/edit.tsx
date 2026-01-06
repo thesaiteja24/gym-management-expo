@@ -1,5 +1,5 @@
 import DatePicker from "@/components/CustomDatePicker";
-import ProfilePic from "@/components/ProfilePic";
+import EditableAvatar from "@/components/EditableAvatar";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
@@ -196,7 +196,7 @@ export default function EditProfileScreen() {
       className="bg-white dark:bg-black"
     >
       <View className="mb-6 items-center">
-        <ProfilePic
+        <EditableAvatar
           uri={user?.profilePicUrl ? user.profilePicUrl : null}
           size={132}
           editable={!isLoading}

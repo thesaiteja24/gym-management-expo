@@ -1,4 +1,4 @@
-import CustomHeader from "@/components/CustomHeader";
+import CustomHeader from "@/components/navigation/CustomHeader";
 import { router, Stack } from "expo-router";
 import React from "react";
 
@@ -53,6 +53,19 @@ export default function WorkoutLayout() {
               router.canGoBack()
                 ? router.back()
                 : router.replace("/(app)/(tabs)/home");
+            },
+          } as any
+        }
+      />
+
+      <Stack.Screen
+        name="save"
+        options={
+          {
+            title: "Save Workout",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.replace("/(app)/workout/start");
             },
           } as any
         }

@@ -1,5 +1,5 @@
-import CustomHeader from "@/components/CustomHeader";
-import CustomTabs from "@/components/CustomTabs";
+import CustomHeader from "@/components/navigation/CustomHeader";
+import CustomTabs from "@/components/navigation/CustomTabs";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";

@@ -1,5 +1,5 @@
 // app/(app)/(tabs)/profile.tsx
-import ProfilePic from "@/components/ProfilePic";
+import EditableAvatar from "@/components/EditableAvatar";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
 import React, { memo, useEffect } from "react";
@@ -44,7 +44,7 @@ export default function ProfileScreen() {
     >
       {/* Avatar */}
       <View className="mb-6 items-center">
-        <ProfilePic
+        <EditableAvatar
           uri={user?.profilePicUrl ? user.profilePicUrl : null}
           size={132}
           editable={false}

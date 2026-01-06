@@ -24,7 +24,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { DisplayDuration } from "./DisplayDuration";
+import { ElapsedTime } from "./ElapsedTime";
 
 /* ───────────────── Constants ───────────────── */
 
@@ -312,10 +312,14 @@ function SetRow({
                 color={set.completed ? "white" : "#3b82f6"}
               />
 
-              <DisplayDuration
+              <ElapsedTime
                 baseSeconds={set.durationSeconds}
                 runningSince={set.durationStartedAt}
-                textColor={set.completed ? "text-white" : "text-blue-500"}
+                textClassName={
+                  set.completed
+                    ? "text-lg font-semibold text-white"
+                    : "text-lg font-semibold text-blue-500"
+                }
               />
             </TouchableOpacity>
           )}

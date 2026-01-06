@@ -10,19 +10,46 @@ import {
 } from "react-native";
 import { TimerPicker } from "react-native-timer-picker";
 
-type Props = {
+/**
+ * Props for RestTimerPickerModal
+ */
+export type RestTimerPickerModalProps = {
+  /**
+   * Whether the modal is visible
+   * @default false
+   */
   visible: boolean;
+
+  /**
+   * Initial duration in seconds
+   * @default 60
+   */
   initialSeconds?: number;
+
+  /**
+   * Called when the modal is closed without confirming
+   */
   onClose: () => void;
+
+  /**
+   * Called when the user confirms a duration
+   * @param seconds Total duration in seconds
+   */
   onConfirm: (seconds: number) => void;
 };
 
+/**
+ * RestTimerPickerModal
+ *
+ * A modal picker for hours, minutes, and seconds.
+ * Converts selected duration to total seconds and passes it to `onConfirm`.
+ */
 export default function RestTimerPickerModal({
   visible,
   initialSeconds = 60,
   onClose,
   onConfirm,
-}: Props) {
+}: RestTimerPickerModalProps) {
   const isDark = useColorScheme() === "dark";
 
   /* ---------------------------------------------

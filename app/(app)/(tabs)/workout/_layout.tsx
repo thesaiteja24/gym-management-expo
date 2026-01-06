@@ -1,4 +1,4 @@
-import CustomHeader from "@/components/CustomHeader";
+import CustomHeader from "@/components/navigation/CustomHeader";
 import { router, Stack } from "expo-router";
 import React from "react";
 

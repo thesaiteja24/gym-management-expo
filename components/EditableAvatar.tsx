@@ -4,7 +4,25 @@ import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 
-type ProfilePicProps = {
+/**
+ * EditableAvatar
+ *
+ * Displays a user's avatar with optional editing capability.
+ * Users can tap the image to pick a new picture from their library.
+ *
+ * @param uri - The current image URI
+ * @param size - Width/height of the avatar in pixels (default 120)
+ * @param editable - Whether the avatar can be changed (default true)
+ * @param uploading - Whether the avatar is currently uploading (shows loader)
+ * @param onChange - Callback when a new image is selected
+ * @param borderColor - Border color around the avatar (default #d1d5db)
+ * @param borderWidth - Border width (default 2)
+ * @param pencilSize - Size of the edit pencil icon (default 18)
+ * @param pencilColor - Pencil icon color (default #fff)
+ * @param pencilBg - Pencil background color (default #1e90ff)
+ * @param shape - Avatar shape: "circle" | "rounded" | "square" (default "circle")
+ */
+type EditableAvatarProps = {
   uri?: string | null;
   size?: number;
   editable?: boolean;
@@ -21,7 +39,7 @@ type ProfilePicProps = {
   shape?: "circle" | "rounded" | "square";
 };
 
-export default function ProfilePic({
+export default function EditableAvatar({
   uri = null,
   size = 120,
   editable = true,
@@ -36,7 +54,7 @@ export default function ProfilePic({
   pencilBg = "#1e90ff",
 
   shape = "circle",
-}: ProfilePicProps) {
+}: EditableAvatarProps) {
   const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
@@ -89,10 +107,7 @@ export default function ProfilePic({
           <Image
             cachePolicy={"memory-disk"}
             source={uri ? { uri } : require("../assets/images/icon.png")}
-            style={{
-              width: "100%",
-              height: "100%",
-            }}
+            style={{ width: "100%", height: "100%" }}
             contentFit="cover"
           />
         )}

@@ -1,7 +1,7 @@
-import { DeleteConfirmModal } from "@/components/DeleteConfrimModal";
 import EquipmentModal from "@/components/exercises/EquipmentModal";
 import ExerciseList from "@/components/exercises/ExerciseList";
 import MuscleGroupModal from "@/components/exercises/MuscleGroupModal";
+import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
 
 import { ROLES as roles } from "@/constants/roles";
 import { useAuth } from "@/stores/authStore";

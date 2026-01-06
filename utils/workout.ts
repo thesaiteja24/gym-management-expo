@@ -28,13 +28,12 @@ export function calculateWorkoutVolume(
       // live workout → only completed sets
       if (isLog && "completed" in set && !set.completed) return;
 
-      sets += 1;
-
       const weight =
         typeof set.weight === "string" ? Number(set.weight) : set.weight;
 
       if (weight != null && weight > 0 && set.reps != null && set.reps > 0) {
         volume += weight * set.reps;
+        sets += 1;
       }
     });
   });

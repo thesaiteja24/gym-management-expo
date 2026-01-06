@@ -1,4 +1,4 @@
-import ProfilePic from "@/components/ProfilePic";
+import EditableAvatar from "@/components/EditableAvatar";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import { useNavigation } from "expo-router";
@@ -52,7 +52,7 @@ export default function CreateMuscleGroup() {
             fileName: "muscle-group.jpg",
             type: "image/jpeg",
           },
-          "equipment"
+          "equipment",
         );
 
         formData.append("image", prepared as any);
@@ -108,8 +108,8 @@ export default function CreateMuscleGroup() {
       className="bg-white dark:bg-black"
     >
       {/* Image picker */}
-      <View className="items-center mb-6">
-        <ProfilePic
+      <View className="mb-6 items-center">
+        <EditableAvatar
           uri={thumbnailUri}
           size={132}
           editable={!muscleGroupLoading}

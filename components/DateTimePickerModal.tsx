@@ -62,34 +62,38 @@ export default function DateTimePickerModal({
             </Text>
 
             {/* DATE */}
-            <View className="mb-6 items-center">
-              <CustomDatePicker
-                value={date}
-                onChange={(d) => {
-                  const updated = new Date(date);
-                  updated.setFullYear(
-                    d.getFullYear(),
-                    d.getMonth(),
-                    d.getDate(),
-                  );
-                  setDate(updated);
-                }}
-              />
+            <View className="flex w-full flex-row items-center justify-evenly">
+              <View className="mb-6 items-center">
+                <Text className="text-lg font-semibold text-blue-500">
+                  <CustomDatePicker
+                    value={date}
+                    textClassName="text-lg font-semibold text-blue-500"
+                    onChange={(d) => {
+                      const updated = new Date(date);
+                      updated.setFullYear(
+                        d.getFullYear(),
+                        d.getMonth(),
+                        d.getDate(),
+                      );
+                      setDate(updated);
+                    }}
+                  />
+                </Text>
+              </View>
+
+              {/* TIME */}
+              <TouchableOpacity
+                onPress={() => setTimeModalVisible(true)}
+                className="mb-6 items-center"
+              >
+                <Text className="text-lg font-semibold text-blue-500">
+                  {date.toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              </TouchableOpacity>
             </View>
-
-            {/* TIME */}
-            <TouchableOpacity
-              onPress={() => setTimeModalVisible(true)}
-              className="mb-6 items-center"
-            >
-              <Text className="text-lg font-semibold text-blue-500">
-                {date.toLocaleTimeString(undefined, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </TouchableOpacity>
-
             {/* ACTIONS */}
             <View className="flex-row gap-4">
               <TouchableOpacity

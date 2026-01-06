@@ -92,6 +92,7 @@ type WorkoutState = {
   /* Workout */
   getAllWorkouts: () => Promise<void>;
   startWorkout: () => void;
+  updateWorkout: (patch: Partial<WorkoutLog>) => void;
   saveWorkout: () => Promise<{ success: boolean; error?: any }>;
   discardWorkout: () => void;
 
@@ -174,6 +175,18 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
       },
     });
   },
+
+  updateWorkout: (patch) =>
+    set((state) => {
+      if (!state.workout) return state;
+
+      return {
+        workout: {
+          ...state.workout,
+          ...patch,
+        },
+      };
+    }),
 
   saveWorkout: async () => {
     const state = get();

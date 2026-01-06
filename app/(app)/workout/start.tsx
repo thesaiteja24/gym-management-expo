@@ -1,4 +1,4 @@
-import { DisplayDuration } from "@/components/DisplayDuration";
+import { ElapsedTime } from "@/components/workout/ElapsedTime";
 import ExerciseRow from "@/components/workout/ExerciseRow";
 import RestTimerSnack from "@/components/workout/RestTimerSnack";
 import { useAuth } from "@/stores/authStore";
@@ -36,8 +36,6 @@ export default function StartWorkout() {
     workout,
     rest,
     startWorkout,
-    saveWorkout,
-    discardWorkout,
     removeExercise,
     reorderExercises,
     addSet,
@@ -110,69 +108,59 @@ export default function StartWorkout() {
     return { valid, invalid };
   }
 
-  const handleSaveWorkout = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  function canNavigateToSave() {
+    if (!workout) return { ok: false };
 
-    if (!workout) return;
-
-    // 1️⃣ No exercises
     if (workout.exercises.length === 0) {
-      Toast.show({
-        type: "error",
-        text1: "No exercises added",
-        text2: "Add at least one exercise to save the workout.",
-      });
-      return;
+      return {
+        ok: false,
+        reason: "NO_EXERCISES",
+      };
     }
 
     const { valid, invalid } = getSetValidationStats();
 
-    // 2️⃣ No valid sets
     if (valid === 0) {
-      Toast.show({
-        type: "error",
-        text1: "No valid sets added",
-        text2: "Add at least one valid set to save the workout.",
-        onPress: () => Toast.hide(), // interactive
-      });
+      return {
+        ok: false,
+        reason: "NO_VALID_SETS",
+      };
+    }
+
+    return {
+      ok: true,
+      invalidCount: invalid,
+    };
+  }
+
+  const handleOpenSave = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    const result = canNavigateToSave();
+
+    if (!result.ok) {
+      if (result.reason === "NO_EXERCISES") {
+        Toast.show({
+          type: "error",
+          text1: "No exercises added",
+          text2: "Add at least one exercise to continue.",
+        });
+      }
+
+      if (result.reason === "NO_VALID_SETS") {
+        Toast.show({
+          type: "error",
+          text1: "No valid sets added",
+          text2: "Add at least one valid set to continue.",
+          onPress: () => Toast.hide(), // interactive
+        });
+      }
+
       return;
     }
 
-    try {
-      const res = await saveWorkout();
-
-      if (res.success) {
-        // 3️⃣ Inform about ignored sets
-        if (invalid > 0) {
-          Toast.show({
-            type: "info",
-            text1: `${invalid} incomplete set${invalid > 1 ? "s" : ""} ignored`,
-          });
-        }
-
-        // 4️⃣ Success toast
-        Toast.show({
-          type: "success",
-          text1: "Workout saved successfully",
-        });
-
-        router.replace("/(app)/(tabs)/workout");
-        discardWorkout();
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Failed to save workout",
-          text2: res.error?.message || "Please try again later.",
-        });
-      }
-    } catch (error) {
-      Toast.show({
-        type: "error",
-        text1: "Failed to save workout",
-        text2:
-          error instanceof Error ? error.message : "Please try again later.",
-      });
-    }
+    // ✅ Guard passed → navigate
+    router.push("/(app)/workout/save");
   };
 
   useEffect(() => {
@@ -223,14 +211,14 @@ export default function StartWorkout() {
     navigation.setOptions({
       rightIcons: [
         {
-          name: workoutSaving ? "hourglass-outline" : "checkmark-done",
-          onPress: workoutSaving ? undefined : handleSaveWorkout,
+          name: "checkmark-done",
+          onPress: workoutSaving ? undefined : handleOpenSave,
           disabled: workoutSaving,
           color: "green",
         },
       ],
     });
-  }, [handleSaveWorkout, workoutSaving]);
+  }, [handleOpenSave, workoutSaving]);
 
   if (!workout) return null;
 
@@ -248,9 +236,9 @@ export default function StartWorkout() {
             color={isDark ? "white" : "black"}
           />
 
-          <DisplayDuration
+          <ElapsedTime
             startTime={workout.startTime}
-            textColor="text-blue-500"
+            textClassName="text-lg font-semibold text-blue-500"
           />
         </View>
         <View className="flex flex-row gap-2">
