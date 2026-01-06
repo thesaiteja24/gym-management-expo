@@ -1,5 +1,5 @@
-import DateTimePickerModal from "@/components/DateTimePickerModal";
 import { Button } from "@/components/ui/Button";
+import DateTimePicker from "@/components/ui/DateTimePicker";
 
 import { useAuth } from "@/stores/authStore";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
@@ -9,14 +9,8 @@ import { convertWeight } from "@/utils/converter";
 import { calculateWorkoutMetrics } from "@/utils/workout";
 
 import { router } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React, { useEffect, useMemo } from "react";
+import { Platform, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
@@ -24,10 +18,6 @@ export default function SaveWorkout() {
   /* Local State */
   const lineHeight = Platform.OS === "ios" ? undefined : 28;
   const insets = useSafeAreaInsets();
-
-  const [activePicker, setActivePicker] = useState<"start" | "end" | null>(
-    null,
-  );
 
   /* Store Related State */
   const {
@@ -153,25 +143,23 @@ export default function SaveWorkout() {
           <View className="flex-row justify-between">
             {/* LEFT */}
             <View className="flex-1 gap-4">
-              <TouchableOpacity
-                onPress={() => setActivePicker("start")}
-                className="gap-1"
-              >
+              <View className="gap-1">
                 <Text className="text-sm text-neutral-500">Started</Text>
-                <Text className="text-base font-semibold text-blue-500">
-                  {summary.startTime.toLocaleString()}
-                </Text>
-              </TouchableOpacity>
+                <DateTimePicker
+                  title="Workout Started"
+                  value={summary.startTime}
+                  onUpdate={(date) => updateWorkout({ startTime: date })}
+                />
+              </View>
 
-              <TouchableOpacity
-                onPress={() => setActivePicker("end")}
-                className="gap-1"
-              >
+              <View className="gap-1">
                 <Text className="text-sm text-neutral-500">Ended</Text>
-                <Text className="text-base font-semibold text-blue-500">
-                  {summary.endTime.toLocaleString()}
-                </Text>
-              </TouchableOpacity>
+                <DateTimePicker
+                  title="Workout Ended"
+                  value={summary.endTime}
+                  onUpdate={(date) => updateWorkout({ endTime: date })}
+                />
+              </View>
             </View>
 
             {/* RIGHT */}
@@ -209,23 +197,6 @@ export default function SaveWorkout() {
           onPress={() => router.back()}
         />
       </View>
-
-      {/* ───── Date pickers ───── */}
-      <DateTimePickerModal
-        visible={activePicker === "start"}
-        title="Workout Started"
-        initialValue={summary.startTime}
-        onClose={() => setActivePicker(null)}
-        onConfirm={(date) => updateWorkout({ startTime: date })}
-      />
-
-      <DateTimePickerModal
-        visible={activePicker === "end"}
-        title="Workout Ended"
-        initialValue={summary.endTime}
-        onClose={() => setActivePicker(null)}
-        onConfirm={(date) => updateWorkout({ endTime: date })}
-      />
     </View>
   );
 }

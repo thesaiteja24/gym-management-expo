@@ -1,5 +1,5 @@
-import DatePicker from "@/components/CustomDatePicker";
 import EditableAvatar from "@/components/EditableAvatar";
+import DateTimePicker from "@/components/ui/DateTimePicker";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
@@ -249,7 +249,11 @@ export default function EditProfileScreen() {
             <Text className="text-sm text-neutral-500 dark:text-neutral-400">
               Date of Birth
             </Text>
-            <DatePicker value={dateOfBirth} onChange={setDateOfBirth} />
+            <DateTimePicker
+              value={dateOfBirth ?? undefined}
+              dateOnly
+              onUpdate={setDateOfBirth}
+            />
           </View>
 
           {/* height */}
