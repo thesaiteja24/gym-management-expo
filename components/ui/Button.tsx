@@ -1,0 +1,167 @@
+import * as Haptics from "expo-haptics";
+import React from "react";
+import {
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  TouchableOpacityProps,
+} from "react-native";
+
+/**
+ * Visual variants supported by the Button component.
+ */
+export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+
+/**
+ * Props for the Button component.
+ */
+export type ButtonProps = {
+  /**
+   * Button label text.
+   */
+  title: string;
+
+  /**
+   * Visual style of the button.
+   * @default "secondary"
+   */
+  variant?: ButtonVariant;
+
+  /**
+   * Disable interaction and dim the button.
+   * Automatically true when `loading` is true.
+   * @default false
+   */
+  disabled?: boolean;
+
+  /**
+   * Show loading spinner instead of text.
+   * Automatically disables the button.
+   * @default false
+   */
+  loading?: boolean;
+
+  /**
+   * Trigger haptic feedback on press.
+   * @default true
+   */
+  haptic?: boolean;
+
+  /**
+   * Optional icon rendered before the title.
+   */
+  leftIcon?: React.ReactNode;
+
+  /**
+   * Optional icon rendered after the title.
+   */
+  rightIcon?: React.ReactNode;
+
+  /**
+   * Additional Tailwind classes for the button container.
+   */
+  className?: string;
+
+  /**
+   * Additional Tailwind classes for the text.
+   */
+  textClassName?: string;
+} & TouchableOpacityProps;
+
+/**
+ * A reusable, consistent button component used across the app.
+ *
+ * Features:
+ * - Variants: primary, secondary, danger, ghost
+ * - Loading state (spinner replaces text)
+ * - Optional haptics
+ * - Disabled handling
+ * - Full-width by default
+ * - Rounded, accessible, and predictable
+ */
+export function Button({
+  title,
+  variant = "secondary",
+  disabled = false,
+  loading = false,
+  haptic = true,
+  leftIcon,
+  rightIcon,
+  className = "",
+  textClassName = "",
+  onPress,
+  ...props
+}: ButtonProps) {
+  const isDisabled = disabled || loading;
+
+  /* ---------------------------------------------
+     Base + Variant styles
+  --------------------------------------------- */
+
+  const baseClass =
+    "h-12 w-full flex-row items-center justify-center gap-2 rounded-2xl";
+
+  const variantClass: Record<ButtonVariant, string> = {
+    primary: "bg-green-600",
+    secondary:
+      "bg-white border border-neutral-200/60 dark:bg-neutral-900 dark:border-neutral-800",
+    danger:
+      "bg-white border border-red-200/60 dark:bg-neutral-900 dark:border-red-800",
+    ghost: "bg-transparent",
+  };
+
+  const textVariantClass: Record<ButtonVariant, string> = {
+    primary: "text-white",
+    secondary: "text-black dark:text-white",
+    danger: "text-red-600",
+    ghost: "text-blue-500",
+  };
+
+  /* ---------------------------------------------
+     Render
+  --------------------------------------------- */
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      disabled={isDisabled}
+      onPress={(e) => {
+        if (isDisabled) return;
+
+        if (haptic) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+
+        onPress?.(e);
+      }}
+      className={[
+        baseClass,
+        variantClass[variant],
+        isDisabled ? "opacity-50" : "",
+        className,
+      ].join(" ")}
+      {...props}
+    >
+      {loading ? (
+        <ActivityIndicator
+          size="small"
+          color={variant === "primary" ? "white" : "#6b7280"}
+        />
+      ) : (
+        <>
+          {leftIcon}
+          <Text
+            className={[
+              "text-xl font-semibold",
+              textVariantClass[variant],
+              textClassName,
+            ].join(" ")}
+          >
+            {title}
+          </Text>
+          {rightIcon}
+        </>
+      )}
+    </TouchableOpacity>
+  );
+}

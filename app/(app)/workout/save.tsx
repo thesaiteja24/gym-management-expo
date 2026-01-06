@@ -4,7 +4,7 @@ import { convertWeight } from "@/utils/converter";
 import { calculateWorkoutVolume } from "@/utils/workout";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Platform,
   Text,
@@ -17,13 +17,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 import DateTimePickerModal from "@/components/DateTimePickerModal";
+import { Button } from "@/components/ui/Button";
 
 export default function SaveWorkout() {
   const lineHeight = Platform.OS === "ios" ? undefined : 28;
   const isDark = useColorScheme() === "dark";
   const insets = useSafeAreaInsets();
 
-  const { workout, updateWorkout, saveWorkout, discardWorkout } = useWorkout();
+  const { workoutSaving, workout, updateWorkout, saveWorkout, discardWorkout } =
+    useWorkout();
   const preferredWeightUnit =
     useAuth((s) => s.user?.preferredWeightUnit) ?? "kg";
 
@@ -45,6 +47,7 @@ export default function SaveWorkout() {
     };
   }, [workout]);
 
+  console.log("Workout summary:", summary);
   /* ───────────────── Save ───────────────── */
 
   const handleConfirmSave = async () => {
@@ -78,6 +81,14 @@ export default function SaveWorkout() {
     discardWorkout();
     router.replace("/(app)/(tabs)/workout");
   };
+
+  useEffect(() => {
+    if (workout) {
+      updateWorkout({
+        endTime: new Date(),
+      });
+    }
+  }, []);
 
   /* ───────────────── Render ───────────────── */
 
@@ -172,21 +183,20 @@ export default function SaveWorkout() {
 
       {/* ───── Actions ───── */}
       <View className="mt-auto gap-3">
-        <TouchableOpacity
-          onPress={handleConfirmSave}
-          className="h-12 items-center justify-center rounded-2xl bg-green-600"
-        >
-          <Text className="text-lg font-semibold text-white">Save Workout</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="h-12 items-center justify-center rounded-2xl border border-neutral-300 dark:border-neutral-700"
-        >
-          <Text className="text-lg text-black dark:text-white">
-            Back to workout
-          </Text>
-        </TouchableOpacity>
+        <View className="mt-auto gap-3">
+          <Button
+            title="Save Workout"
+            variant="primary"
+            loading={workoutSaving}
+            onPress={handleConfirmSave}
+          />
+          <Button
+            title="Back to Workout"
+            variant="secondary"
+            disabled={workoutSaving}
+            onPress={() => router.back()}
+          />
+        </View>
       </View>
 
       {/* ───── DateTime Pickers ───── */}

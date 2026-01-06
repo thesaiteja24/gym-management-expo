@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { ElapsedTime } from "@/components/workout/ElapsedTime";
 import ExerciseRow from "@/components/workout/ExerciseRow";
 import RestTimerSnack from "@/components/workout/RestTimerSnack";
@@ -10,13 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useNavigation } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  Vibration,
-  View,
-} from "react-native";
+import { Text, useColorScheme, Vibration, View } from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -338,20 +333,15 @@ export default function StartWorkout() {
         }
         ListFooterComponent={
           <View className="mb-16 p-4">
-            <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            <Button
+              title="Add an Exercise"
+              onPress={() =>
                 router.push({
                   pathname: "/(app)/exercises",
                   params: { mode: "select" },
-                });
-              }}
-              className="mb-24 h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
-            >
-              <Text className="text-center text-xl font-semibold text-black dark:text-white">
-                Add an Exercise
-              </Text>
-            </TouchableOpacity>
+                })
+              }
+            />
           </View>
         }
       />

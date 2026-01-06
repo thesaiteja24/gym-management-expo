@@ -1,58 +1,38 @@
+import { Button } from "@/components/ui/Button";
 import { useWorkout } from "@/stores/workoutStore";
-import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 export default function WorkoutScreen() {
   const { workout, discardWorkout } = useWorkout();
   return (
-    <ScrollView className="flex-1 bg-white p-4 dark:bg-black">
+    <ScrollView className="h-full flex-col bg-white p-4 dark:bg-black">
       <View className="flex flex-row gap-4">
-        <View className="flex-1">
-          <TouchableOpacity
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push("/(app)/workout/start");
-            }}
-            className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
-          >
-            <Text className="text-center text-xl font-semibold text-black dark:text-white">
-              {workout ? "Continue the Pump" : "Ready to Get Pumped?"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <Button
+          title={workout ? "Continue the Pump" : "Ready to Get Pumped?"}
+          variant="primary"
+          onPress={() => router.push("/(app)/workout/start")}
+          className="flex-1"
+        />
 
         {workout && (
-          <View className="max-w-[35%] flex-1">
-            <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                discardWorkout();
-              }}
-              className="h-12 w-full justify-center rounded-2xl border border-red-200/60 bg-white dark:border-red-800 dark:bg-neutral-900"
-            >
-              <Text className="text-center text-xl font-semibold text-red-600">
-                Discard
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Button
+            title="Discard"
+            variant="danger"
+            haptic
+            onPress={discardWorkout}
+            className="max-w-[35%]"
+          />
         )}
       </View>
 
-      <View className="mt-4">
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push("/(app)/exercises/");
-          }}
-          className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
-        >
-          <Text className="text-center text-xl font-semibold text-black dark:text-white">
-            View Exercise Directory
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <Button
+        title="View Exercise Library"
+        variant="secondary"
+        onPress={() => router.push("/(app)/exercises/")}
+        className="mt-4"
+      />
     </ScrollView>
   );
 }

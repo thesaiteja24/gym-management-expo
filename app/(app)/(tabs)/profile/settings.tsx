@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
 import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -74,36 +75,28 @@ export default function SettingsScreen() {
     ].join(" ");
 
   return (
-    <View className="flex h-full items-center bg-white p-4 dark:bg-black">
+    <View className="flex h-full items-center gap-4 bg-white p-4 dark:bg-black">
       {/* Logout */}
-      <View className="mb-4 w-full">
-        <TouchableOpacity
-          onPress={logout}
-          className="flex w-full flex-row items-center gap-4 rounded-2xl border border-neutral-200/60 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
-        >
-          <AntDesign name="logout" size={24} color="red" />
-          <Text className="text-xl font-semibold text-black dark:text-white">
-            Logout
-          </Text>
-        </TouchableOpacity>
-      </View>
+
+      <Button
+        title="Logout"
+        variant="danger"
+        leftIcon={<AntDesign name="logout" size={24} color="red" />}
+        onPress={logout}
+      />
 
       {/* Unit preferences */}
-      <View className="mb-4 w-full">
-        <TouchableOpacity
-          onPress={() => setUnitModalVisible(true)}
-          className="flex w-full flex-row items-center gap-4 rounded-2xl border border-neutral-200/60 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
-        >
+      <Button
+        title="Unit Preferences"
+        leftIcon={
           <MaterialCommunityIcons
             name="pencil-ruler"
             size={24}
             color={isDarkMode ? "white" : "black"}
           />
-          <Text className="text-xl font-semibold text-black dark:text-white">
-            Unit Preferences
-          </Text>
-        </TouchableOpacity>
-      </View>
+        }
+        onPress={() => setUnitModalVisible(true)}
+      />
 
       {/* Modal */}
       <Modal visible={unitModalVisible} transparent animationType="slide">

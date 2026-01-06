@@ -17,6 +17,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import { Button } from "../ui/Button";
 import RestTimerPickerModal from "./RestTimerPickerModal";
 
 /* ───────────────── Capabilities ───────────────── */
@@ -225,14 +226,7 @@ function ExerciseRow({
       ))}
 
       {/* ───── Add set ───── */}
-      <TouchableOpacity
-        onPress={onAddSet}
-        className="mt-2 h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
-      >
-        <Text className="text-center text-xl font-semibold text-black dark:text-white">
-          Add Set
-        </Text>
-      </TouchableOpacity>
+      <Button title="Add Set" variant="secondary" onPress={onAddSet} />
 
       {/* ───── Menu ───── */}
       <Modal

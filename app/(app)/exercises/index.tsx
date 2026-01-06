@@ -1,6 +1,7 @@
 import EquipmentModal from "@/components/exercises/EquipmentModal";
 import ExerciseList from "@/components/exercises/ExerciseList";
 import MuscleGroupModal from "@/components/exercises/MuscleGroupModal";
+import { Button } from "@/components/ui/Button";
 import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
 
 import { ROLES as roles } from "@/constants/roles";
@@ -211,17 +212,10 @@ export default function ExercisesScreen() {
               onRemove={() => setFilter((f) => ({ ...f, equipmentId: "" }))}
             />
           ) : (
-            <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
-                setShowEquipmentModal(true);
-              }}
-              className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
-            >
-              <Text className="text-center text-xl font-semibold text-black dark:text-white">
-                Equipment
-              </Text>
-            </TouchableOpacity>
+            <Button
+              title="Equipment"
+              onPress={() => setShowEquipmentModal(true)}
+            />
           )}
         </View>
 
@@ -230,22 +224,15 @@ export default function ExercisesScreen() {
             <Chip
               label={
                 muscleGroupList.find((m) => m.id === filter.muscleGroupId)
-                  ?.title ?? "Muscle"
+                  ?.title ?? "Muscle Groups"
               }
               onRemove={() => setFilter((f) => ({ ...f, muscleGroupId: "" }))}
             />
           ) : (
-            <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
-                setShowMuscleGroupsModal(true);
-              }}
-              className="h-12 w-full justify-center rounded-2xl border border-neutral-200/60 bg-white dark:border-neutral-800 dark:bg-neutral-900"
-            >
-              <Text className="text-center text-xl font-semibold text-black dark:text-white">
-                Muscle Groups
-              </Text>
-            </TouchableOpacity>
+            <Button
+              title="Muscle Groups"
+              onPress={() => setShowMuscleGroupsModal(true)}
+            />
           )}
         </View>
       </View>
