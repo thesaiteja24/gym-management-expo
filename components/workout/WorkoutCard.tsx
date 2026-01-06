@@ -1,14 +1,21 @@
+import { ExerciseType } from "@/stores/exerciseStore";
 import { WorkoutHistoryItem } from "@/stores/workoutStore";
 import { formatDurationFromDates, formatTimeAgo } from "@/utils/time";
-import { calculateWorkoutVolume } from "@/utils/workout";
+import { calculateWorkoutMetrics } from "@/utils/workout";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
-export default function WorkoutCard(workout: WorkoutHistoryItem) {
+export default function WorkoutCard({
+  workout,
+  exerciseTypeMap,
+}: {
+  workout: WorkoutHistoryItem;
+  exerciseTypeMap: Map<string, ExerciseType>;
+}) {
   const duration = formatDurationFromDates(workout.startTime, workout.endTime);
   const timeAgo = formatTimeAgo(workout.endTime);
-  const volume = calculateWorkoutVolume(workout).volume;
+  const volume = calculateWorkoutMetrics(workout, exerciseTypeMap).tonnage;
 
   const previewExercises = workout.exercises.slice(0, 3);
   const remaining = workout.exercises.length - previewExercises.length;
@@ -40,7 +47,7 @@ export default function WorkoutCard(workout: WorkoutHistoryItem) {
       </View>
 
       <Text className="mb-3 text-lg font-medium text-neutral-600 dark:text-neutral-400">
-        Volume: {volume.toLocaleString()} kg
+        Volume: {volume} kg
       </Text>
 
       {/* Exercise preview */}

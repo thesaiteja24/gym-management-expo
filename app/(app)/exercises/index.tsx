@@ -109,10 +109,10 @@ export default function ExercisesScreen() {
   /* ───────────────── Load data ───────────────── */
 
   useEffect(() => {
-    getAllEquipment();
-    getAllMuscleGroups();
-    getAllExercises();
-  }, []);
+    if (!equipmentList.length) getAllEquipment();
+    if (!muscleGroupList.length) getAllMuscleGroups();
+    if (!exerciseList.length) getAllExercises();
+  }, [exerciseList.length, muscleGroupList.length, equipmentList.length]);
 
   /* ───────────────── Fuzzy search ───────────────── */
 

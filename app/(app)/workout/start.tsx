@@ -2,14 +2,18 @@ import { Button } from "@/components/ui/Button";
 import { ElapsedTime } from "@/components/workout/ElapsedTime";
 import ExerciseRow from "@/components/workout/ExerciseRow";
 import RestTimerSnack from "@/components/workout/RestTimerSnack";
+
 import { useAuth } from "@/stores/authStore";
-import { Exercise, useExercise } from "@/stores/exerciseStore";
+import { Exercise, ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
+
 import { convertWeight } from "@/utils/converter";
-import { calculateWorkoutVolume } from "@/utils/workout";
+import { calculateWorkoutMetrics } from "@/utils/workout";
+
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useNavigation } from "expo-router";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Text, useColorScheme, Vibration, View } from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
@@ -17,15 +21,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function StartWorkout() {
+  /* Local State */
   const isDark = useColorScheme() === "dark";
   const safeAreaInsets = useSafeAreaInsets();
   const navigation = useNavigation();
 
-  const exerciseList = useExercise((s) => s.exerciseList);
+  const [now, setNow] = useState(Date.now());
+  const [isDragging, setIsDragging] = useState(false);
 
-  const preferredWeightUnit =
-    useAuth((s) => s.user?.preferredWeightUnit) ?? "kg";
+  const lastIndexRef = useRef<number | null>(null);
+  const prevCompletedRef = useRef<Map<string, boolean>>(new Map());
 
+  /* Store Related State */
   const {
     workoutSaving,
     workout,
@@ -45,21 +52,34 @@ export default function StartWorkout() {
     adjustRestTimer,
   } = useWorkout();
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [now, setNow] = useState(Date.now());
-  const lastIndexRef = useRef<number | null>(null);
-  const prevCompletedRef = useRef<Map<string, boolean>>(new Map());
+  const exerciseList = useExercise((s) => s.exerciseList);
 
+  const preferredWeightUnit =
+    useAuth((s) => s.user?.preferredWeightUnit) ?? "kg";
+
+  /* Derived State */
+  // Derived Map of exerciseId -> exerciseType
+  const exerciseTypeMap = useMemo(() => {
+    const map = new Map<string, ExerciseType>();
+    exerciseList.forEach((ex) => {
+      map.set(ex.id, ex.exerciseType);
+    });
+    return map;
+  }, [exerciseList]);
+
+  // Derived Map of exerciseId -> Exercise
   const exerciseMap = useMemo<Map<string, Exercise>>(
     () => new Map(exerciseList.map((e) => [e.id, e])),
     [exerciseList],
   );
 
+  // Remaining rest timer seconds
   const remainingSeconds =
     rest.running && rest.startedAt && rest.seconds != null
       ? Math.max(0, rest.seconds - Math.floor((now - rest.startedAt) / 1000))
       : 0;
 
+  /* Helpers */
   function getSetValidationStats() {
     if (!workout) return { valid: 0, invalid: 0 };
 
@@ -67,7 +87,7 @@ export default function StartWorkout() {
     let invalid = 0;
 
     workout.exercises.forEach((ex) => {
-      const exerciseType = exerciseMap.get(ex.exerciseId)?.exerciseType;
+      const exerciseType = exerciseTypeMap.get(ex.exerciseId);
       if (!exerciseType) return;
 
       ex.sets.forEach((set) => {
@@ -107,27 +127,19 @@ export default function StartWorkout() {
     if (!workout) return { ok: false };
 
     if (workout.exercises.length === 0) {
-      return {
-        ok: false,
-        reason: "NO_EXERCISES",
-      };
+      return { ok: false, reason: "NO_EXERCISES" };
     }
 
     const { valid, invalid } = getSetValidationStats();
 
     if (valid === 0) {
-      return {
-        ok: false,
-        reason: "NO_VALID_SETS",
-      };
+      return { ok: false, reason: "NO_VALID_SETS" };
     }
 
-    return {
-      ok: true,
-      invalidCount: invalid,
-    };
+    return { ok: true, invalidCount: invalid };
   }
 
+  /* Handlers */
   const handleOpenSave = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -147,23 +159,23 @@ export default function StartWorkout() {
           type: "error",
           text1: "No valid sets added",
           text2: "Add at least one valid set to continue.",
-          onPress: () => Toast.hide(), // interactive
+          onPress: () => Toast.hide(),
         });
       }
 
       return;
     }
 
-    // ✅ Guard passed → navigate
     router.push("/(app)/workout/save");
   };
 
+  /* Effects */
+  // Start a new workout if none exists
   useEffect(() => {
-    if (!workout) {
-      startWorkout();
-    }
+    if (!workout) startWorkout();
   }, []);
 
+  // Rest Timer Effect
   useEffect(() => {
     if (!rest.running) return;
 
@@ -172,6 +184,7 @@ export default function StartWorkout() {
     return () => clearInterval(id);
   }, [rest.running, rest.startedAt]);
 
+  // Rest Timer Completion Effect
   useEffect(() => {
     if (rest.running && remainingSeconds === 0) {
       Vibration.vibrate([0, 500, 200, 500, 200, 500]);
@@ -179,6 +192,7 @@ export default function StartWorkout() {
     }
   }, [rest.running, remainingSeconds]);
 
+  // Set Completion Effect - Start/Stop rest timer based on set completion
   useEffect(() => {
     if (!workout) return;
 
@@ -187,12 +201,10 @@ export default function StartWorkout() {
         const key = `${exercise.exerciseId}:${set.id}`;
         const prevCompleted = prevCompletedRef.current.get(key) ?? false;
 
-        // just completed → start rest (if preset exists)
         if (!prevCompleted && set.completed && set.restSeconds) {
           startRestTimer(set.restSeconds);
         }
 
-        // just uncompleted → stop rest
         if (prevCompleted && !set.completed) {
           stopRestTimer();
         }
@@ -202,6 +214,7 @@ export default function StartWorkout() {
     });
   }, [workout?.exercises]);
 
+  // Navigation Options Effect
   useEffect(() => {
     navigation.setOptions({
       rightIcons: [
@@ -215,7 +228,10 @@ export default function StartWorkout() {
     });
   }, [handleOpenSave, workoutSaving]);
 
-  if (!workout) return null;
+  /* UI Rendering */
+  if (!workout) {
+    return <View className="flex-1 bg-white dark:bg-black" />;
+  }
 
   return (
     <View
@@ -240,14 +256,16 @@ export default function StartWorkout() {
           <Text className="text-black dark:text-white">Volume: </Text>
           <Text className="text-black dark:text-white">
             {/* converts from KG to User preferred unit as we by default store as kg */}
-            {convertWeight(calculateWorkoutVolume(workout).volume)}{" "}
+            {convertWeight(
+              calculateWorkoutMetrics(workout, exerciseTypeMap).tonnage,
+            )}{" "}
             {preferredWeightUnit}
           </Text>
         </View>
         <View className="flex flex-row gap-2">
           <Text className="text-black dark:text-white">Sets: </Text>
           <Text className="text-black dark:text-white">
-            {calculateWorkoutVolume(workout).sets}
+            {calculateWorkoutMetrics(workout, exerciseTypeMap).completedSets}
           </Text>
         </View>
       </View>

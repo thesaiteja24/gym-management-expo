@@ -13,32 +13,40 @@ function isWorkoutLog(
   return workout.startTime instanceof Date;
 }
 
-/* ───────────────── Volume ───────────────── */
+/* ───────────────── Metrics ───────────────── */
 
-export function calculateWorkoutVolume(
+export function calculateWorkoutMetrics(
   workout: WorkoutHistoryItem | WorkoutLog,
+  exerciseTypeMap: Map<string, ExerciseType>,
 ) {
-  let volume = 0;
-  let sets = 0;
+  let tonnage = 0;
+  let completedSets = 0;
 
   const isLog = isWorkoutLog(workout);
 
   workout.exercises.forEach((ex) => {
+    const type = exerciseTypeMap.get(ex.exerciseId);
+    if (!type) return;
+
     ex.sets.forEach((set) => {
-      // live workout → only completed sets
       if (isLog && "completed" in set && !set.completed) return;
 
-      const weight =
-        typeof set.weight === "string" ? Number(set.weight) : set.weight;
+      if (!isValidCompletedSet(set as WorkoutLogSet, type)) return;
 
-      if (weight != null && weight > 0 && set.reps != null && set.reps > 0) {
-        volume += weight * set.reps;
-        sets += 1;
+      completedSets += 1;
+
+      if (type === "weighted" || type === "assisted") {
+        const weight =
+          typeof set.weight === "string" ? Number(set.weight) : set.weight;
+
+        if (weight && set.reps) {
+          tonnage += weight * set.reps;
+        }
       }
     });
   });
 
-  return { volume, sets };
+  return { tonnage, completedSets };
 }
 
 /* ───────────────── Timers ───────────────── */

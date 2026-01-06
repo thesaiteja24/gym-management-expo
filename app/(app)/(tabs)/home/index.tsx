@@ -1,4 +1,5 @@
 import WorkoutCard from "@/components/workout/WorkoutCard";
+import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { router, useNavigation } from "expo-router";
 import React, { useEffect } from "react";
@@ -7,10 +8,27 @@ import { FlatList, Text, View } from "react-native";
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { workoutLoading, workoutHistory, getAllWorkouts } = useWorkout();
+  const { exerciseList, getAllExercises } = useExercise();
 
+  // derived Map of exerciseId -> exerciseType
+  const exerciseTypeMap = React.useMemo(() => {
+    const map = new Map<string, ExerciseType>();
+    exerciseList.forEach((ex) => {
+      map.set(ex.id, ex.exerciseType);
+    });
+    return map;
+  }, [exerciseList]);
+
+  /* Side Effects */
+  // Load workouts on mount
   useEffect(() => {
-    getAllWorkouts();
-  }, []);
+    if (!exerciseList.length) {
+      getAllExercises();
+    }
+    if (!workoutHistory.length) {
+      getAllWorkouts();
+    }
+  }, [exerciseList.length, workoutHistory.length]);
 
   // Inject reload button
   useEffect(() => {
@@ -18,7 +36,14 @@ export default function HomeScreen() {
       rightIcons: [
         {
           name: "refresh-outline",
-          onPress: () => getAllWorkouts(),
+          onPress: () => {
+            if (!exerciseList.length) {
+              getAllExercises();
+            }
+            if (!workoutHistory.length) {
+              getAllWorkouts();
+            }
+          },
         },
         {
           name: "settings-outline",
@@ -37,7 +62,9 @@ export default function HomeScreen() {
       <FlatList
         data={workoutHistory}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <WorkoutCard {...item} />}
+        renderItem={({ item }) => (
+          <WorkoutCard workout={item} exerciseTypeMap={exerciseTypeMap} />
+        )}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           !workoutLoading ? (

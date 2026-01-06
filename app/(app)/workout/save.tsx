@@ -1,8 +1,13 @@
+import DateTimePickerModal from "@/components/DateTimePickerModal";
+import { Button } from "@/components/ui/Button";
+
 import { useAuth } from "@/stores/authStore";
+import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
+
 import { convertWeight } from "@/utils/converter";
-import { calculateWorkoutVolume } from "@/utils/workout";
-import * as Haptics from "expo-haptics";
+import { calculateWorkoutMetrics } from "@/utils/workout";
+
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -10,49 +15,71 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-import DateTimePickerModal from "@/components/DateTimePickerModal";
-import { Button } from "@/components/ui/Button";
-
 export default function SaveWorkout() {
+  /* Local State */
   const lineHeight = Platform.OS === "ios" ? undefined : 28;
-  const isDark = useColorScheme() === "dark";
   const insets = useSafeAreaInsets();
-
-  const { workoutSaving, workout, updateWorkout, saveWorkout, discardWorkout } =
-    useWorkout();
-  const preferredWeightUnit =
-    useAuth((s) => s.user?.preferredWeightUnit) ?? "kg";
 
   const [activePicker, setActivePicker] = useState<"start" | "end" | null>(
     null,
   );
 
-  if (!workout) return null;
+  /* Store Related State */
+  const {
+    workoutSaving,
+    workout,
+    getAllWorkouts,
+    updateWorkout,
+    saveWorkout,
+    discardWorkout,
+  } = useWorkout();
 
-  /* ───────────────── Derived Summary ───────────────── */
+  const { exerciseList, getAllExercises } = useExercise();
 
+  const preferredWeightUnit =
+    useAuth((s) => s.user?.preferredWeightUnit) ?? "kg";
+
+  /* Derived State */
+  // Derived Map of exerciseId -> exerciseType
+  const exerciseTypeMap = useMemo(() => {
+    const map = new Map<string, ExerciseType>();
+    exerciseList.forEach((ex) => {
+      map.set(ex.id, ex.exerciseType);
+    });
+    return map;
+  }, [exerciseList]);
+
+  // Workout summary
   const summary = useMemo(() => {
-    const { volume, sets } = calculateWorkoutVolume(workout);
+    if (!workout) {
+      return {
+        volume: 0,
+        sets: 0,
+        startTime: new Date(),
+        endTime: new Date(),
+      };
+    }
+
+    const { tonnage, completedSets } = calculateWorkoutMetrics(
+      workout,
+      exerciseTypeMap,
+    );
+
     return {
-      volume,
-      sets,
+      volume: tonnage,
+      sets: completedSets,
       startTime: new Date(workout.startTime),
       endTime: new Date(workout.endTime),
     };
-  }, [workout]);
+  }, [workout, exerciseTypeMap]);
 
-  console.log("Workout summary:", summary);
-  /* ───────────────── Save ───────────────── */
-
+  /* Handlers */
   const handleConfirmSave = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
     if (summary.endTime <= summary.startTime) {
       Toast.show({
         type: "error",
@@ -79,18 +106,28 @@ export default function SaveWorkout() {
     });
 
     discardWorkout();
+    getAllWorkouts();
     router.replace("/(app)/(tabs)/workout");
   };
 
+  /* Effects */
+  // Set end time to now on mount
   useEffect(() => {
     if (workout) {
-      updateWorkout({
-        endTime: new Date(),
-      });
+      updateWorkout({ endTime: new Date() });
     }
   }, []);
 
-  /* ───────────────── Render ───────────────── */
+  useEffect(() => {
+    if (!exerciseList.length) {
+      getAllExercises();
+    }
+  }, [exerciseList.length]);
+
+  /* UI Rendering */
+  if (!workout) {
+    return <View className="flex-1 bg-white dark:bg-black" />;
+  }
 
   return (
     <View
@@ -114,64 +151,40 @@ export default function SaveWorkout() {
 
         <View className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
           <View className="flex-row justify-between">
-            {/* LEFT COLUMN */}
+            {/* LEFT */}
             <View className="flex-1 gap-4">
-              {/* Started */}
               <TouchableOpacity
                 onPress={() => setActivePicker("start")}
                 className="gap-1"
               >
-                <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-                  Started
-                </Text>
+                <Text className="text-sm text-neutral-500">Started</Text>
                 <Text className="text-base font-semibold text-blue-500">
-                  {summary.startTime.toLocaleString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {summary.startTime.toLocaleString()}
                 </Text>
               </TouchableOpacity>
 
-              {/* Ended */}
               <TouchableOpacity
                 onPress={() => setActivePicker("end")}
                 className="gap-1"
               >
-                <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-                  Ended
-                </Text>
+                <Text className="text-sm text-neutral-500">Ended</Text>
                 <Text className="text-base font-semibold text-blue-500">
-                  {summary.endTime.toLocaleString(undefined, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {summary.endTime.toLocaleString()}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* RIGHT COLUMN */}
+            {/* RIGHT */}
             <View className="flex-1 items-end gap-4">
-              {/* Volume */}
               <View className="items-end gap-1">
-                <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-                  Volume
-                </Text>
+                <Text className="text-sm text-neutral-500">Volume</Text>
                 <Text className="text-base font-medium text-black dark:text-white">
                   {convertWeight(summary.volume)} {preferredWeightUnit}
                 </Text>
               </View>
 
-              {/* Sets */}
               <View className="items-end gap-1">
-                <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-                  Sets
-                </Text>
+                <Text className="text-sm text-neutral-500">Sets</Text>
                 <Text className="text-base font-medium text-black dark:text-white">
                   {summary.sets}
                 </Text>
@@ -183,23 +196,21 @@ export default function SaveWorkout() {
 
       {/* ───── Actions ───── */}
       <View className="mt-auto gap-3">
-        <View className="mt-auto gap-3">
-          <Button
-            title="Save Workout"
-            variant="primary"
-            loading={workoutSaving}
-            onPress={handleConfirmSave}
-          />
-          <Button
-            title="Back to Workout"
-            variant="secondary"
-            disabled={workoutSaving}
-            onPress={() => router.back()}
-          />
-        </View>
+        <Button
+          title="Save Workout"
+          variant="primary"
+          loading={workoutSaving}
+          onPress={handleConfirmSave}
+        />
+        <Button
+          title="Back to Workout"
+          variant="secondary"
+          disabled={workoutSaving}
+          onPress={() => router.back()}
+        />
       </View>
 
-      {/* ───── DateTime Pickers ───── */}
+      {/* ───── Date pickers ───── */}
       <DateTimePickerModal
         visible={activePicker === "start"}
         title="Workout Started"

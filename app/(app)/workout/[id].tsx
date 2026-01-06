@@ -1,10 +1,11 @@
+import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
 import {
   formatDurationFromDates,
   formatSeconds,
   formatTimeAgo,
 } from "@/utils/time";
-import { calculateWorkoutVolume } from "@/utils/workout";
+import { calculateWorkoutMetrics } from "@/utils/workout";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import React, { useMemo } from "react";
@@ -15,12 +16,25 @@ import {
 } from "react-native-safe-area-context";
 
 export default function WorkoutDetails() {
-  const safeAreaInsets = useSafeAreaInsets();
+  /* Local State */
   const { id } = useLocalSearchParams<{ id: string }>();
+  const safeAreaInsets = useSafeAreaInsets();
+
+  /* Store Related State */
   const { workoutHistory } = useWorkout();
+  const { exerciseList } = useExercise();
+
+  /* Derived State */
+  const exerciseTypeMap = useMemo(() => {
+    const map = new Map<string, ExerciseType>();
+    exerciseList.forEach((ex) => {
+      map.set(ex.id, ex.exerciseType);
+    });
+    return map;
+  }, [exerciseList]);
 
   const workout = useMemo(
-    () => workoutHistory.find((w: any) => w.id === id),
+    () => workoutHistory.find((w) => w.id === id),
     [workoutHistory, id],
   );
 
@@ -33,9 +47,15 @@ export default function WorkoutDetails() {
   }
 
   const duration = formatDurationFromDates(workout.startTime, workout.endTime);
-  const timeAgo = formatTimeAgo(workout.endTime);
-  const volume = calculateWorkoutVolume(workout).volume;
 
+  const timeAgo = formatTimeAgo(workout.endTime);
+
+  const { tonnage, completedSets } = calculateWorkoutMetrics(
+    workout,
+    exerciseTypeMap,
+  );
+
+  /* UI Rendering */
   return (
     <SafeAreaView
       style={{ flex: 1 }}
@@ -53,7 +73,8 @@ export default function WorkoutDetails() {
           </Text>
 
           <Text className="mt-1 text-base text-neutral-500 dark:text-neutral-400">
-            {timeAgo} · {duration} · {volume.toLocaleString()} kg
+            {timeAgo} · {duration} · {tonnage.toLocaleString()} kg ·{" "}
+            {completedSets} sets
           </Text>
         </View>
 
