@@ -209,7 +209,7 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
 
     const finalizedWorkout: WorkoutLog = {
       ...workout,
-      endTime: new Date(),
+      endTime: workout.endTime ?? new Date(),
       exercises: workout.exercises
         .map((ex) => {
           const exerciseType = exerciseMap.get(ex.exerciseId);

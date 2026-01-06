@@ -37,12 +37,8 @@ export default function HomeScreen() {
         {
           name: "refresh-outline",
           onPress: () => {
-            if (!exerciseList.length) {
-              getAllExercises();
-            }
-            if (!workoutHistory.length) {
-              getAllWorkouts();
-            }
+            getAllWorkouts();
+            getAllExercises();
           },
         },
         {

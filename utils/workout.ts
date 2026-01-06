@@ -5,14 +5,6 @@ import {
   WorkoutLogSet,
 } from "@/stores/workoutStore";
 
-/* ───────────────── Helpers ───────────────── */
-
-function isWorkoutLog(
-  workout: WorkoutHistoryItem | WorkoutLog,
-): workout is WorkoutLog {
-  return workout.startTime instanceof Date;
-}
-
 /* ───────────────── Metrics ───────────────── */
 
 export function calculateWorkoutMetrics(
@@ -22,16 +14,22 @@ export function calculateWorkoutMetrics(
   let tonnage = 0;
   let completedSets = 0;
 
-  const isLog = isWorkoutLog(workout);
+  const isLiveWorkout = workout.exercises.some((ex) =>
+    ex.sets.some((set) => "completed" in set),
+  );
 
   workout.exercises.forEach((ex) => {
     const type = exerciseTypeMap.get(ex.exerciseId);
     if (!type) return;
 
     ex.sets.forEach((set) => {
-      if (isLog && "completed" in set && !set.completed) return;
+      // Live workout → only completed sets
+      if (isLiveWorkout && "completed" in set && !set.completed) return;
 
-      if (!isValidCompletedSet(set as WorkoutLogSet, type)) return;
+      // this will and should only run for live workouts
+      // sets in workout history are always valid (as proper validation happens on backend and frontend before saving)
+      if (isLiveWorkout && !isValidCompletedSet(set as WorkoutLogSet, type))
+        return;
 
       completedSets += 1;
 
