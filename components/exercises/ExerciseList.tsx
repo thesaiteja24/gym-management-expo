@@ -1,8 +1,13 @@
 import { Exercise } from "@/stores/exerciseStore";
-import { ActivityIndicator } from "@react-native-blossom-ui/components";
 import { Image } from "expo-image";
 import React, { useCallback } from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 /* ───────────────── Types ───────────────── */
 

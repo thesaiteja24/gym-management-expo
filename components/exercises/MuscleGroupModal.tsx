@@ -1,7 +1,7 @@
-import { ActivityIndicator } from "@react-native-blossom-ui/components";
 import { Image } from "expo-image";
 import React from "react";
 import {
+  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
