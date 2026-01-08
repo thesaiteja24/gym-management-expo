@@ -62,10 +62,7 @@ export default function WorkoutDetails() {
       edges={["bottom"]}
       className="bg-white dark:bg-black"
     >
-      <ScrollView
-        className="flex-1 bg-white p-4 dark:bg-black"
-        style={{ paddingBottom: safeAreaInsets.bottom }}
-      >
+      <ScrollView className="flex-1 bg-white p-4 dark:bg-black">
         {/* Header */}
         <View className="mb-6">
           <Text className="text-2xl font-bold text-black dark:text-white">

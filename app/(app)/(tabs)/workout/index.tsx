@@ -2,12 +2,16 @@ import { Button } from "@/components/ui/Button";
 import { useWorkout } from "@/stores/workoutStore";
 import { router } from "expo-router";
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function WorkoutScreen() {
   const { workout, discardWorkout } = useWorkout();
   return (
-    <ScrollView className="h-full flex-col bg-white p-4 dark:bg-black">
+    <View
+      className="flex-1 bg-white p-4 dark:bg-black"
+      style={{ paddingBottom: useSafeAreaInsets().bottom }}
+    >
       <View className="flex flex-row gap-4">
         <Button
           title={workout ? "Continue the Pump" : "Ready to Get Pumped?"}
@@ -33,6 +37,6 @@ export default function WorkoutScreen() {
         onPress={() => router.push("/(app)/exercises/")}
         className="mt-4"
       />
-    </ScrollView>
+    </View>
   );
 }

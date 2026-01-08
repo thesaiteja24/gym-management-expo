@@ -8,12 +8,12 @@ import {
   ActivityIndicator,
   Keyboard,
   Platform,
-  ScrollView,
   Text,
   TextInput,
   useColorScheme,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function EditMuscleGroup() {
@@ -172,9 +172,9 @@ export default function EditMuscleGroup() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-      className="bg-white dark:bg-black"
+    <View
+      className="flex-1 bg-white p-4 dark:bg-black"
+      style={{ paddingBottom: useSafeAreaInsets().bottom }}
     >
       {/* Image picker */}
       <View className="mb-6 items-center">
@@ -233,6 +233,6 @@ export default function EditMuscleGroup() {
           }}
         />
       )}
-    </ScrollView>
+    </View>
   );
 }

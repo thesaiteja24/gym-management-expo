@@ -3,7 +3,8 @@ import EditableAvatar from "@/components/EditableAvatar";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
 import React, { memo, useEffect } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const InfoRow = memo(function InfoRow({
   label,
@@ -37,10 +38,9 @@ export default function ProfileScreen() {
   }, [user?.userId]);
 
   return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-      className="bg-white dark:bg-black"
+    <View
+      className="flex-1 bg-white p-4 dark:bg-black"
+      style={{ paddingBottom: useSafeAreaInsets().bottom }}
     >
       {/* Avatar */}
       <View className="mb-6 items-center">
@@ -70,6 +70,6 @@ export default function ProfileScreen() {
         <InfoRow label="Height" value={user?.height ? `${user.height}` : ""} />
         <InfoRow label="Weight" value={user?.weight ? `${user.weight}` : ""} />
       </View>
-    </ScrollView>
+    </View>
   );
 }

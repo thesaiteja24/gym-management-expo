@@ -6,12 +6,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   Keyboard,
   Platform,
-  ScrollView,
   Text,
   TextInput,
   useColorScheme,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function CreateEquipment() {
@@ -103,9 +103,9 @@ export default function CreateEquipment() {
   }, [navigation, onSave, equipmentLoading, title]);
 
   return (
-    <ScrollView
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-      className="bg-white dark:bg-black"
+    <View
+      className="flex-1 bg-white p-4 dark:bg-black"
+      style={{ paddingBottom: useSafeAreaInsets().bottom }}
     >
       {/* Image picker */}
       <View className="mb-6 items-center">
@@ -135,6 +135,6 @@ export default function CreateEquipment() {
           style={{ lineHeight }}
         />
       </View>
-    </ScrollView>
+    </View>
   );
 }
