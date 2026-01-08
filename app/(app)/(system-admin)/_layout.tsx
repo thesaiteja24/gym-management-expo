@@ -1,11 +1,15 @@
 import CustomHeader from "@/components/navigation/CustomHeader";
 import { router, Stack } from "expo-router";
 import React from "react";
+import { useColorScheme } from "react-native";
 
 export default function SystemAdminLayout() {
   return (
     <Stack
       screenOptions={{
+        contentStyle: {
+          backgroundColor: useColorScheme() === "dark" ? "#000000" : "#ffffff",
+        },
         header: (props) => {
           const { options } = props;
 
