@@ -29,7 +29,7 @@ export default function WorkoutLayout() {
             title: "Log Your Pump",
             leftIcon: "chevron-back-outline",
             onLeftPress: () => {
-              router.replace("/(app)/(tabs)/workout");
+              router.back();
             },
             rightIcons: [
               {
@@ -50,9 +50,7 @@ export default function WorkoutLayout() {
             title: "Workout Details",
             leftIcon: "chevron-back-outline",
             onLeftPress: () => {
-              router.canGoBack()
-                ? router.back()
-                : router.replace("/(app)/(tabs)/home");
+              router.back();
             },
           } as any
         }
@@ -65,7 +63,7 @@ export default function WorkoutLayout() {
             title: "Save Workout",
             leftIcon: "chevron-back-outline",
             onLeftPress: () => {
-              router.replace("/(app)/workout/start");
+              router.back();
             },
           } as any
         }

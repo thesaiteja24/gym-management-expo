@@ -159,7 +159,7 @@ export default function ExercisesScreen() {
 
     if (replaceExerciseId) {
       replaceExercise(replaceExerciseId, exercise.id);
-      router.replace("/(app)/workout/start");
+      router.back();
       return;
     }
 
@@ -285,7 +285,7 @@ export default function ExercisesScreen() {
                 }
               });
 
-              router.replace("/(app)/workout/start");
+              router.back();
             }}
           >
             <Text

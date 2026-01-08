@@ -97,7 +97,8 @@ export default function SaveWorkout() {
 
     discardWorkout();
     getAllWorkouts();
-    router.replace("/(app)/(tabs)/workout");
+    router.dismissAll();
+    router.push("/(app)/(tabs)/workout");
   };
 
   /* Effects */

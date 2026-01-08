@@ -31,9 +31,7 @@ export default function ExercisesLayout() {
             title: "Exercises",
             leftIcon: "chevron-back-outline",
             onLeftPress: () => {
-              router.canGoBack()
-                ? router.back()
-                : router.replace("/(app)/(tabs)/workout");
+              router.back();
             },
           } as any
         }

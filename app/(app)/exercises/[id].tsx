@@ -2,6 +2,7 @@ import { useExercise } from "@/stores/exerciseStore";
 import { useLocalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Dimensions, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -22,7 +23,10 @@ export default function ViewExerciseScreen() {
   );
 
   return (
-    <View className="flex-1 items-center justify-center bg-white dark:bg-black">
+    <View
+      className="flex-1 items-center justify-center bg-white dark:bg-black"
+      style={{ paddingBottom: useSafeAreaInsets().bottom }}
+    >
       <VideoView
         style={{
           width: width,
