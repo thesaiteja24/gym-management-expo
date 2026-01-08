@@ -36,7 +36,7 @@ export default function HomeLayout() {
             rightIcons: [
               {
                 name: "settings-outline",
-                onPress: () => router.push("/profile/settings"),
+                onPress: () => router.push("/(app)/profile/settings"),
               },
             ],
           } as any

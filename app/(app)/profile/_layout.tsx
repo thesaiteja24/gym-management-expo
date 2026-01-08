@@ -27,22 +27,35 @@ export default function ProfileLayout() {
         },
       }}
     >
-      {/* PROFILE HOME */}
+      {/* EDIT */}
       <Stack.Screen
-        name="index"
+        name="edit"
         options={
           {
-            title: "Profile",
+            title: "Edit Profile",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => router.back(),
             rightIcons: [
               {
-                name: "create-outline",
-                onPress: () => router.push("/(app)/profile/edit"),
-              },
-              {
-                name: "settings-outline",
-                onPress: () => router.push("/(app)/profile/settings"),
+                name: "checkmark-done",
+                disabled: true,
+                color: "green",
               },
             ],
+          } as any
+        }
+      />
+
+      {/* SETTINGS */}
+      <Stack.Screen
+        name="settings"
+        options={
+          {
+            title: "Settings",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
           } as any
         }
       />
