@@ -52,6 +52,7 @@ type ExerciseState = {
   createExercise: (data: FormData) => Promise<any>;
   updateExercise: (id: string, data: FormData) => Promise<any>;
   deleteExercise: (id: string) => Promise<any>;
+  resetState: () => void;
 };
 
 const initialState = {
@@ -143,4 +144,6 @@ export const useExercise = create<ExerciseState>((set) => ({
       };
     }
   },
+
+  resetState: () => set({ ...initialState }),
 }));

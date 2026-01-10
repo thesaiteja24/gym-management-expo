@@ -24,6 +24,7 @@ type MuscleGroupState = {
   createMuscleGroup: (data: FormData) => Promise<any>;
   updateMuscleGroup: (id: string, data: FormData) => Promise<any>;
   deleteMuscleGroup: (id: string) => Promise<any>;
+  resetState: () => void;
 };
 
 const initialState = {
@@ -114,4 +115,6 @@ export const useMuscleGroup = create<MuscleGroupState>((set) => ({
       };
     }
   },
+
+  resetState: () => set({ ...initialState }),
 }));

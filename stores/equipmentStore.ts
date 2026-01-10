@@ -24,6 +24,7 @@ type EquipmentState = {
   createEquipment: (data: FormData) => Promise<any>;
   updateEquipment: (id: string, data: FormData) => Promise<any>;
   deleteEquipment: (id: string) => Promise<any>;
+  resetState: () => void;
 };
 
 const initialState = {
@@ -115,4 +116,6 @@ export const useEquipment = create<EquipmentState>((set) => ({
       };
     }
   },
+
+  resetState: () => set({ ...initialState }),
 }));

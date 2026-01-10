@@ -121,11 +121,11 @@ type WorkoutState = {
   stopRestTimer: () => void;
   adjustRestTimer: (deltaSeconds: number) => void;
   saveRestForSet: (exerciseId: string, setId: string, seconds: number) => void;
+
+  resetState: () => void;
 };
 
-/* ───────────────── Store ───────────────── */
-
-export const useWorkout = create<WorkoutState>((set, get) => ({
+const initialState = {
   workoutLoading: false,
   workoutSaving: false,
   workout: null,
@@ -136,6 +136,12 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
     startedAt: null,
     running: false,
   },
+};
+
+/* ───────────────── Store ───────────────── */
+
+export const useWorkout = create<WorkoutState>((set, get) => ({
+  ...initialState,
 
   /* ───── Workout ───── */
   getAllWorkouts: async () => {
@@ -504,4 +510,6 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
         },
       };
     }),
+
+  resetState: () => set({ ...initialState }),
 }));

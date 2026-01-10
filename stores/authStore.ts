@@ -1,7 +1,11 @@
 import { sendOtpService, verifyOtpService } from "@/services/authService";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
+import { useEquipment } from "./equipmentStore";
+import { useExercise } from "./exerciseStore";
+import { useMuscleGroup } from "./muscleGroupStore";
 import { LengthUnits, WeightUnits } from "./userStore";
+import { useWorkout } from "./workoutStore";
 
 type User = {
   userId?: string;
@@ -143,11 +147,12 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   logout: async () => {
     set({ isLoading: true });
+
     try {
       await SecureStore.deleteItemAsync("accessToken");
       await SecureStore.deleteItemAsync("user");
     } catch (e) {
-      // ignore
+      console.warn("Error clearing secure store on logout", e);
     } finally {
       set({
         user: null,
@@ -155,6 +160,12 @@ export const useAuth = create<AuthState>((set, get) => ({
         isAuthenticated: false,
         isLoading: false,
       });
+
+      // ✅ Correct: call Zustand stores WITHOUT hooks
+      useEquipment.getState().resetState();
+      useMuscleGroup.getState().resetState();
+      useWorkout.getState().resetState();
+      useExercise.getState().resetState();
     }
   },
 }));
