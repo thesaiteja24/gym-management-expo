@@ -38,6 +38,7 @@ type Props = {
   exercise: WorkoutLogExercise;
   exerciseDetails: Exercise;
   isActive: boolean;
+  isGrouped: boolean;
   isDragging: boolean;
   preferredWeightUnit: WeightUnits;
 
@@ -45,6 +46,8 @@ type Props = {
   onPress: () => void;
 
   onReplaceExercise: () => void;
+  onCreateSuperSet: () => void;
+  onCreateGiantSet: () => void;
   onDeleteExercise: () => void;
 
   onAddSet: () => void;
@@ -63,12 +66,15 @@ type Props = {
 function ExerciseRow({
   exercise,
   exerciseDetails,
+  isGrouped,
   isDragging,
   isActive,
   preferredWeightUnit,
   drag,
   onPress,
   onReplaceExercise,
+  onCreateSuperSet,
+  onCreateGiantSet,
   onDeleteExercise,
   onAddSet,
   onUpdateSet,
@@ -109,6 +115,12 @@ function ExerciseRow({
         transform: [{ scale: isActive ? 1.02 : 1 }],
       }}
     >
+      {isGrouped && (
+        <Text className="ml-2 rounded-md bg-blue-600 px-2 py-0.5 text-xs text-white">
+          Grouped
+        </Text>
+      )}
+
       {/* ───── Header / drag handle ───── */}
       <View className="flex-row items-center justify-between">
         <View className="w-8/12">
@@ -256,6 +268,30 @@ function ExerciseRow({
             <Text className="text-base text-black dark:text-white">
               Replace Exercise
             </Text>
+          </TouchableOpacity>
+
+          <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
+
+          <TouchableOpacity
+            onPress={() => {
+              setMenuVisible(false);
+              onCreateSuperSet();
+            }}
+            className="px-4 py-3"
+          >
+            <Text className="text-base text-white">Create Super Set</Text>
+          </TouchableOpacity>
+
+          <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
+
+          <TouchableOpacity
+            onPress={() => {
+              setMenuVisible(false);
+              onCreateGiantSet();
+            }}
+            className="px-4 py-3"
+          >
+            <Text className="text-base text-white">Create Giant Set</Text>
           </TouchableOpacity>
 
           <View className="h-px bg-neutral-200 dark:bg-neutral-800" />

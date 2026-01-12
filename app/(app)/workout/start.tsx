@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/Button";
 import { ElapsedTime } from "@/components/workout/ElapsedTime";
+import ExerciseGroupModal from "@/components/workout/ExerciseGroupModal";
 import ExerciseRow from "@/components/workout/ExerciseRow";
 import RestTimerSnack from "@/components/workout/RestTimerSnack";
 
 import { useAuth } from "@/stores/authStore";
 import { Exercise, ExerciseType, useExercise } from "@/stores/exerciseStore";
-import { useWorkout } from "@/stores/workoutStore";
+import { ExerciseGroupType, useWorkout } from "@/stores/workoutStore";
 
 import { convertWeight } from "@/utils/converter";
 import { calculateWorkoutMetrics } from "@/utils/workout";
@@ -36,6 +37,18 @@ export default function StartWorkout() {
   const [now, setNow] = useState(Date.now());
   const [isDragging, setIsDragging] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  // state for grouping mode (superset/giantset) and selected exercise
+  const [groupingMode, setGroupingMode] = useState<{
+    type: ExerciseGroupType;
+    sourceExerciseId: string;
+  } | null>(null);
+  // selected exercises for grouping
+  const [selectedGroupExerciseIds, setSelectedGroupExerciseIds] = useState<
+    Set<string>
+  >(new Set());
+  // state for showing/hiding muscle group modal
+  const [isMuscleGroupModalVisible, setIsMuscleGroupModalVisible] =
+    useState(false);
 
   const lastIndexRef = useRef<number | null>(null);
   const prevCompletedRef = useRef<Map<string, boolean>>(new Map());
@@ -48,6 +61,7 @@ export default function StartWorkout() {
     startWorkout,
     removeExercise,
     reorderExercises,
+    createExerciseGroup,
     addSet,
     updateSet,
     toggleSetCompleted,
@@ -80,6 +94,26 @@ export default function StartWorkout() {
     () => new Map(exerciseList.map((e) => [e.id, e])),
     [exerciseList],
   );
+
+  // Exercises in the workout formatted for grouping
+  const workoutExercisesForGrouping = useMemo(() => {
+    if (!workout || !groupingMode) return [];
+
+    return workout.exercises
+      .map((we) => {
+        const ex = exerciseMap.get(we.exerciseId);
+        if (!ex) return null;
+
+        return {
+          id: ex.id,
+          title: ex.title,
+          thumbnailUrl: ex.thumbnailUrl,
+          selected: selectedGroupExerciseIds.has(ex.id),
+          disabled: Boolean(we.groupId) && !selectedGroupExerciseIds.has(ex.id),
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+  }, [workout, groupingMode, selectedGroupExerciseIds, exerciseMap]);
 
   // Remaining rest timer seconds
   const remainingSeconds =
@@ -175,6 +209,24 @@ export default function StartWorkout() {
     }
 
     router.push("/(app)/workout/save");
+  };
+
+  const handleConfirmExerciseGroup = () => {
+    // if no grouping mode or less than 2 exercises selected, do nothing
+    if (!groupingMode || selectedGroupExerciseIds.size < 2) {
+      return;
+    }
+
+    // Create the exercise group
+    createExerciseGroup(
+      groupingMode.type,
+      Array.from(selectedGroupExerciseIds),
+    );
+
+    // reset local UI state
+    setGroupingMode(null);
+    setSelectedGroupExerciseIds(new Set());
+    setIsMuscleGroupModalVisible(false);
   };
 
   /* Effects */
@@ -326,6 +378,7 @@ export default function StartWorkout() {
                 exercise={item}
                 exerciseDetails={details}
                 isActive={isActive}
+                isGrouped={!!item.groupId}
                 isDragging={isDragging}
                 drag={drag}
                 preferredWeightUnit={preferredWeightUnit}
@@ -338,6 +391,24 @@ export default function StartWorkout() {
                     params: { replace: item.exerciseId },
                   })
                 }
+                onCreateSuperSet={() => {
+                  setGroupingMode({
+                    type: "superSet",
+                    sourceExerciseId: item.exerciseId,
+                  });
+
+                  setSelectedGroupExerciseIds(new Set([item.exerciseId]));
+                  setIsMuscleGroupModalVisible(true);
+                }}
+                onCreateGiantSet={() => {
+                  setGroupingMode({
+                    type: "giantSet",
+                    sourceExerciseId: item.exerciseId,
+                  });
+
+                  setSelectedGroupExerciseIds(new Set([item.exerciseId]));
+                  setIsMuscleGroupModalVisible(true);
+                }}
                 onDeleteExercise={() => removeExercise(item.exerciseId)}
                 onAddSet={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -397,6 +468,43 @@ export default function StartWorkout() {
         remainingSeconds={remainingSeconds}
         onAddTime={adjustRestTimer}
         onSkip={stopRestTimer}
+      />
+
+      {/* Superset and Giantset Modal */}
+      <ExerciseGroupModal
+        visible={isMuscleGroupModalVisible}
+        exercises={workoutExercisesForGrouping}
+        onSelect={(exercise) => {
+          if (!exercise || exercise.disabled) return;
+
+          setSelectedGroupExerciseIds((prev) => {
+            const next = new Set(prev);
+
+            // Deselect if already selected
+            if (next.has(exercise.id)) {
+              if (exercise.id === groupingMode?.sourceExerciseId) {
+                return prev;
+              }
+              next.delete(exercise.id);
+              return next;
+            }
+
+            // For supersets, limit to 2 exercises
+            if (groupingMode?.type === "superSet" && next.size >= 2) {
+              return prev;
+            }
+
+            // Select exercise
+            next.add(exercise.id);
+            return next;
+          });
+        }}
+        onConfirm={handleConfirmExerciseGroup} // ADD
+        onClose={() => {
+          setGroupingMode(null);
+          setSelectedGroupExerciseIds(new Set());
+          setIsMuscleGroupModalVisible(false);
+        }}
       />
     </View>
   );

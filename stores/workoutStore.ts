@@ -13,16 +13,22 @@ import { useExercise } from "./exerciseStore";
 
 /* ───────────────── Types ───────────────── */
 
+export type SetType = "warmup" | "working" | "dropSet" | "failureSet";
+
+export type ExerciseGroupType = "superSet" | "giantSet";
+
 export type WorkoutLog = {
   title: string;
   startTime: Date;
   endTime: Date;
   exercises: WorkoutLogExercise[];
+  exerciseGroups: WorkoutLogGroup[];
 };
 
 export type WorkoutLogExercise = {
   exerciseId: string;
   exerciseIndex: number;
+  groupId?: string | null;
   sets: WorkoutLogSet[];
 };
 
@@ -36,11 +42,18 @@ export type WorkoutLogSet = {
   durationSeconds?: number;
   restSeconds?: number;
   note?: string;
-
-  completed: boolean;
+  setType: SetType;
 
   // runtime-only
+  completed: boolean;
   durationStartedAt?: number | null;
+};
+
+export type WorkoutLogGroup = {
+  id: string;
+  groupType: ExerciseGroupType;
+  groupIndex: number;
+  restSeconds?: number | null;
 };
 
 export type WorkoutHistoryItem = {
@@ -101,6 +114,7 @@ type WorkoutState = {
   removeExercise: (exerciseId: string) => void;
   replaceExercise: (oldId: string, newId: string) => void;
   reorderExercises: (ordered: WorkoutLogExercise[]) => void;
+  createExerciseGroup: (type: ExerciseGroupType, exerciseIds: string[]) => void;
 
   /* Sets */
   addSet: (exerciseId: string) => void;
@@ -167,6 +181,7 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
         startTime: new Date(),
         endTime: new Date(),
         exercises: [],
+        exerciseGroups: [],
       },
     });
   },
@@ -272,6 +287,7 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
             {
               exerciseId,
               exerciseIndex: state.workout.exercises.length,
+              groupId: null,
               sets: [],
             },
           ],
@@ -321,6 +337,31 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
       };
     }),
 
+  createExerciseGroup: (type, exerciseIds) =>
+    set((state) => {
+      if (!state.workout) return state;
+
+      const groupId = Crypto.randomUUID();
+
+      return {
+        workout: {
+          ...state.workout,
+          exerciseGroups: [
+            ...state.workout.exerciseGroups,
+            {
+              id: groupId,
+              groupType: type,
+              groupIndex: state.workout.exerciseGroups.length,
+              restSeconds: null,
+            },
+          ],
+          exercises: state.workout.exercises.map((ex) =>
+            exerciseIds.includes(ex.exerciseId) ? { ...ex, groupId } : ex,
+          ),
+        },
+      };
+    }),
+
   /* ───── Sets ───── */
 
   addSet: (exerciseId) =>
@@ -339,6 +380,7 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
                     {
                       id: Crypto.randomUUID(),
                       setIndex: ex.sets.length,
+                      setType: "working",
                       completed: false,
                     },
                   ],
