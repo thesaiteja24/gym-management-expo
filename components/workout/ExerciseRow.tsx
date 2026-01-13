@@ -78,6 +78,7 @@ type Props = {
   onReplaceExercise: () => void;
   onCreateSuperSet: () => void;
   onCreateGiantSet: () => void;
+  onRemoveExerciseGroup: () => void;
   onDeleteExercise: () => void;
 
   onAddSet: () => void;
@@ -105,6 +106,7 @@ function ExerciseRow({
   onReplaceExercise,
   onCreateSuperSet,
   onCreateGiantSet,
+  onRemoveExerciseGroup,
   onDeleteExercise,
   onAddSet,
   onUpdateSet,
@@ -176,7 +178,7 @@ function ExerciseRow({
           onPress={() => {
             menuRef.current?.measureInWindow((x, y, width, height) => {
               setMenuPosition({
-                x: x + width - 160,
+                x: x + width - 200,
                 y: y + height + 6,
               });
               setMenuVisible(true);
@@ -288,7 +290,7 @@ function ExerciseRow({
             position: "absolute",
             top: menuPosition.y,
             left: menuPosition.x,
-            width: 160,
+            width: 200,
           }}
           className="rounded-xl border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900"
         >
@@ -304,30 +306,52 @@ function ExerciseRow({
             </Text>
           </TouchableOpacity>
 
-          <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
+          {groupDetails ? (
+            <>
+              <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
+              <TouchableOpacity
+                onPress={() => {
+                  onRemoveExerciseGroup();
+                }}
+                className="px-4 py-3"
+              >
+                <Text className="text-base text-white">
+                  Remove from
+                  {groupDetails?.groupType === "superSet"
+                    ? " Super Set"
+                    : groupDetails?.groupType === "giantSet"
+                      ? " Giant Set"
+                      : ""}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
 
-          <TouchableOpacity
-            onPress={() => {
-              setMenuVisible(false);
-              onCreateSuperSet();
-            }}
-            className="px-4 py-3"
-          >
-            <Text className="text-base text-white">Create Super Set</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setMenuVisible(false);
+                  onCreateSuperSet();
+                }}
+                className="px-4 py-3"
+              >
+                <Text className="text-base text-white">Create Super Set</Text>
+              </TouchableOpacity>
 
-          <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
+              <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
 
-          <TouchableOpacity
-            onPress={() => {
-              setMenuVisible(false);
-              onCreateGiantSet();
-            }}
-            className="px-4 py-3"
-          >
-            <Text className="text-base text-white">Create Giant Set</Text>
-          </TouchableOpacity>
-
+              <TouchableOpacity
+                onPress={() => {
+                  setMenuVisible(false);
+                  onCreateGiantSet();
+                }}
+                className="px-4 py-3"
+              >
+                <Text className="text-base text-white">Create Giant Set</Text>
+              </TouchableOpacity>
+            </>
+          )}
           <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
 
           <TouchableOpacity

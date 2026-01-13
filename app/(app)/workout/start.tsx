@@ -66,6 +66,7 @@ export default function StartWorkout() {
     removeExercise,
     reorderExercises,
     createExerciseGroup,
+    removeExerciseFromGroup,
     addSet,
     updateSet,
     toggleSetCompleted,
@@ -402,6 +403,9 @@ export default function StartWorkout() {
                     params: { replace: item.exerciseId },
                   })
                 }
+                onRemoveExerciseGroup={() => {
+                  removeExerciseFromGroup(item.exerciseId);
+                }}
                 onCreateSuperSet={() => {
                   setGroupingMode({
                     type: "superSet",

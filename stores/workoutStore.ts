@@ -115,6 +115,7 @@ type WorkoutState = {
   replaceExercise: (oldId: string, newId: string) => void;
   reorderExercises: (ordered: WorkoutLogExercise[]) => void;
   createExerciseGroup: (type: ExerciseGroupType, exerciseIds: string[]) => void;
+  removeExerciseFromGroup: (exerciseId: string) => void;
 
   /* Sets */
   addSet: (exerciseId: string) => void;
@@ -358,6 +359,63 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
           exercises: state.workout.exercises.map((ex) =>
             exerciseIds.includes(ex.exerciseId) ? { ...ex, groupId } : ex,
           ),
+        },
+      };
+    }),
+
+  removeExerciseFromGroup: (exerciseId) =>
+    set((state) => {
+      if (!state.workout) return state;
+
+      const workout = state.workout;
+
+      // Find the exercise
+      const targetExercise = workout.exercises.find(
+        (e) => e.exerciseId === exerciseId,
+      );
+
+      if (!targetExercise?.groupId) return state;
+
+      const groupId = targetExercise.groupId;
+
+      // Remove exercise from the group
+      const updatedExercises = workout.exercises.map((ex) =>
+        ex.exerciseId === exerciseId ? { ...ex, groupId: null } : ex,
+      );
+
+      // Count remaining exercises in this group
+      const remainingInGroup = updatedExercises.filter(
+        (ex) => ex.groupId === groupId,
+      );
+
+      // If group still valid (>= 2), keep it
+      if (remainingInGroup.length >= 2) {
+        return {
+          workout: {
+            ...workout,
+            exercises: updatedExercises,
+          },
+        };
+      }
+
+      // Otherwise, remove the group entirely
+      const updatedGroups = workout.exerciseGroups
+        .filter((g) => g.id !== groupId)
+        .map((g, index) => ({
+          ...g,
+          groupIndex: index,
+        }));
+
+      // Clear groupId for any leftover exercise
+      const cleanedExercises = updatedExercises.map((ex) =>
+        ex.groupId === groupId ? { ...ex, groupId: null } : ex,
+      );
+
+      return {
+        workout: {
+          ...workout,
+          exerciseGroups: updatedGroups,
+          exercises: cleanedExercises,
         },
       };
     }),
