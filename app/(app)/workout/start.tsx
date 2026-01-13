@@ -405,6 +405,7 @@ export default function StartWorkout() {
                 }
                 onRemoveExerciseGroup={() => {
                   removeExerciseFromGroup(item.exerciseId);
+                  setIsMuscleGroupModalVisible(false);
                 }}
                 onCreateSuperSet={() => {
                   setGroupingMode({

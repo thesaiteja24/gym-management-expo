@@ -300,12 +300,47 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
     set((state) => {
       if (!state.workout) return state;
 
-      const exercises = state.workout.exercises
-        .filter((e) => e.exerciseId !== exerciseId)
-        .map((e, index) => ({ ...e, exerciseIndex: index }));
+      const workout = state.workout;
+      const target = workout.exercises.find((e) => e.exerciseId === exerciseId);
+
+      if (!target) return state;
+
+      let exercises = workout.exercises.filter(
+        (e) => e.exerciseId !== exerciseId,
+      );
+
+      let exerciseGroups = workout.exerciseGroups;
+
+      // Handle grouping invariant
+      if (target.groupId) {
+        const groupId = target.groupId;
+        const remaining = exercises.filter((e) => e.groupId === groupId);
+
+        if (remaining.length < 2) {
+          // Kill the group
+          exerciseGroups = exerciseGroups
+            .filter((g) => g.id !== groupId)
+            .map((g, index) => ({ ...g, groupIndex: index }));
+
+          // Clean leftover exercise
+          exercises = exercises.map((e) =>
+            e.groupId === groupId ? { ...e, groupId: null } : e,
+          );
+        }
+      }
+
+      // Reindex exercises
+      exercises = exercises.map((e, index) => ({
+        ...e,
+        exerciseIndex: index,
+      }));
 
       return {
-        workout: { ...state.workout, exercises },
+        workout: {
+          ...workout,
+          exercises,
+          exerciseGroups,
+        },
       };
     }),
 
