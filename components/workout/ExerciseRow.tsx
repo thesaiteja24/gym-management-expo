@@ -213,9 +213,14 @@ function ExerciseRow({
           Previous
         </Text>
 
-        <View className="w-16 items-center">
+        <View className="flex w-16 flex-row items-center justify-center gap-4">
           <MaterialIcons
             name="restore"
+            size={22}
+            color={isDark ? "white" : "black"}
+          />
+          <MaterialCommunityIcons
+            name="note-plus-outline"
             size={22}
             color={isDark ? "white" : "black"}
           />

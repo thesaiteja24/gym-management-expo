@@ -79,6 +79,8 @@ function SetRow({
   const swipeableRef = useRef<SwipeableMethods>(null);
   const hasTriggeredHaptic = useRef(false);
 
+  const [isNoteOpen, setIsNoteOpen] = useState(false);
+  const [noteText, setNoteText] = useState(set.note ?? "");
   /* ───── Sync inputs when NOT editing ───── */
 
   useEffect(() => {
@@ -100,6 +102,12 @@ function SetRow({
       setRepsText(set.reps != null ? set.reps.toString() : "");
     }
   }, [set.reps, isEditing, hasReps]);
+
+  useEffect(() => {
+    if (!isNoteOpen) {
+      setNoteText(set.note ?? "");
+    }
+  }, [set.note, isNoteOpen]);
 
   /* ───── Swipe hint ───── */
 
@@ -162,170 +170,214 @@ function SetRow({
   /* ───────────────── Render ───────────────── */
 
   return (
-    <Swipeable
-      ref={swipeableRef}
-      enabled={!isEditing && !isDeleting}
-      overshootLeft={false}
-      overshootRight={false}
-      overshootFriction={4}
-      leftThreshold={80}
-      rightThreshold={DELETE_REVEAL_WIDTH}
-      renderLeftActions={renderLeftActions}
-      renderRightActions={renderRightActions}
-      onSwipeableOpen={(direction) => {
-        if (hasTriggeredHaptic.current) return;
-        hasTriggeredHaptic.current = true;
+    <View>
+      <Swipeable
+        ref={swipeableRef}
+        enabled={!isEditing && !isDeleting}
+        overshootLeft={false}
+        overshootRight={false}
+        overshootFriction={4}
+        leftThreshold={80}
+        rightThreshold={DELETE_REVEAL_WIDTH}
+        renderLeftActions={renderLeftActions}
+        renderRightActions={renderRightActions}
+        onSwipeableOpen={(direction) => {
+          if (hasTriggeredHaptic.current) return;
+          hasTriggeredHaptic.current = true;
 
-        if (direction === "right") {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          requestAnimationFrame(() => swipeableRef.current?.close());
-          onToggleComplete();
-        }
+          if (direction === "right") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            requestAnimationFrame(() => swipeableRef.current?.close());
+            onToggleComplete();
+          }
 
-        if (direction === "left") {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-      }}
-      onSwipeableClose={() => {
-        hasTriggeredHaptic.current = false;
-      }}
-    >
-      <View className="relative overflow-hidden rounded-md">
-        {/* Left background */}
-        <Animated.View
-          entering={FadeIn.duration(1000)}
-          className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-green-600 px-4"
-        >
-          <Ionicons name="checkmark-circle" size={22} color="white" />
-        </Animated.View>
+          if (direction === "left") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        }}
+        onSwipeableClose={() => {
+          hasTriggeredHaptic.current = false;
+        }}
+      >
+        <View className="relative overflow-hidden rounded-md">
+          {/* Left background */}
+          <Animated.View
+            entering={FadeIn.duration(1000)}
+            className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-green-600 px-4"
+          >
+            <Ionicons name="checkmark-circle" size={22} color="white" />
+          </Animated.View>
 
-        {/* Right background */}
-        <Animated.View
-          entering={FadeIn.duration(1000)}
-          className="absolute inset-y-0 right-0 w-20 items-end justify-center bg-red-600 px-4"
-        >
-          <Ionicons name="trash" size={20} color="white" />
-        </Animated.View>
+          {/* Right background */}
+          <Animated.View
+            entering={FadeIn.duration(1000)}
+            className="absolute inset-y-0 right-0 w-20 items-end justify-center bg-red-600 px-4"
+          >
+            <Ionicons name="trash" size={20} color="white" />
+          </Animated.View>
 
-        {/* Foreground */}
-        <Animated.View
-          entering={FadeIn}
-          exiting={FadeOut.duration(400)}
-          style={[hintStyle, { height: 42 }]}
-          className={`flex-row items-center justify-around rounded-md px-2 ${
-            set.completed
-              ? "bg-green-600 dark:bg-green-600"
-              : "bg-white dark:bg-black"
-          }`}
-        >
-          {/* Set number */}
-          <Text
-            className={`w-10 text-center ${
-              set.completed ? "text-white" : "text-blue-500"
+          {/* Foreground */}
+          <Animated.View
+            entering={FadeIn}
+            exiting={FadeOut.duration(400)}
+            style={[hintStyle, { height: 42 }]}
+            className={`flex-row items-center justify-around rounded-md px-2 ${
+              set.completed
+                ? "bg-green-600 dark:bg-green-600"
+                : "bg-white dark:bg-black"
             }`}
           >
-            {set.setIndex + 1}
-          </Text>
-
-          {/* Previous */}
-          <Text
-            className={`flex-1 text-center ${
-              set.completed ? "text-white" : "text-blue-500"
-            }`}
-          >
-            --
-          </Text>
-
-          {/* Rest */}
-          <View className="w-16 items-center">
-            <TouchableOpacity onPress={onOpenRestPicker}>
-              <MaterialCommunityIcons
-                name="timer-outline"
-                size={22}
-                color={restColor}
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Weight */}
-          {hasWeight && (
-            <TextInput
-              value={weightText}
-              keyboardType="decimal-pad"
-              selectTextOnFocus
-              onFocus={() => setIsEditing(true)}
-              onBlur={() => {
-                setIsEditing(false);
-                const num = Number(weightText);
-                if (!isNaN(num)) {
-                  onUpdate({
-                    weight: convertWeight(num, {
-                      from: preferredWeightUnit,
-                      to: "kg",
-                    }),
-                  });
-                }
-              }}
-              onChangeText={setWeightText}
-              placeholder="0"
-              placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-              style={{ lineHeight }}
-              className={`w-20 text-center text-lg ${
+            {/* Set number */}
+            <Text
+              className={`w-10 text-center ${
                 set.completed ? "text-white" : "text-blue-500"
               }`}
-            />
-          )}
-
-          {/* Reps */}
-          {hasReps && (
-            <TextInput
-              value={repsText}
-              keyboardType="number-pad"
-              selectTextOnFocus
-              onFocus={() => setIsEditing(true)}
-              onBlur={() => {
-                setIsEditing(false);
-                const num = Number(repsText);
-                if (!isNaN(num)) onUpdate({ reps: num });
-              }}
-              onChangeText={setRepsText}
-              placeholder="0"
-              placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-              style={{ lineHeight }}
-              className={`w-16 text-center text-lg ${
-                set.completed ? "text-white" : "text-blue-500"
-              }`}
-            />
-          )}
-
-          {/* Duration */}
-          {hasDuration && (
-            <TouchableOpacity
-              onPress={() =>
-                set.durationStartedAt ? onStopTimer() : onStartTimer()
-              }
-              className="flex w-20 flex-row items-center justify-center gap-x-1"
             >
-              <MaterialCommunityIcons
-                name={set.durationStartedAt ? "stop" : "play"}
-                size={24}
-                color={set.completed ? "white" : "#3b82f6"}
-              />
+              {set.setIndex + 1}
+            </Text>
 
-              <ElapsedTime
-                baseSeconds={set.durationSeconds}
-                runningSince={set.durationStartedAt}
-                textClassName={
-                  set.completed
-                    ? "text-lg font-semibold text-white"
-                    : "text-lg font-semibold text-blue-500"
-                }
+            {/* Previous */}
+            <Text
+              className={`flex-1 text-center ${
+                set.completed ? "text-white" : "text-blue-500"
+              }`}
+            >
+              --
+            </Text>
+
+            {/* Rest */}
+            <View className="flex w-16 flex-row items-center gap-2">
+              <TouchableOpacity onPress={onOpenRestPicker}>
+                <MaterialCommunityIcons
+                  name="timer-outline"
+                  size={22}
+                  color={restColor}
+                />
+              </TouchableOpacity>
+              {/* Note */}
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setIsNoteOpen((v) => !v);
+                }}
+                className="w-10 items-center"
+              >
+                <MaterialCommunityIcons
+                  name={
+                    set.note || isNoteOpen ? "note-text" : "note-text-outline"
+                  }
+                  size={20}
+                  color={set.completed ? "white" : "#6b7280"}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Weight */}
+            {hasWeight && (
+              <TextInput
+                value={weightText}
+                keyboardType="decimal-pad"
+                selectTextOnFocus
+                onFocus={() => setIsEditing(true)}
+                onBlur={() => {
+                  setIsEditing(false);
+                  const num = Number(weightText);
+                  if (!isNaN(num)) {
+                    onUpdate({
+                      weight: convertWeight(num, {
+                        from: preferredWeightUnit,
+                        to: "kg",
+                      }),
+                    });
+                  }
+                }}
+                onChangeText={setWeightText}
+                placeholder="0"
+                placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+                style={{ lineHeight }}
+                className={`w-20 text-center text-lg ${
+                  set.completed ? "text-white" : "text-blue-500"
+                }`}
               />
-            </TouchableOpacity>
-          )}
+            )}
+
+            {/* Reps */}
+            {hasReps && (
+              <TextInput
+                value={repsText}
+                keyboardType="number-pad"
+                selectTextOnFocus
+                onFocus={() => setIsEditing(true)}
+                onBlur={() => {
+                  setIsEditing(false);
+                  const num = Number(repsText);
+                  if (!isNaN(num)) onUpdate({ reps: num });
+                }}
+                onChangeText={setRepsText}
+                placeholder="0"
+                placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+                style={{ lineHeight }}
+                className={`w-16 text-center text-lg ${
+                  set.completed ? "text-white" : "text-blue-500"
+                }`}
+              />
+            )}
+
+            {/* Duration */}
+            {hasDuration && (
+              <TouchableOpacity
+                onPress={() =>
+                  set.durationStartedAt ? onStopTimer() : onStartTimer()
+                }
+                className="flex w-20 flex-row items-center justify-center gap-x-1"
+              >
+                <MaterialCommunityIcons
+                  name={set.durationStartedAt ? "stop" : "play"}
+                  size={24}
+                  color={set.completed ? "white" : "#3b82f6"}
+                />
+
+                <ElapsedTime
+                  baseSeconds={set.durationSeconds}
+                  runningSince={set.durationStartedAt}
+                  textClassName={
+                    set.completed
+                      ? "text-lg font-semibold text-white"
+                      : "text-lg font-semibold text-blue-500"
+                  }
+                />
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        </View>
+      </Swipeable>
+      {isNoteOpen && (
+        <Animated.View
+          entering={FadeIn.duration(150)}
+          exiting={FadeOut.duration(150)}
+          className="rounded-md bg-white px-4 py-2 dark:bg-black"
+        >
+          <TextInput
+            value={noteText}
+            onChangeText={setNoteText}
+            multiline
+            placeholder="Add a note for this set…"
+            placeholderTextColor="#9ca3af"
+            className="min-h-[48px] text-base text-black dark:text-white"
+            onBlur={() => {
+              setIsNoteOpen(false);
+
+              const trimmed = noteText.trim();
+              if (trimmed !== (set.note ?? "")) {
+                onUpdate({ note: trimmed || undefined });
+              }
+            }}
+            returnKeyType="done"
+            blurOnSubmit
+          />
         </Animated.View>
-      </View>
-    </Swipeable>
+      )}
+    </View>
   );
 }
 
