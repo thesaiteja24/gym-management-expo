@@ -1,7 +1,7 @@
 import SetRow from "@/components/workout/SetRow";
 import { Exercise, ExerciseType } from "@/stores/exerciseStore";
 import { WeightUnits } from "@/stores/userStore";
-import { WorkoutLogExercise } from "@/stores/workoutStore";
+import { WorkoutLogExercise, WorkoutLogGroup } from "@/stores/workoutStore";
 import {
   Entypo,
   MaterialCommunityIcons,
@@ -32,14 +32,44 @@ const EXERCISE_CAPABILITIES: Record<
   durationOnly: { hasWeight: false, hasReps: false, hasDuration: true },
 };
 
+// Colors for different groups
+const GROUP_COLORS = [
+  "#4C1D95", // deep purple
+  "#7C2D12", // dark orange / brown
+  "#14532D", // dark green
+  "#7F1D1D", // dark red
+  "#1E3A8A", // deep blue
+  "#581C87", // violet
+  "#0F766E", // teal
+  "#1F2937", // slate
+];
+
+// Simple hash function to map a string to an index
+function hashStringToIndex(str: string, modulo: number) {
+  let hash = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0; // force 32-bit
+  }
+
+  return Math.abs(hash) % modulo;
+}
+
+// Get color for a group based on its ID
+function getGroupColor(groupId: string) {
+  const index = hashStringToIndex(groupId, GROUP_COLORS.length);
+  return GROUP_COLORS[index];
+}
+
 /* ───────────────── Props ───────────────── */
 
 type Props = {
   exercise: WorkoutLogExercise;
   exerciseDetails: Exercise;
   isActive: boolean;
-  isGrouped: boolean;
   isDragging: boolean;
+  groupDetails?: WorkoutLogGroup;
   preferredWeightUnit: WeightUnits;
 
   drag: () => void;
@@ -66,9 +96,9 @@ type Props = {
 function ExerciseRow({
   exercise,
   exerciseDetails,
-  isGrouped,
   isDragging,
   isActive,
+  groupDetails,
   preferredWeightUnit,
   drag,
   onPress,
@@ -115,12 +145,6 @@ function ExerciseRow({
         transform: [{ scale: isActive ? 1.02 : 1 }],
       }}
     >
-      {isGrouped && (
-        <Text className="ml-2 rounded-md bg-blue-600 px-2 py-0.5 text-xs text-white">
-          Grouped
-        </Text>
-      )}
-
       {/* ───── Header / drag handle ───── */}
       <View className="flex-row items-center justify-between">
         <View className="w-8/12">
@@ -166,6 +190,16 @@ function ExerciseRow({
           />
         </TouchableOpacity>
       </View>
+      {groupDetails && (
+        <View
+          className="self-start rounded-full"
+          style={{ backgroundColor: getGroupColor(groupDetails.id) }}
+        >
+          <Text className="w-full px-3 py-1 text-sm font-semibold text-white">
+            {`${groupDetails.groupType.toUpperCase()} ${String.fromCharCode("A".charCodeAt(0) + groupDetails.groupIndex)}`}
+          </Text>
+        </View>
+      )}
 
       {/* ───── Sets header ───── */}
       <View className="flex-row items-center px-2">

@@ -6,7 +6,11 @@ import RestTimerSnack from "@/components/workout/RestTimerSnack";
 
 import { useAuth } from "@/stores/authStore";
 import { Exercise, ExerciseType, useExercise } from "@/stores/exerciseStore";
-import { ExerciseGroupType, useWorkout } from "@/stores/workoutStore";
+import {
+  ExerciseGroupType,
+  useWorkout,
+  WorkoutLogGroup,
+} from "@/stores/workoutStore";
 
 import { convertWeight } from "@/utils/converter";
 import { calculateWorkoutMetrics } from "@/utils/workout";
@@ -93,6 +97,12 @@ export default function StartWorkout() {
   const exerciseMap = useMemo<Map<string, Exercise>>(
     () => new Map(exerciseList.map((e) => [e.id, e])),
     [exerciseList],
+  );
+
+  // Derived Map of exerciseGroupId -> WorkoutLogGroup
+  const exerciseGroupMap = useMemo<Map<string, WorkoutLogGroup>>(
+    () => new Map(workout?.exerciseGroups.map((g) => [g.id, g]) || []),
+    [workout?.exerciseGroups],
   );
 
   // Exercises in the workout formatted for grouping
@@ -371,6 +381,7 @@ export default function StartWorkout() {
           }}
           renderItem={({ item, drag, isActive }) => {
             const details = exerciseMap.get(item.exerciseId);
+            const groupDetails = exerciseGroupMap.get(item.groupId || "");
             if (!details) return null;
 
             return (
@@ -378,8 +389,8 @@ export default function StartWorkout() {
                 exercise={item}
                 exerciseDetails={details}
                 isActive={isActive}
-                isGrouped={!!item.groupId}
                 isDragging={isDragging}
+                groupDetails={groupDetails}
                 drag={drag}
                 preferredWeightUnit={preferredWeightUnit}
                 onPress={() =>
