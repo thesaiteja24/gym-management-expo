@@ -204,16 +204,17 @@ function ExerciseRow({
       )}
 
       {/* ───── Sets header ───── */}
-      <View className="flex-row items-center px-2">
-        <Text className="w-10 text-lg font-semibold text-black dark:text-white">
+      <View className="flex-row items-center justify-around gap-4 bg-white dark:bg-black">
+        <Text className="w-8 text-center text-lg font-semibold text-black dark:text-white">
           Set
         </Text>
 
-        <Text className="flex-1 text-center text-lg font-semibold text-black dark:text-white">
-          Previous
+        <Text className="w-12 text-center text-lg font-semibold text-black dark:text-white">
+          Prev
         </Text>
 
-        <View className="flex w-16 flex-row items-center justify-center gap-4">
+        {/* Rest and Notes */}
+        <View className="w-[20%] flex-row items-center justify-around gap-4">
           <MaterialIcons
             name="restore"
             size={22}
@@ -226,35 +227,51 @@ function ExerciseRow({
           />
         </View>
 
-        {hasWeight && (
-          <View className="w-20 items-center">
-            <MaterialCommunityIcons
-              name={
-                preferredWeightUnit === "kg"
-                  ? "weight-kilogram"
-                  : "weight-pound"
-              }
-              size={22}
-              color={isDark ? "white" : "black"}
-            />
-          </View>
-        )}
+        {/* Load */}
+        <View className="w-[30%] flex-row items-center justify-around gap-4">
+          {/* Weight */}
+          {hasWeight && (
+            <View className="items-center">
+              <MaterialCommunityIcons
+                name={
+                  preferredWeightUnit === "kg"
+                    ? "weight-kilogram"
+                    : "weight-pound"
+                }
+                size={22}
+                color={isDark ? "white" : "black"}
+              />
+            </View>
+          )}
 
-        {hasReps && (
-          <View className="w-16 items-center">
-            <Entypo name="cycle" size={22} color={isDark ? "white" : "black"} />
-          </View>
-        )}
+          {/* RPE */}
 
-        {hasDuration && (
-          <View className="w-20 items-center">
-            <MaterialCommunityIcons
-              name="timer-outline"
-              size={22}
-              color={isDark ? "white" : "black"}
-            />
-          </View>
-        )}
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            RPE
+          </Text>
+
+          {/* Reps */}
+          {hasReps && (
+            <View className="items-center">
+              <Entypo
+                name="cycle"
+                size={22}
+                color={isDark ? "white" : "black"}
+              />
+            </View>
+          )}
+
+          {/* Duration */}
+          {hasDuration && (
+            <View className="w-[50%] items-center">
+              <MaterialCommunityIcons
+                name="timer-outline"
+                size={22}
+                color={isDark ? "white" : "black"}
+              />
+            </View>
+          )}
+        </View>
       </View>
 
       {/* ───── Sets ───── */}

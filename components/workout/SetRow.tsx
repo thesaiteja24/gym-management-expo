@@ -25,18 +25,13 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { ElapsedTime } from "./ElapsedTime";
+import RPESelectionModal from "./RPESelectionModal";
 import SetTypeSelectionModal from "./SetTypeSelectionModal";
 
 /* ───────────────── Constants ───────────────── */
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const DELETE_REVEAL_WIDTH = SCREEN_WIDTH * 0.25;
-const SET_TYPES = [
-  { key: "warmup", label: "Warm-up" },
-  { key: "working", label: "Working" },
-  { key: "dropSet", label: "Drop" },
-  { key: "failureSet", label: "Failure" },
-] as const;
 
 /* ───────────────── Props ───────────────── */
 
@@ -90,6 +85,8 @@ function SetRow({
   const [noteText, setNoteText] = useState(set.note ?? "");
 
   const [setTypeModalVisible, setSetTypeModalVisible] = useState(false);
+
+  const [rpeModalVisible, setRpeModalVisible] = useState(false);
 
   /* ───── Sync inputs when NOT editing ───── */
 
@@ -260,7 +257,7 @@ function SetRow({
             entering={FadeIn}
             exiting={FadeOut.duration(400)}
             style={[hintStyle, { height: 42 }]}
-            className={`flex-row items-center justify-around rounded-md px-2 ${
+            className={`max-w-full flex-row items-center justify-around gap-4 rounded-md ${
               set.completed
                 ? "bg-green-600 dark:bg-green-600"
                 : "bg-white dark:bg-black"
@@ -272,7 +269,7 @@ function SetRow({
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setSetTypeModalVisible(true);
               }}
-              className="w-10 items-center"
+              className="w-8 items-center"
             >
               <Text
                 className={`text-center text-lg font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
@@ -283,15 +280,16 @@ function SetRow({
 
             {/* Previous */}
             <Text
-              className={`flex-1 text-center ${
+              className={`w-12 text-center ${
                 set.completed ? "text-white" : "text-blue-500"
               }`}
             >
               --
             </Text>
 
-            {/* Rest */}
-            <View className="flex w-16 flex-row items-center gap-2">
+            {/* Rest and Note */}
+            <View className="w-[20%] flex-row items-center justify-around gap-4">
+              {/* Rest */}
               <TouchableOpacity onPress={onOpenRestPicker}>
                 <MaterialCommunityIcons
                   name="timer-outline"
@@ -299,13 +297,14 @@ function SetRow({
                   color={restColor}
                 />
               </TouchableOpacity>
+
               {/* Note */}
               <TouchableOpacity
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setIsNoteOpen((v) => !v);
                 }}
-                className="w-10 items-center"
+                className="items-center"
               >
                 <MaterialCommunityIcons
                   name={
@@ -317,82 +316,106 @@ function SetRow({
               </TouchableOpacity>
             </View>
 
-            {/* Weight */}
-            {hasWeight && (
-              <TextInput
-                value={weightText}
-                keyboardType="decimal-pad"
-                selectTextOnFocus
-                onFocus={() => setIsEditing(true)}
-                onBlur={() => {
-                  setIsEditing(false);
-                  const num = Number(weightText);
-                  if (!isNaN(num)) {
-                    onUpdate({
-                      weight: convertWeight(num, {
-                        from: preferredWeightUnit,
-                        to: "kg",
-                      }),
-                    });
-                  }
-                }}
-                onChangeText={setWeightText}
-                placeholder="0"
-                placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-                style={{ lineHeight }}
-                className={`w-20 text-center text-lg ${
-                  set.completed ? "text-white" : "text-blue-500"
-                }`}
-              />
-            )}
+            {/* Load */}
+            <View className="w-[30%] flex-row items-center justify-around gap-4">
+              {/* Weight */}
+              {hasWeight && (
+                <TextInput
+                  value={weightText}
+                  keyboardType="decimal-pad"
+                  selectTextOnFocus
+                  onFocus={() => setIsEditing(true)}
+                  onBlur={() => {
+                    setIsEditing(false);
+                    const num = Number(weightText);
+                    if (!isNaN(num)) {
+                      onUpdate({
+                        weight: convertWeight(num, {
+                          from: preferredWeightUnit,
+                          to: "kg",
+                        }),
+                      });
+                    }
+                  }}
+                  onChangeText={setWeightText}
+                  placeholder="0"
+                  placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+                  style={{ lineHeight }}
+                  className={`text-center text-lg ${
+                    set.completed ? "text-white" : "text-blue-500"
+                  }`}
+                />
+              )}
 
-            {/* Reps */}
-            {hasReps && (
-              <TextInput
-                value={repsText}
-                keyboardType="number-pad"
-                selectTextOnFocus
-                onFocus={() => setIsEditing(true)}
-                onBlur={() => {
-                  setIsEditing(false);
-                  const num = Number(repsText);
-                  if (!isNaN(num)) onUpdate({ reps: num });
-                }}
-                onChangeText={setRepsText}
-                placeholder="0"
-                placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
-                style={{ lineHeight }}
-                className={`w-16 text-center text-lg ${
-                  set.completed ? "text-white" : "text-blue-500"
-                }`}
-              />
-            )}
-
-            {/* Duration */}
-            {hasDuration && (
+              {/* RPE */}
               <TouchableOpacity
-                onPress={() =>
-                  set.durationStartedAt ? onStopTimer() : onStartTimer()
-                }
-                className="flex w-20 flex-row items-center justify-center gap-x-1"
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setRpeModalVisible(true);
+                }}
+                className={`rounded-full px-2 py-1 ${
+                  set.rpe ? "bg-blue-500" : "bg-neutral-200 dark:bg-neutral-700"
+                }`}
               >
-                <MaterialCommunityIcons
-                  name={set.durationStartedAt ? "stop" : "play"}
-                  size={24}
-                  color={set.completed ? "white" : "#3b82f6"}
-                />
-
-                <ElapsedTime
-                  baseSeconds={set.durationSeconds}
-                  runningSince={set.durationStartedAt}
-                  textClassName={
-                    set.completed
-                      ? "text-lg font-semibold text-white"
-                      : "text-lg font-semibold text-blue-500"
-                  }
-                />
+                <Text
+                  className={`text-sm font-semibold ${
+                    set.rpe
+                      ? "text-white"
+                      : "text-neutral-600 dark:text-neutral-300"
+                  }`}
+                >
+                  {set.rpe ? `${set.rpe}` : "RPE"}
+                </Text>
               </TouchableOpacity>
-            )}
+
+              {/* Reps */}
+              {hasReps && (
+                <TextInput
+                  value={repsText}
+                  keyboardType="number-pad"
+                  selectTextOnFocus
+                  onFocus={() => setIsEditing(true)}
+                  onBlur={() => {
+                    setIsEditing(false);
+                    const num = Number(repsText);
+                    if (!isNaN(num)) onUpdate({ reps: num });
+                  }}
+                  onChangeText={setRepsText}
+                  placeholder="0"
+                  placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+                  style={{ lineHeight }}
+                  className={`text-center text-lg ${
+                    set.completed ? "text-white" : "text-blue-500"
+                  }`}
+                />
+              )}
+
+              {/* Duration */}
+              {hasDuration && (
+                <TouchableOpacity
+                  onPress={() =>
+                    set.durationStartedAt ? onStopTimer() : onStartTimer()
+                  }
+                  className="flex w-[50%] flex-row items-center justify-center"
+                >
+                  <MaterialCommunityIcons
+                    name={set.durationStartedAt ? "stop" : "play"}
+                    size={24}
+                    color={set.completed ? "white" : "#3b82f6"}
+                  />
+
+                  <ElapsedTime
+                    baseSeconds={set.durationSeconds}
+                    runningSince={set.durationStartedAt}
+                    textClassName={
+                      set.completed
+                        ? "text-lg font-semibold text-white"
+                        : "text-lg font-semibold text-blue-500"
+                    }
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
           </Animated.View>
         </View>
       </Swipeable>
@@ -429,6 +452,16 @@ function SetRow({
           if (type !== set.setType) {
             onUpdate({ setType: type });
           }
+        }}
+      />
+
+      <RPESelectionModal
+        visible={rpeModalVisible}
+        currentValue={set.rpe}
+        onClose={() => setRpeModalVisible(false)}
+        onSelect={(value) => {
+          onUpdate({ rpe: value });
+          setRpeModalVisible(false);
         }}
       />
     </View>
