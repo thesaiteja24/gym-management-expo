@@ -74,6 +74,7 @@ export function serializeWorkoutForApi(workout: WorkoutLog) {
       exerciseIndex: exercise.exerciseIndex,
       sets: exercise.sets.map((set) => ({
         setIndex: set.setIndex,
+        setType: set.setType,
         weight: set.weight ?? null,
         reps: set.reps ?? null,
         rpe: set.rpe ?? null,

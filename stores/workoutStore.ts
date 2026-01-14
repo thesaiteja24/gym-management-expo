@@ -82,10 +82,12 @@ export type WorkoutHistoryExercise = {
 export type WorkoutHistorySet = {
   id: string;
   setIndex: number;
+  setType: SetType;
   weight: string | null;
   reps: number | null;
   durationSeconds: number | null;
   restSeconds: number | null;
+  note: string | null;
 };
 
 /* ───────────────── State ───────────────── */

@@ -1,5 +1,5 @@
 import { WeightUnits } from "@/stores/userStore";
-import { WorkoutLogSet } from "@/stores/workoutStore";
+import { SetType, WorkoutLogSet } from "@/stores/workoutStore";
 import { convertWeight } from "@/utils/converter";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -25,11 +25,18 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { ElapsedTime } from "./ElapsedTime";
+import SetTypeSelectionModal from "./SetTypeSelectionModal";
 
 /* ───────────────── Constants ───────────────── */
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const DELETE_REVEAL_WIDTH = SCREEN_WIDTH * 0.25;
+const SET_TYPES = [
+  { key: "warmup", label: "Warm-up" },
+  { key: "working", label: "Working" },
+  { key: "dropSet", label: "Drop" },
+  { key: "failureSet", label: "Failure" },
+] as const;
 
 /* ───────────────── Props ───────────────── */
 
@@ -81,6 +88,9 @@ function SetRow({
 
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState(set.note ?? "");
+
+  const [setTypeModalVisible, setSetTypeModalVisible] = useState(false);
+
   /* ───── Sync inputs when NOT editing ───── */
 
   useEffect(() => {
@@ -142,6 +152,35 @@ function SetRow({
     setTimeout(onDelete, 400);
   };
 
+  function getSetTypeColor(
+    set: WorkoutLogSet,
+    type: SetType,
+    completed: boolean,
+  ): { style: string; value: string | number } {
+    switch (type) {
+      case "warmup":
+        if (completed) {
+          return { style: "text-white", value: "W" };
+        }
+        return { style: "text-yellow-500", value: "W" };
+      case "dropSet":
+        if (completed) {
+          return { style: "text-white", value: "D" };
+        }
+        return { style: "text-purple-500", value: "D" };
+      case "failureSet":
+        if (completed) {
+          return { style: "text-white", value: "F" };
+        }
+        return { style: "text-red-500", value: "F" };
+      default:
+        if (completed) {
+          return { style: "text-white", value: set.setIndex + 1 };
+        }
+        return { style: "text-blue-500", value: set.setIndex + 1 };
+    }
+  }
+
   /* ───── Rest icon color ───── */
 
   const restColor = set.completed
@@ -173,7 +212,7 @@ function SetRow({
     <View>
       <Swipeable
         ref={swipeableRef}
-        enabled={!isEditing && !isDeleting}
+        enabled={!isEditing && !isDeleting && !setTypeModalVisible}
         overshootLeft={false}
         overshootRight={false}
         overshootFriction={4}
@@ -228,13 +267,19 @@ function SetRow({
             }`}
           >
             {/* Set number */}
-            <Text
-              className={`w-10 text-center ${
-                set.completed ? "text-white" : "text-blue-500"
-              }`}
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSetTypeModalVisible(true);
+              }}
+              className="w-10 items-center"
             >
-              {set.setIndex + 1}
-            </Text>
+              <Text
+                className={`text-center text-lg font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
+              >
+                {getSetTypeColor(set, set.setType, set.completed).value}
+              </Text>
+            </TouchableOpacity>
 
             {/* Previous */}
             <Text
@@ -355,7 +400,7 @@ function SetRow({
         <Animated.View
           entering={FadeIn.duration(150)}
           exiting={FadeOut.duration(150)}
-          className="rounded-md bg-white px-4 py-2 dark:bg-black"
+          className="rounded-md bg-white px-4 dark:bg-black"
         >
           <TextInput
             value={noteText}
@@ -363,20 +408,29 @@ function SetRow({
             multiline
             placeholder="Add a note for this set…"
             placeholderTextColor="#9ca3af"
-            className="min-h-[48px] text-base text-black dark:text-white"
+            className="text-base text-black dark:text-white"
             onBlur={() => {
-              setIsNoteOpen(false);
-
               const trimmed = noteText.trim();
               if (trimmed !== (set.note ?? "")) {
                 onUpdate({ note: trimmed || undefined });
               }
             }}
-            returnKeyType="done"
             blurOnSubmit
+            style={{ lineHeight: lineHeight }}
           />
         </Animated.View>
       )}
+
+      <SetTypeSelectionModal
+        visible={setTypeModalVisible}
+        currentType={set.setType}
+        onClose={() => setSetTypeModalVisible(false)}
+        onSelect={(type) => {
+          if (type !== set.setType) {
+            onUpdate({ setType: type });
+          }
+        }}
+      />
     </View>
   );
 }
