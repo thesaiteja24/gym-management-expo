@@ -241,7 +241,7 @@ function SetRow({
             entering={FadeIn.duration(1000)}
             className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-green-600 px-4"
           >
-            <Ionicons name="checkmark-circle" size={22} color="white" />
+            <Ionicons name="checkmark-circle" size={24} color="white" />
           </Animated.View>
 
           {/* Right background */}
@@ -256,44 +256,46 @@ function SetRow({
           <Animated.View
             entering={FadeIn}
             exiting={FadeOut.duration(400)}
-            style={[hintStyle, { height: 42 }]}
-            className={`max-w-full flex-row items-center justify-around gap-4 rounded-md ${
+            style={[hintStyle, { height: 48 }]}
+            className={`flex-row items-center rounded-md ${
               set.completed
                 ? "bg-green-600 dark:bg-green-600"
                 : "bg-white dark:bg-black"
             }`}
           >
-            {/* Set number */}
-            <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setSetTypeModalVisible(true);
-              }}
-              className="w-8 items-center"
-            >
-              <Text
-                className={`text-center text-lg font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
+            <View className="basis-[30%] flex-row items-center justify-evenly">
+              {/* Set number */}
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSetTypeModalVisible(true);
+                }}
+                className="items-center"
               >
-                {getSetTypeColor(set, set.setType, set.completed).value}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  className={`text-center text-lg font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
+                >
+                  {getSetTypeColor(set, set.setType, set.completed).value}
+                </Text>
+              </TouchableOpacity>
 
-            {/* Previous */}
-            <Text
-              className={`w-12 text-center ${
-                set.completed ? "text-white" : "text-blue-500"
-              }`}
-            >
-              --
-            </Text>
+              {/* Previous */}
+              <Text
+                className={`text-center ${
+                  set.completed ? "text-white" : "text-blue-500"
+                }`}
+              >
+                --
+              </Text>
+            </View>
 
             {/* Rest and Note */}
-            <View className="w-[20%] flex-row items-center justify-around gap-4">
+            <View className="basis-[40%] flex-row items-center justify-evenly">
               {/* Rest */}
               <TouchableOpacity onPress={onOpenRestPicker}>
                 <MaterialCommunityIcons
                   name="timer-outline"
-                  size={22}
+                  size={24}
                   color={restColor}
                 />
               </TouchableOpacity>
@@ -314,16 +316,37 @@ function SetRow({
                   color={set.completed ? "white" : "#6b7280"}
                 />
               </TouchableOpacity>
+
+              {/* RPE */}
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setRpeModalVisible(true);
+                }}
+                className={`rounded-full px-2 py-1 ${
+                  set.rpe ? "bg-blue-500" : "bg-neutral-200 dark:bg-neutral-700"
+                }`}
+              >
+                <Text
+                  className={`text-sm font-semibold ${
+                    set.rpe
+                      ? "text-white"
+                      : "text-neutral-600 dark:text-neutral-300"
+                  }`}
+                >
+                  {set.rpe ? `${set.rpe}` : "RPE"}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Load */}
-            <View className="w-[30%] flex-row items-center justify-around gap-4">
+            <View className="basis-[30%] flex-row items-center justify-evenly">
               {/* Weight */}
               {hasWeight && (
                 <TextInput
                   value={weightText}
                   keyboardType="decimal-pad"
-                  selectTextOnFocus
+                  // selectTextOnFocus
                   onFocus={() => setIsEditing(true)}
                   onBlur={() => {
                     setIsEditing(false);
@@ -347,33 +370,12 @@ function SetRow({
                 />
               )}
 
-              {/* RPE */}
-              <TouchableOpacity
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setRpeModalVisible(true);
-                }}
-                className={`rounded-full px-2 py-1 ${
-                  set.rpe ? "bg-blue-500" : "bg-neutral-200 dark:bg-neutral-700"
-                }`}
-              >
-                <Text
-                  className={`text-sm font-semibold ${
-                    set.rpe
-                      ? "text-white"
-                      : "text-neutral-600 dark:text-neutral-300"
-                  }`}
-                >
-                  {set.rpe ? `${set.rpe}` : "RPE"}
-                </Text>
-              </TouchableOpacity>
-
               {/* Reps */}
               {hasReps && (
                 <TextInput
                   value={repsText}
                   keyboardType="number-pad"
-                  selectTextOnFocus
+                  // selectTextOnFocus
                   onFocus={() => setIsEditing(true)}
                   onBlur={() => {
                     setIsEditing(false);
@@ -396,7 +398,7 @@ function SetRow({
                   onPress={() =>
                     set.durationStartedAt ? onStopTimer() : onStartTimer()
                   }
-                  className="flex w-[50%] flex-row items-center justify-center"
+                  className="flex flex-row items-center justify-center"
                 >
                   <MaterialCommunityIcons
                     name={set.durationStartedAt ? "stop" : "play"}

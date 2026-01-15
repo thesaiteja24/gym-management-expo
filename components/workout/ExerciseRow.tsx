@@ -204,72 +204,61 @@ function ExerciseRow({
       )}
 
       {/* ───── Sets header ───── */}
-      <View className="flex-row items-center justify-around gap-4 bg-white dark:bg-black">
-        <Text className="w-8 text-center text-lg font-semibold text-black dark:text-white">
-          Set
-        </Text>
+      <View className="flex-row items-center bg-white dark:bg-black">
+        {/* ───── LEFT 35% ───── */}
+        <View className="basis-[30%] flex-row items-center justify-evenly">
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            Set
+          </Text>
 
-        <Text className="w-12 text-center text-lg font-semibold text-black dark:text-white">
-          Prev
-        </Text>
-
-        {/* Rest and Notes */}
-        <View className="w-[20%] flex-row items-center justify-around gap-4">
-          <MaterialIcons
-            name="restore"
-            size={22}
-            color={isDark ? "white" : "black"}
-          />
-          <MaterialCommunityIcons
-            name="note-plus-outline"
-            size={22}
-            color={isDark ? "white" : "black"}
-          />
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            Prev
+          </Text>
         </View>
 
-        {/* Load */}
-        <View className="w-[30%] flex-row items-center justify-around gap-4">
-          {/* Weight */}
-          {hasWeight && (
-            <View className="items-center">
-              <MaterialCommunityIcons
-                name={
-                  preferredWeightUnit === "kg"
-                    ? "weight-kilogram"
-                    : "weight-pound"
-                }
-                size={22}
-                color={isDark ? "white" : "black"}
-              />
-            </View>
-          )}
+        {/* ───── MIDDLE 30% ───── */}
+        <View className="basis-[40%] flex-row items-center justify-evenly">
+          <MaterialIcons
+            name="restore"
+            size={24}
+            color={isDark ? "white" : "black"}
+          />
 
-          {/* RPE */}
+          <MaterialCommunityIcons
+            name="note-plus-outline"
+            size={24}
+            color={isDark ? "white" : "black"}
+          />
 
           <Text className="text-lg font-semibold text-black dark:text-white">
             RPE
           </Text>
+        </View>
 
-          {/* Reps */}
-          {hasReps && (
-            <View className="items-center">
-              <Entypo
-                name="cycle"
-                size={22}
-                color={isDark ? "white" : "black"}
-              />
-            </View>
+        {/* ───── RIGHT 35% ───── */}
+        <View className="basis-[30%] flex-row items-center justify-evenly">
+          {hasWeight && (
+            <MaterialCommunityIcons
+              name={
+                preferredWeightUnit === "kg"
+                  ? "weight-kilogram"
+                  : "weight-pound"
+              }
+              size={24}
+              color={isDark ? "white" : "black"}
+            />
           )}
 
-          {/* Duration */}
+          {hasReps && (
+            <Entypo name="cycle" size={24} color={isDark ? "white" : "black"} />
+          )}
+
           {hasDuration && (
-            <View className="w-[50%] items-center">
-              <MaterialCommunityIcons
-                name="timer-outline"
-                size={22}
-                color={isDark ? "white" : "black"}
-              />
-            </View>
+            <MaterialCommunityIcons
+              name="timer-outline"
+              size={24}
+              color={isDark ? "white" : "black"}
+            />
           )}
         </View>
       </View>
