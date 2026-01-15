@@ -63,9 +63,9 @@ export default function RPESelectionModal({
           Select RPE
         </Text>
 
-        <View className="flex-row gap-6">
+        <View className="flex-row">
           {/* ───── Left: Scale ───── */}
-          <View className="items-end">
+          <View className="gap-4 rounded-full bg-slate-50 px-2 py-4 dark:bg-neutral-800">
             {RPE_VALUES.map((value) => {
               const isSelected = value === selectedValue;
 
@@ -82,10 +82,10 @@ export default function RPESelectionModal({
                       onSelect(value);
                     }
                   }}
-                  className="flex-row items-center gap-3 py-1"
+                  className={`flex-row items-center justify-center gap-4 px-2 ${isSelected ? "rounded-full bg-blue-100 dark:bg-blue-900" : ""}`}
                 >
                   <Text
-                    className={`text-base ${
+                    className={`text-center text-base ${
                       isSelected
                         ? "font-semibold text-blue-500"
                         : "text-neutral-500 dark:text-neutral-400"
@@ -93,22 +93,13 @@ export default function RPESelectionModal({
                   >
                     {value}
                   </Text>
-
-                  {/* Indicator */}
-                  <View
-                    className={`h-3 w-3 rounded-full border ${
-                      isSelected
-                        ? "border-blue-500 bg-blue-500"
-                        : "border-neutral-400"
-                    }`}
-                  />
                 </TouchableOpacity>
               );
             })}
           </View>
 
           {/* ───── Right: Detail ───── */}
-          <View className="flex-1 justify-center">
+          <View className="flex-1 items-center justify-center">
             <Text className="text-4xl font-bold text-black dark:text-white">
               {selectedValue ?? "--"}
             </Text>

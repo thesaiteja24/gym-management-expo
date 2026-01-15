@@ -463,7 +463,6 @@ function SetRow({
         onClose={() => setRpeModalVisible(false)}
         onSelect={(value) => {
           onUpdate({ rpe: value });
-          setRpeModalVisible(false);
         }}
       />
     </View>
