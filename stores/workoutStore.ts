@@ -9,20 +9,26 @@ import {
 } from "@/utils/workout";
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
-import { useExercise } from "./exerciseStore";
+import { ExerciseType, useExercise } from "./exerciseStore";
 
 /* ───────────────── Types ───────────────── */
+
+export type SetType = "warmup" | "working" | "dropSet" | "failureSet";
+
+export type ExerciseGroupType = "superSet" | "giantSet";
 
 export type WorkoutLog = {
   title: string;
   startTime: Date;
   endTime: Date;
   exercises: WorkoutLogExercise[];
+  exerciseGroups: WorkoutLogGroup[];
 };
 
 export type WorkoutLogExercise = {
   exerciseId: string;
   exerciseIndex: number;
+  groupId?: string | null;
   sets: WorkoutLogSet[];
 };
 
@@ -36,11 +42,52 @@ export type WorkoutLogSet = {
   durationSeconds?: number;
   restSeconds?: number;
   note?: string;
-
-  completed: boolean;
+  setType: SetType;
 
   // runtime-only
+  completed: boolean;
   durationStartedAt?: number | null;
+};
+
+export type WorkoutLogGroup = {
+  id: string;
+  groupType: ExerciseGroupType;
+  groupIndex: number;
+  restSeconds?: number | null;
+};
+
+export type WorkoutHistoryGroup = {
+  id: string;
+  groupType: ExerciseGroupType;
+  groupIndex: number;
+  restSeconds: number | null;
+};
+
+export type WorkoutHistoryExercise = {
+  id: string;
+  exerciseId: string;
+  exerciseIndex: number;
+  exerciseGroupId: string | null;
+
+  exercise: {
+    id: string;
+    title: string;
+    thumbnailUrl: string;
+    exerciseType: ExerciseType;
+  };
+
+  sets: WorkoutHistorySet[];
+};
+
+export type WorkoutHistorySet = {
+  id: string;
+  setIndex: number;
+  setType: SetType;
+  weight: number | null;
+  reps: number | null;
+  durationSeconds: number | null;
+  restSeconds: number | null;
+  note: string | null;
 };
 
 export type WorkoutHistoryItem = {
@@ -50,29 +97,9 @@ export type WorkoutHistoryItem = {
   endTime: string;
   createdAt: string;
   updatedAt: string;
+
+  exerciseGroups: WorkoutHistoryGroup[];
   exercises: WorkoutHistoryExercise[];
-};
-
-export type WorkoutHistoryExercise = {
-  id: string;
-  exerciseId: string;
-  exerciseIndex: number;
-  exercise: {
-    id: string;
-    title: string;
-    thumbnailUrl: string;
-    exerciseType: string;
-  };
-  sets: WorkoutHistorySet[];
-};
-
-export type WorkoutHistorySet = {
-  id: string;
-  setIndex: number;
-  weight: string | null;
-  reps: number | null;
-  durationSeconds: number | null;
-  restSeconds: number | null;
 };
 
 /* ───────────────── State ───────────────── */
@@ -101,6 +128,8 @@ type WorkoutState = {
   removeExercise: (exerciseId: string) => void;
   replaceExercise: (oldId: string, newId: string) => void;
   reorderExercises: (ordered: WorkoutLogExercise[]) => void;
+  createExerciseGroup: (type: ExerciseGroupType, exerciseIds: string[]) => void;
+  removeExerciseFromGroup: (exerciseId: string) => void;
 
   /* Sets */
   addSet: (exerciseId: string) => void;
@@ -167,6 +196,7 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
         startTime: new Date(),
         endTime: new Date(),
         exercises: [],
+        exerciseGroups: [],
       },
     });
   },
@@ -272,6 +302,7 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
             {
               exerciseId,
               exerciseIndex: state.workout.exercises.length,
+              groupId: null,
               sets: [],
             },
           ],
@@ -283,12 +314,47 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
     set((state) => {
       if (!state.workout) return state;
 
-      const exercises = state.workout.exercises
-        .filter((e) => e.exerciseId !== exerciseId)
-        .map((e, index) => ({ ...e, exerciseIndex: index }));
+      const workout = state.workout;
+      const target = workout.exercises.find((e) => e.exerciseId === exerciseId);
+
+      if (!target) return state;
+
+      let exercises = workout.exercises.filter(
+        (e) => e.exerciseId !== exerciseId,
+      );
+
+      let exerciseGroups = workout.exerciseGroups;
+
+      // Handle grouping invariant
+      if (target.groupId) {
+        const groupId = target.groupId;
+        const remaining = exercises.filter((e) => e.groupId === groupId);
+
+        if (remaining.length < 2) {
+          // Kill the group
+          exerciseGroups = exerciseGroups
+            .filter((g) => g.id !== groupId)
+            .map((g, index) => ({ ...g, groupIndex: index }));
+
+          // Clean leftover exercise
+          exercises = exercises.map((e) =>
+            e.groupId === groupId ? { ...e, groupId: null } : e,
+          );
+        }
+      }
+
+      // Reindex exercises
+      exercises = exercises.map((e, index) => ({
+        ...e,
+        exerciseIndex: index,
+      }));
 
       return {
-        workout: { ...state.workout, exercises },
+        workout: {
+          ...workout,
+          exercises,
+          exerciseGroups,
+        },
       };
     }),
 
@@ -321,6 +387,88 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
       };
     }),
 
+  createExerciseGroup: (type, exerciseIds) =>
+    set((state) => {
+      if (!state.workout) return state;
+
+      const groupId = Crypto.randomUUID();
+
+      return {
+        workout: {
+          ...state.workout,
+          exerciseGroups: [
+            ...state.workout.exerciseGroups,
+            {
+              id: groupId,
+              groupType: type,
+              groupIndex: state.workout.exerciseGroups.length,
+              restSeconds: null,
+            },
+          ],
+          exercises: state.workout.exercises.map((ex) =>
+            exerciseIds.includes(ex.exerciseId) ? { ...ex, groupId } : ex,
+          ),
+        },
+      };
+    }),
+
+  removeExerciseFromGroup: (exerciseId) =>
+    set((state) => {
+      if (!state.workout) return state;
+
+      const workout = state.workout;
+
+      // Find the exercise
+      const targetExercise = workout.exercises.find(
+        (e) => e.exerciseId === exerciseId,
+      );
+
+      if (!targetExercise?.groupId) return state;
+
+      const groupId = targetExercise.groupId;
+
+      // Remove exercise from the group
+      const updatedExercises = workout.exercises.map((ex) =>
+        ex.exerciseId === exerciseId ? { ...ex, groupId: null } : ex,
+      );
+
+      // Count remaining exercises in this group
+      const remainingInGroup = updatedExercises.filter(
+        (ex) => ex.groupId === groupId,
+      );
+
+      // If group still valid (>= 2), keep it
+      if (remainingInGroup.length >= 2) {
+        return {
+          workout: {
+            ...workout,
+            exercises: updatedExercises,
+          },
+        };
+      }
+
+      // Otherwise, remove the group entirely
+      const updatedGroups = workout.exerciseGroups
+        .filter((g) => g.id !== groupId)
+        .map((g, index) => ({
+          ...g,
+          groupIndex: index,
+        }));
+
+      // Clear groupId for any leftover exercise
+      const cleanedExercises = updatedExercises.map((ex) =>
+        ex.groupId === groupId ? { ...ex, groupId: null } : ex,
+      );
+
+      return {
+        workout: {
+          ...workout,
+          exerciseGroups: updatedGroups,
+          exercises: cleanedExercises,
+        },
+      };
+    }),
+
   /* ───── Sets ───── */
 
   addSet: (exerciseId) =>
@@ -339,6 +487,7 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
                     {
                       id: Crypto.randomUUID(),
                       setIndex: ex.sets.length,
+                      setType: "working",
                       completed: false,
                     },
                   ],

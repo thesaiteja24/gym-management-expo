@@ -1,7 +1,7 @@
 import SetRow from "@/components/workout/SetRow";
 import { Exercise, ExerciseType } from "@/stores/exerciseStore";
 import { WeightUnits } from "@/stores/userStore";
-import { WorkoutLogExercise } from "@/stores/workoutStore";
+import { WorkoutLogExercise, WorkoutLogGroup } from "@/stores/workoutStore";
 import {
   Entypo,
   MaterialCommunityIcons,
@@ -32,6 +32,36 @@ const EXERCISE_CAPABILITIES: Record<
   durationOnly: { hasWeight: false, hasReps: false, hasDuration: true },
 };
 
+// Colors for different groups
+const GROUP_COLORS = [
+  "#4C1D95", // deep purple
+  "#7C2D12", // dark orange / brown
+  "#14532D", // dark green
+  "#7F1D1D", // dark red
+  "#1E3A8A", // deep blue
+  "#581C87", // violet
+  "#0F766E", // teal
+  "#1F2937", // slate
+];
+
+// Simple hash function to map a string to an index
+function hashStringToIndex(str: string, modulo: number) {
+  let hash = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0; // force 32-bit
+  }
+
+  return Math.abs(hash) % modulo;
+}
+
+// Get color for a group based on its ID
+function getGroupColor(groupId: string) {
+  const index = hashStringToIndex(groupId, GROUP_COLORS.length);
+  return GROUP_COLORS[index];
+}
+
 /* ───────────────── Props ───────────────── */
 
 type Props = {
@@ -39,12 +69,16 @@ type Props = {
   exerciseDetails: Exercise;
   isActive: boolean;
   isDragging: boolean;
+  groupDetails?: WorkoutLogGroup;
   preferredWeightUnit: WeightUnits;
 
   drag: () => void;
   onPress: () => void;
 
   onReplaceExercise: () => void;
+  onCreateSuperSet: () => void;
+  onCreateGiantSet: () => void;
+  onRemoveExerciseGroup: () => void;
   onDeleteExercise: () => void;
 
   onAddSet: () => void;
@@ -65,10 +99,14 @@ function ExerciseRow({
   exerciseDetails,
   isDragging,
   isActive,
+  groupDetails,
   preferredWeightUnit,
   drag,
   onPress,
   onReplaceExercise,
+  onCreateSuperSet,
+  onCreateGiantSet,
+  onRemoveExerciseGroup,
   onDeleteExercise,
   onAddSet,
   onUpdateSet,
@@ -140,7 +178,7 @@ function ExerciseRow({
           onPress={() => {
             menuRef.current?.measureInWindow((x, y, width, height) => {
               setMenuPosition({
-                x: x + width - 160,
+                x: x + width - 200,
                 y: y + height + 6,
               });
               setMenuVisible(true);
@@ -154,54 +192,75 @@ function ExerciseRow({
           />
         </TouchableOpacity>
       </View>
+      {groupDetails && (
+        <View
+          className="self-start rounded-full"
+          style={{ backgroundColor: getGroupColor(groupDetails.id) }}
+        >
+          <Text className="w-full px-3 py-1 text-sm font-semibold text-white">
+            {`${groupDetails.groupType.toUpperCase()} ${String.fromCharCode("A".charCodeAt(0) + groupDetails.groupIndex)}`}
+          </Text>
+        </View>
+      )}
 
       {/* ───── Sets header ───── */}
-      <View className="flex-row items-center px-2">
-        <Text className="w-10 text-lg font-semibold text-black dark:text-white">
-          Set
-        </Text>
+      <View className="flex-row items-center bg-white dark:bg-black">
+        {/* ───── LEFT 35% ───── */}
+        <View className="basis-[30%] flex-row items-center justify-evenly">
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            Set
+          </Text>
 
-        <Text className="flex-1 text-center text-lg font-semibold text-black dark:text-white">
-          Previous
-        </Text>
-
-        <View className="w-16 items-center">
-          <MaterialIcons
-            name="restore"
-            size={22}
-            color={isDark ? "white" : "black"}
-          />
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            Prev
+          </Text>
         </View>
 
-        {hasWeight && (
-          <View className="w-20 items-center">
+        {/* ───── MIDDLE 30% ───── */}
+        <View className="basis-[40%] flex-row items-center justify-evenly">
+          <MaterialIcons
+            name="restore"
+            size={24}
+            color={isDark ? "white" : "black"}
+          />
+
+          <MaterialCommunityIcons
+            name="note-plus-outline"
+            size={24}
+            color={isDark ? "white" : "black"}
+          />
+
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            RPE
+          </Text>
+        </View>
+
+        {/* ───── RIGHT 35% ───── */}
+        <View className="basis-[30%] flex-row items-center justify-evenly">
+          {hasWeight && (
             <MaterialCommunityIcons
               name={
                 preferredWeightUnit === "kg"
                   ? "weight-kilogram"
                   : "weight-pound"
               }
-              size={22}
+              size={24}
               color={isDark ? "white" : "black"}
             />
-          </View>
-        )}
+          )}
 
-        {hasReps && (
-          <View className="w-16 items-center">
-            <Entypo name="cycle" size={22} color={isDark ? "white" : "black"} />
-          </View>
-        )}
+          {hasReps && (
+            <Entypo name="cycle" size={24} color={isDark ? "white" : "black"} />
+          )}
 
-        {hasDuration && (
-          <View className="w-20 items-center">
+          {hasDuration && (
             <MaterialCommunityIcons
               name="timer-outline"
-              size={22}
+              size={24}
               color={isDark ? "white" : "black"}
             />
-          </View>
-        )}
+          )}
+        </View>
       </View>
 
       {/* ───── Sets ───── */}
@@ -242,7 +301,7 @@ function ExerciseRow({
             position: "absolute",
             top: menuPosition.y,
             left: menuPosition.x,
-            width: 160,
+            width: 200,
           }}
           className="rounded-xl border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900"
         >
@@ -258,6 +317,52 @@ function ExerciseRow({
             </Text>
           </TouchableOpacity>
 
+          {groupDetails ? (
+            <>
+              <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
+              <TouchableOpacity
+                onPress={() => {
+                  onRemoveExerciseGroup();
+                }}
+                className="px-4 py-3"
+              >
+                <Text className="text-base text-white">
+                  Remove from
+                  {groupDetails?.groupType === "superSet"
+                    ? " Super Set"
+                    : groupDetails?.groupType === "giantSet"
+                      ? " Giant Set"
+                      : ""}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
+
+              <TouchableOpacity
+                onPress={() => {
+                  setMenuVisible(false);
+                  onCreateSuperSet();
+                }}
+                className="px-4 py-3"
+              >
+                <Text className="text-base text-white">Create Super Set</Text>
+              </TouchableOpacity>
+
+              <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
+
+              <TouchableOpacity
+                onPress={() => {
+                  setMenuVisible(false);
+                  onCreateGiantSet();
+                }}
+                className="px-4 py-3"
+              >
+                <Text className="text-base text-white">Create Giant Set</Text>
+              </TouchableOpacity>
+            </>
+          )}
           <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
 
           <TouchableOpacity

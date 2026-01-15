@@ -69,11 +69,20 @@ export function serializeWorkoutForApi(workout: WorkoutLog) {
     startTime: workout.startTime?.toISOString() ?? null,
     endTime: workout.endTime?.toISOString() ?? null,
 
+    exerciseGroups: workout.exerciseGroups.map((group) => ({
+      id: group.id,
+      groupType: group.groupType,
+      groupIndex: group.groupIndex,
+      restSeconds: group.restSeconds ?? null,
+    })),
+
     exercises: workout.exercises.map((exercise) => ({
       exerciseId: exercise.exerciseId,
       exerciseIndex: exercise.exerciseIndex,
+      exerciseGroupId: exercise.groupId ?? null,
       sets: exercise.sets.map((set) => ({
         setIndex: set.setIndex,
+        setType: set.setType,
         weight: set.weight ?? null,
         reps: set.reps ?? null,
         rpe: set.rpe ?? null,
