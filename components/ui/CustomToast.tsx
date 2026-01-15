@@ -1,4 +1,5 @@
 import { StyleSheet, Text, useColorScheme, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function CustomToast({
   text1,
@@ -11,6 +12,7 @@ export function CustomToast({
 }) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const insets = useSafeAreaInsets();
 
   const borderColors = {
     success: "#4CAF50", // green
@@ -26,6 +28,7 @@ export function CustomToast({
           backgroundColor: isDark ? "#1c1c1e" : "#ffffff",
           borderLeftColor: borderColors[type],
           shadowColor: isDark ? "#ffffff" : "#000000",
+          marginTop: insets.top,
         },
       ]}
     >

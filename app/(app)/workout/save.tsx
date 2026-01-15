@@ -95,6 +95,27 @@ export default function SaveWorkout() {
   };
 
   const handleConfirmSave = async () => {
+    const startTime = workout?.startTime;
+    const endTime = workout?.endTime;
+
+    if (!startTime || !endTime) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid workout time",
+        text2: "Start time and end time must be set.",
+      });
+      return;
+    }
+
+    if (new Date(startTime) > new Date(endTime)) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid workout time",
+        text2: "Workout cannot end before it starts.",
+      });
+      return;
+    }
+
     const prepared = useWorkout.getState().prepareWorkoutForSave();
     if (!prepared) return;
 
@@ -230,27 +251,29 @@ export default function SaveWorkout() {
             </Text>
 
             <View className="mt-4 flex-row gap-3">
-              <Button
-                title="Cancel"
-                variant="secondary"
-                className="w-[50%]"
-                onPress={() => {
-                  setPendingSave(null);
-                  setPruneMessage(null);
-                }}
-              />
+              <View className="flex-1">
+                <Button
+                  title="Cancel"
+                  variant="secondary"
+                  onPress={() => {
+                    setPendingSave(null);
+                    setPruneMessage(null);
+                  }}
+                />
+              </View>
 
-              <Button
-                title="Save anyway"
-                variant="primary"
-                className="w-[50%]"
-                onPress={() => {
-                  const workout = pendingSave!;
-                  setPendingSave(null);
-                  setPruneMessage(null);
-                  commitSave(workout);
-                }}
-              />
+              <View className="flex-1">
+                <Button
+                  title="Save anyway"
+                  variant="primary"
+                  onPress={() => {
+                    const workout = pendingSave!;
+                    setPendingSave(null);
+                    setPruneMessage(null);
+                    commitSave(workout);
+                  }}
+                />
+              </View>
             </View>
           </View>
         </View>

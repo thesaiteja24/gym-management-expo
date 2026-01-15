@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SET_TYPES: {
   key: WorkoutLogSet["setType"];
@@ -51,7 +52,12 @@ export default function SetTypeSelectionModal({
 }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 justify-end bg-black/40">
+      <View
+        className="flex-1 justify-end bg-black/40"
+        style={{
+          marginBottom: useSafeAreaInsets().bottom,
+        }}
+      >
         {/* Backdrop */}
         <Pressable className="absolute inset-0" onPress={onClose} />
 

@@ -15,10 +15,7 @@ import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import React, { useMemo } from "react";
 import { ScrollView, Text, View } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 /* ───────────────── Group Color Logic (shared with ExerciseRow) ───────────────── */
 
@@ -82,7 +79,6 @@ function getSetTypeColor(
 export default function WorkoutDetails() {
   /* Local State */
   const { id } = useLocalSearchParams<{ id: string }>();
-  const safeAreaInsets = useSafeAreaInsets();
 
   /* Store Related State */
   const { workoutHistory } = useWorkout();
@@ -128,7 +124,7 @@ export default function WorkoutDetails() {
   /* UI Rendering */
   return (
     <SafeAreaView
-      style={{ flex: 1, paddingBottom: safeAreaInsets.bottom }}
+      style={{ flex: 1 }}
       edges={["bottom"]}
       className="bg-white dark:bg-black"
     >

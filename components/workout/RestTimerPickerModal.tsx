@@ -8,6 +8,7 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TimerPicker } from "react-native-timer-picker";
 
 /* --------------------------------------------------
@@ -129,7 +130,10 @@ export default function RestTimerPickerModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 justify-end bg-black/40">
+      <View
+        className="flex-1 justify-end bg-black/40"
+        style={{ marginBottom: useSafeAreaInsets().bottom }}
+      >
         <Pressable className="absolute inset-0" onPress={handleCancel} />
 
         <View className="h-[55%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">

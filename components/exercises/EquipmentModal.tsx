@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   visible: boolean;
@@ -34,10 +35,15 @@ export default function EquipmentModal({
 }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 justify-end bg-black/40">
+      <View
+        className="flex-1 justify-end bg-black/40"
+        style={{
+          marginBottom: useSafeAreaInsets().bottom,
+        }}
+      >
         <Pressable className="absolute inset-0" onPress={onClose} />
 
-        <View className="h-[80%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">
+        <View className="h-[80%] rounded-t-3xl bg-white px-6 pt-6 dark:bg-[#111]">
           <View
             className={`flex-row items-center ${
               onCreatePress && enableCreate
