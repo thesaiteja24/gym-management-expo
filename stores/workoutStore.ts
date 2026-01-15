@@ -9,7 +9,7 @@ import {
 } from "@/utils/workout";
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
-import { useExercise } from "./exerciseStore";
+import { ExerciseType, useExercise } from "./exerciseStore";
 
 /* ───────────────── Types ───────────────── */
 
@@ -56,26 +56,26 @@ export type WorkoutLogGroup = {
   restSeconds?: number | null;
 };
 
-export type WorkoutHistoryItem = {
+export type WorkoutHistoryGroup = {
   id: string;
-  title: string | null;
-  startTime: string;
-  endTime: string;
-  createdAt: string;
-  updatedAt: string;
-  exercises: WorkoutHistoryExercise[];
+  groupType: ExerciseGroupType;
+  groupIndex: number;
+  restSeconds: number | null;
 };
 
 export type WorkoutHistoryExercise = {
   id: string;
   exerciseId: string;
   exerciseIndex: number;
+  exerciseGroupId: string | null;
+
   exercise: {
     id: string;
     title: string;
     thumbnailUrl: string;
-    exerciseType: string;
+    exerciseType: ExerciseType;
   };
+
   sets: WorkoutHistorySet[];
 };
 
@@ -83,11 +83,23 @@ export type WorkoutHistorySet = {
   id: string;
   setIndex: number;
   setType: SetType;
-  weight: string | null;
+  weight: number | null;
   reps: number | null;
   durationSeconds: number | null;
   restSeconds: number | null;
   note: string | null;
+};
+
+export type WorkoutHistoryItem = {
+  id: string;
+  title: string | null;
+  startTime: string;
+  endTime: string;
+  createdAt: string;
+  updatedAt: string;
+
+  exerciseGroups: WorkoutHistoryGroup[];
+  exercises: WorkoutHistoryExercise[];
 };
 
 /* ───────────────── State ───────────────── */
