@@ -27,9 +27,9 @@ export default function WorkoutCard({
       className="mb-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
     >
       {/* Header */}
-      <View className="mb-3 flex-row items-start justify-between">
-        <View>
-          <Text className="text-xl font-semibold text-black dark:text-white">
+      <View className="mb-3 flex-row justify-between">
+        <View className="w-2/3">
+          <Text className="line-clamp-1 text-xl font-semibold text-black dark:text-white">
             {workout.title || "Workout"}
           </Text>
 
@@ -38,7 +38,7 @@ export default function WorkoutCard({
           </Text>
         </View>
 
-        <Text className="text-lg font-semibold text-blue-500">
+        <Text className="w-1/3 text-lg font-semibold text-blue-500">
           <Text className="text-lg font-semibold text-black dark:text-white">
             Duration:
           </Text>{" "}

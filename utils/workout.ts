@@ -3,6 +3,7 @@ import {
   WorkoutHistoryItem,
   WorkoutLog,
   WorkoutLogSet,
+  WorkoutPruneReport,
 } from "@/stores/workoutStore";
 
 /* ───────────────── Metrics ───────────────── */
@@ -120,4 +121,31 @@ export function isValidCompletedSet(
     default:
       return false;
   }
+}
+
+/* ───────────────── Prune Message ───────────────── */
+export function buildPruneMessage(report: WorkoutPruneReport): string | null {
+  const parts: string[] = [];
+
+  if (report.droppedSets > 0) {
+    parts.push(
+      `${report.droppedSets} invalid set${report.droppedSets > 1 ? "s" : ""}`,
+    );
+  }
+
+  if (report.droppedExercises > 0) {
+    parts.push(
+      `${report.droppedExercises} exercise${report.droppedExercises > 1 ? "s" : ""}`,
+    );
+  }
+
+  if (report.droppedGroups > 0) {
+    parts.push(
+      `${report.droppedGroups} group${report.droppedGroups > 1 ? "s" : ""}`,
+    );
+  }
+
+  if (parts.length === 0) return null;
+
+  return `We removed ${parts.join(", ")} because they were incomplete.`;
 }

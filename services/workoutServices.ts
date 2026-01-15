@@ -14,7 +14,7 @@ export async function getAllWokroutsService() {
   }
 }
 
-export async function createWokroutService(data: WorkoutLog) {
+export async function createWorkoutService(data: WorkoutLog) {
   try {
     const res = await client.post(wokrouts_endpoint, data);
 

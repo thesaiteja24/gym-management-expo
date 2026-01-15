@@ -326,7 +326,7 @@ function ExerciseRow({
                 }}
                 className="px-4 py-3"
               >
-                <Text className="text-base text-white">
+                <Text className="text-base text-black dark:text-white">
                   Remove from
                   {groupDetails?.groupType === "superSet"
                     ? " Super Set"
@@ -347,7 +347,9 @@ function ExerciseRow({
                 }}
                 className="px-4 py-3"
               >
-                <Text className="text-base text-white">Create Super Set</Text>
+                <Text className="text-base text-black dark:text-white">
+                  Create Super Set
+                </Text>
               </TouchableOpacity>
 
               <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
@@ -359,7 +361,9 @@ function ExerciseRow({
                 }}
                 className="px-4 py-3"
               >
-                <Text className="text-base text-white">Create Giant Set</Text>
+                <Text className="text-base text-black dark:text-white">
+                  Create Giant Set
+                </Text>
               </TouchableOpacity>
             </>
           )}

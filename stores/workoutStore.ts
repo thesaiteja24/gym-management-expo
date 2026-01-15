@@ -1,5 +1,5 @@
 import {
-  createWokroutService,
+  createWorkoutService,
   getAllWokroutsService,
 } from "@/services/workoutServices";
 import {
@@ -54,6 +54,12 @@ export type WorkoutLogGroup = {
   groupType: ExerciseGroupType;
   groupIndex: number;
   restSeconds?: number | null;
+};
+
+export type WorkoutPruneReport = {
+  droppedSets: number;
+  droppedExercises: number;
+  droppedGroups: number;
 };
 
 export type WorkoutHistoryGroup = {
@@ -120,7 +126,14 @@ type WorkoutState = {
   getAllWorkouts: () => Promise<void>;
   startWorkout: () => void;
   updateWorkout: (patch: Partial<WorkoutLog>) => void;
-  saveWorkout: () => Promise<{ success: boolean; error?: any }>;
+  prepareWorkoutForSave: () => {
+    workout: WorkoutLog;
+    pruneReport: WorkoutPruneReport;
+  } | null;
+  saveWorkout: (
+    prepared: WorkoutLog,
+  ) => Promise<{ success: boolean; error?: any }>;
+  resetWorkout: () => void;
   discardWorkout: () => void;
 
   /* Exercises */
@@ -224,49 +237,94 @@ export const useWorkout = create<WorkoutState>((set, get) => ({
       };
     }),
 
-  saveWorkout: async () => {
+  prepareWorkoutForSave: () => {
     const state = get();
     const workout = state.workout;
-
-    if (!workout) {
-      return { success: false, error: "No active workout" };
-    }
-
-    if (state.workoutSaving) {
-      return { success: false };
-    }
-
-    set({ workoutSaving: true });
+    if (!workout) return null;
 
     const exerciseList = useExercise.getState().exerciseList;
     const exerciseMap = new Map(
       exerciseList.map((e) => [e.id, e.exerciseType]),
     );
 
+    let droppedSets = 0;
+    let droppedExercises = 0;
+    let droppedGroups = 0;
+
+    const finalizedExercises: WorkoutLogExercise[] = [];
+
+    for (const ex of workout.exercises) {
+      const type = exerciseMap.get(ex.exerciseId);
+      if (!type) continue;
+
+      const finalizedSets = ex.sets.map(finalizeSetTimer);
+      const validSets = finalizedSets.filter((set) =>
+        isValidCompletedSet(set, type),
+      );
+
+      droppedSets += finalizedSets.length - validSets.length;
+
+      if (validSets.length === 0) {
+        droppedExercises += 1;
+        continue;
+      }
+
+      finalizedExercises.push({ ...ex, sets: validSets });
+    }
+
     const finalizedWorkout: WorkoutLog = {
       ...workout,
       endTime: workout.endTime ?? new Date(),
-      exercises: workout.exercises
-        .map((ex) => {
-          const exerciseType = exerciseMap.get(ex.exerciseId);
-          if (!exerciseType) return null;
-
-          return {
-            ...ex,
-            sets: ex.sets
-              .map(finalizeSetTimer)
-              .filter((set) => isValidCompletedSet(set, exerciseType)),
-          };
-        })
-        .filter((ex): ex is WorkoutLogExercise => !!ex && ex.sets.length > 0),
+      exercises: finalizedExercises,
     };
 
-    const payload = serializeWorkoutForApi(finalizedWorkout);
+    // group pruning (unchanged)
+    const groupCounts = new Map<string, number>();
+    for (const ex of finalizedWorkout.exercises) {
+      if (ex.groupId) {
+        groupCounts.set(ex.groupId, (groupCounts.get(ex.groupId) ?? 0) + 1);
+      }
+    }
+
+    const validGroupIds = new Set(
+      [...groupCounts.entries()].filter(([, c]) => c >= 2).map(([id]) => id),
+    );
+
+    droppedGroups =
+      finalizedWorkout.exerciseGroups.length -
+      finalizedWorkout.exerciseGroups.filter((g) => validGroupIds.has(g.id))
+        .length;
+
+    finalizedWorkout.exerciseGroups = finalizedWorkout.exerciseGroups.filter(
+      (g) => validGroupIds.has(g.id),
+    );
+
+    finalizedWorkout.exercises = finalizedWorkout.exercises.map((ex) =>
+      ex.groupId && !validGroupIds.has(ex.groupId)
+        ? { ...ex, groupId: null }
+        : ex,
+    );
+
+    return {
+      workout: finalizedWorkout,
+      pruneReport: {
+        droppedSets,
+        droppedExercises,
+        droppedGroups,
+      },
+    };
+  },
+
+  saveWorkout: async (prepared: WorkoutLog) => {
+    set({ workoutSaving: true });
+
+    const payload = serializeWorkoutForApi(prepared);
 
     try {
-      const res = await createWokroutService(payload as any);
+      // @ts-ignore
+      await createWorkoutService(payload);
       set({ workoutSaving: false });
-      return res;
+      return { success: true };
     } catch (error) {
       set({ workoutSaving: false });
       return { success: false, error };

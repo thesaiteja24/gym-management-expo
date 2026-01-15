@@ -3,14 +3,14 @@ import DateTimePicker from "@/components/ui/DateTimePicker";
 
 import { useAuth } from "@/stores/authStore";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
-import { useWorkout } from "@/stores/workoutStore";
+import { useWorkout, WorkoutLog } from "@/stores/workoutStore";
 
 import { convertWeight } from "@/utils/converter";
-import { calculateWorkoutMetrics } from "@/utils/workout";
+import { buildPruneMessage, calculateWorkoutMetrics } from "@/utils/workout";
 
 import { router } from "expo-router";
-import React, { useEffect, useMemo } from "react";
-import { Platform, Text, TextInput, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Modal, Platform, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
@@ -18,6 +18,9 @@ export default function SaveWorkout() {
   /* Local State */
   const lineHeight = Platform.OS === "ios" ? undefined : 28;
   const insets = useSafeAreaInsets();
+
+  const [pendingSave, setPendingSave] = useState<WorkoutLog | null>(null);
+  const [pruneMessage, setPruneMessage] = useState<string | null>(null);
 
   /* Store Related State */
   const {
@@ -69,23 +72,13 @@ export default function SaveWorkout() {
   }, [workout, exerciseTypeMap]);
 
   /* Handlers */
-  const handleConfirmSave = async () => {
-    if (summary.endTime <= summary.startTime) {
-      Toast.show({
-        type: "error",
-        text1: "Invalid time range",
-        text2: "End time must be after start time",
-      });
-      return;
-    }
-
-    const res = await saveWorkout();
+  const commitSave = async (workoutToSave: WorkoutLog) => {
+    const res = await saveWorkout(workoutToSave);
 
     if (!res.success) {
       Toast.show({
         type: "error",
         text1: "Failed to save workout",
-        text2: res.error?.message || "Please try again",
       });
       return;
     }
@@ -99,6 +92,31 @@ export default function SaveWorkout() {
     getAllWorkouts();
     router.dismissAll();
     router.push("/(app)/(tabs)/workout");
+  };
+
+  const handleConfirmSave = async () => {
+    const prepared = useWorkout.getState().prepareWorkoutForSave();
+    if (!prepared) return;
+
+    if (prepared.workout.exercises.length === 0) {
+      Toast.show({
+        type: "error",
+        text1: "No valid exercises",
+        text2: "Add at least one completed set to save.",
+      });
+      return;
+    }
+
+    const message = buildPruneMessage(prepared.pruneReport);
+
+    if (message) {
+      setPendingSave(prepared.workout);
+      setPruneMessage(message);
+      return; // stop here, wait for confirmation
+    }
+
+    // no pruning → save immediately
+    await commitSave(prepared.workout);
   };
 
   /* Effects */
@@ -198,6 +216,45 @@ export default function SaveWorkout() {
           onPress={() => router.back()}
         />
       </View>
+
+      {/* Confirm save modal */}
+      <Modal visible={!!pendingSave} transparent animationType="fade">
+        <View className="flex-1 items-center justify-center bg-black/40">
+          <View className="w-[90%] rounded-xl bg-white p-5 dark:bg-neutral-900">
+            <Text className="text-lg font-semibold text-black dark:text-white">
+              Before saving
+            </Text>
+
+            <Text className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+              {pruneMessage}
+            </Text>
+
+            <View className="mt-4 flex-row gap-3">
+              <Button
+                title="Cancel"
+                variant="secondary"
+                className="w-[50%]"
+                onPress={() => {
+                  setPendingSave(null);
+                  setPruneMessage(null);
+                }}
+              />
+
+              <Button
+                title="Save anyway"
+                variant="primary"
+                className="w-[50%]"
+                onPress={() => {
+                  const workout = pendingSave!;
+                  setPendingSave(null);
+                  setPruneMessage(null);
+                  commitSave(workout);
+                }}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
