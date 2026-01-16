@@ -324,14 +324,21 @@ function SetRow({
                   setRpeModalVisible(true);
                 }}
                 className={`w-12 rounded-full py-1 ${
-                  set.rpe ? "bg-blue-500" : "bg-neutral-200 dark:bg-neutral-700"
-                } ${set.completed ? "bg-white text-black" : ""}`}
+                  set.completed
+                    ? "bg-white"
+                    : set.rpe
+                      ? "bg-blue-500"
+                      : "bg-neutral-200 dark:bg-neutral-700"
+                }`}
               >
                 <Text
+                  numberOfLines={1}
                   className={`text-center text-sm font-semibold ${
-                    set.rpe
-                      ? "text-white"
-                      : "text-neutral-600 dark:text-neutral-300"
+                    set.completed
+                      ? "text-black"
+                      : set.rpe
+                        ? "text-white"
+                        : "text-neutral-600 dark:text-neutral-300"
                   }`}
                 >
                   {set.rpe ? `${set.rpe}` : "RPE"}

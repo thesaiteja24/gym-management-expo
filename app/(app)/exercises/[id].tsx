@@ -39,12 +39,12 @@ export default function ViewExerciseScreen() {
         nativeControls={false}
       />
 
-      <Text className="self-start p-4 text-xl font-semibold text-black dark:text-white">
+      <Text className="self-start p-4 text-lg font-semibold text-black dark:text-white">
         {exercise?.title}
       </Text>
 
       <ScrollView>
-        <Text className="p-4 text-lg font-normal text-black dark:text-white">
+        <Text className="p-4 text-base font-normal text-black dark:text-white">
           {exercise?.instructions}
         </Text>
       </ScrollView>

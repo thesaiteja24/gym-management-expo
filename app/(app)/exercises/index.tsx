@@ -58,7 +58,7 @@ function Chip({ label, onRemove }: ChipProps) {
 /* ───────────────── Screen ───────────────── */
 
 export default function ExercisesScreen() {
-  const lineHeight = Platform.OS === "ios" ? 0 : 30;
+  const lineHeight = Platform.OS === "ios" ? 0 : 20;
   const role = useAuth((s) => s.user?.role);
   const safeAreaInsets = useSafeAreaInsets();
   const params = useLocalSearchParams();

@@ -1,24 +1,59 @@
 import { formatSeconds } from "@/utils/time";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   visible: boolean;
-  remainingSeconds: number;
+  startedAt: number | null;
+  targetSeconds: number;
   onAddTime: (delta: number) => void;
   onSkip: () => void;
+  onComplete?: () => void;
 };
 
 export default function RestTimerSnack({
   visible,
-  remainingSeconds,
+  startedAt,
+  targetSeconds,
   onAddTime,
   onSkip,
+  onComplete,
 }: Props) {
   const isDark = useColorScheme() === "dark";
   const safeAreaInsets = useSafeAreaInsets();
+  const [now, setNow] = useState(Date.now());
+
+  /* 
+     Update "now" every second while visible.
+  */
+  useEffect(() => {
+    if (!visible) return;
+
+    setNow(Date.now()); // sync immediately on mount
+    const id = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, [visible]);
+
+  /*
+    Calculate remaining time.
+  */
+  const elapsed = visible && startedAt ? Math.floor((now - startedAt) / 1000) : 0;
+  const remainingSeconds = Math.max(0, targetSeconds - elapsed);
+
+  /*
+    Notify parent on completion (just once).
+  */
+  useEffect(() => {
+    if (visible && remainingSeconds === 0) {
+      onComplete?.();
+    }
+  }, [visible, remainingSeconds, onComplete]);
 
   if (!visible) return null;
 

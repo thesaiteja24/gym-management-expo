@@ -122,7 +122,7 @@ export function Button({
   const isDisabled = disabled || loading;
 
   const baseClass =
-    "h-11 w-full flex-row items-center justify-center gap-2 rounded-2xl";
+    "min-h-[44px] w-full flex-row items-center justify-center gap-2 rounded-2xl px-4 py-2";
 
   const variantClass: Record<ButtonVariant, string> = {
     primary: "bg-green-600",
@@ -170,6 +170,8 @@ export function Button({
         <>
           {leftIcon}
           <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
             className={[
               "text-lg font-semibold",
               textVariantClass[variant],

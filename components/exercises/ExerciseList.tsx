@@ -40,7 +40,7 @@ const ExerciseRow = React.memo(
     return (
       <TouchableOpacity
         activeOpacity={1}
-        className={`mb-4 h-20 flex-row items-center justify-between px-4 ${
+        className={`mb-2 h-20 flex-row items-center justify-between px-4 ${
           selected && isSelecting
             ? "rounded-l-lg border-l-4 border-l-amber-500"
             : ""
@@ -50,32 +50,32 @@ const ExerciseRow = React.memo(
         delayLongPress={700}
       >
         <View className="w-3/4">
-          <Text className="text-xl font-semibold text-black dark:text-white">
+          <Text className="text-lg font-semibold text-black dark:text-white">
             {item.title}
           </Text>
 
           <View className="mt-1 flex-row gap-4">
             {item.equipment && (
-              <Text className="text-sm font-semibold text-blue-500">
+              <Text className="text-sm text-blue-500">
                 {item.equipment.title}
               </Text>
             )}
 
             {item.primaryMuscleGroup && (
-              <Text className="text-sm font-semibold text-blue-500">
+              <Text className="text-sm text-blue-500">
                 {item.primaryMuscleGroup.title}
               </Text>
             )}
 
-            <Text className="text-sm font-semibold text-red-500">PR</Text>
+            <Text className="text-sm text-red-500">PR</Text>
           </View>
         </View>
 
         <Image
           source={item.thumbnailUrl}
           style={{
-            width: 60,
-            height: 60,
+            width: 48,
+            height: 48,
             borderRadius: 100,
             borderWidth: 1,
             borderColor: "gray",

@@ -7,9 +7,9 @@ import RestTimerSnack from "@/components/workout/RestTimerSnack";
 import { useAuth } from "@/stores/authStore";
 import { Exercise, ExerciseType, useExercise } from "@/stores/exerciseStore";
 import {
-  ExerciseGroupType,
-  useWorkout,
-  WorkoutLogGroup,
+    ExerciseGroupType,
+    useWorkout,
+    WorkoutLogGroup,
 } from "@/stores/workoutStore";
 
 import { convertWeight } from "@/utils/converter";
@@ -21,12 +21,12 @@ import { router, useNavigation } from "expo-router";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Text,
-  useColorScheme,
-  Vibration,
-  View,
+    Keyboard,
+    KeyboardAvoidingView,
+    Text,
+    useColorScheme,
+    Vibration,
+    View,
 } from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -38,7 +38,6 @@ export default function StartWorkout() {
   const safeAreaInsets = useSafeAreaInsets();
   const navigation = useNavigation();
 
-  const [now, setNow] = useState(Date.now());
   const [isDragging, setIsDragging] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   // state for grouping mode (superset/giantset) and selected exercise
@@ -126,11 +125,7 @@ export default function StartWorkout() {
       .filter((item): item is NonNullable<typeof item> => item !== null);
   }, [workout, groupingMode, selectedGroupExerciseIds, exerciseMap]);
 
-  // Remaining rest timer seconds
-  const remainingSeconds =
-    rest.running && rest.startedAt && rest.seconds != null
-      ? Math.max(0, rest.seconds - Math.floor((now - rest.startedAt) / 1000))
-      : 0;
+
 
   /* Helpers */
   function getSetValidationStats() {
@@ -246,22 +241,7 @@ export default function StartWorkout() {
     if (!workout) startWorkout();
   }, []);
 
-  // Rest Timer Effect
-  useEffect(() => {
-    if (!rest.running) return;
 
-    setNow(Date.now());
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [rest.running, rest.startedAt]);
-
-  // Rest Timer Completion Effect
-  useEffect(() => {
-    if (rest.running && remainingSeconds === 0) {
-      Vibration.vibrate([0, 500, 200, 500, 200, 500]);
-      stopRestTimer();
-    }
-  }, [rest.running, remainingSeconds]);
 
   // Set Completion Effect - Start/Stop rest timer based on set completion
   useEffect(() => {
@@ -481,9 +461,14 @@ export default function StartWorkout() {
       </KeyboardAvoidingView>
       <RestTimerSnack
         visible={rest.running}
-        remainingSeconds={remainingSeconds}
+        startedAt={rest.startedAt}
+        targetSeconds={rest.seconds ?? 0}
         onAddTime={adjustRestTimer}
         onSkip={stopRestTimer}
+        onComplete={() => {
+          Vibration.vibrate([0, 500, 200, 500, 200, 500]);
+          stopRestTimer();
+        }}
       />
 
       {/* Superset and Giantset Modal */}
