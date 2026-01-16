@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { useRef } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 
@@ -16,20 +17,32 @@ export function DeleteConfirmModal({
   onCancel,
   onConfirm,
 }: Props) {
+  const colors = useThemeColor();
   const lockedRef = useRef(false);
 
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View className="flex-1 items-center justify-center bg-black/60 px-6">
         <View
-          className="w-full rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-black dark:shadow-black"
-          style={{ elevation: 8 }}
+          className="w-full rounded-2xl border p-6 shadow-xl"
+          style={{
+            backgroundColor: colors.background,
+            borderColor: colors.neutral[200],
+            shadowColor: "#000",
+            elevation: 8,
+          }}
         >
-          <Text className="text-center text-lg font-bold text-black dark:text-white">
+          <Text
+            className="text-center text-lg font-bold"
+            style={{ color: colors.text }}
+          >
             {title}
           </Text>
 
-          <Text className="mt-3 text-center text-sm text-gray-600 dark:text-gray-300">
+          <Text
+            className="mt-3 text-center text-sm"
+            style={{ color: colors.neutral[500] }}
+          >
             {description}
           </Text>
 
@@ -37,9 +50,13 @@ export function DeleteConfirmModal({
             {/* Cancel */}
             <Pressable
               onPress={onCancel}
-              className="flex-1 rounded-xl border border-gray-300 py-3 dark:border-gray-700"
+              className="flex-1 rounded-xl border py-3"
+              style={{ borderColor: colors.neutral[200] }}
             >
-              <Text className="text-center text-base text-black dark:text-white">
+              <Text
+                className="text-center text-base"
+                style={{ color: colors.text }}
+              >
                 Cancel
               </Text>
             </Pressable>
@@ -51,7 +68,8 @@ export function DeleteConfirmModal({
                 lockedRef.current = true;
                 await onConfirm();
               }}
-              className="flex-1 rounded-xl bg-red-600 py-3"
+              className="flex-1 rounded-xl py-3"
+              style={{ backgroundColor: colors.danger }}
             >
               <Text className="text-center text-base font-semibold text-white">
                 Delete

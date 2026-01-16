@@ -1,5 +1,6 @@
 import { OtaUpdateModal } from "@/components/auth/OtaUpdateModal";
 import { CustomToast } from "@/components/ui/CustomToast";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack, useSegments } from "expo-router";
@@ -23,6 +24,7 @@ SplashScreen.preventAutoHideAsync();
 type UpdateState = "idle" | "downloading" | "restarting";
 
 export default function RootLayout() {
+  const colors = useThemeColor();
   const theme = useColorScheme();
   const segments = useSegments();
 
@@ -84,7 +86,7 @@ export default function RootLayout() {
   if (!fontsLoaded || !hasRestored || !otaChecked) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
@@ -94,7 +96,7 @@ export default function RootLayout() {
     <GestureHandlerRootView
       style={{
         flex: 1,
-        backgroundColor: theme === "dark" ? "#000000" : "#ffffff",
+        backgroundColor: colors.background,
       }}
     >
       <>
@@ -102,7 +104,7 @@ export default function RootLayout() {
           screenOptions={{
             headerShown: false,
             contentStyle: {
-              backgroundColor: theme === "dark" ? "#000000" : "#ffffff",
+              backgroundColor: colors.background,
             },
           }}
         >
@@ -110,10 +112,9 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(app)" />
         </Stack>
-
         <StatusBar
           barStyle={theme === "dark" ? "light-content" : "dark-content"}
-          backgroundColor={theme === "dark" ? "#000000" : "#ffffff"}
+          backgroundColor={colors.background}
         />
 
         <Toast

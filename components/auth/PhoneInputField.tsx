@@ -3,18 +3,18 @@ import { COUNTRIES } from "@/constants/countries";
 
 import React, { useMemo, useState } from "react";
 import {
-  FlatList,
-  Modal,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    FlatList,
+    Modal,
+    Platform,
+    Pressable,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  ChevronDownIcon,
-  MagnifyingGlassIcon,
+    ChevronDownIcon,
+    MagnifyingGlassIcon,
 } from "react-native-heroicons/outline";
 
 // helper: convert ISO country code to emoji flag
@@ -27,6 +27,8 @@ function countryCodeToFlag(iso: string) {
     .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
     .join("");
 }
+
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 type Props = {
   value?: string;
@@ -45,6 +47,7 @@ export default function PhoneInputField({
   initialCountry = "IN",
   onCountryChange,
 }: Props) {
+  const colors = useThemeColor();
   const [modalVisible, setModalVisible] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Country>(
@@ -70,7 +73,13 @@ export default function PhoneInputField({
 
   return (
     <View style={style} className="w-full">
-      <View className="flex-row items-center overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-black">
+      <View
+        className="flex-row items-center overflow-hidden rounded-lg border"
+        style={{
+          backgroundColor: colors.background,
+          borderColor: colors.neutral[200], // or a specific border token
+        }}
+      >
         {/* Country selector */}
         <TouchableOpacity
           activeOpacity={0.8}
@@ -80,22 +89,27 @@ export default function PhoneInputField({
           <Text className="mr-2 text-lg">
             {countryCodeToFlag(selected.code)}
           </Text>
-          <Text className="mr-1 text-base text-black dark:text-white">
+          <Text
+            className="mr-1 text-base"
+            style={{ color: colors.text }}
+          >
             {selected.dial_code}
           </Text>
           {/* show chevron; if react-native-heroicons not installed, replace with simple text */}
           {Platform.OS === "web" ? (
-            <Text className="ml-1 text-black dark:text-white">▾</Text>
+            <Text className="ml-1" style={{ color: colors.text }}>
+              ▾
+            </Text>
           ) : (
-            <ChevronDownIcon
-              size={18}
-              color={Platform.OS ? "#111827" : "#111827"}
-            />
+            <ChevronDownIcon size={18} color={colors.text} />
           )}
         </TouchableOpacity>
 
         {/* Divider */}
-        <View className="h-8 w-px bg-gray-200 dark:bg-gray-800" />
+        <View
+          className="h-8 w-px"
+          style={{ backgroundColor: colors.neutral[200] }}
+        />
 
         {/* Phone input */}
         <TextInput
@@ -103,8 +117,9 @@ export default function PhoneInputField({
           onChangeText={onChangeText}
           keyboardType="phone-pad"
           placeholder={`${selected.dial_code} 98765 43210`}
-          placeholderTextColor="#9CA3AF"
-          className="flex-1 px-4 py-3 text-black dark:text-white"
+          placeholderTextColor={colors.neutral[500]}
+          className="flex-1 px-4 py-3"
+          style={{ color: colors.text }}
           {...inputProps}
         />
       </View>
@@ -120,22 +135,32 @@ export default function PhoneInputField({
           className="flex-1 justify-end bg-black/40"
           onPress={() => setModalVisible(false)}
         >
-          <Pressable className="max-h-[70%] rounded-t-2xl bg-white p-4 dark:bg-black">
+          <Pressable
+            className="max-h-[70%] rounded-t-2xl p-4"
+            style={{ backgroundColor: colors.background }} // Ensure modal bg is correct
+          >
             {/* Search */}
-            <View className="mb-4 flex-row items-center rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-800">
+            <View
+              className="mb-4 flex-row items-center rounded-lg border px-3 py-2"
+              style={{
+                borderColor: colors.neutral[200],
+                backgroundColor: colors.background,
+              }}
+            >
               {/* optional icon */}
               {Platform.OS === "web" ? (
                 <Text className="mr-2">🔍</Text>
               ) : (
-                <MagnifyingGlassIcon size={18} color="#111827" />
+                <MagnifyingGlassIcon size={18} color={colors.text} />
               )}
               <TextInput
                 autoFocus
                 value={query}
                 onChangeText={setQuery}
                 placeholder="Search"
-                placeholderTextColor="#9CA3AF"
-                className="flex-1 text-black dark:text-white"
+                placeholderTextColor={colors.neutral[500]}
+                className="flex-1"
+                style={{ color: colors.text }}
               />
             </View>
 
@@ -152,17 +177,20 @@ export default function PhoneInputField({
                     <Text className="mr-3 text-xl">
                       {countryCodeToFlag(item.code)}
                     </Text>
-                    <Text className="text-base text-black dark:text-white">
+                    <Text className="text-base" style={{ color: colors.text }}>
                       {item.name}
                     </Text>
                   </View>
-                  <Text className="text-base text-black dark:text-white">
+                  <Text className="text-base" style={{ color: colors.text }}>
                     {item.dial_code}
                   </Text>
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => (
-                <View className="h-px bg-gray-100 dark:bg-gray-900" />
+                <View
+                  className="h-px"
+                  style={{ backgroundColor: colors.neutral[200] }}
+                />
               )}
             />
           </Pressable>

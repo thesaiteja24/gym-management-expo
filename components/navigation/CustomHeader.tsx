@@ -1,11 +1,12 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-  Platform,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    Platform,
+    Text,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -35,15 +36,22 @@ export default function CustomHeader({
 }: CustomHeaderProps) {
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === "dark";
+  const colors = useThemeColor();
   const headerHeight =
     Platform.OS === "ios" ? 44 + insets.top : 56 + insets.top;
 
-  const baseIconColor = iconColor ? iconColor : isDark ? "white" : "black";
+  const baseIconColor = iconColor ? iconColor : colors.icon;
 
   return (
     <View
-      className="flex flex-row w-full items-center justify-between px-4 bg-white dark:bg-black border-b border-b-[#ddd] dark:border-b-[#333]"
-      style={{ height: headerHeight, paddingTop: insets.top }}
+      className="flex flex-row w-full items-center justify-between px-4"
+      style={{
+        height: headerHeight,
+        paddingTop: insets.top,
+        backgroundColor: colors.background,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutral[200], // or a specific border token if available, defaulting to neutral-200 equivalent
+      }}
     >
       {/* Left icon */}
       {leftIcon && (
@@ -59,7 +67,8 @@ export default function CustomHeader({
           style={{ marginTop: insets.top }}
         >
           <Text
-            className="font-semibold text-xl text-black dark:text-white"
+            className="font-semibold text-xl"
+            style={{ color: colors.text }}
             numberOfLines={1}
           >
             {title}
@@ -67,7 +76,8 @@ export default function CustomHeader({
         </View>
       ) : (
         <Text
-          className="font-semibold text-xl text-black dark:text-white"
+          className="font-semibold text-xl"
+          style={{ color: colors.text }}
           numberOfLines={1}
         >
           {title}

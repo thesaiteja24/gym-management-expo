@@ -37,7 +37,7 @@ export default function WorkoutCard({
             {timeAgo}
           </Text>
 
-          <Text className="w-1/3 text-base font-semibold text-blue-500">
+          <Text className="w-1/3 text-base font-semibold text-primary">
             <Text className="text-base font-semibold text-black dark:text-white">
               Duration:
             </Text>{" "}
@@ -69,7 +69,7 @@ export default function WorkoutCard({
       ))}
 
       {remaining > 0 && (
-        <Text className="mt-1 text-center text-sm text-blue-500">
+        <Text className="mt-1 text-center text-sm text-primary">
           See {remaining} more exercise{remaining > 1 ? "s" : ""}
         </Text>
       )}

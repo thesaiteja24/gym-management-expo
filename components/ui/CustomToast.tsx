@@ -1,4 +1,5 @@
-import { StyleSheet, Text, useColorScheme, View } from "react-native";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function CustomToast({
@@ -10,14 +11,14 @@ export function CustomToast({
   text2?: string;
   type: "success" | "error" | "info";
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const colors = useThemeColor();
   const insets = useSafeAreaInsets();
 
+  // Map types to theme colors if available, or fallback to standard semantic colors
   const borderColors = {
-    success: "#4CAF50", // green
-    error: "#FF3B30", // red
-    info: "#007AFF", // blue
+    success: colors.success,
+    error: colors.danger,
+    info: colors.primary,
   };
 
   return (
@@ -25,20 +26,20 @@ export function CustomToast({
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? "#1c1c1e" : "#ffffff",
+          backgroundColor: colors.background,
           borderLeftColor: borderColors[type],
-          shadowColor: isDark ? "#ffffff" : "#000000",
+          shadowColor: "#000", // Shadow usually stays black, or use colors.shadow if exists
           marginTop: insets.top,
         },
       ]}
     >
       {text1 && (
-        <Text style={[styles.title, { color: isDark ? "white" : "black" }]}>
+        <Text style={[styles.title, { color: colors.text }]}>
           {text1}
         </Text>
       )}
       {text2 && (
-        <Text style={[styles.subtitle, { color: isDark ? "white" : "black" }]}>
+        <Text style={[styles.subtitle, { color: colors.text }]}>
           {text2}
         </Text>
       )}

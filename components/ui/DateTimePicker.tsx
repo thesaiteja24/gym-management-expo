@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -140,6 +141,7 @@ export type DateTimePickerProps =
  */
 export default function DateTimePicker(props: DateTimePickerProps) {
   const isDark = useColorScheme() === "dark";
+  const colors = useThemeColor();
 
   const { value, onUpdate, dateOnly = false, is24Hour } = props;
 
@@ -215,7 +217,8 @@ export default function DateTimePicker(props: DateTimePickerProps) {
     <>
       <Pressable onPress={open}>
         <Text
-          className={textClassName ?? "text-base font-medium text-blue-500"}
+          className={textClassName ?? "text-base font-medium"}
+          style={!textClassName ? { color: colors.primary } : undefined}
         >
           {displayValue}
         </Text>
@@ -230,8 +233,14 @@ export default function DateTimePicker(props: DateTimePickerProps) {
         >
           <Pressable className="absolute inset-0" onPress={close} />
 
-          <View className="rounded-t-3xl bg-white p-6 dark:bg-[#111]">
-            <Text className="mb-4 text-center text-xl font-bold text-black dark:text-white">
+          <View
+            className="rounded-t-3xl p-6"
+            style={{ backgroundColor: colors.background }}
+          >
+            <Text
+              className="mb-4 text-center text-xl font-bold"
+              style={{ color: colors.text }}
+            >
               {title}
             </Text>
 
@@ -253,16 +262,18 @@ export default function DateTimePicker(props: DateTimePickerProps) {
             <View className="mt-6 flex-row gap-4">
               <TouchableOpacity
                 onPress={close}
-                className="h-12 flex-1 items-center justify-center rounded-2xl border border-neutral-300 dark:border-neutral-700"
+                className="h-12 flex-1 items-center justify-center rounded-2xl border"
+                style={{ borderColor: colors.neutral[200] }}
               >
-                <Text className="text-lg text-black dark:text-white">
+                <Text className="text-lg" style={{ color: colors.text }}>
                   Cancel
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={confirm}
-                className="h-12 flex-1 items-center justify-center rounded-2xl bg-blue-600"
+                className="h-12 flex-1 items-center justify-center rounded-2xl"
+                style={{ backgroundColor: colors.primary }}
               >
                 <Text className="text-lg font-semibold text-white">
                   Confirm

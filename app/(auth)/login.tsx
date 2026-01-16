@@ -1,19 +1,21 @@
 import PhoneInputField from "@/components/auth/PhoneInputField";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  Keyboard,
-  KeyboardAvoidingView,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Keyboard,
+    KeyboardAvoidingView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function Login() {
+  const colors = useThemeColor();
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState({
     name: "India",
@@ -54,10 +56,8 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} className="bg-white dark:bg-black">
-      <View
-        style={{ flex: 2, paddingHorizontal: 24, justifyContent: "center" }}
-      >
+    <SafeAreaView className="flex-1 bg-white dark:bg-black">
+      <View className="flex-[2] justify-center px-6">
         <View className="flex flex-row items-center gap-2">
           <Text className="mb-2 text-3xl font-extrabold text-black dark:text-white">
             Welcome to
@@ -77,9 +77,7 @@ export default function Login() {
         </Text>
       </View>
 
-      <View
-        style={{ flex: 2, paddingHorizontal: 24, justifyContent: "center" }}
-      >
+      <View className="flex-[2] justify-center px-6">
         <Text className="mb-4 text-sm text-gray-400 dark:text-gray-500">
           Enter your mobile number to continue.
         </Text>
@@ -94,19 +92,14 @@ export default function Login() {
 
       <KeyboardAvoidingView
         behavior="position"
-        style={{
-          flex: 4,
-          paddingHorizontal: 24,
-          justifyContent: "flex-end",
-          paddingBottom: 24,
-        }}
+        className="flex-[4] justify-end px-6 pb-6"
       >
         <TouchableOpacity
-          className="w-full items-center rounded-full bg-blue-600 py-2"
+          className="w-full items-center rounded-full bg-primary py-2"
           onPress={onContinue}
         >
           {isLoading ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={colors.white} />
           ) : (
             <Text className="text-lg font-semibold text-white">Continue</Text>
           )}

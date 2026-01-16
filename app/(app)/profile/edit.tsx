@@ -1,29 +1,30 @@
 import EditableAvatar from "@/components/EditableAvatar";
 import DateTimePicker from "@/components/ui/DateTimePicker";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import { useNavigation } from "expo-router";
 import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 import {
-  Keyboard,
-  Platform,
-  Text,
-  TextInput,
-  useColorScheme,
-  View,
+    Keyboard,
+    Platform,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
+  const colors = useThemeColor();
 
   // global state (stores)
   const user = useAuth((s) => s.user);
@@ -138,11 +139,11 @@ export default function EditProfileScreen() {
           name: "checkmark-done",
           onPress: onSave,
           disabled: !isDirty || isLoading,
-          color: "green",
+          color: colors.primary,
         },
       ],
     });
-  }, [navigation, isDirty, onSave, user, isLoading]);
+  }, [navigation, isDirty, onSave, user, isLoading, colors.primary]);
 
   // profile pic picker
   const onPick = async (uri: string | null) => {
@@ -215,10 +216,8 @@ export default function EditProfileScreen() {
             onChangeText={setFirstName}
             editable={!isLoading}
             placeholder="Enter Name..."
-            className="text-lg text-blue-500"
-            placeholderTextColor={
-              useColorScheme() === "dark" ? "#a3a3a3" : "#737373"
-            }
+            className="text-lg text-primary"
+            placeholderTextColor={colors.neutral[500]}
             style={{ lineHeight }}
           />
         </View>
@@ -233,10 +232,8 @@ export default function EditProfileScreen() {
             onChangeText={setLastName}
             editable={!isLoading}
             placeholder="Enter Surname..."
-            className="text-lg text-blue-500"
-            placeholderTextColor={
-              useColorScheme() === "dark" ? "#a3a3a3" : "#737373"
-            }
+            className="text-lg text-primary"
+            placeholderTextColor={colors.neutral[500]}
             style={{ lineHeight }}
           />
         </View>
@@ -263,16 +260,14 @@ export default function EditProfileScreen() {
             <TextInput
               value={height?.toString() ?? ""}
               placeholder="--"
-              placeholderTextColor={
-                useColorScheme() === "dark" ? "#555" : "#aaa"
-              }
+              placeholderTextColor={colors.neutral[500]}
               keyboardType="numeric"
               onChangeText={(text) =>
                 // @ts-ignore
                 setHeight(text)
               }
               editable={!isLoading}
-              className="text-lg text-blue-500"
+              className="text-lg text-primary"
               style={{ lineHeight }}
             />
           </View>
@@ -285,16 +280,14 @@ export default function EditProfileScreen() {
             <TextInput
               value={weight?.toString() ?? ""}
               placeholder="--"
-              placeholderTextColor={
-                useColorScheme() === "dark" ? "#555" : "#aaa"
-              }
+              placeholderTextColor={colors.neutral[500]}
               keyboardType="decimal-pad"
               onChangeText={(text) =>
                 // @ts-ignore
                 setWeight(text)
               }
               editable={!isLoading}
-              className="text-lg text-blue-500"
+              className="text-lg text-primary"
               style={{ lineHeight }}
             />
           </View>

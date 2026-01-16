@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { formatSeconds } from "@/utils/time";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
@@ -86,6 +87,7 @@ export type ElapsedTimeProps =
  */
 export function ElapsedTime(props: ElapsedTimeProps) {
   const [now, setNow] = useState(Date.now());
+  const colors = useThemeColor();
 
   const isWallClock = "startTime" in props;
   const runningSince = !isWallClock ? props.runningSince : null;
@@ -121,8 +123,9 @@ export function ElapsedTime(props: ElapsedTimeProps) {
     <Text
       className={
         props.textClassName ??
-        "text-lg font-semibold text-black dark:text-white"
+        "text-lg font-semibold"
       }
+      style={!props.textClassName ? { color: colors.text } : undefined}
     >
       {formatSeconds(totalSeconds)}
     </Text>

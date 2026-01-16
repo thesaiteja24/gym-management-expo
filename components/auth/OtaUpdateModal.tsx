@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { useRef } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 
@@ -12,6 +13,7 @@ type Props = {
 
 export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
   const isBusy = state !== "idle";
+  const colors = useThemeColor();
 
   // 🔒 Immediate synchronous lock (no re-render needed)
   const restartLockedRef = useRef(false);
@@ -20,26 +22,26 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
     <Modal transparent visible={visible} animationType="fade">
       <View className="flex-1 bg-black/60 items-center justify-center px-6">
         <View
-          className="
-            w-full
-            rounded-2xl
-            bg-white
-            dark:bg-black
-            p-6
-            border
-            border-gray-200
-            dark:border-gray-800
-            shadow-xl
-            dark:shadow-black
-          "
-          style={{ elevation: 8 }}
+          className="w-full rounded-2xl p-6 border shadow-xl"
+          style={{
+            backgroundColor: colors.background,
+            borderColor: colors.neutral[200],
+            shadowColor: "#000",
+            elevation: 8,
+          }}
           pointerEvents={isBusy ? "none" : "auto"}
         >
-          <Text className="text-xl font-bold text-center text-black dark:text-white">
+          <Text
+            className="text-xl font-bold text-center"
+            style={{ color: colors.text }}
+          >
             Update available
           </Text>
 
-          <Text className="mt-3 text-center text-gray-600 dark:text-gray-300">
+          <Text
+            className="mt-3 text-center"
+            style={{ color: colors.neutral[500] }}
+          >
             {state === "idle" &&
               "A new version of Pump is ready. Restart to apply it."}
             {state === "downloading" && "Downloading update…"}
@@ -48,11 +50,13 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
 
           {/* Progress bar */}
           {state !== "idle" && (
-            <View className="mt-5 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
+            <View
+              className="mt-5 h-2 w-full rounded-full overflow-hidden"
+              style={{ backgroundColor: colors.neutral[200] }}
+            >
               <View
-                className={`h-full bg-black dark:bg-white ${
-                  state === "downloading" ? "w-2/3" : "w-full"
-                }`}
+                className={`h-full ${state === "downloading" ? "w-2/3" : "w-full"}`}
+                style={{ backgroundColor: colors.text }}
               />
             </View>
           )}
@@ -62,13 +66,15 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
             <Pressable
               disabled={isBusy}
               onPress={onLater}
-              className={`flex-1 py-3 rounded-xl border ${
-                isBusy
-                  ? "opacity-40 border-gray-300"
-                  : "border-gray-300 dark:border-gray-700"
-              }`}
+              className={`flex-1 py-3 rounded-xl border ${isBusy ? "opacity-40" : ""}`}
+              style={{
+                borderColor: colors.neutral[200],
+              }}
             >
-              <Text className="text-center text-black dark:text-white">
+              <Text
+                className="text-center"
+                style={{ color: colors.text }}
+              >
                 Later
               </Text>
             </Pressable>
@@ -88,14 +94,20 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
                   restartLockedRef.current = false;
                 }
               }}
-              className={`flex-1 py-3 rounded-xl ${
-                isBusy ? "bg-gray-400" : "bg-black dark:bg-white"
-              }`}
+              className={`flex-1 py-3 rounded-xl ${isBusy ? "bg-gray-400" : ""}`}
+              style={
+                !isBusy
+                  ? {
+                      backgroundColor: colors.text, // Invert bg for primary button effect if using text color, or use colors.primary
+                    }
+                  : undefined
+              }
             >
               <Text
-                className={`text-center font-semibold ${
-                  isBusy ? "text-white" : "text-white dark:text-black"
-                }`}
+                className="text-center font-semibold"
+                style={{
+                  color: !isBusy ? colors.background : "white", // Text color should be background color (inverted)
+                }}
               >
                 Restart
               </Text>
