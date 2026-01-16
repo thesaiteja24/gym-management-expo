@@ -1,19 +1,22 @@
+import { checkNetworkStatus } from "@/hooks/useNetworkStatus";
+import { enqueue } from "@/lib/offlineQueue";
 import { createWorkoutService } from "@/services/workoutServices";
 import {
-    finalizeSetTimer,
-    isValidCompletedSet,
-    serializeWorkoutForApi,
+  finalizeSetTimer,
+  isValidCompletedSet,
+  serializeWorkoutForApi,
 } from "@/utils/workout";
 import * as Crypto from "expo-crypto";
 import { StateCreator } from "zustand";
+import { useAuth } from "../authStore";
 import { useExercise } from "../exerciseStore";
 import {
-    ExerciseGroupType,
-    WorkoutLog,
-    WorkoutLogExercise,
-    WorkoutLogSet,
-    WorkoutPruneReport,
-    WorkoutState,
+  ExerciseGroupType,
+  WorkoutLog,
+  WorkoutLogExercise,
+  WorkoutLogSet,
+  WorkoutPruneReport,
+  WorkoutState,
 } from "./types";
 
 export interface ActiveWorkoutSlice {
@@ -180,12 +183,38 @@ export const createActiveWorkoutSlice: StateCreator<
 
     const payload = serializeWorkoutForApi(prepared);
 
+    // Add clientId for idempotency
+    const clientId = Crypto.randomUUID();
+    const payloadWithClientId = { ...payload, clientId };
+
     try {
+      // Check network status
+      const { isConnected, isInternetReachable } = await checkNetworkStatus();
+      const isOnline = isConnected && isInternetReachable !== false;
+
+      if (!isOnline) {
+        // Queue for later sync
+        const userId = useAuth.getState().user?.userId;
+        if (userId) {
+          enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
+        }
+        set({ workoutSaving: false });
+        return { success: true, queued: true };
+      }
+
+      // Online - send directly
       // @ts-ignore
-      await createWorkoutService(payload);
+      await createWorkoutService(payloadWithClientId);
       set({ workoutSaving: false });
       return { success: true };
     } catch (error) {
+      // If network error, queue the mutation
+      const userId = useAuth.getState().user?.userId;
+      if (userId) {
+        enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
+        set({ workoutSaving: false });
+        return { success: true, queued: true };
+      }
       set({ workoutSaving: false });
       return { success: false, error };
     }

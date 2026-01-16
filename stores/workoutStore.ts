@@ -1,4 +1,6 @@
+import { zustandStorage } from "@/lib/storage";
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { createActiveWorkoutSlice } from "./workout/activeWorkoutSlice";
 import { createHistorySlice } from "./workout/historySlice";
 import { createRestTimerSlice } from "./workout/restTimerSlice";
@@ -11,6 +13,7 @@ const initialState = {
   workoutSaving: false,
   workout: null,
   workoutHistory: [],
+  lastSyncedAt: null as number | null,
 
   rest: {
     seconds: null,
@@ -19,13 +22,25 @@ const initialState = {
   },
 };
 
-export const useWorkout = create<WorkoutState>()((...a) => ({
-  ...createHistorySlice(...a),
-  ...createActiveWorkoutSlice(...a),
-  ...createRestTimerSlice(...a),
+export const useWorkout = create<WorkoutState>()(
+  persist(
+    (...a) => ({
+      ...createHistorySlice(...a),
+      ...createActiveWorkoutSlice(...a),
+      ...createRestTimerSlice(...a),
 
-  resetState: () => {
-    const [set] = a;
-    set(initialState);
-  },
-}));
+      resetState: () => {
+        const [set] = a;
+        set(initialState);
+      },
+    }),
+    {
+      name: "workout-store",
+      storage: zustandStorage,
+      partialize: (state) => ({
+        workout: state.workout,
+        workoutHistory: state.workoutHistory,
+      }),
+    },
+  ),
+);

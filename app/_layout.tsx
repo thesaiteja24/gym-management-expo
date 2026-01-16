@@ -1,5 +1,7 @@
 import { OtaUpdateModal } from "@/components/auth/OtaUpdateModal";
 import { CustomToast } from "@/components/ui/CustomToast";
+import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
+import { useSyncQueue } from "@/hooks/useSyncQueue";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
 import { useFonts } from "expo-font";
@@ -43,6 +45,9 @@ export default function RootLayout() {
   const [updateState, setUpdateState] = useState<UpdateState>("idle");
 
   const isAuthRoute = segments[0] === "(auth)";
+
+  // ───── Offline sync ─────
+  useSyncQueue();
 
   // 1️⃣ Restore auth
   useEffect(() => {
@@ -147,6 +152,9 @@ export default function RootLayout() {
             }
           }}
         />
+
+        {/* Offline Indicator */}
+        <OfflineIndicator />
       </>
     </GestureHandlerRootView>
   );

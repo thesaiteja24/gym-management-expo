@@ -5,7 +5,6 @@ import { useEquipment } from "./equipmentStore";
 import { useExercise } from "./exerciseStore";
 import { useMuscleGroup } from "./muscleGroupStore";
 import { LengthUnits, WeightUnits } from "./userStore";
-import { useWorkout } from "./workoutStore";
 
 type User = {
   userId?: string;
@@ -161,11 +160,12 @@ export const useAuth = create<AuthState>((set, get) => ({
         isLoading: false,
       });
 
-      // ✅ Correct: call Zustand stores WITHOUT hooks
+      // Reset reference data stores but PRESERVE workoutStore
+      // to keep offline queue intact across logout/login cycles
       useEquipment.getState().resetState();
       useMuscleGroup.getState().resetState();
-      useWorkout.getState().resetState();
       useExercise.getState().resetState();
+      // NOTE: workoutStore is NOT reset to preserve pending offline mutations
     }
   },
 }));
