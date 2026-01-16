@@ -27,26 +27,26 @@ export default function WorkoutCard({
       className="mb-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
     >
       {/* Header */}
-      <View className="mb-3 flex-row justify-between">
-        <View className="w-2/3">
-          <Text className="line-clamp-1 text-xl font-semibold text-black dark:text-white">
-            {workout.title || "Workout"}
-          </Text>
+      <View className="mb-3 flex-col justify-between gap-2">
+        <Text className="line-clamp-1 text-lg font-semibold text-black dark:text-white">
+          {workout.title || "Workout"}
+        </Text>
 
+        <View className="flex-row items-center justify-between gap-4">
           <Text className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
             {timeAgo}
           </Text>
-        </View>
 
-        <Text className="w-1/3 text-lg font-semibold text-blue-500">
-          <Text className="text-lg font-semibold text-black dark:text-white">
-            Duration:
-          </Text>{" "}
-          {duration}
-        </Text>
+          <Text className="w-1/3 text-base font-semibold text-blue-500">
+            <Text className="text-base font-semibold text-black dark:text-white">
+              Duration:
+            </Text>{" "}
+            {duration}
+          </Text>
+        </View>
       </View>
 
-      <Text className="mb-3 text-lg font-medium text-neutral-600 dark:text-neutral-400">
+      <Text className="mb-3 text-base font-medium text-neutral-600 dark:text-neutral-400">
         Volume: {volume} kg
       </Text>
 
@@ -61,7 +61,7 @@ export default function WorkoutCard({
 
           <Text
             numberOfLines={1}
-            className="flex-1 text-lg font-semibold text-black dark:text-white"
+            className="flex-1 text-base font-semibold text-black dark:text-white"
           >
             {ex.sets.length} sets of {ex.exercise.title}
           </Text>
@@ -69,7 +69,7 @@ export default function WorkoutCard({
       ))}
 
       {remaining > 0 && (
-        <Text className="mt-1 text-center text-lg text-blue-500">
+        <Text className="mt-1 text-center text-sm text-blue-500">
           See {remaining} more exercise{remaining > 1 ? "s" : ""}
         </Text>
       )}

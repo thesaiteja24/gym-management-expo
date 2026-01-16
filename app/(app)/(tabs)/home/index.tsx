@@ -51,7 +51,7 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-white px-4 pt-4 dark:bg-black">
-      <Text className="mb-4 text-xl font-semibold text-black dark:text-white">
+      <Text className="mb-4 text-lg font-semibold text-black dark:text-white">
         Your Workouts
       </Text>
 
@@ -64,7 +64,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           !workoutLoading ? (
-            <Text className="mt-12 text-center text-neutral-500 dark:text-neutral-400">
+            <Text className="mt-12 text-center text-base text-neutral-500 dark:text-neutral-400">
               No workouts logged yet
             </Text>
           ) : null

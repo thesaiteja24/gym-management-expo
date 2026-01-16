@@ -199,7 +199,7 @@ function SetRow({
       onPress={handleDelete}
       className="items-end justify-center rounded-md bg-red-600 px-6"
     >
-      <Ionicons name="trash" size={24} color="white" />
+      <Ionicons name="trash" size={22} color="white" />
     </TouchableOpacity>
   );
 
@@ -241,7 +241,7 @@ function SetRow({
             entering={FadeIn.duration(1000)}
             className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-green-600 px-4"
           >
-            <Ionicons name="checkmark-circle" size={24} color="white" />
+            <Ionicons name="checkmark-circle" size={22} color="white" />
           </Animated.View>
 
           {/* Right background */}
@@ -249,21 +249,21 @@ function SetRow({
             entering={FadeIn.duration(1000)}
             className="absolute inset-y-0 right-0 w-20 items-end justify-center bg-red-600 px-4"
           >
-            <Ionicons name="trash" size={20} color="white" />
+            <Ionicons name="trash" size={22} color="white" />
           </Animated.View>
 
           {/* Foreground */}
           <Animated.View
             entering={FadeIn}
             exiting={FadeOut.duration(400)}
-            style={[hintStyle, { height: 48 }]}
+            style={[hintStyle, { height: 44 }]}
             className={`flex-row items-center rounded-md ${
               set.completed
                 ? "bg-green-600 dark:bg-green-600"
                 : "bg-white dark:bg-black"
             }`}
           >
-            <View className="basis-[30%] flex-row items-center justify-evenly">
+            <View className="basis-[35%] flex-row items-center justify-evenly">
               {/* Set number */}
               <TouchableOpacity
                 onPress={() => {
@@ -273,7 +273,7 @@ function SetRow({
                 className="items-center"
               >
                 <Text
-                  className={`text-center text-lg font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
+                  className={`text-center text-lg font-semibold ${getSetTypeColor(set, set.setType, set.completed).style}`}
                 >
                   {getSetTypeColor(set, set.setType, set.completed).value}
                 </Text>
@@ -281,7 +281,7 @@ function SetRow({
 
               {/* Previous */}
               <Text
-                className={`text-center ${
+                className={`text-center text-lg font-semibold ${
                   set.completed ? "text-white" : "text-blue-500"
                 }`}
               >
@@ -290,12 +290,12 @@ function SetRow({
             </View>
 
             {/* Rest and Note */}
-            <View className="basis-[40%] flex-row items-center justify-evenly">
+            <View className="basis-[35%] flex-row items-center justify-between">
               {/* Rest */}
               <TouchableOpacity onPress={onOpenRestPicker}>
                 <MaterialCommunityIcons
                   name="timer-outline"
-                  size={24}
+                  size={22}
                   color={restColor}
                 />
               </TouchableOpacity>
@@ -312,7 +312,7 @@ function SetRow({
                   name={
                     set.note || isNoteOpen ? "note-text" : "note-text-outline"
                   }
-                  size={20}
+                  size={22}
                   color={set.completed ? "white" : "#6b7280"}
                 />
               </TouchableOpacity>
@@ -323,12 +323,12 @@ function SetRow({
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setRpeModalVisible(true);
                 }}
-                className={`rounded-full px-2 py-1 ${
+                className={`w-12 rounded-full py-1 ${
                   set.rpe ? "bg-blue-500" : "bg-neutral-200 dark:bg-neutral-700"
-                }`}
+                } ${set.completed ? "bg-white text-black" : ""}`}
               >
                 <Text
-                  className={`text-sm font-semibold ${
+                  className={`text-center text-sm font-semibold ${
                     set.rpe
                       ? "text-white"
                       : "text-neutral-600 dark:text-neutral-300"
@@ -362,9 +362,9 @@ function SetRow({
                   }}
                   onChangeText={setWeightText}
                   placeholder="0"
-                  placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+                  placeholderTextColor={set.completed ? "#ffffff" : "#737373"}
                   style={{ lineHeight }}
-                  className={`text-center text-lg ${
+                  className={`text-center text-base ${
                     set.completed ? "text-white" : "text-blue-500"
                   }`}
                 />
@@ -384,9 +384,9 @@ function SetRow({
                   }}
                   onChangeText={setRepsText}
                   placeholder="0"
-                  placeholderTextColor={isDark ? "#a3a3a3" : "#737373"}
+                  placeholderTextColor={set.completed ? "#ffffff" : "#737373"}
                   style={{ lineHeight }}
-                  className={`text-center text-lg ${
+                  className={`text-center text-base ${
                     set.completed ? "text-white" : "text-blue-500"
                   }`}
                 />
@@ -402,7 +402,7 @@ function SetRow({
                 >
                   <MaterialCommunityIcons
                     name={set.durationStartedAt ? "stop" : "play"}
-                    size={24}
+                    size={22}
                     color={set.completed ? "white" : "#3b82f6"}
                   />
 
@@ -411,8 +411,8 @@ function SetRow({
                     runningSince={set.durationStartedAt}
                     textClassName={
                       set.completed
-                        ? "text-lg font-semibold text-white"
-                        : "text-lg font-semibold text-blue-500"
+                        ? "text-base font-semibold text-white"
+                        : "text-base font-semibold text-blue-500"
                     }
                   />
                 </TouchableOpacity>
@@ -432,7 +432,7 @@ function SetRow({
             onChangeText={setNoteText}
             multiline
             placeholder="Add a note for this set…"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={"#9ca3af"}
             className="text-base text-black dark:text-white"
             onBlur={() => {
               const trimmed = noteText.trim();

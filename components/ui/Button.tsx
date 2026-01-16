@@ -122,7 +122,7 @@ export function Button({
   const isDisabled = disabled || loading;
 
   const baseClass =
-    "h-12 w-full flex-row items-center justify-center gap-2 rounded-2xl";
+    "h-11 w-full flex-row items-center justify-center gap-2 rounded-2xl";
 
   const variantClass: Record<ButtonVariant, string> = {
     primary: "bg-green-600",
@@ -171,7 +171,7 @@ export function Button({
           {leftIcon}
           <Text
             className={[
-              "text-xl font-semibold",
+              "text-lg font-semibold",
               textVariantClass[variant],
               textClassName,
             ].join(" ")}

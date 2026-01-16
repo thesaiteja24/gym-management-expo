@@ -169,6 +169,11 @@ export default function DateTimePicker(props: DateTimePickerProps) {
     }
 
     return d.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: is24Hour !== undefined ? !is24Hour : undefined,
     });
   }, [value, dateOnly, is24Hour]);

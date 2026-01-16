@@ -130,12 +130,12 @@ export default function WorkoutDetails() {
     >
       <ScrollView className="flex-1 bg-white p-4 dark:bg-black">
         {/* Header */}
-        <View className="mb-6">
-          <Text className="text-2xl font-bold text-black dark:text-white">
+        <View className="mb-6 flex-col gap-2">
+          <Text className="text-xl font-bold text-black dark:text-white">
             {workout.title || "Workout"}
           </Text>
 
-          <Text className="mt-1 text-base text-neutral-500 dark:text-neutral-400">
+          <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             {timeAgo} · {duration} · {tonnage.toLocaleString()} kg ·{" "}
             {completedSets} sets
           </Text>
@@ -156,10 +156,10 @@ export default function WorkoutDetails() {
               <View className="mb-3 flex-row items-center gap-3">
                 <Image
                   source={ex.exercise.thumbnailUrl}
-                  style={{ width: 48, height: 48, borderRadius: 999 }}
+                  style={{ width: 44, height: 44, borderRadius: 999 }}
                 />
 
-                <Text className="text-xl font-semibold text-black dark:text-white">
+                <Text className="text-lg font-semibold text-black dark:text-white">
                   {ex.exercise.title}
                 </Text>
               </View>
@@ -170,7 +170,7 @@ export default function WorkoutDetails() {
                   className="mb-3 self-start rounded-full"
                   style={{ backgroundColor: getGroupColor(groupDetails.id) }}
                 >
-                  <Text className="px-3 py-1 text-base font-semibold text-white">
+                  <Text className="font-regular px-3 py-1 text-sm text-white">
                     {`${groupDetails.groupType.toUpperCase()} ${String.fromCharCode(
                       "A".charCodeAt(0) + groupDetails.groupIndex,
                     )}`}
@@ -182,7 +182,7 @@ export default function WorkoutDetails() {
               {ex.sets.map((set: any, setIndex: number) => (
                 <View key={set.id} className="flex-row items-center py-2">
                   <Text
-                    className={`flex-1 text-lg font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
+                    className={`flex-1 text-base font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
                   >
                     {getSetTypeColor(set, set.setType, set.completed).value}
                   </Text>

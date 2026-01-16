@@ -328,18 +328,18 @@ export default function StartWorkout() {
         <View className="flex flex-row gap-2">
           <Ionicons
             name="hourglass-outline"
-            size={24}
+            size={20}
             color={isDark ? "white" : "black"}
           />
 
           <ElapsedTime
             startTime={workout.startTime}
-            textClassName="text-lg font-semibold text-blue-500"
+            textClassName="text-base font-semibold text-blue-500"
           />
         </View>
         <View className="flex flex-row gap-2">
-          <Text className="text-black dark:text-white">Volume: </Text>
-          <Text className="text-black dark:text-white">
+          <Text className="text-sm text-black dark:text-white">Volume: </Text>
+          <Text className="text-sm text-black dark:text-white">
             {/* converts from KG to User preferred unit as we by default store as kg */}
             {convertWeight(
               calculateWorkoutMetrics(workout, exerciseTypeMap).tonnage,
@@ -348,8 +348,8 @@ export default function StartWorkout() {
           </Text>
         </View>
         <View className="flex flex-row gap-2">
-          <Text className="text-black dark:text-white">Sets: </Text>
-          <Text className="text-black dark:text-white">
+          <Text className="text-sm text-black dark:text-white">Sets: </Text>
+          <Text className="text-sm text-black dark:text-white">
             {calculateWorkoutMetrics(workout, exerciseTypeMap).completedSets}
           </Text>
         </View>
@@ -451,7 +451,7 @@ export default function StartWorkout() {
             <View className="flex-1 items-center justify-center px-6 py-20">
               <Ionicons
                 name="accessibility-outline"
-                size={48}
+                size={40}
                 color={isDark ? "#9ca3af" : "#6b7280"}
               />
 
@@ -459,7 +459,7 @@ export default function StartWorkout() {
                 No exercises yet
               </Text>
 
-              <Text className="mt-2 text-center text-neutral-500 dark:text-neutral-400">
+              <Text className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
                 Add an exercise to start your workout
               </Text>
             </View>

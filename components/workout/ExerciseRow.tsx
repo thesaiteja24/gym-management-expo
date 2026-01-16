@@ -187,7 +187,7 @@ function ExerciseRow({
         >
           <Entypo
             name="dots-three-horizontal"
-            size={24}
+            size={20}
             color={isDark ? "white" : "black"}
           />
         </TouchableOpacity>
@@ -197,7 +197,7 @@ function ExerciseRow({
           className="self-start rounded-full"
           style={{ backgroundColor: getGroupColor(groupDetails.id) }}
         >
-          <Text className="w-full px-3 py-1 text-sm font-semibold text-white">
+          <Text className="font-regular w-full px-3 py-1 text-sm text-white">
             {`${groupDetails.groupType.toUpperCase()} ${String.fromCharCode("A".charCodeAt(0) + groupDetails.groupIndex)}`}
           </Text>
         </View>
@@ -205,37 +205,36 @@ function ExerciseRow({
 
       {/* ───── Sets header ───── */}
       <View className="flex-row items-center bg-white dark:bg-black">
-        {/* ───── LEFT 35% ───── */}
-        <View className="basis-[30%] flex-row items-center justify-evenly">
-          <Text className="text-lg font-semibold text-black dark:text-white">
-            Set
+        <View className="basis-[35%] flex-row items-center justify-evenly">
+          <Text className="font-regular text-base text-black dark:text-white">
+            SET
           </Text>
 
-          <Text className="text-lg font-semibold text-black dark:text-white">
-            Prev
+          <Text className="font-regular text-base text-black dark:text-white">
+            PREV
           </Text>
         </View>
 
-        {/* ───── MIDDLE 30% ───── */}
-        <View className="basis-[40%] flex-row items-center justify-evenly">
+        {/* Rest and Note */}
+        <View className="basis-[35%] flex-row items-center justify-between">
           <MaterialIcons
             name="restore"
-            size={24}
+            size={20}
             color={isDark ? "white" : "black"}
           />
 
           <MaterialCommunityIcons
             name="note-plus-outline"
-            size={24}
+            size={20}
             color={isDark ? "white" : "black"}
           />
 
-          <Text className="text-lg font-semibold text-black dark:text-white">
+          <Text className="font-regular w-11 text-base text-black dark:text-white">
             RPE
           </Text>
         </View>
 
-        {/* ───── RIGHT 35% ───── */}
+        {/* Load */}
         <View className="basis-[30%] flex-row items-center justify-evenly">
           {hasWeight && (
             <MaterialCommunityIcons
@@ -244,19 +243,19 @@ function ExerciseRow({
                   ? "weight-kilogram"
                   : "weight-pound"
               }
-              size={24}
+              size={20}
               color={isDark ? "white" : "black"}
             />
           )}
 
           {hasReps && (
-            <Entypo name="cycle" size={24} color={isDark ? "white" : "black"} />
+            <Entypo name="cycle" size={20} color={isDark ? "white" : "black"} />
           )}
 
           {hasDuration && (
             <MaterialCommunityIcons
               name="timer-outline"
-              size={24}
+              size={20}
               color={isDark ? "white" : "black"}
             />
           )}
