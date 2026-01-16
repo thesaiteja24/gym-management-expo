@@ -114,6 +114,7 @@ export interface WorkoutState {
 
   /* Workout */
   getAllWorkouts: () => Promise<void>;
+  deleteWorkout: (id: string) => Promise<boolean>;
   startWorkout: () => void;
   updateWorkout: (patch: Partial<WorkoutLog>) => void;
   prepareWorkoutForSave: () => {

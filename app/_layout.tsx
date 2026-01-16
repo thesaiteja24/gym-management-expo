@@ -1,6 +1,5 @@
 import { OtaUpdateModal } from "@/components/auth/OtaUpdateModal";
 import { CustomToast } from "@/components/ui/CustomToast";
-import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
 import { useSyncQueue } from "@/hooks/useSyncQueue";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
@@ -152,9 +151,6 @@ export default function RootLayout() {
             }
           }}
         />
-
-        {/* Offline Indicator */}
-        <OfflineIndicator />
       </>
     </GestureHandlerRootView>
   );
