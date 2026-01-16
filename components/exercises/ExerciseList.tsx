@@ -2,11 +2,11 @@ import { Exercise } from "@/stores/exerciseStore";
 import { Image } from "expo-image";
 import React, { useCallback } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 /* ───────────────── Types ───────────────── */
@@ -56,18 +56,18 @@ const ExerciseRow = React.memo(
 
           <View className="mt-1 flex-row gap-4">
             {item.equipment && (
-              <Text className="text-sm text-blue-500">
+              <Text className="text-sm text-primary">
                 {item.equipment.title}
               </Text>
             )}
 
             {item.primaryMuscleGroup && (
-              <Text className="text-sm text-blue-500">
+              <Text className="text-sm text-primary">
                 {item.primaryMuscleGroup.title}
               </Text>
             )}
 
-            <Text className="text-sm text-red-500">PR</Text>
+            <Text className="text-sm text-danger">PR</Text>
           </View>
         </View>
 

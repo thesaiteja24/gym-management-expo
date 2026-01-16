@@ -7,9 +7,9 @@ import RestTimerSnack from "@/components/workout/RestTimerSnack";
 import { useAuth } from "@/stores/authStore";
 import { Exercise, ExerciseType, useExercise } from "@/stores/exerciseStore";
 import {
-    ExerciseGroupType,
-    useWorkout,
-    WorkoutLogGroup,
+  ExerciseGroupType,
+  useWorkout,
+  WorkoutLogGroup,
 } from "@/stores/workoutStore";
 
 import { convertWeight } from "@/utils/converter";
@@ -19,20 +19,23 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useNavigation } from "expo-router";
 
+import { useThemeColor } from "@/hooks/useThemeColor";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Text,
-    useColorScheme,
-    Vibration,
-    View,
+  Keyboard,
+  KeyboardAvoidingView,
+  Text,
+  useColorScheme,
+  Vibration,
+  View,
 } from "react-native";
 import DraggableFlatList from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function StartWorkout() {
+  const colors = useThemeColor();
+
   /* Local State */
   const isDark = useColorScheme() === "dark";
   const safeAreaInsets = useSafeAreaInsets();
@@ -309,12 +312,12 @@ export default function StartWorkout() {
           <Ionicons
             name="hourglass-outline"
             size={20}
-            color={isDark ? "white" : "black"}
+            color={colors.icon}
           />
 
           <ElapsedTime
             startTime={workout.startTime}
-            textClassName="text-base font-semibold text-blue-500"
+            textClassName="text-lg font-semibold text-primary"
           />
         </View>
         <View className="flex flex-row gap-2">

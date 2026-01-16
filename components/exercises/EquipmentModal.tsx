@@ -1,13 +1,13 @@
 import { Image } from "expo-image";
 import React from "react";
 import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Modal,
+    Pressable,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -43,7 +43,7 @@ export default function EquipmentModal({
       >
         <Pressable className="absolute inset-0" onPress={onClose} />
 
-        <View className="h-[80%] rounded-t-3xl bg-white px-6 pt-6 dark:bg-[#111]">
+        <View className="h-[80%] rounded-t-3xl bg-white px-6 pt-6 dark:bg-neutral-900">
           <View
             className={`flex-row items-center ${
               onCreatePress && enableCreate
@@ -57,7 +57,7 @@ export default function EquipmentModal({
 
             {onCreatePress && enableCreate && (
               <TouchableOpacity onPress={onCreatePress}>
-                <Text className="text-xl text-blue-500">Create</Text>
+                <Text className="text-xl text-primary">Create</Text>
               </TouchableOpacity>
             )}
           </View>

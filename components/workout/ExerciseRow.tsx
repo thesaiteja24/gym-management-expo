@@ -167,7 +167,7 @@ function ExerciseRow({
               }}
             />
 
-            <Text className="text-xl font-semibold text-black dark:text-white">
+            <Text className="text-lg font-semibold text-black dark:text-white">
               {exerciseDetails.title}
             </Text>
           </TouchableOpacity>
@@ -197,20 +197,20 @@ function ExerciseRow({
           className="self-start rounded-full"
           style={{ backgroundColor: getGroupColor(groupDetails.id) }}
         >
-          <Text className="font-regular w-full px-3 py-1 text-sm text-white">
+          <Text className="font-semibold w-full px-3 py-1 text-xs text-white">
             {`${groupDetails.groupType.toUpperCase()} ${String.fromCharCode("A".charCodeAt(0) + groupDetails.groupIndex)}`}
           </Text>
         </View>
       )}
 
       {/* ───── Sets header ───── */}
-      <View className="flex-row items-center bg-white dark:bg-black">
+      <View className="flex-row items-center bg-white py-1 dark:bg-black">
         <View className="basis-[35%] flex-row items-center justify-evenly">
-          <Text className="font-regular text-base text-black dark:text-white">
+          <Text className="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             SET
           </Text>
 
-          <Text className="font-regular text-base text-black dark:text-white">
+          <Text className="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             PREV
           </Text>
         </View>
@@ -219,17 +219,17 @@ function ExerciseRow({
         <View className="basis-[35%] flex-row items-center justify-between">
           <MaterialIcons
             name="restore"
-            size={20}
-            color={isDark ? "white" : "black"}
+            size={16}
+            color={isDark ? "#a3a3a3" : "#737373"}
           />
 
           <MaterialCommunityIcons
             name="note-plus-outline"
-            size={20}
-            color={isDark ? "white" : "black"}
+            size={16}
+            color={isDark ? "#a3a3a3" : "#737373"}
           />
 
-          <Text className="font-regular w-11 text-base text-black dark:text-white">
+          <Text className="w-11 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             RPE
           </Text>
         </View>
@@ -243,20 +243,24 @@ function ExerciseRow({
                   ? "weight-kilogram"
                   : "weight-pound"
               }
-              size={20}
-              color={isDark ? "white" : "black"}
+              size={16}
+              color={isDark ? "#a3a3a3" : "#737373"}
             />
           )}
 
           {hasReps && (
-            <Entypo name="cycle" size={20} color={isDark ? "white" : "black"} />
+            <Entypo
+              name="cycle"
+              size={16}
+              color={isDark ? "#a3a3a3" : "#737373"}
+            />
           )}
 
           {hasDuration && (
             <MaterialCommunityIcons
               name="timer-outline"
-              size={20}
-              color={isDark ? "white" : "black"}
+              size={16}
+              color={isDark ? "#a3a3a3" : "#737373"}
             />
           )}
         </View>

@@ -8,6 +8,12 @@ module.exports = {
       fontFamily: {
         monoton: ["Monoton_400Regular"],
       },
+      colors: {
+        primary: "#3b82f6", // blue-500
+        success: "#22c55e", // green-500
+        danger: "#dc2626", // red-600
+        // surface colors could be added here if we want to override defaults
+      },
     },
   },
   plugins: [],

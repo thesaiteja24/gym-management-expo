@@ -1,12 +1,12 @@
 import * as Haptics from "expo-haptics";
 import React, { useMemo } from "react";
 import {
-  Modal,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    Modal,
+    Pressable,
+    Text,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -94,7 +94,7 @@ export default function RPESelectionModal({
                     <Text
                       className={`text-center text-base ${
                         isSelected
-                          ? "font-semibold text-blue-500"
+                          ? "font-semibold text-primary"
                           : "text-neutral-500 dark:text-neutral-400"
                       }`}
                     >

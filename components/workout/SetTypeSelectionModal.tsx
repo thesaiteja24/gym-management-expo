@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { WorkoutLogSet } from "@/stores/workoutStore";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -27,13 +28,13 @@ const SET_TYPES: {
     key: "failureSet",
     title: "Failure",
     description: "Performed until no further reps are possible.",
-    titleClass: "text-red-500",
+    titleClass: "text-danger",
   },
   {
     key: "dropSet",
     title: "Drop Set",
     description: "Reduce weight and continue immediately after failure.",
-    titleClass: "text-blue-500 font-semibold",
+    titleClass: "text-primary font-semibold",
   },
 ];
 
@@ -50,6 +51,7 @@ export default function SetTypeSelectionModal({
   onSelect,
   onClose,
 }: Props) {
+  const colors = useThemeColor();
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View
@@ -62,7 +64,7 @@ export default function SetTypeSelectionModal({
         <Pressable className="absolute inset-0" onPress={onClose} />
 
         {/* Sheet */}
-        <View className="rounded-t-3xl bg-white p-6 dark:bg-[#111]">
+        <View className="rounded-t-3xl bg-white p-6 dark:bg-neutral-900">
           {/* Header */}
           <View className="mb-6 flex-row items-center justify-between">
             <Text className="text-xl font-bold text-black dark:text-white">
@@ -89,7 +91,7 @@ export default function SetTypeSelectionModal({
                   }}
                   className={`rounded-xl border p-4 ${
                     selected
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                      ? "border-primary bg-blue-50 dark:bg-blue-950"
                       : "border-neutral-300 dark:border-neutral-700"
                   }`}
                 >
@@ -108,7 +110,7 @@ export default function SetTypeSelectionModal({
                       <Ionicons
                         name="checkmark-circle"
                         size={22}
-                        color="#3b82f6"
+                        color={colors.primary}
                       />
                     )}
                   </View>

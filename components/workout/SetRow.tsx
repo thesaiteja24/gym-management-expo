@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { WeightUnits } from "@/stores/userStore";
 import { SetType, WorkoutLogSet } from "@/stores/workoutStore";
 import { convertWeight } from "@/utils/converter";
@@ -5,24 +6,24 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { memo, useEffect, useRef, useState } from "react";
 import {
-  Dimensions,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-  View,
+    Dimensions,
+    Platform,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    useColorScheme,
+    View,
 } from "react-native";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
-  FadeIn,
-  FadeOut,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withSequence,
-  withTiming,
+    FadeIn,
+    FadeOut,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withSequence,
+    withTiming,
 } from "react-native-reanimated";
 import { ElapsedTime } from "./ElapsedTime";
 import RPESelectionModal from "./RPESelectionModal";
@@ -67,6 +68,7 @@ function SetRow({
   onStopTimer,
   onOpenRestPicker,
 }: Props) {
+  const colors = useThemeColor();
   const isDark = useColorScheme() === "dark";
   const lineHeight = Platform.OS === "ios" ? undefined : 18;
 
@@ -169,12 +171,12 @@ function SetRow({
         if (completed) {
           return { style: "text-white", value: "F" };
         }
-        return { style: "text-red-500", value: "F" };
+        return { style: "text-danger", value: "F" };
       default:
         if (completed) {
           return { style: "text-white", value: set.setIndex + 1 };
         }
-        return { style: "text-blue-500", value: set.setIndex + 1 };
+        return { style: "text-primary", value: set.setIndex + 1 };
     }
   }
 
@@ -183,13 +185,13 @@ function SetRow({
   const restColor = set.completed
     ? "#facc15"
     : set.restSeconds != null
-      ? "#22c55e"
+      ? colors.success
       : "#9ca3af";
 
   /* ───────────────── Render helpers ───────────────── */
 
   const renderLeftActions = () => (
-    <View className="flex-1 items-start justify-center rounded-md bg-green-700 px-6">
+    <View className="flex-1 items-start justify-center rounded-md bg-success px-6">
       <Ionicons name="checkmark-circle" size={28} color="white" />
     </View>
   );
@@ -197,7 +199,7 @@ function SetRow({
   const renderRightActions = () => (
     <TouchableOpacity
       onPress={handleDelete}
-      className="items-end justify-center rounded-md bg-red-600 px-6"
+      className="items-end justify-center rounded-md bg-danger px-6"
     >
       <Ionicons name="trash" size={22} color="white" />
     </TouchableOpacity>
@@ -239,7 +241,7 @@ function SetRow({
           {/* Left background */}
           <Animated.View
             entering={FadeIn.duration(1000)}
-            className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-green-600 px-4"
+            className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-success px-4"
           >
             <Ionicons name="checkmark-circle" size={22} color="white" />
           </Animated.View>
@@ -247,7 +249,7 @@ function SetRow({
           {/* Right background */}
           <Animated.View
             entering={FadeIn.duration(1000)}
-            className="absolute inset-y-0 right-0 w-20 items-end justify-center bg-red-600 px-4"
+            className="absolute inset-y-0 right-0 w-20 items-end justify-center bg-danger px-4"
           >
             <Ionicons name="trash" size={22} color="white" />
           </Animated.View>
@@ -259,7 +261,7 @@ function SetRow({
             style={[hintStyle, { height: 44 }]}
             className={`flex-row items-center rounded-md ${
               set.completed
-                ? "bg-green-600 dark:bg-green-600"
+                ? "bg-success dark:bg-success"
                 : "bg-white dark:bg-black"
             }`}
           >
@@ -273,7 +275,7 @@ function SetRow({
                 className="items-center"
               >
                 <Text
-                  className={`text-center text-lg font-semibold ${getSetTypeColor(set, set.setType, set.completed).style}`}
+                  className={`text-center text-base font-semibold ${getSetTypeColor(set, set.setType, set.completed).style}`}
                 >
                   {getSetTypeColor(set, set.setType, set.completed).value}
                 </Text>
@@ -281,8 +283,8 @@ function SetRow({
 
               {/* Previous */}
               <Text
-                className={`text-center text-lg font-semibold ${
-                  set.completed ? "text-white" : "text-blue-500"
+                className={`text-center text-base font-medium ${
+                  set.completed ? "text-white" : "text-neutral-500 dark:text-neutral-400"
                 }`}
               >
                 --
@@ -327,7 +329,7 @@ function SetRow({
                   set.completed
                     ? "bg-white"
                     : set.rpe
-                      ? "bg-blue-500"
+                      ? "bg-primary"
                       : "bg-neutral-200 dark:bg-neutral-700"
                 }`}
               >
@@ -372,7 +374,7 @@ function SetRow({
                   placeholderTextColor={set.completed ? "#ffffff" : "#737373"}
                   style={{ lineHeight }}
                   className={`text-center text-base ${
-                    set.completed ? "text-white" : "text-blue-500"
+                    set.completed ? "text-white" : "text-primary"
                   }`}
                 />
               )}
@@ -394,7 +396,7 @@ function SetRow({
                   placeholderTextColor={set.completed ? "#ffffff" : "#737373"}
                   style={{ lineHeight }}
                   className={`text-center text-base ${
-                    set.completed ? "text-white" : "text-blue-500"
+                    set.completed ? "text-white" : "text-primary"
                   }`}
                 />
               )}
@@ -410,7 +412,7 @@ function SetRow({
                   <MaterialCommunityIcons
                     name={set.durationStartedAt ? "stop" : "play"}
                     size={22}
-                    color={set.completed ? "white" : "#3b82f6"}
+                    color={set.completed ? "white" : colors.primary}
                   />
 
                   <ElapsedTime
@@ -419,7 +421,7 @@ function SetRow({
                     textClassName={
                       set.completed
                         ? "text-base font-semibold text-white"
-                        : "text-base font-semibold text-blue-500"
+                        : "text-base font-semibold text-primary"
                     }
                   />
                 </TouchableOpacity>

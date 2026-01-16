@@ -1,12 +1,12 @@
-// components/CustomTabs.tsx
+import { useThemeColor } from "@/hooks/useThemeColor";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import * as React from "react";
 import {
-  Platform,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    Platform,
+    Text,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -15,15 +15,16 @@ export default function CustomTabs({
   descriptors,
   navigation,
 }: BottomTabBarProps) {
+  const colors = useThemeColor();
   const isDark = useColorScheme() === "dark";
   const insets = useSafeAreaInsets();
 
-  // monochrome palette
-  const barBg = isDark ? "#000000" : "#FFFFFF";
-  const barBorder = isDark ? "#222222" : "#DDDDDD";
-  const activeColor = isDark ? "#FFFFFF" : "#000000";
+  // monochrome palette from theme
+  const barBg = colors.background;
+  const barBorder = isDark ? "#222222" : "#DDDDDD"; // Could be colors.border if defined
+  const activeColor = colors.text;
   const inactiveColor = "#A8A8A8";
-  const pillBg = isDark ? "#111111" : "#F2F2F2";
+  const pillBg = isDark ? "#111111" : "#F2F2F2"; // Could be colors.surface
 
   return (
     <View

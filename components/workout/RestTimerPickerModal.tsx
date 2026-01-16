@@ -1,12 +1,12 @@
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import {
-  Modal,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    Modal,
+    Pressable,
+    Text,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TimerPicker } from "react-native-timer-picker";
@@ -136,7 +136,7 @@ export default function RestTimerPickerModal({
       >
         <Pressable className="absolute inset-0" onPress={handleCancel} />
 
-        <View className="h-[55%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">
+        <View className="h-[55%] rounded-t-3xl bg-white p-6 dark:bg-neutral-900">
           {/* Title */}
           <Text className="mb-6 text-center text-xl font-bold text-black dark:text-white">
             Rest Timer
@@ -183,7 +183,7 @@ export default function RestTimerPickerModal({
 
             <TouchableOpacity
               onPress={handleConfirm}
-              className="h-12 flex-1 justify-center rounded-2xl bg-blue-600"
+              className="h-12 flex-1 justify-center rounded-2xl bg-primary"
             >
               <Text className="text-center text-lg font-semibold text-white">
                 Confirm
