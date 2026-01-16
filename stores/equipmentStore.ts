@@ -1,3 +1,4 @@
+import { zustandStorage } from "@/lib/storage";
 import {
   createEquipmentService,
   deleteEquipmentService,
@@ -6,6 +7,7 @@ import {
   updateEquipmentService,
 } from "@/services/equipmentService";
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type Equipment = {
   id: string;
@@ -18,6 +20,7 @@ type Equipment = {
 type EquipmentState = {
   equipmentLoading: boolean;
   equipmentList: Array<Equipment>;
+  lastSyncedAt: number | null;
 
   getAllEquipment: () => Promise<void>;
   getEquipmentById: (id: string) => Promise<any>;
@@ -29,93 +32,109 @@ type EquipmentState = {
 
 const initialState = {
   equipmentLoading: false,
-  equipmentList: [],
+  equipmentList: [] as Equipment[],
+  lastSyncedAt: null as number | null,
 };
 
-export const useEquipment = create<EquipmentState>((set) => ({
-  ...initialState,
+export const useEquipment = create<EquipmentState>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  getAllEquipment: async () => {
-    set({ equipmentLoading: true });
-    try {
-      const res = await getAllEquipmentService();
+      getAllEquipment: async () => {
+        set({ equipmentLoading: true });
+        try {
+          const res = await getAllEquipmentService();
 
-      if (res.success) {
-        set({ equipmentList: res.data || [] });
-      }
-      set({ equipmentLoading: false });
-    } catch (error) {
-      set({ equipmentLoading: false });
-    }
-  },
+          if (res.success) {
+            set({
+              equipmentList: res.data || [],
+              lastSyncedAt: Date.now(),
+            });
+          }
+          set({ equipmentLoading: false });
+        } catch (error) {
+          set({ equipmentLoading: false });
+        }
+      },
 
-  getEquipmentById: async (id: string) => {
-    set({ equipmentLoading: true });
-    try {
-      const res = await getEquipmentByIdService(id);
+      getEquipmentById: async (id: string) => {
+        set({ equipmentLoading: true });
+        try {
+          const res = await getEquipmentByIdService(id);
 
-      set({ equipmentLoading: false });
-      return res;
-    } catch (error) {
-      set({ equipmentLoading: false });
+          set({ equipmentLoading: false });
+          return res;
+        } catch (error) {
+          set({ equipmentLoading: false });
 
-      return {
-        succss: false,
-        error: error,
-      };
-    }
-  },
+          return {
+            succss: false,
+            error: error,
+          };
+        }
+      },
 
-  createEquipment: async (data: FormData) => {
-    set({ equipmentLoading: true });
-    try {
-      const res = await createEquipmentService(data);
+      createEquipment: async (data: FormData) => {
+        set({ equipmentLoading: true });
+        try {
+          const res = await createEquipmentService(data);
 
-      set({ equipmentLoading: false });
-      return res;
-    } catch (error) {
-      set({ equipmentLoading: false });
+          set({ equipmentLoading: false });
+          return res;
+        } catch (error) {
+          set({ equipmentLoading: false });
 
-      return {
-        success: false,
-        error: error,
-      };
-    }
-  },
+          return {
+            success: false,
+            error: error,
+          };
+        }
+      },
 
-  updateEquipment: async (id: string, data: FormData) => {
-    set({ equipmentLoading: true });
-    try {
-      const res = await updateEquipmentService(id, data);
+      updateEquipment: async (id: string, data: FormData) => {
+        set({ equipmentLoading: true });
+        try {
+          const res = await updateEquipmentService(id, data);
 
-      set({ equipmentLoading: false });
-      return res;
-    } catch (error) {
-      set({ equipmentLoading: false });
+          set({ equipmentLoading: false });
+          return res;
+        } catch (error) {
+          set({ equipmentLoading: false });
 
-      return {
-        success: false,
-        error: error,
-      };
-    }
-  },
+          return {
+            success: false,
+            error: error,
+          };
+        }
+      },
 
-  deleteEquipment: async (id: string) => {
-    set({ equipmentLoading: true });
-    try {
-      const res = await deleteEquipmentService(id);
+      deleteEquipment: async (id: string) => {
+        set({ equipmentLoading: true });
+        try {
+          const res = await deleteEquipmentService(id);
 
-      set({ equipmentLoading: false });
-      return res;
-    } catch (error) {
-      set({ equipmentLoading: false });
+          set({ equipmentLoading: false });
+          return res;
+        } catch (error) {
+          set({ equipmentLoading: false });
 
-      return {
-        success: false,
-        error: error,
-      };
-    }
-  },
+          return {
+            success: false,
+            error: error,
+          };
+        }
+      },
 
-  resetState: () => set({ ...initialState }),
-}));
+      resetState: () => set({ ...initialState }),
+    }),
+    {
+      name: "equipment-store",
+      storage: zustandStorage,
+      partialize: (state) => ({
+        equipmentList: state.equipmentList,
+        lastSyncedAt: state.lastSyncedAt,
+      }),
+    },
+  ),
+);

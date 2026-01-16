@@ -1,3 +1,4 @@
+import { zustandStorage } from "@/lib/storage";
 import {
   createMuscleGroupService,
   deleteMuscleGroupService,
@@ -6,6 +7,7 @@ import {
   updateMuscleGroupService,
 } from "@/services/muscleGroupService";
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type MuscleGroup = {
   id: string;
@@ -18,6 +20,7 @@ type MuscleGroup = {
 type MuscleGroupState = {
   muscleGroupLoading: boolean;
   muscleGroupList: Array<MuscleGroup>;
+  lastSyncedAt: number | null;
 
   getAllMuscleGroups: () => Promise<void>;
   getMuscleGroupById: (id: string) => Promise<any>;
@@ -29,92 +32,108 @@ type MuscleGroupState = {
 
 const initialState = {
   muscleGroupLoading: false,
-  muscleGroupList: [],
+  muscleGroupList: [] as MuscleGroup[],
+  lastSyncedAt: null as number | null,
 };
 
-export const useMuscleGroup = create<MuscleGroupState>((set) => ({
-  ...initialState,
+export const useMuscleGroup = create<MuscleGroupState>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  getAllMuscleGroups: async () => {
-    set({ muscleGroupLoading: true });
-    try {
-      const res = await getAllMuscleGroupsService();
+      getAllMuscleGroups: async () => {
+        set({ muscleGroupLoading: true });
+        try {
+          const res = await getAllMuscleGroupsService();
 
-      if (res.success) {
-        set({ muscleGroupList: res.data || [] });
-      }
-      set({ muscleGroupLoading: false });
-    } catch (error) {
-      set({ muscleGroupLoading: false });
-    }
-  },
+          if (res.success) {
+            set({
+              muscleGroupList: res.data || [],
+              lastSyncedAt: Date.now(),
+            });
+          }
+          set({ muscleGroupLoading: false });
+        } catch (error) {
+          set({ muscleGroupLoading: false });
+        }
+      },
 
-  getMuscleGroupById: async (id: string) => {
-    set({ muscleGroupLoading: true });
-    try {
-      const res = await getMuscleGroupByIdService(id);
+      getMuscleGroupById: async (id: string) => {
+        set({ muscleGroupLoading: true });
+        try {
+          const res = await getMuscleGroupByIdService(id);
 
-      set({ muscleGroupLoading: false });
-      return res;
-    } catch (error) {
-      set({ muscleGroupLoading: false });
+          set({ muscleGroupLoading: false });
+          return res;
+        } catch (error) {
+          set({ muscleGroupLoading: false });
 
-      return {
-        succss: false,
-        error: error,
-      };
-    }
-  },
+          return {
+            succss: false,
+            error: error,
+          };
+        }
+      },
 
-  createMuscleGroup: async (data: FormData) => {
-    set({ muscleGroupLoading: true });
-    try {
-      const res = await createMuscleGroupService(data);
+      createMuscleGroup: async (data: FormData) => {
+        set({ muscleGroupLoading: true });
+        try {
+          const res = await createMuscleGroupService(data);
 
-      set({ muscleGroupLoading: false });
-      return res;
-    } catch (error) {
-      set({ muscleGroupLoading: false });
+          set({ muscleGroupLoading: false });
+          return res;
+        } catch (error) {
+          set({ muscleGroupLoading: false });
 
-      return {
-        succss: false,
-        error: error,
-      };
-    }
-  },
+          return {
+            succss: false,
+            error: error,
+          };
+        }
+      },
 
-  updateMuscleGroup: async (id: string, data: FormData) => {
-    set({ muscleGroupLoading: true });
-    try {
-      const res = await updateMuscleGroupService(id, data);
-      set({ muscleGroupLoading: false });
-      return res;
-    } catch (error) {
-      set({ muscleGroupLoading: false });
+      updateMuscleGroup: async (id: string, data: FormData) => {
+        set({ muscleGroupLoading: true });
+        try {
+          const res = await updateMuscleGroupService(id, data);
+          set({ muscleGroupLoading: false });
+          return res;
+        } catch (error) {
+          set({ muscleGroupLoading: false });
 
-      return {
-        succss: false,
-        error: error,
-      };
-    }
-  },
+          return {
+            succss: false,
+            error: error,
+          };
+        }
+      },
 
-  deleteMuscleGroup: async (id: string) => {
-    set({ muscleGroupLoading: true });
-    try {
-      const res = await deleteMuscleGroupService(id);
+      deleteMuscleGroup: async (id: string) => {
+        set({ muscleGroupLoading: true });
+        try {
+          const res = await deleteMuscleGroupService(id);
 
-      set({ muscleGroupLoading: false });
-      return res;
-    } catch (error) {
-      set({ muscleGroupLoading: false });
+          set({ muscleGroupLoading: false });
+          return res;
+        } catch (error) {
+          set({ muscleGroupLoading: false });
 
-      return {
-        success: false,
-        error: error,
-      };
-    }
-  },
+          return {
+            success: false,
+            error: error,
+          };
+        }
+      },
 
-  resetState: () => set({ ...initialState }),
-}));
+      resetState: () => set({ ...initialState }),
+    }),
+    {
+      name: "muscle-group-store",
+      storage: zustandStorage,
+      partialize: (state) => ({
+        muscleGroupList: state.muscleGroupList,
+        lastSyncedAt: state.lastSyncedAt,
+      }),
+    },
+  ),
+);
