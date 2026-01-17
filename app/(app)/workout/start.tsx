@@ -65,6 +65,7 @@ export default function StartWorkout() {
     workout,
     rest,
     startWorkout,
+    discardWorkout,
     removeExercise,
     reorderExercises,
     createExerciseGroup,
@@ -127,8 +128,6 @@ export default function StartWorkout() {
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
   }, [workout, groupingMode, selectedGroupExerciseIds, exerciseMap]);
-
-
 
   /* Helpers */
   function getSetValidationStats() {
@@ -244,8 +243,6 @@ export default function StartWorkout() {
     if (!workout) startWorkout();
   }, []);
 
-
-
   // Set Completion Effect - Start/Stop rest timer based on set completion
   useEffect(() => {
     if (!workout) return;
@@ -271,6 +268,12 @@ export default function StartWorkout() {
   // Navigation Options Effect
   useEffect(() => {
     navigation.setOptions({
+      onLeftPress: () => {
+        if (workout?.id) {
+          discardWorkout();
+        }
+        router.back();
+      },
       rightIcons: [
         {
           name: "checkmark-done",
@@ -310,15 +313,25 @@ export default function StartWorkout() {
       <View className="flex-row items-center justify-between gap-2 border-b border-neutral-200 p-4 dark:border-neutral-800">
         <View className="flex flex-row gap-2">
           <Ionicons
-            name="hourglass-outline"
+            name={workout.id ? "create-outline" : "hourglass-outline"}
             size={20}
             color={colors.icon}
           />
 
-          <ElapsedTime
-            startTime={workout.startTime}
-            textClassName="text-lg font-semibold text-primary"
-          />
+          {workout.id ? (
+            <ElapsedTime
+              baseSeconds={Math.floor(
+                (workout.endTime.getTime() - workout.startTime.getTime()) /
+                  1000,
+              )}
+              textClassName="text-lg font-semibold text-primary"
+            />
+          ) : (
+            <ElapsedTime
+              startTime={workout.startTime}
+              textClassName="text-lg font-semibold text-primary"
+            />
+          )}
         </View>
         <View className="flex flex-row gap-2">
           <Text className="text-sm text-black dark:text-white">Volume: </Text>

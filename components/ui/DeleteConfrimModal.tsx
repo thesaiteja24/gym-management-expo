@@ -8,6 +8,7 @@ type Props = {
   description?: string;
   onCancel: () => void;
   onConfirm: () => Promise<void> | void;
+  confirmText?: string;
 };
 
 export function DeleteConfirmModal({
@@ -16,6 +17,7 @@ export function DeleteConfirmModal({
   description = "This action cannot be undone.",
   onCancel,
   onConfirm,
+  confirmText = "Delete",
 }: Props) {
   const colors = useThemeColor();
   const lockedRef = useRef(false);
@@ -60,7 +62,6 @@ export function DeleteConfirmModal({
                 Cancel
               </Text>
             </Pressable>
-
             {/* Delete */}
             <Pressable
               onPress={async () => {
@@ -72,7 +73,7 @@ export function DeleteConfirmModal({
               style={{ backgroundColor: colors.danger }}
             >
               <Text className="text-center text-base font-semibold text-white">
-                Delete
+                {confirmText}
               </Text>
             </Pressable>
           </View>
