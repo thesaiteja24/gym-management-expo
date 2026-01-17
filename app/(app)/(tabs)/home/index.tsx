@@ -2,13 +2,14 @@ import WorkoutCard from "@/components/workout/WorkoutCard";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { router, useNavigation } from "expo-router";
-import React, { useEffect } from "react";
-import { FlatList, Text, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { FlatList, RefreshControl, Text, View } from "react-native";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { workoutLoading, workoutHistory, getAllWorkouts } = useWorkout();
   const { exerciseList, getAllExercises } = useExercise();
+  const [refreshing, setRefreshing] = useState(false);
 
   // derived Map of exerciseId -> exerciseType
   const exerciseTypeMap = React.useMemo(() => {
@@ -35,19 +36,19 @@ export default function HomeScreen() {
     navigation.setOptions({
       rightIcons: [
         {
-          name: "refresh-outline",
-          onPress: () => {
-            getAllWorkouts();
-            getAllExercises();
-          },
-        },
-        {
           name: "settings-outline",
           onPress: () => router.navigate("/profile/settings"),
         },
       ],
     });
   }, [navigation]);
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([getAllWorkouts(), getAllExercises()]);
+    setRefreshing(false);
+  }, [getAllWorkouts, getAllExercises]);
 
   return (
     <View className="flex-1 bg-white px-4 pt-4 dark:bg-black">
@@ -62,6 +63,9 @@ export default function HomeScreen() {
           <WorkoutCard workout={item} exerciseTypeMap={exerciseTypeMap} />
         )}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         ListEmptyComponent={
           !workoutLoading ? (
             <Text className="mt-12 text-center text-base text-neutral-500 dark:text-neutral-400">

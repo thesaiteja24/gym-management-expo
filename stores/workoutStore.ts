@@ -41,6 +41,23 @@ export const useWorkout = create<WorkoutState>()(
         workout: state.workout,
         workoutHistory: state.workoutHistory,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Convert ISO strings back to Date objects after rehydration
+        if (state?.workout) {
+          if (
+            state.workout.startTime &&
+            typeof state.workout.startTime === "string"
+          ) {
+            state.workout.startTime = new Date(state.workout.startTime);
+          }
+          if (
+            state.workout.endTime &&
+            typeof state.workout.endTime === "string"
+          ) {
+            state.workout.endTime = new Date(state.workout.endTime);
+          }
+        }
+      },
     },
   ),
 );

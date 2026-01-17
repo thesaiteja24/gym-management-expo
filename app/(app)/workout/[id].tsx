@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/Button";
+import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import {
   SetType,
@@ -12,8 +14,8 @@ import {
 } from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
 import { Image } from "expo-image";
-import { useLocalSearchParams } from "expo-router";
-import React, { useMemo } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -79,9 +81,11 @@ function getSetTypeColor(
 export default function WorkoutDetails() {
   /* Local State */
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   /* Store Related State */
-  const { workoutHistory } = useWorkout();
+  const { workoutHistory, deleteWorkout } = useWorkout();
   const { exerciseList } = useExercise();
 
   /* Derived State */
@@ -103,6 +107,18 @@ export default function WorkoutDetails() {
     workout?.exerciseGroups.forEach((g) => map.set(g.id, g));
     return map;
   }, [workout?.exerciseGroups]);
+
+  /* Handlers */
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    const success = await deleteWorkout(id);
+    setIsDeleting(false);
+    setShowDeleteModal(false);
+
+    if (success) {
+      router.back();
+    }
+  };
 
   if (!workout) {
     return (
@@ -207,7 +223,26 @@ export default function WorkoutDetails() {
             </View>
           );
         })}
+
+        {/* Delete Button */}
+        <View className="mb-8 mt-4">
+          <Button
+            title="Delete Workout"
+            variant="danger"
+            loading={isDeleting}
+            onPress={() => setShowDeleteModal(true)}
+          />
+        </View>
       </ScrollView>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        visible={showDeleteModal}
+        title="Delete Workout?"
+        description="This workout and all its data will be permanently deleted. This action cannot be undone."
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+      />
     </SafeAreaView>
   );
 }
