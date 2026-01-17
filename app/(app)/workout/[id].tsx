@@ -83,6 +83,7 @@ export default function WorkoutDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   /* Store Related State */
   const { workoutHistory, deleteWorkout } = useWorkout();
@@ -109,6 +110,34 @@ export default function WorkoutDetails() {
   }, [workout?.exerciseGroups]);
 
   /* Handlers */
+  const handleEdit = () => {
+    if (!workout) return;
+
+    const activeWorkout = useWorkout.getState().workout;
+
+    if (activeWorkout) {
+      if (activeWorkout.id === workout.id) {
+        // Resuming same edit
+        router.push("/(app)/workout/start");
+        return;
+      }
+
+      // Warn about overwriting
+      setShowDiscardModal(true);
+    } else {
+      useWorkout.getState().loadWorkoutHistory(workout);
+      router.push("/(app)/workout/start");
+    }
+  };
+
+  const handleDiscardConfirm = () => {
+    if (!workout) return;
+    useWorkout.getState().discardWorkout();
+    useWorkout.getState().loadWorkoutHistory(workout);
+    setShowDiscardModal(false);
+    router.push("/(app)/workout/start");
+  };
+
   const handleDeleteConfirm = async () => {
     setIsDeleting(true);
     const success = await deleteWorkout(id);
@@ -147,9 +176,18 @@ export default function WorkoutDetails() {
       <ScrollView className="flex-1 bg-white p-4 dark:bg-black">
         {/* Header */}
         <View className="mb-6 flex-col gap-2">
-          <Text className="text-xl font-bold text-black dark:text-white">
-            {workout.title || "Workout"}
-          </Text>
+          <View className="flex-row items-center justify-between">
+            <Text className="flex-1 text-xl font-bold text-black dark:text-white">
+              {workout.title || "Workout"}
+            </Text>
+            {workout.isEdited && (
+              <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
+                <Text className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                  Edited
+                </Text>
+              </View>
+            )}
+          </View>
 
           <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             {timeAgo} · {duration} · {tonnage.toLocaleString()} kg ·{" "}
@@ -224,8 +262,13 @@ export default function WorkoutDetails() {
           );
         })}
 
-        {/* Delete Button */}
-        <View className="mb-8 mt-4">
+        {/* Actions */}
+        <View className="mb-8 mt-4 flex-col gap-3">
+          <Button
+            title="Edit Workout"
+            onPress={handleEdit}
+            variant="secondary"
+          />
           <Button
             title="Delete Workout"
             variant="danger"
@@ -242,6 +285,16 @@ export default function WorkoutDetails() {
         description="This workout and all its data will be permanently deleted. This action cannot be undone."
         onCancel={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteConfirm}
+      />
+
+      {/* Discard Confirmation Modal */}
+      <DeleteConfirmModal
+        visible={showDiscardModal}
+        title="Discard Current Workout?"
+        description="You have an active workout in progress. Editing this history item will discard your current progress."
+        confirmText="Discard & Edit"
+        onCancel={() => setShowDiscardModal(false)}
+        onConfirm={handleDiscardConfirm}
       />
     </SafeAreaView>
   );

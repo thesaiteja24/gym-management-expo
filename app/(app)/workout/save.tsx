@@ -141,9 +141,9 @@ export default function SaveWorkout() {
   };
 
   /* Effects */
-  // Set end time to now on mount
+  // Set end time to now on mount ONLY if creating a new workout
   useEffect(() => {
-    if (workout) {
+    if (workout && !workout.id) {
       updateWorkout({ endTime: new Date() });
     }
   }, []);
@@ -158,6 +158,8 @@ export default function SaveWorkout() {
   if (!workout) {
     return <View className="flex-1 bg-white dark:bg-black" />;
   }
+
+  const isEditing = !!workout.id;
 
   return (
     <View
@@ -225,13 +227,13 @@ export default function SaveWorkout() {
       {/* ───── Actions ───── */}
       <View className="mt-auto gap-3">
         <Button
-          title="Save Workout"
+          title={isEditing ? "Save Edits" : "Save Workout"}
           variant="primary"
           loading={workoutSaving}
           onPress={handleConfirmSave}
         />
         <Button
-          title="Back to Workout"
+          title={isEditing ? "Discard Changes" : "Back to Workout"}
           variant="secondary"
           disabled={workoutSaving}
           onPress={() => router.back()}

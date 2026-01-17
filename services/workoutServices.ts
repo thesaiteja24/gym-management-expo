@@ -25,6 +25,17 @@ export async function createWorkoutService(data: WorkoutLog) {
   }
 }
 
+export async function updateWorkoutService(id: string, data: WorkoutLog) {
+  try {
+    const res = await client.put(`${wokrouts_endpoint}/${id}`, data);
+
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}
+
 export async function deleteWorkoutService(id: string) {
   try {
     const res = await client.delete(`${wokrouts_endpoint}/${id}`);

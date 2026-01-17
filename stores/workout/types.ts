@@ -7,11 +7,14 @@ export type SetType = "warmup" | "working" | "dropSet" | "failureSet";
 export type ExerciseGroupType = "superSet" | "giantSet";
 
 export type WorkoutLog = {
+  id?: string;
   title: string;
   startTime: Date;
   endTime: Date;
   exercises: WorkoutLogExercise[];
   exerciseGroups: WorkoutLogGroup[];
+  isEdited?: boolean;
+  editedAt?: Date | null;
 };
 
 export type WorkoutLogExercise = {
@@ -92,6 +95,8 @@ export type WorkoutHistoryItem = {
   endTime: string;
   createdAt: string;
   updatedAt: string;
+  isEdited: boolean;
+  editedAt: string | null;
 
   exerciseGroups: WorkoutHistoryGroup[];
   exercises: WorkoutHistoryExercise[];
@@ -116,6 +121,7 @@ export interface WorkoutState {
   getAllWorkouts: () => Promise<void>;
   deleteWorkout: (id: string) => Promise<boolean>;
   startWorkout: () => void;
+  loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => void;
   updateWorkout: (patch: Partial<WorkoutLog>) => void;
   prepareWorkoutForSave: () => {
     workout: WorkoutLog;

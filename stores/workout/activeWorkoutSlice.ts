@@ -1,6 +1,9 @@
 import { checkNetworkStatus } from "@/hooks/useNetworkStatus";
 import { enqueue } from "@/lib/offlineQueue";
-import { createWorkoutService } from "@/services/workoutServices";
+import {
+  createWorkoutService,
+  updateWorkoutService,
+} from "@/services/workoutServices";
 import {
   finalizeSetTimer,
   isValidCompletedSet,
@@ -12,6 +15,7 @@ import { useAuth } from "../authStore";
 import { useExercise } from "../exerciseStore";
 import {
   ExerciseGroupType,
+  WorkoutHistoryItem,
   WorkoutLog,
   WorkoutLogExercise,
   WorkoutLogSet,
@@ -24,6 +28,7 @@ export interface ActiveWorkoutSlice {
   workout: WorkoutLog | null;
 
   startWorkout: () => void;
+  loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => void;
   updateWorkout: (patch: Partial<WorkoutLog>) => void;
   prepareWorkoutForSave: () => {
     workout: WorkoutLog;
@@ -178,6 +183,44 @@ export const createActiveWorkoutSlice: StateCreator<
     };
   },
 
+  loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => {
+    // Map history item to active workout state
+    const workoutLog: WorkoutLog = {
+      id: historyItem.id,
+      title: historyItem.title || "Untitled Workout",
+      startTime: new Date(historyItem.startTime),
+      endTime: new Date(historyItem.endTime),
+      exercises: historyItem.exercises.map((ex) => ({
+        exerciseId: ex.exerciseId,
+        exerciseIndex: ex.exerciseIndex,
+        groupId: ex.exerciseGroupId,
+        sets: ex.sets.map((s) => ({
+          id: s.id,
+          setIndex: s.setIndex,
+          setType: s.setType,
+          weight: s.weight ?? undefined, // handle nulls
+          reps: s.reps ?? undefined,
+          rpe: undefined, // RPE not strictly typed in history item, assuming undefined or need map
+          durationSeconds: s.durationSeconds ?? undefined,
+          restSeconds: s.restSeconds ?? undefined,
+          note: s.note ?? undefined,
+          completed: true, // past workouts are completed
+        })),
+      })),
+      exerciseGroups: historyItem.exerciseGroups.map((g) => ({
+        id: g.id,
+        groupType: g.groupType,
+        groupIndex: g.groupIndex,
+        restSeconds: g.restSeconds,
+      })),
+    };
+
+    set({
+      workout: workoutLog,
+      // For editing mode, we might want to flag specific UI states, but user said "start.tsx" used directly
+    });
+  },
+
   saveWorkout: async (prepared: WorkoutLog) => {
     set({ workoutSaving: true });
 
@@ -193,25 +236,40 @@ export const createActiveWorkoutSlice: StateCreator<
       const isOnline = isConnected && isInternetReachable !== false;
 
       if (!isOnline) {
-        // Queue for later sync
         const userId = useAuth.getState().user?.userId;
         if (userId) {
-          enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
+          if (prepared.id) {
+            enqueue("EDIT_WORKOUT", { id: prepared.id, ...payload }, userId);
+          } else {
+            enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
+          }
         }
         set({ workoutSaving: false });
         return { success: true, queued: true };
       }
 
-      // Online - send directly
-      // @ts-ignore
-      await createWorkoutService(payloadWithClientId);
+      // Online
+      if (prepared.id) {
+        // @ts-ignore
+        await updateWorkoutService(prepared.id, payload);
+      } else {
+        // @ts-ignore
+        await createWorkoutService(payloadWithClientId);
+      }
+
       set({ workoutSaving: false });
+      // Refresh history list to show new edits/creates
+      get().getAllWorkouts(); // Assuming getAllWorkouts is available on the store (merged slice) or cast needed
       return { success: true };
     } catch (error) {
-      // If network error, queue the mutation
+      // If network error, queue it
       const userId = useAuth.getState().user?.userId;
       if (userId) {
-        enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
+        if (prepared.id) {
+          enqueue("EDIT_WORKOUT", { id: prepared.id, ...payload }, userId);
+        } else {
+          enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
+        }
         set({ workoutSaving: false });
         return { success: true, queued: true };
       }
