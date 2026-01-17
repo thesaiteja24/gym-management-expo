@@ -4,7 +4,11 @@ import {
   incrementRetry,
   QueuedMutation,
 } from "@/lib/offlineQueue";
-import { createWorkoutService } from "@/services/workoutServices";
+import {
+  createWorkoutService,
+  deleteWorkoutService,
+  updateWorkoutService,
+} from "@/services/workoutServices";
 import { useAuth } from "@/stores/authStore";
 import { useCallback, useEffect, useRef } from "react";
 import { useNetworkStatus } from "./useNetworkStatus";
@@ -29,14 +33,37 @@ export function useSyncQueue() {
           case "CREATE_WORKOUT":
             await createWorkoutService(mutation.payload);
             break;
-          // Add more mutation types here as needed
+          case "EDIT_WORKOUT":
+            await updateWorkoutService(mutation.payload.id, mutation.payload);
+            break;
+          case "DELETE_WORKOUT": // Assuming we might add this
+            await deleteWorkoutService(mutation.payload.id);
+            break;
+          case "UPDATE_PROFILE":
+            // await updateProfileService(mutation.payload);
+            break;
           default:
             console.warn(`Unknown mutation type: ${mutation.type}`);
             return false;
         }
         return true;
-      } catch (error) {
-        console.error(`Failed to sync mutation ${mutation.id}:`, error);
+      } catch (error: any) {
+        const status = error?.response?.status;
+
+        console.error("[SYNC ERROR]", {
+          id: mutation.id,
+          type: mutation.type,
+          status,
+          message: error?.message,
+        });
+
+        // Non-retryable → delete permanently
+        if (status && status >= 400 && status < 500) {
+          console.warn("[SYNC] Dropping non-retryable mutation", mutation.id);
+          dequeue(mutation.id);
+          return true;
+        }
+
         return false;
       }
     },
@@ -52,7 +79,8 @@ export function useSyncQueue() {
 
     for (const mutation of queue) {
       if (mutation.retryCount >= MAX_RETRIES) {
-        console.warn(`Mutation ${mutation.id} exceeded max retries, skipping`);
+        console.warn("[SYNC] Dropping dead mutation", mutation);
+        dequeue(mutation.id);
         continue;
       }
 

@@ -3,7 +3,11 @@ import { storage } from "./storage";
 
 const QUEUE_KEY = "offline-mutation-queue";
 
-export type MutationType = "CREATE_WORKOUT" | "EDIT_WORKOUT" | "UPDATE_PROFILE";
+export type MutationType =
+  | "CREATE_WORKOUT"
+  | "EDIT_WORKOUT"
+  | "DELETE_WORKOUT"
+  | "UPDATE_PROFILE";
 
 export interface QueuedMutation {
   id: string;

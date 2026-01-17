@@ -22,6 +22,7 @@ import {
   WorkoutPruneReport,
   WorkoutState,
 } from "./types";
+import { WorkoutTemplate } from "@/stores/template/types";
 
 export interface ActiveWorkoutSlice {
   workoutSaving: boolean;
@@ -29,6 +30,7 @@ export interface ActiveWorkoutSlice {
 
   startWorkout: () => void;
   loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => void;
+  loadTemplate: (template: WorkoutTemplate) => void;
   updateWorkout: (patch: Partial<WorkoutLog>) => void;
   prepareWorkoutForSave: () => {
     workout: WorkoutLog;
@@ -218,6 +220,42 @@ export const createActiveWorkoutSlice: StateCreator<
     set({
       workout: workoutLog,
       // For editing mode, we might want to flag specific UI states, but user said "start.tsx" used directly
+    });
+  },
+
+  loadTemplate: (template: WorkoutTemplate) => {
+    // Map template to NEW active workout state
+    const workoutLog: WorkoutLog = {
+      // No ID initially (create new on save)
+      title: template.title || "New Workout",
+      startTime: new Date(),
+      endTime: new Date(), // Placeholder, updates on save
+      exercises: template.exercises.map((ex) => ({
+        exerciseId: ex.exerciseId,
+        exerciseIndex: ex.exerciseIndex,
+        groupId: ex.exerciseGroupId || null,
+        sets: ex.sets.map((s) => ({
+          id: Crypto.randomUUID(), // New UUIDs for sets
+          setIndex: s.setIndex,
+          setType: s.setType,
+          weight: s.weight,
+          reps: s.reps,
+          rpe: s.rpe,
+          durationSeconds: s.durationSeconds,
+          restSeconds: s.restSeconds,
+          completed: false, // reset completion
+        })),
+      })),
+      exerciseGroups: template.exerciseGroups.map((g) => ({
+        id: g.id,
+        groupType: g.groupType,
+        groupIndex: g.groupIndex,
+        restSeconds: g.restSeconds,
+      })),
+    };
+
+    set({
+      workout: workoutLog,
     });
   },
 
