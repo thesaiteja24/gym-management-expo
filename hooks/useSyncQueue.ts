@@ -2,8 +2,14 @@ import {
   dequeue,
   getQueueForUser,
   incrementRetry,
+  moveToFailedQueue,
   QueuedMutation,
 } from "@/lib/offlineQueue";
+import {
+  createTemplateService,
+  deleteTemplateService,
+  updateTemplateService,
+} from "@/services/templateService";
 import {
   createWorkoutService,
   deleteWorkoutService,
@@ -42,6 +48,15 @@ export function useSyncQueue() {
           case "UPDATE_PROFILE":
             // await updateProfileService(mutation.payload);
             break;
+          case "CREATE_TEMPLATE":
+            await createTemplateService(mutation.payload);
+            break;
+          case "EDIT_TEMPLATE":
+            await updateTemplateService(mutation.payload.id, mutation.payload);
+            break;
+          case "DELETE_TEMPLATE":
+            await deleteTemplateService(mutation.payload.id);
+            break;
           default:
             console.warn(`Unknown mutation type: ${mutation.type}`);
             return false;
@@ -57,11 +72,14 @@ export function useSyncQueue() {
           message: error?.message,
         });
 
-        // Non-retryable → delete permanently
+        // Non-retryable → move to failed queue (prevent data loss)
         if (status && status >= 400 && status < 500) {
-          console.warn("[SYNC] Dropping non-retryable mutation", mutation.id);
-          dequeue(mutation.id);
-          return true;
+          console.warn(
+            "[SYNC] Moving non-retryable mutation to failed queue",
+            mutation.id,
+          );
+          moveToFailedQueue(mutation.id);
+          return true; // Return true to signal handled (removed from main queue)
         }
 
         return false;
@@ -79,8 +97,8 @@ export function useSyncQueue() {
 
     for (const mutation of queue) {
       if (mutation.retryCount >= MAX_RETRIES) {
-        console.warn("[SYNC] Dropping dead mutation", mutation);
-        dequeue(mutation.id);
+        console.warn("[SYNC] Moving dead mutation to failed queue", mutation);
+        moveToFailedQueue(mutation.id);
         continue;
       }
 

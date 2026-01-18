@@ -9,6 +9,7 @@ import { useAuth } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
 import { Exercise, useExercise } from "@/stores/exerciseStore";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
+import { useTemplate } from "@/stores/templateStore";
 import { useWorkout } from "@/stores/workoutStore";
 
 import { Ionicons } from "@expo/vector-icons";
@@ -62,6 +63,7 @@ export default function ExercisesScreen() {
   const role = useAuth((s) => s.user?.role);
   const safeAreaInsets = useSafeAreaInsets();
   const params = useLocalSearchParams();
+  const context = (params.context as "workout" | "template") || "workout"; // Default to workout
 
   const replaceExerciseId =
     typeof params.replace === "string" ? params.replace : null;
@@ -71,16 +73,27 @@ export default function ExercisesScreen() {
   const { addExercise, removeExercise, replaceExercise, workout } =
     useWorkout();
 
+  const {
+    draftTemplate,
+    addExerciseToDraft,
+    removeExerciseFromDraft,
+    replaceDraftExercise,
+  } = useTemplate();
+
   const { equipmentList, equipmentLoading, getAllEquipment } = useEquipment();
   const { muscleGroupList, muscleGroupLoading, getAllMuscleGroups } =
     useMuscleGroup();
   const { exerciseList, exerciseLoading, getAllExercises, deleteExercise } =
     useExercise();
 
-  const initialSelectedIds = useMemo(
-    () => new Set(workout?.exercises.map((e) => e.exerciseId) ?? []),
-    [workout?.exercises],
-  );
+  const initialSelectedIds = useMemo(() => {
+    if (context === "template") {
+      return new Set<string>(
+        draftTemplate?.exercises.map((e) => e.exerciseId) ?? [],
+      );
+    }
+    return new Set<string>(workout?.exercises.map((e) => e.exerciseId) ?? []);
+  }, [workout?.exercises, draftTemplate?.exercises, context]);
 
   // Local, temporary selection buffer (UI only)
   const [tempSelectedIds, setTempSelectedIds] =
@@ -88,7 +101,7 @@ export default function ExercisesScreen() {
 
   const selectedExerciseIds = isSelectionMode
     ? tempSelectedIds
-    : new Set(workout?.exercises.map((e) => e.exerciseId) ?? []);
+    : initialSelectedIds;
 
   const selectedCount = selectedExerciseIds.size;
 
@@ -158,7 +171,11 @@ export default function ExercisesScreen() {
     Haptics.selectionAsync();
 
     if (replaceExerciseId) {
-      replaceExercise(replaceExerciseId, exercise.id);
+      if (context === "template") {
+        replaceDraftExercise(replaceExerciseId, exercise.id);
+      } else {
+        replaceExercise(replaceExerciseId, exercise.id);
+      }
       router.back();
       return;
     }
@@ -274,14 +291,22 @@ export default function ExercisesScreen() {
               // Remove exercises that were unselected
               initialSelectedIds.forEach((id) => {
                 if (!tempSelectedIds.has(id)) {
-                  removeExercise(id);
+                  if (context === "template") {
+                    removeExerciseFromDraft(id);
+                  } else {
+                    removeExercise(id);
+                  }
                 }
               });
 
               // Add newly selected exercises
               tempSelectedIds.forEach((id) => {
                 if (!initialSelectedIds.has(id)) {
-                  addExercise(id);
+                  if (context === "template") {
+                    addExerciseToDraft(id);
+                  } else {
+                    addExercise(id);
+                  }
                 }
               });
 

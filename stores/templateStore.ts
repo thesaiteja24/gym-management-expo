@@ -1,3 +1,5 @@
+import { checkNetworkStatus } from "@/hooks/useNetworkStatus";
+import { enqueue } from "@/lib/offlineQueue";
 import { zustandStorage } from "@/lib/storage";
 import {
   createTemplateService,
@@ -7,9 +9,9 @@ import {
 } from "@/services/templateService";
 import { serializeTemplateForApi } from "@/utils/template";
 import * as Crypto from "expo-crypto";
-import { router } from "expo-router";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useAuth } from "./authStore";
 import { TemplateExercise, TemplateSet, TemplateState } from "./template/types";
 import { useWorkout } from "./workoutStore";
 
@@ -41,8 +43,35 @@ export const useTemplate = create<TemplateState>()(
 
       createTemplate: async (data) => {
         set({ templateLoading: true });
+
+        const payload = serializeTemplateForApi(data);
+        const userId = useAuth.getState().user?.userId;
+
         try {
-          const payload = serializeTemplateForApi(data);
+          // Network check
+          const { isConnected, isInternetReachable } =
+            await checkNetworkStatus();
+          const isOnline = isConnected && isInternetReachable !== false;
+
+          if (!isOnline && userId) {
+            enqueue("CREATE_TEMPLATE", payload, userId);
+            // Optimistic Update: Add to local templates
+            const newTemplate = {
+              ...payload,
+              id: Crypto.randomUUID(), // Temp ID, might need reconciliation later if backend returns diff ID
+              // But wait, payload usually lacks ID for create.
+              // Ideally we generate ID on client for offline parity.
+              // For now, let's just assume we reload or separate "offline" list?
+              // ActiveWorkoutSlice used clientId. Templates don't have clientId in schema yet?
+              // We didn't add clientId to Template Schema in Phase 0.
+              // So we can't fully guarantee idempotency or ID matching for Templates yet.
+              // We'll just queue it.
+            };
+            // Ideally we should update local state optimistically too, but for now just queue.
+            set({ templateLoading: false });
+            return { success: true, queued: true };
+          }
+
           const res = await createTemplateService(payload);
           if (res.success) {
             // Optimistic or Refetch
@@ -51,6 +80,11 @@ export const useTemplate = create<TemplateState>()(
           }
           return res;
         } catch (e) {
+          if (userId) {
+            enqueue("CREATE_TEMPLATE", payload, userId);
+            set({ templateLoading: false });
+            return { success: true, queued: true };
+          }
           return { success: false, error: e };
         } finally {
           set({ templateLoading: false });
@@ -59,9 +93,27 @@ export const useTemplate = create<TemplateState>()(
 
       updateTemplate: async (id, data) => {
         set({ templateLoading: true });
+
+        const payload =
+          "exercises" in data ? serializeTemplateForApi(data as any) : data;
+        const userId = useAuth.getState().user?.userId;
+
         try {
-          const payload =
-            "exercises" in data ? serializeTemplateForApi(data as any) : data;
+          const { isConnected, isInternetReachable } =
+            await checkNetworkStatus();
+          const isOnline = isConnected && isInternetReachable !== false;
+
+          if (!isOnline && userId) {
+            enqueue("EDIT_TEMPLATE", { id, ...payload }, userId);
+            // Optimistic local update
+            set((state) => ({
+              templates: state.templates.map((t) =>
+                t.id === id ? ({ ...t, ...payload } as any) : t,
+              ),
+            }));
+            set({ templateLoading: false });
+            return { success: true, queued: true };
+          }
 
           // @ts-ignore
           const res = await updateTemplateService(id, payload);
@@ -76,6 +128,16 @@ export const useTemplate = create<TemplateState>()(
           }
           return res;
         } catch (e) {
+          if (userId) {
+            enqueue("EDIT_TEMPLATE", { id, ...payload }, userId);
+            set((state) => ({
+              templates: state.templates.map((t) =>
+                t.id === id ? ({ ...t, ...payload } as any) : t,
+              ),
+            }));
+            set({ templateLoading: false });
+            return { success: true, queued: true };
+          }
           return { success: false, error: e };
         } finally {
           set({ templateLoading: false });
@@ -84,15 +146,31 @@ export const useTemplate = create<TemplateState>()(
 
       deleteTemplate: async (id) => {
         set({ templateLoading: true });
+
+        const userId = useAuth.getState().user?.userId;
+
         try {
-          // Optimistic update
+          const { isConnected, isInternetReachable } =
+            await checkNetworkStatus();
+          const isOnline = isConnected && isInternetReachable !== false;
+
+          // Optimistic update (always good for delete)
           set((state) => ({
             templates: state.templates.filter((t) => t.id !== id),
           }));
+
+          if (!isOnline && userId) {
+            enqueue("DELETE_TEMPLATE", { id }, userId);
+            set({ templateLoading: false });
+            return;
+          }
+
           await deleteTemplateService(id);
         } catch (e) {
-          // Revert? For now just log
           console.error("Failed to delete template", e);
+          if (userId) {
+            enqueue("DELETE_TEMPLATE", { id }, userId);
+          }
         } finally {
           set({ templateLoading: false });
         }
@@ -104,7 +182,6 @@ export const useTemplate = create<TemplateState>()(
 
         const { loadTemplate } = useWorkout.getState();
         loadTemplate(template);
-        router.push("/(app)/workout/start");
       },
 
       /* ───── Draft Actions ───── */

@@ -121,6 +121,7 @@ export interface WorkoutState {
 
   /* Workout */
   getAllWorkouts: () => Promise<void>;
+  upsertWorkoutHistoryItem: (item: WorkoutHistoryItem) => void;
   deleteWorkout: (id: string) => Promise<boolean>;
   startWorkout: () => void;
   loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => void;

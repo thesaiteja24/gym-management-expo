@@ -14,7 +14,12 @@ import {
 /**
  * Visual variants supported by the Button component.
  */
-export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "danger"
+  | "ghost"
+  | "outline";
 
 /**
  * Props for the Button component.
@@ -131,6 +136,7 @@ export function Button({
     danger:
       "bg-white border border-red-200/60 dark:bg-neutral-900 dark:border-red-800",
     ghost: "bg-transparent",
+    outline: "bg-transparent border border-neutral-300 dark:border-neutral-700",
   };
 
   const textVariantClass: Record<ButtonVariant, string> = {
@@ -138,6 +144,7 @@ export function Button({
     secondary: "text-black dark:text-white",
     danger: "text-red-600",
     ghost: "text-blue-500",
+    outline: "text-neutral-700 dark:text-neutral-300",
   };
 
   return (

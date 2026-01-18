@@ -9,6 +9,7 @@ export interface HistorySlice {
   workoutLoading: boolean;
   workoutHistory: WorkoutHistoryItem[];
   getAllWorkouts: () => Promise<void>;
+  upsertWorkoutHistoryItem: (item: WorkoutHistoryItem) => void;
   deleteWorkout: (id: string) => Promise<boolean>;
 }
 
@@ -33,6 +34,22 @@ export const createHistorySlice: StateCreator<
     } catch (error) {
       set({ workoutLoading: false });
     }
+  },
+
+  upsertWorkoutHistoryItem: (item: WorkoutHistoryItem) => {
+    set((state) => {
+      const exists = state.workoutHistory.some((w) => w.id === item.id);
+      if (exists) {
+        return {
+          workoutHistory: state.workoutHistory.map((w) =>
+            w.id === item.id ? item : w,
+          ),
+        };
+      }
+      return {
+        workoutHistory: [item, ...state.workoutHistory],
+      };
+    });
   },
 
   deleteWorkout: async (id: string) => {

@@ -4,6 +4,7 @@ import {
   createWorkoutService,
   updateWorkoutService,
 } from "@/services/workoutServices";
+import { WorkoutTemplate } from "@/stores/template/types";
 import {
   finalizeSetTimer,
   isValidCompletedSet,
@@ -12,7 +13,7 @@ import {
 import * as Crypto from "expo-crypto";
 import { StateCreator } from "zustand";
 import { useAuth } from "../authStore";
-import { useExercise } from "../exerciseStore";
+import { ExerciseType, useExercise } from "../exerciseStore";
 import {
   ExerciseGroupType,
   WorkoutHistoryItem,
@@ -22,7 +23,6 @@ import {
   WorkoutPruneReport,
   WorkoutState,
 } from "./types";
-import { WorkoutTemplate } from "@/stores/template/types";
 
 export interface ActiveWorkoutSlice {
   workoutSaving: boolean;
@@ -273,13 +273,76 @@ export const createActiveWorkoutSlice: StateCreator<
       const { isConnected, isInternetReachable } = await checkNetworkStatus();
       const isOnline = isConnected && isInternetReachable !== false;
 
+      // --- Helper to create optimistic history item ---
+      const createOptimisticItem = (
+        log: WorkoutLog,
+        logId: string,
+      ): WorkoutHistoryItem => ({
+        id: logId,
+        title: log.title || "Untitled Workout",
+        startTime: log.startTime.toISOString(),
+        endTime: log.endTime.toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isEdited: false,
+        editedAt: null,
+        exerciseGroups: log.exerciseGroups.map((g) => ({
+          id: g.id,
+          groupType: g.groupType,
+          groupIndex: g.groupIndex,
+          restSeconds: g.restSeconds ?? null,
+        })),
+        exercises: log.exercises.map((ex) => ({
+          id: Crypto.randomUUID(), // Temp ID
+          exerciseId: ex.exerciseId,
+          exerciseIndex: ex.exerciseIndex,
+          exerciseGroupId: ex.groupId ?? null,
+          exercise: (useExercise
+            .getState()
+            .exerciseList.find((e) => e.id === ex.exerciseId) || {
+            id: ex.exerciseId,
+            title: "Unknown Exercise",
+            thumbnailUrl: "",
+            exerciseType: "repsOnly" as ExerciseType,
+            description: "",
+            muscleGroups: [],
+            equipment: [],
+          }) as any, // Cast to any to avoid strict structural match issues for now
+          sets: ex.sets.map((s) => ({
+            id: s.id,
+            setIndex: s.setIndex,
+            setType: s.setType,
+            weight: s.weight ?? null,
+            reps: s.reps ?? null,
+            rpe: s.rpe ?? null,
+            durationSeconds: s.durationSeconds ?? null,
+            restSeconds: s.restSeconds ?? null,
+            note: s.note ?? null,
+          })),
+        })),
+      });
+
       if (!isOnline) {
         const userId = useAuth.getState().user?.userId;
         if (userId) {
           if (prepared.id) {
             enqueue("EDIT_WORKOUT", { id: prepared.id, ...payload }, userId);
+            // Optimistic update for edit
+            get().upsertWorkoutHistoryItem(
+              createOptimisticItem(prepared, prepared.id),
+            );
           } else {
             enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
+            // Optimistic update for create (using clientId as temp ID if needed, or if prepared.id is undefined)
+            // But History Item needs an ID.
+            // In theory, `prepared` should have an ID if it's an edit. If create, it doesn't.
+            // When we sync, the backend gives a real ID.
+            // If we use clientId as ID locally, we might have duplicates if we later fetch global list.
+            // But we must show SOMETHING.
+            // Let's use clientId as the ID for now.
+            get().upsertWorkoutHistoryItem(
+              createOptimisticItem(prepared, clientId),
+            );
           }
         }
         set({ workoutSaving: false });
@@ -290,14 +353,22 @@ export const createActiveWorkoutSlice: StateCreator<
       if (prepared.id) {
         // @ts-ignore
         await updateWorkoutService(prepared.id, payload);
+        // Optimistic update for edit
+        get().upsertWorkoutHistoryItem(
+          createOptimisticItem(prepared, prepared.id),
+        );
       } else {
         // @ts-ignore
-        await createWorkoutService(payloadWithClientId);
+        const res = await createWorkoutService(payloadWithClientId);
+        if (res.success && res.data) {
+          // Use the REAL data from backend
+          get().upsertWorkoutHistoryItem(res.data);
+        }
       }
 
       set({ workoutSaving: false });
-      // Refresh history list to show new edits/creates
-      get().getAllWorkouts(); // Assuming getAllWorkouts is available on the store (merged slice) or cast needed
+      // We don't need to refetch all workouts anymore!
+      // get().getAllWorkouts();
       return { success: true };
     } catch (error) {
       // If network error, queue it
