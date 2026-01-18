@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
 import ExerciseGroupModal from "@/components/workout/ExerciseGroupModal";
 import ExerciseRow from "@/components/workout/ExerciseRow";
 import { useAuth } from "@/stores/authStore";
@@ -9,7 +10,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -53,6 +53,7 @@ export default function TemplateEditor() {
   } = useTemplate();
 
   /* ───── Grouping State ───── */
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [groupingMode, setGroupingMode] = useState<{
     type: ExerciseGroupType;
     sourceExerciseId: string;
@@ -99,7 +100,7 @@ export default function TemplateEditor() {
 
   const handleCreateGroup = (
     currentExerciseId: string,
-    type: "superSet" | "giantSet",
+    type: ExerciseGroupType,
   ) => {
     setGroupingMode({
       type,
@@ -176,27 +177,11 @@ export default function TemplateEditor() {
   }, [navigation, draftTemplate, saving, isEditing]);
 
   const handleCancel = () => {
-    // Check for changes?
-    // For simplicity, just confirm discard if there's any content
     if (
       draftTemplate &&
       (draftTemplate.title || draftTemplate.exercises.length > 0)
     ) {
-      Alert.alert(
-        "Discard Changes?",
-        "You have unsaved changes. Are you sure you want to discard them?",
-        [
-          { text: "Keep Editing", style: "cancel" },
-          {
-            text: "Discard",
-            style: "destructive",
-            onPress: () => {
-              discardDraftTemplate();
-              router.back();
-            },
-          },
-        ],
-      );
+      setIsDeleteModalVisible(true);
     } else {
       discardDraftTemplate();
       router.back();
@@ -311,8 +296,7 @@ export default function TemplateEditor() {
                 preferredWeightUnit={preferredWeightUnit}
                 isTemplate
                 isActive={isActive}
-                // @ts-ignore
-                isDragging={isActive} // Revisit this prop: DraggableFlatList passes isActive, but ExerciseRow expects isDragging? Props say isDragging.
+                isDragging={isActive}
                 drag={drag}
                 groupDetails={
                   item.exerciseGroupId
@@ -345,6 +329,11 @@ export default function TemplateEditor() {
                     },
                   });
                 }}
+                onSaveRestPreset={(setId, seconds) =>
+                  updateDraftSet(item.exerciseId, setId, {
+                    restSeconds: seconds,
+                  })
+                }
               />
             );
           }}
@@ -413,6 +402,18 @@ export default function TemplateEditor() {
           setSelectedGroupExerciseIds(new Set());
           setIsMuscleGroupModalVisible(false);
         }}
+      />
+      <DeleteConfirmModal
+        visible={isDeleteModalVisible}
+        title="Discard Changes?"
+        description="You have unsaved changes. Are you sure you want to discard them?"
+        onConfirm={() => {
+          setIsDeleteModalVisible(false);
+          discardDraftTemplate();
+          router.back();
+        }}
+        confirmText="Discard"
+        onCancel={() => setIsDeleteModalVisible(false)}
       />
     </SafeAreaView>
   );

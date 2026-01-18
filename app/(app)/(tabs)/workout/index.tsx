@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/Button";
 import TemplateCard from "@/components/workout/TemplateCard";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useExercise } from "@/stores/exerciseStore";
 import { useTemplate } from "@/stores/templateStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -13,21 +12,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function WorkoutScreen() {
   const colors = useThemeColor();
 
-  const {
-    workout,
-    discardWorkout,
-    workoutHistory,
-    loadWorkoutHistory: loadHistoryList,
-  } = useWorkout();
+  const { workout, discardWorkout } = useWorkout();
   const { templates, getAllTemplates } = useTemplate();
-  const { exerciseList } = useExercise(); // Get list instead of undefined map
-  const insets = useSafeAreaInsets();
-
-  const exerciseTypeMap = React.useMemo(() => {
-    const map = new Map();
-    exerciseList.forEach((ex) => map.set(ex.id, ex.exerciseType));
-    return map;
-  }, [exerciseList]);
 
   useEffect(() => {
     getAllTemplates();

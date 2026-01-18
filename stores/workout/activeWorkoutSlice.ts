@@ -185,6 +185,10 @@ export const createActiveWorkoutSlice: StateCreator<
     };
   },
 
+  /**
+   * This function is used to load a workout history item into the active workout state
+   * It is used when the user wants to edit a previous workout
+   */
   loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => {
     // Map history item to active workout state
     const workoutLog: WorkoutLog = {
@@ -223,6 +227,11 @@ export const createActiveWorkoutSlice: StateCreator<
     });
   },
 
+  /**
+   * This function is used to load a workout template into the active workout state
+   * It is used when the user wants to start a new workout from a template
+   * It is called in StartWorkoutFromTemplate() in templateStore
+   */
   loadTemplate: (template: WorkoutTemplate) => {
     // Map template to NEW active workout state
     const workoutLog: WorkoutLog = {
@@ -333,13 +342,6 @@ export const createActiveWorkoutSlice: StateCreator<
             );
           } else {
             enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
-            // Optimistic update for create (using clientId as temp ID if needed, or if prepared.id is undefined)
-            // But History Item needs an ID.
-            // In theory, `prepared` should have an ID if it's an edit. If create, it doesn't.
-            // When we sync, the backend gives a real ID.
-            // If we use clientId as ID locally, we might have duplicates if we later fetch global list.
-            // But we must show SOMETHING.
-            // Let's use clientId as the ID for now.
             get().upsertWorkoutHistoryItem(
               createOptimisticItem(prepared, clientId),
             );

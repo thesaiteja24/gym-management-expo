@@ -53,9 +53,7 @@ export function serializeTemplateForApi(
             ? Number(set.durationSeconds)
             : undefined,
           restSeconds: set.restSeconds ? Number(set.restSeconds) : undefined,
-          // Template sets don't usually have 'completed' or 'note' in the same way,
-          // but if they did, handle here.
-          // TemplateSet type: id, setIndex, setType, weight, reps, rpe, durationSeconds, restSeconds
+          note: set.note ?? undefined,
         })),
       };
     }),

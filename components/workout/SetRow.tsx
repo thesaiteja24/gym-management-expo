@@ -257,22 +257,6 @@ function SetRow({
 
       if (direction === "left") {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        // Left Panel Open (Swiping Right)
-        // Actually direction arg in onSwipeableOpen refers to WHICH SIDE OPENED.
-        // 'left' -> Left actions panel opened.
-        // 'right' -> Right actions panel opened.
-
-        // Re-reading original code logic assumption:
-        // renderLeftActions -> Green Checkmark.
-        // We want GREEN CHECKMARK (Left Panel) to trigger Complete.
-        // That corresponds to `direction === 'left'`.
-        // The previous code had `direction === 'right'` triggering Complete.
-        // This implies previous code had Right Panel as Complete?
-        // Or my understanding of `direction` arg is flipped.
-        // Let's assume standard intuitive behavior and stick to previous working logic if confusing.
-        // HOWEVER, user says "disable wiggle and save gestures".
-        // So I disabled `renderLeftActions` for template.
-        // So swiping right (drag to right) will be blocked or show nothing.
       }
     },
     onSwipeableClose: () => {
@@ -369,7 +353,6 @@ function SetRow({
               >
                 <MaterialCommunityIcons
                   name={
-                    // @ts-ignore
                     set.note || isNoteOpen ? "note-text" : "note-text-outline"
                   }
                   size={22}

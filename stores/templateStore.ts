@@ -59,15 +59,7 @@ export const useTemplate = create<TemplateState>()(
             const newTemplate = {
               ...payload,
               id: Crypto.randomUUID(), // Temp ID, might need reconciliation later if backend returns diff ID
-              // But wait, payload usually lacks ID for create.
-              // Ideally we generate ID on client for offline parity.
-              // For now, let's just assume we reload or separate "offline" list?
-              // ActiveWorkoutSlice used clientId. Templates don't have clientId in schema yet?
-              // We didn't add clientId to Template Schema in Phase 0.
-              // So we can't fully guarantee idempotency or ID matching for Templates yet.
-              // We'll just queue it.
             };
-            // Ideally we should update local state optimistically too, but for now just queue.
             set({ templateLoading: false });
             return { success: true, queued: true };
           }
@@ -198,6 +190,7 @@ export const useTemplate = create<TemplateState>()(
         });
       },
 
+      // Update template title and template note
       updateDraftTemplate: (patch) => {
         const draft = get().draftTemplate;
         if (!draft) return;
@@ -208,6 +201,7 @@ export const useTemplate = create<TemplateState>()(
         set({ draftTemplate: null });
       },
 
+      // add exercise to draft template
       addExerciseToDraft: (exerciseId) => {
         const draft = get().draftTemplate;
         if (!draft) return;
@@ -227,6 +221,7 @@ export const useTemplate = create<TemplateState>()(
         });
       },
 
+      // remove exercise from draft template used in exercise editor and exercise screen
       removeExerciseFromDraft: (exerciseId) => {
         const draft = get().draftTemplate;
         if (!draft) return;
@@ -243,6 +238,7 @@ export const useTemplate = create<TemplateState>()(
         });
       },
 
+      // replace exercise in draft template used in exercise editor and exercise screen
       replaceDraftExercise: (oldId, newId) => {
         const draft = get().draftTemplate;
         if (!draft) return;
@@ -256,6 +252,7 @@ export const useTemplate = create<TemplateState>()(
         });
       },
 
+      // reorder exercises in draft template used in exercise editor and exercise screen
       reorderDraftExercises: (ordered) => {
         const draft = get().draftTemplate;
         if (!draft) return;
@@ -271,6 +268,7 @@ export const useTemplate = create<TemplateState>()(
         });
       },
 
+      // add set to draft template used in exercise editor and exercise screen
       addSetToDraft: (exerciseId) => {
         const draft = get().draftTemplate;
         if (!draft) return;
@@ -286,6 +284,7 @@ export const useTemplate = create<TemplateState>()(
               rpe: undefined,
               durationSeconds: undefined,
               restSeconds: undefined,
+              note: undefined,
             };
             return {
               ...e,
@@ -303,6 +302,7 @@ export const useTemplate = create<TemplateState>()(
         });
       },
 
+      // update set in draft template used in exercise editor and exercise screen
       updateDraftSet: (exerciseId, setId, patch) => {
         const draft = get().draftTemplate;
         if (!draft) return;
@@ -321,6 +321,7 @@ export const useTemplate = create<TemplateState>()(
         });
       },
 
+      // remove set from draft template used in exercise editor and exercise screen
       removeSetFromDraft: (exerciseId, setId) => {
         const draft = get().draftTemplate;
         if (!draft) return;
@@ -341,6 +342,7 @@ export const useTemplate = create<TemplateState>()(
         });
       },
 
+      // create exercise group in draft template used in exercise editor and exercise screen
       createDraftExerciseGroup: (exerciseIds, type) => {
         const draft = get().draftTemplate;
         if (!draft) return;
