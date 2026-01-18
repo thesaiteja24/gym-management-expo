@@ -121,7 +121,7 @@ export function serializeWorkoutForApi(workout: WorkoutLog) {
 }
 
 /* ───────────────── Validation ───────────────── */
-
+// NOTE: Keep this logic in sync with backend `src/utils/workoutValidation.ts`
 export function isValidCompletedSet(
   set: WorkoutLogSet,
   exerciseType: ExerciseType,

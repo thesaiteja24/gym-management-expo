@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
+import { useTemplate } from "@/stores/templateStore";
 import {
   SetType,
   useWorkout,
@@ -13,6 +14,7 @@ import {
   formatTimeAgo,
 } from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
+import * as Crypto from "expo-crypto";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -149,6 +151,57 @@ export default function WorkoutDetails() {
     }
   };
 
+  const handleSaveAsTemplate = () => {
+    if (!workout) return;
+
+    const { startDraftTemplate } = useTemplate.getState();
+
+    // Map history to template draft
+    // We generate new UUIDs for the template entities
+    const exercises = workout.exercises.map((ex: any, exIdx: number) => ({
+      id: Crypto.randomUUID(),
+      exerciseId: ex.exercise.id,
+      exerciseIndex: exIdx,
+      sets: ex.sets.map((s: any, sIdx: number) => ({
+        id: Crypto.randomUUID(),
+        setIndex: sIdx,
+        setType: s.setType,
+        weight: s.weight,
+        reps: s.reps,
+        // rpe: s.rpe, // stored in note? or separate field?
+        // History set usually has rpe/duration if valid
+        // Start types have rpe/duration.
+        // Let's check WorkoutHistorySet type in types.ts
+        // It has no 'rpe'. It has 'note'.
+        // Active workout has 'rpe'. History might store it in note or just miss it if schema didn't have it?
+        // Schema has `rpe` in `WorkoutSet`?
+        // Let's check Prisma schema.
+        // `WorkoutSet` in schema has `weight`, `reps`, `duration`, `distance`. No `rpe`.
+        // `ActiveWorkout` (local) has `rpe`.
+        // If `rpe` isn't persisted to DB, it's lost in history.
+        // Verify `WorkoutHistorySet` type: `weight`, `reps`, `durationSeconds`, `restSeconds`, `note`.
+        // `rpe` is missing from history.
+        // So for template, we leave RPE blank or parse from note?
+        // Leave blank for now.
+        durationSeconds: s.durationSeconds,
+        restSeconds: s.restSeconds,
+      })),
+    }));
+
+    startDraftTemplate({
+      title: workout.title || "Untitled Workout",
+      notes: "Created from workout history",
+      exercises: exercises as any, // Type cast if needed due to strict types
+      exerciseGroups: [], // Groups logic if needed?
+      // If we want to preserve supersets, we need to map exerciseGroups too.
+      // For MVP "Save as Template", flattening to straight list is acceptable or we map groups.
+      // Let's stick to flat list or simple mapping if easy.
+      // TemplateExerciseGroup follows same structure.
+    });
+
+    router.push("/(app)/template/editor");
+  };
+
   if (!workout) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
@@ -267,6 +320,11 @@ export default function WorkoutDetails() {
           <Button
             title="Edit Workout"
             onPress={handleEdit}
+            variant="secondary"
+          />
+          <Button
+            title="Save as Template"
+            onPress={handleSaveAsTemplate}
             variant="secondary"
           />
           <Button

@@ -1,5 +1,9 @@
 import SetRow from "@/components/workout/SetRow";
 import { Exercise, ExerciseType } from "@/stores/exerciseStore";
+import {
+  TemplateExercise,
+  TemplateExerciseGroup,
+} from "@/stores/template/types";
 import { WeightUnits } from "@/stores/userStore";
 import { WorkoutLogExercise, WorkoutLogGroup } from "@/stores/workoutStore";
 import {
@@ -8,7 +12,7 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -65,15 +69,16 @@ function getGroupColor(groupId: string) {
 /* ───────────────── Props ───────────────── */
 
 type Props = {
-  exercise: WorkoutLogExercise;
+  exercise: WorkoutLogExercise | TemplateExercise;
   exerciseDetails: Exercise;
   isActive: boolean;
   isDragging: boolean;
-  groupDetails?: WorkoutLogGroup;
+  groupDetails?: WorkoutLogGroup | TemplateExerciseGroup | null;
   preferredWeightUnit: WeightUnits;
+  isTemplate?: boolean;
 
-  drag: () => void;
-  onPress: () => void;
+  drag?: () => void;
+  onPress?: () => void;
 
   onReplaceExercise: () => void;
   onCreateSuperSet: () => void;
@@ -83,13 +88,13 @@ type Props = {
 
   onAddSet: () => void;
   onUpdateSet: (setId: string, patch: any) => void;
-  onToggleCompleteSet: (setId: string) => void;
+  onToggleCompleteSet?: (setId: string) => void;
   onDeleteSet: (setId: string) => void;
 
-  onStartSetTimer: (setId: string) => void;
-  onStopSetTimer: (setId: string) => void;
+  onStartSetTimer?: (setId: string) => void;
+  onStopSetTimer?: (setId: string) => void;
 
-  onSaveRestPreset: (setId: string, seconds: number) => void;
+  onSaveRestPreset?: (setId: string, seconds: number) => void;
 };
 
 /* ───────────────── Component ───────────────── */
@@ -101,6 +106,7 @@ function ExerciseRow({
   isActive,
   groupDetails,
   preferredWeightUnit,
+  isTemplate = false,
   drag,
   onPress,
   onReplaceExercise,
@@ -153,6 +159,7 @@ function ExerciseRow({
           <TouchableOpacity
             onPress={onPress}
             onLongPress={drag}
+            delayLongPress={200}
             activeOpacity={0.8}
             className="flex-row items-center gap-4"
           >
@@ -197,7 +204,7 @@ function ExerciseRow({
           className="self-start rounded-full"
           style={{ backgroundColor: getGroupColor(groupDetails.id) }}
         >
-          <Text className="font-semibold w-full px-3 py-1 text-xs text-white">
+          <Text className="w-full px-3 py-1 text-xs font-semibold text-white">
             {`${groupDetails.groupType.toUpperCase()} ${String.fromCharCode("A".charCodeAt(0) + groupDetails.groupIndex)}`}
           </Text>
         </View>
@@ -210,9 +217,12 @@ function ExerciseRow({
             SET
           </Text>
 
-          <Text className="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-            PREV
-          </Text>
+          {!isTemplate && (
+            <Text className="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              PREV
+            </Text>
+          )}
+          {isTemplate && <View className="w-8" />}
         </View>
 
         {/* Rest and Note */}
@@ -275,11 +285,12 @@ function ExerciseRow({
           hasReps={hasReps}
           hasDuration={hasDuration}
           preferredWeightUnit={preferredWeightUnit}
+          isTemplate={isTemplate}
           onUpdate={(patch) => onUpdateSet(set.id, patch)}
-          onToggleComplete={() => onToggleCompleteSet(set.id)}
+          onToggleComplete={() => onToggleCompleteSet?.(set.id)}
           onDelete={() => onDeleteSet(set.id)}
-          onStartTimer={() => onStartSetTimer(set.id)}
-          onStopTimer={() => onStopSetTimer(set.id)}
+          onStartTimer={() => onStartSetTimer?.(set.id)}
+          onStopTimer={() => onStopSetTimer?.(set.id)}
           onOpenRestPicker={() => {
             setActiveRestSetId(set.id);
             setRestPickerVisible(true);
@@ -325,6 +336,7 @@ function ExerciseRow({
               <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
               <TouchableOpacity
                 onPress={() => {
+                  setMenuVisible(false);
                   onRemoveExerciseGroup();
                 }}
                 className="px-4 py-3"
@@ -335,7 +347,7 @@ function ExerciseRow({
                     ? " Super Set"
                     : groupDetails?.groupType === "giantSet"
                       ? " Giant Set"
-                      : ""}
+                      : " Group"}
                 </Text>
               </TouchableOpacity>
             </>
@@ -400,7 +412,7 @@ function ExerciseRow({
         onConfirm={(seconds) => {
           if (!activeRestSetId) return;
 
-          onSaveRestPreset(activeRestSetId, seconds);
+          onSaveRestPreset?.(activeRestSetId, seconds);
 
           setRestPickerVisible(false);
           setActiveRestSetId(null);
@@ -410,4 +422,4 @@ function ExerciseRow({
   );
 }
 
-export default React.memo(ExerciseRow);
+export default memo(ExerciseRow);

@@ -3,7 +3,14 @@ import { storage } from "./storage";
 
 const QUEUE_KEY = "offline-mutation-queue";
 
-export type MutationType = "CREATE_WORKOUT" | "EDIT_WORKOUT" | "UPDATE_PROFILE";
+export type MutationType =
+  | "CREATE_WORKOUT"
+  | "EDIT_WORKOUT"
+  | "DELETE_WORKOUT"
+  | "CREATE_TEMPLATE"
+  | "EDIT_TEMPLATE"
+  | "DELETE_TEMPLATE"
+  | "UPDATE_PROFILE";
 
 export interface QueuedMutation {
   id: string;
@@ -111,4 +118,55 @@ export function clearQueueForUser(userId: string): void {
  */
 export function getQueueSize(): number {
   return getQueue().length;
+}
+
+const FAILED_QUEUE_KEY = "offline-failed-queue";
+
+/**
+ * Get all failed mutations
+ */
+export function getFailedQueue(): QueuedMutation[] {
+  const raw = storage.getString(FAILED_QUEUE_KEY);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Save failed queue to storage
+ */
+function saveFailedQueue(queue: QueuedMutation[]): void {
+  storage.set(FAILED_QUEUE_KEY, JSON.stringify(queue));
+}
+
+/**
+ * Move a mutation to the failed queue
+ */
+export function moveToFailedQueue(id: string): void {
+  const queue = getQueue();
+  const mutation = queue.find((m) => m.id === id);
+
+  if (!mutation) return;
+
+  // Remove from main queue
+  const newQueue = queue.filter((m) => m.id !== id);
+  saveQueue(newQueue);
+
+  // Add to failed queue
+  const failedQueue = getFailedQueue();
+  failedQueue.push({
+    ...mutation,
+    retryCount: mutation.retryCount + 1, // Increment to show it failed
+  });
+  saveFailedQueue(failedQueue);
+}
+
+/**
+ * Get failed mutations for a specific user
+ */
+export function getFailedQueueForUser(userId: string): QueuedMutation[] {
+  return getFailedQueue().filter((m) => m.userId === userId);
 }

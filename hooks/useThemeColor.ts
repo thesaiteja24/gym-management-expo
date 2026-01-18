@@ -10,6 +10,7 @@ const COLORS = {
   primary: "#3b82f6",
   success: "#22c55e",
   danger: "#dc2626",
+  warning: "#f97316",
   black: "#000000",
   white: "#ffffff",
   neutral: {

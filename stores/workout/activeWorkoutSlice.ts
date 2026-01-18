@@ -4,6 +4,7 @@ import {
   createWorkoutService,
   updateWorkoutService,
 } from "@/services/workoutServices";
+import { WorkoutTemplate } from "@/stores/template/types";
 import {
   finalizeSetTimer,
   isValidCompletedSet,
@@ -12,7 +13,7 @@ import {
 import * as Crypto from "expo-crypto";
 import { StateCreator } from "zustand";
 import { useAuth } from "../authStore";
-import { useExercise } from "../exerciseStore";
+import { ExerciseType, useExercise } from "../exerciseStore";
 import {
   ExerciseGroupType,
   WorkoutHistoryItem,
@@ -29,6 +30,7 @@ export interface ActiveWorkoutSlice {
 
   startWorkout: () => void;
   loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => void;
+  loadTemplate: (template: WorkoutTemplate) => void;
   updateWorkout: (patch: Partial<WorkoutLog>) => void;
   prepareWorkoutForSave: () => {
     workout: WorkoutLog;
@@ -183,6 +185,10 @@ export const createActiveWorkoutSlice: StateCreator<
     };
   },
 
+  /**
+   * This function is used to load a workout history item into the active workout state
+   * It is used when the user wants to edit a previous workout
+   */
   loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => {
     // Map history item to active workout state
     const workoutLog: WorkoutLog = {
@@ -221,6 +227,47 @@ export const createActiveWorkoutSlice: StateCreator<
     });
   },
 
+  /**
+   * This function is used to load a workout template into the active workout state
+   * It is used when the user wants to start a new workout from a template
+   * It is called in StartWorkoutFromTemplate() in templateStore
+   */
+  loadTemplate: (template: WorkoutTemplate) => {
+    // Map template to NEW active workout state
+    const workoutLog: WorkoutLog = {
+      // No ID initially (create new on save)
+      title: template.title || "New Workout",
+      startTime: new Date(),
+      endTime: new Date(), // Placeholder, updates on save
+      exercises: template.exercises.map((ex) => ({
+        exerciseId: ex.exerciseId,
+        exerciseIndex: ex.exerciseIndex,
+        groupId: ex.exerciseGroupId || null,
+        sets: ex.sets.map((s) => ({
+          id: Crypto.randomUUID(), // New UUIDs for sets
+          setIndex: s.setIndex,
+          setType: s.setType,
+          weight: s.weight,
+          reps: s.reps,
+          rpe: s.rpe,
+          durationSeconds: s.durationSeconds,
+          restSeconds: s.restSeconds,
+          completed: false, // reset completion
+        })),
+      })),
+      exerciseGroups: template.exerciseGroups.map((g) => ({
+        id: g.id,
+        groupType: g.groupType,
+        groupIndex: g.groupIndex,
+        restSeconds: g.restSeconds,
+      })),
+    };
+
+    set({
+      workout: workoutLog,
+    });
+  },
+
   saveWorkout: async (prepared: WorkoutLog) => {
     set({ workoutSaving: true });
 
@@ -235,13 +282,69 @@ export const createActiveWorkoutSlice: StateCreator<
       const { isConnected, isInternetReachable } = await checkNetworkStatus();
       const isOnline = isConnected && isInternetReachable !== false;
 
+      // --- Helper to create optimistic history item ---
+      const createOptimisticItem = (
+        log: WorkoutLog,
+        logId: string,
+      ): WorkoutHistoryItem => ({
+        id: logId,
+        title: log.title || "Untitled Workout",
+        startTime: log.startTime.toISOString(),
+        endTime: log.endTime.toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isEdited: false,
+        editedAt: null,
+        exerciseGroups: log.exerciseGroups.map((g) => ({
+          id: g.id,
+          groupType: g.groupType,
+          groupIndex: g.groupIndex,
+          restSeconds: g.restSeconds ?? null,
+        })),
+        exercises: log.exercises.map((ex) => ({
+          id: Crypto.randomUUID(), // Temp ID
+          exerciseId: ex.exerciseId,
+          exerciseIndex: ex.exerciseIndex,
+          exerciseGroupId: ex.groupId ?? null,
+          exercise: (useExercise
+            .getState()
+            .exerciseList.find((e) => e.id === ex.exerciseId) || {
+            id: ex.exerciseId,
+            title: "Unknown Exercise",
+            thumbnailUrl: "",
+            exerciseType: "repsOnly" as ExerciseType,
+            description: "",
+            muscleGroups: [],
+            equipment: [],
+          }) as any, // Cast to any to avoid strict structural match issues for now
+          sets: ex.sets.map((s) => ({
+            id: s.id,
+            setIndex: s.setIndex,
+            setType: s.setType,
+            weight: s.weight ?? null,
+            reps: s.reps ?? null,
+            rpe: s.rpe ?? null,
+            durationSeconds: s.durationSeconds ?? null,
+            restSeconds: s.restSeconds ?? null,
+            note: s.note ?? null,
+          })),
+        })),
+      });
+
       if (!isOnline) {
         const userId = useAuth.getState().user?.userId;
         if (userId) {
           if (prepared.id) {
             enqueue("EDIT_WORKOUT", { id: prepared.id, ...payload }, userId);
+            // Optimistic update for edit
+            get().upsertWorkoutHistoryItem(
+              createOptimisticItem(prepared, prepared.id),
+            );
           } else {
             enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
+            get().upsertWorkoutHistoryItem(
+              createOptimisticItem(prepared, clientId),
+            );
           }
         }
         set({ workoutSaving: false });
@@ -252,14 +355,22 @@ export const createActiveWorkoutSlice: StateCreator<
       if (prepared.id) {
         // @ts-ignore
         await updateWorkoutService(prepared.id, payload);
+        // Optimistic update for edit
+        get().upsertWorkoutHistoryItem(
+          createOptimisticItem(prepared, prepared.id),
+        );
       } else {
         // @ts-ignore
-        await createWorkoutService(payloadWithClientId);
+        const res = await createWorkoutService(payloadWithClientId);
+        if (res.success && res.data) {
+          // Use the REAL data from backend
+          get().upsertWorkoutHistoryItem(res.data);
+        }
       }
 
       set({ workoutSaving: false });
-      // Refresh history list to show new edits/creates
-      get().getAllWorkouts(); // Assuming getAllWorkouts is available on the store (merged slice) or cast needed
+      // We don't need to refetch all workouts anymore!
+      // get().getAllWorkouts();
       return { success: true };
     } catch (error) {
       // If network error, queue it

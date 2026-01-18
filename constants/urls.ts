@@ -26,3 +26,6 @@ export const EXERCISE_ITEM_ENDPOINT = (id: string) => `/exercises/${id}`;
 
 export const WORKOUTS_ENDPONT = `/workouts`;
 export const WORKOUT_ITEM_ENDPOINT = (id: string) => `/workouts/${id}`;
+
+export const TEMPLATES_ENDPOINT = `/templates`;
+export const TEMPLATE_ITEM_ENDPOINT = (id: string) => `/templates/${id}`;

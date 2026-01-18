@@ -2,13 +2,14 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-    Platform,
-    Text,
-    TouchableOpacity,
-    View,
-    useColorScheme,
+  Platform,
+  Text,
+  TouchableOpacity,
+  View,
+  useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import SyncStatus from "../ui/SyncStatus";
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -44,7 +45,7 @@ export default function CustomHeader({
 
   return (
     <View
-      className="flex flex-row w-full items-center justify-between px-4"
+      className="flex w-full flex-row items-center justify-between px-4"
       style={{
         height: headerHeight,
         paddingTop: insets.top,
@@ -67,7 +68,7 @@ export default function CustomHeader({
           style={{ marginTop: insets.top }}
         >
           <Text
-            className="font-semibold text-xl"
+            className="text-xl font-semibold"
             style={{ color: colors.text }}
             numberOfLines={1}
           >
@@ -76,7 +77,7 @@ export default function CustomHeader({
         </View>
       ) : (
         <Text
-          className="font-semibold text-xl"
+          className="text-xl font-semibold"
           style={{ color: colors.text }}
           numberOfLines={1}
         >
@@ -85,13 +86,14 @@ export default function CustomHeader({
       )}
 
       {/* Right icons */}
-      <View className="flex flex-row items-center w-16 justify-end">
+      <View className="flex w-auto flex-row items-center justify-end">
+        <SyncStatus />
         {rightIcons.map((item, index) => {
           const color = item.disabled
             ? "#9ca3af"
             : item.color // individual override
-            ? item.color
-            : baseIconColor; // global or system color
+              ? item.color
+              : baseIconColor; // global or system color
 
           return (
             <TouchableOpacity

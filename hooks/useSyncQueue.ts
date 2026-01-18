@@ -1,11 +1,23 @@
 import {
   dequeue,
+  getFailedQueueForUser,
   getQueueForUser,
   incrementRetry,
+  moveToFailedQueue,
   QueuedMutation,
 } from "@/lib/offlineQueue";
-import { createWorkoutService } from "@/services/workoutServices";
+import {
+  createTemplateService,
+  deleteTemplateService,
+  updateTemplateService,
+} from "@/services/templateService";
+import {
+  createWorkoutService,
+  deleteWorkoutService,
+  updateWorkoutService,
+} from "@/services/workoutServices";
 import { useAuth } from "@/stores/authStore";
+import { useSyncStore } from "@/stores/syncStore";
 import { useCallback, useEffect, useRef } from "react";
 import { useNetworkStatus } from "./useNetworkStatus";
 
@@ -22,6 +34,23 @@ export function useSyncQueue() {
 
   const isSyncing = useRef(false);
 
+  // Update global store network status
+  useEffect(() => {
+    useSyncStore.getState().setNetworkStatus(isOnline);
+  }, [isOnline]);
+
+  const updateCounts = useCallback(() => {
+    if (!user?.userId) return;
+    const queue = getQueueForUser(user.userId);
+    const failed = getFailedQueueForUser(user.userId);
+    useSyncStore.getState().setQueueCounts(queue.length, failed.length);
+  }, [user?.userId]);
+
+  // Initial count load
+  useEffect(() => {
+    updateCounts();
+  }, [updateCounts]);
+
   const processMutation = useCallback(
     async (mutation: QueuedMutation): Promise<boolean> => {
       try {
@@ -29,14 +58,49 @@ export function useSyncQueue() {
           case "CREATE_WORKOUT":
             await createWorkoutService(mutation.payload);
             break;
-          // Add more mutation types here as needed
+          case "EDIT_WORKOUT":
+            await updateWorkoutService(mutation.payload.id, mutation.payload);
+            break;
+          case "DELETE_WORKOUT": // Assuming we might add this
+            await deleteWorkoutService(mutation.payload.id);
+            break;
+          case "UPDATE_PROFILE":
+            // await updateProfileService(mutation.payload);
+            break;
+          case "CREATE_TEMPLATE":
+            await createTemplateService(mutation.payload);
+            break;
+          case "EDIT_TEMPLATE":
+            await updateTemplateService(mutation.payload.id, mutation.payload);
+            break;
+          case "DELETE_TEMPLATE":
+            await deleteTemplateService(mutation.payload.id);
+            break;
           default:
             console.warn(`Unknown mutation type: ${mutation.type}`);
             return false;
         }
         return true;
-      } catch (error) {
-        console.error(`Failed to sync mutation ${mutation.id}:`, error);
+      } catch (error: any) {
+        const status = error?.response?.status;
+
+        console.error("[SYNC ERROR]", {
+          id: mutation.id,
+          type: mutation.type,
+          status,
+          message: error?.message,
+        });
+
+        // Non-retryable → move to failed queue (prevent data loss)
+        if (status && status >= 400 && status < 500) {
+          console.warn(
+            "[SYNC] Moving non-retryable mutation to failed queue",
+            mutation.id,
+          );
+          moveToFailedQueue(mutation.id);
+          return true; // Return true to signal handled (removed from main queue)
+        }
+
         return false;
       }
     },
@@ -47,12 +111,16 @@ export function useSyncQueue() {
     if (!user?.userId || isSyncing.current) return;
 
     isSyncing.current = true;
+    useSyncStore.getState().setSyncStatus(true);
+    updateCounts();
 
     const queue = getQueueForUser(user.userId);
 
     for (const mutation of queue) {
       if (mutation.retryCount >= MAX_RETRIES) {
-        console.warn(`Mutation ${mutation.id} exceeded max retries, skipping`);
+        console.warn("[SYNC] Moving dead mutation to failed queue", mutation);
+        moveToFailedQueue(mutation.id);
+        updateCounts();
         continue;
       }
 
@@ -60,6 +128,7 @@ export function useSyncQueue() {
 
       if (success) {
         dequeue(mutation.id);
+        updateCounts();
       } else {
         incrementRetry(mutation.id);
         // Wait before next attempt
@@ -68,7 +137,9 @@ export function useSyncQueue() {
     }
 
     isSyncing.current = false;
-  }, [user?.userId, processMutation]);
+    useSyncStore.getState().setSyncStatus(false);
+    updateCounts();
+  }, [user?.userId, processMutation, updateCounts]);
 
   // Sync when coming back online
   useEffect(() => {

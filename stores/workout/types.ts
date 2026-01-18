@@ -1,3 +1,4 @@
+import { WorkoutTemplate } from "@/stores/template/types";
 import { ExerciseType } from "../exerciseStore";
 
 /* ───────────────── Types ───────────────── */
@@ -83,6 +84,7 @@ export type WorkoutHistorySet = {
   setType: SetType;
   weight: number | null;
   reps: number | null;
+  rpe: number | null;
   durationSeconds: number | null;
   restSeconds: number | null;
   note: string | null;
@@ -119,6 +121,7 @@ export interface WorkoutState {
 
   /* Workout */
   getAllWorkouts: () => Promise<void>;
+  upsertWorkoutHistoryItem: (item: WorkoutHistoryItem) => void;
   deleteWorkout: (id: string) => Promise<boolean>;
   startWorkout: () => void;
   loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => void;
@@ -140,6 +143,8 @@ export interface WorkoutState {
   reorderExercises: (ordered: WorkoutLogExercise[]) => void;
   createExerciseGroup: (type: ExerciseGroupType, exerciseIds: string[]) => void;
   removeExerciseFromGroup: (exerciseId: string) => void;
+
+  loadTemplate: (template: WorkoutTemplate) => void;
 
   /* Sets */
   addSet: (exerciseId: string) => void;
