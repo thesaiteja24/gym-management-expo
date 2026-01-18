@@ -15,13 +15,18 @@ export function calculateWorkoutMetrics(
   let tonnage = 0;
   let completedSets = 0;
 
+  // Guard against undefined or null exercises
+  if (!workout || !workout.exercises || workout.exercises.length === 0) {
+    return { tonnage: 0, completedSets: 0 };
+  }
+
   const isLiveWorkout = workout.exercises.some((ex) =>
-    ex.sets.some((set) => "completed" in set),
+    ex.sets?.some((set) => "completed" in set),
   );
 
   workout.exercises.forEach((ex) => {
     const type = exerciseTypeMap.get(ex.exerciseId);
-    if (!type) return;
+    if (!type || !ex.sets) return;
 
     ex.sets.forEach((set) => {
       // Live workout → only completed sets

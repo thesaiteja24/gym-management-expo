@@ -233,15 +233,31 @@ export const createActiveWorkoutSlice: StateCreator<
    * It is called in StartWorkoutFromTemplate() in templateStore
    */
   loadTemplate: (template: WorkoutTemplate) => {
+    const exerciseStore = useExercise.getState();
+    const exerciseMap = new Map(
+      exerciseStore.exerciseList.map((e) => [e.id, e]),
+    );
+
+    // Validate and filter exercises that still exist
+    const validExercises = template.exercises.filter((ex) => {
+      const exists = exerciseMap.has(ex.exerciseId);
+      if (!exists) {
+        console.warn(
+          `Exercise ${ex.exerciseId} from template "${template.title}" not found in exercise store, skipping`,
+        );
+      }
+      return exists;
+    });
+
     // Map template to NEW active workout state
     const workoutLog: WorkoutLog = {
       // No ID initially (create new on save)
       title: template.title || "New Workout",
       startTime: new Date(),
       endTime: new Date(), // Placeholder, updates on save
-      exercises: template.exercises.map((ex) => ({
+      exercises: validExercises.map((ex, index) => ({
         exerciseId: ex.exerciseId,
-        exerciseIndex: ex.exerciseIndex,
+        exerciseIndex: index, // Re-index after filtering
         groupId: ex.exerciseGroupId || null,
         sets: ex.sets.map((s) => ({
           id: Crypto.randomUUID(), // New UUIDs for sets
@@ -252,6 +268,7 @@ export const createActiveWorkoutSlice: StateCreator<
           rpe: s.rpe,
           durationSeconds: s.durationSeconds,
           restSeconds: s.restSeconds,
+          note: s.note, // Preserve notes from template
           completed: false, // reset completion
         })),
       })),

@@ -56,6 +56,13 @@ export const useWorkout = create<WorkoutState>()(
           ) {
             state.workout.endTime = new Date(state.workout.endTime);
           }
+          // Convert editedAt from ISO string to Date
+          if (
+            state.workout.editedAt &&
+            typeof state.workout.editedAt === "string"
+          ) {
+            state.workout.editedAt = new Date(state.workout.editedAt);
+          }
         }
       },
     },

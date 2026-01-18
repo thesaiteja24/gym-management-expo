@@ -17,8 +17,10 @@ export default function WorkoutCard({
   const timeAgo = formatTimeAgo(workout.endTime);
   const volume = calculateWorkoutMetrics(workout, exerciseTypeMap).tonnage;
 
-  const previewExercises = workout.exercises.slice(0, 3);
-  const remaining = workout.exercises.length - previewExercises.length;
+  // Guard against missing exercises array
+  const exercises = workout.exercises || [];
+  const previewExercises = exercises.slice(0, 3);
+  const remaining = exercises.length - previewExercises.length;
 
   return (
     <TouchableOpacity

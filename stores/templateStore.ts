@@ -170,7 +170,12 @@ export const useTemplate = create<TemplateState>()(
 
       startWorkoutFromTemplate: (templateId) => {
         const template = get().templates.find((t) => t.id === templateId);
-        if (!template) return;
+        if (!template) {
+          console.error(`[Template] Template not found: ${templateId}`);
+          // Note: Toast import would be needed here for user notification
+          // For now, just log the error for debugging
+          return;
+        }
 
         const { loadTemplate } = useWorkout.getState();
         loadTemplate(template);
