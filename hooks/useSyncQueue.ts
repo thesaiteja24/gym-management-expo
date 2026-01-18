@@ -1,5 +1,6 @@
 import {
   dequeue,
+  getFailedQueueForUser,
   getQueueForUser,
   incrementRetry,
   moveToFailedQueue,
@@ -16,6 +17,7 @@ import {
   updateWorkoutService,
 } from "@/services/workoutServices";
 import { useAuth } from "@/stores/authStore";
+import { useSyncStore } from "@/stores/syncStore";
 import { useCallback, useEffect, useRef } from "react";
 import { useNetworkStatus } from "./useNetworkStatus";
 
@@ -31,6 +33,23 @@ export function useSyncQueue() {
   const isOnline = isConnected && isInternetReachable !== false;
 
   const isSyncing = useRef(false);
+
+  // Update global store network status
+  useEffect(() => {
+    useSyncStore.getState().setNetworkStatus(isOnline);
+  }, [isOnline]);
+
+  const updateCounts = useCallback(() => {
+    if (!user?.userId) return;
+    const queue = getQueueForUser(user.userId);
+    const failed = getFailedQueueForUser(user.userId);
+    useSyncStore.getState().setQueueCounts(queue.length, failed.length);
+  }, [user?.userId]);
+
+  // Initial count load
+  useEffect(() => {
+    updateCounts();
+  }, [updateCounts]);
 
   const processMutation = useCallback(
     async (mutation: QueuedMutation): Promise<boolean> => {
@@ -92,6 +111,8 @@ export function useSyncQueue() {
     if (!user?.userId || isSyncing.current) return;
 
     isSyncing.current = true;
+    useSyncStore.getState().setSyncStatus(true);
+    updateCounts();
 
     const queue = getQueueForUser(user.userId);
 
@@ -99,6 +120,7 @@ export function useSyncQueue() {
       if (mutation.retryCount >= MAX_RETRIES) {
         console.warn("[SYNC] Moving dead mutation to failed queue", mutation);
         moveToFailedQueue(mutation.id);
+        updateCounts();
         continue;
       }
 
@@ -106,6 +128,7 @@ export function useSyncQueue() {
 
       if (success) {
         dequeue(mutation.id);
+        updateCounts();
       } else {
         incrementRetry(mutation.id);
         // Wait before next attempt
@@ -114,7 +137,9 @@ export function useSyncQueue() {
     }
 
     isSyncing.current = false;
-  }, [user?.userId, processMutation]);
+    useSyncStore.getState().setSyncStatus(false);
+    updateCounts();
+  }, [user?.userId, processMutation, updateCounts]);
 
   // Sync when coming back online
   useEffect(() => {
