@@ -4,5 +4,6 @@
  * Re-exports all queue-related functionality.
  */
 
-export type { WorkoutMutation } from "../types";
+export type { TemplateMutation, WorkoutMutation } from "../types";
+export * from "./templateQueue";
 export * from "./workoutQueue";

@@ -84,6 +84,50 @@ export interface WorkoutMutation {
   retryCount: number;
 }
 
+/* ───────────────── Template Types ───────────────── */
+
+/**
+ * Mutation types for the template domain
+ */
+export type TemplateMutationType = "CREATE" | "UPDATE" | "DELETE";
+
+/**
+ * Serialized template exercise for API payload
+ */
+export interface SerializedTemplateExercise {
+  exerciseId: string;
+  exerciseIndex: number;
+  exerciseGroupId?: string | null;
+  sets: SerializedSet[];
+}
+
+/**
+ * Serialized template payload for API/queue
+ */
+export interface TemplatePayload {
+  clientId: string;
+  id?: string | null;
+  title?: string;
+  notes?: string;
+  exercises?: SerializedTemplateExercise[];
+  exerciseGroups?: SerializedExerciseGroup[];
+}
+
+/**
+ * Template mutation stored in the queue
+ */
+export interface TemplateMutation {
+  queueId: string;
+  clientId: string;
+  type: TemplateMutationType;
+  payload: TemplatePayload;
+  userId: string;
+  createdAt: number;
+  retryCount: number;
+}
+
+/* ───────────────── Sync Result ───────────────── */
+
 /**
  * Result of a sync operation
  */

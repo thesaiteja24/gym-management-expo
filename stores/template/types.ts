@@ -1,3 +1,4 @@
+import { SyncStatus } from "@/lib/sync/types";
 import { ExerciseGroupType, SetType } from "../workout/types";
 
 export interface TemplateSet {
@@ -31,8 +32,16 @@ export interface TemplateExerciseGroup {
   restSeconds?: number;
 }
 
+/**
+ * Workout template with offline-first support.
+ * - clientId: Client-generated stable identifier (for offline lookup)
+ * - id: Backend-generated ID (always present in synced items)
+ * - syncStatus: Track sync state for UI indicators
+ */
 export interface WorkoutTemplate {
+  clientId: string;
   id: string;
+  syncStatus: SyncStatus;
   userId: string;
   title: string;
   notes?: string;
@@ -45,10 +54,10 @@ export interface WorkoutTemplate {
 
 export type DraftTemplate = Omit<
   WorkoutTemplate,
-  "id" | "createdAt" | "updatedAt"
+  "id" | "createdAt" | "updatedAt" | "syncStatus"
 > & {
   // Optional ID if editing existing
-  id?: string;
+  id?: string | null;
 };
 
 export interface TemplateState {

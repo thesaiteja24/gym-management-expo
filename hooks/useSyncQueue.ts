@@ -7,17 +7,26 @@ import {
   QueuedMutation,
 } from "@/lib/offlineQueue";
 import {
+  dequeueTemplate,
   dequeueWorkout,
+  getTemplateQueueCounts,
+  getTemplateQueueForUser,
   getWorkoutQueueCounts,
   getWorkoutQueueForUser,
+  incrementTemplateRetry,
   incrementWorkoutRetry,
+  moveTemplateToFailedQueue,
   moveWorkoutToFailedQueue,
+  TemplateMutation,
   WorkoutMutation,
 } from "@/lib/sync/queue";
 import { queueEvents } from "@/lib/sync/queueEvents";
 import {
+  markTemplateFailed,
+  markTemplateSynced,
   markWorkoutFailed,
   markWorkoutSynced,
+  reconcileTemplateId,
   reconcileWorkoutId,
 } from "@/lib/sync/reconciler";
 import {
@@ -59,13 +68,14 @@ export function useSyncQueue() {
     // Legacy queue counts
     const queue = getQueueForUser(user.userId);
     const failed = getFailedQueueForUser(user.userId);
-    // New workout queue counts
+    // New queue counts
     const workoutCounts = getWorkoutQueueCounts(user.userId);
+    const templateCounts = getTemplateQueueCounts(user.userId);
     useSyncStore
       .getState()
       .setQueueCounts(
-        queue.length + workoutCounts.pending,
-        failed.length + workoutCounts.failed,
+        queue.length + workoutCounts.pending + templateCounts.pending,
+        failed.length + workoutCounts.failed + templateCounts.failed,
       );
   }, [user?.userId]);
 
@@ -136,6 +146,75 @@ export function useSyncQueue() {
           markWorkoutFailed(mutation.clientId);
           moveWorkoutToFailedQueue(mutation.queueId);
           return true; // Handled (removed from main queue)
+        }
+
+        return false;
+      }
+    },
+    [],
+  );
+
+  /**
+   * Process a single template mutation with ID reconciliation
+   */
+  const processTemplateMutation = useCallback(
+    async (mutation: TemplateMutation): Promise<boolean> => {
+      try {
+        switch (mutation.type) {
+          case "CREATE": {
+            const res = await createTemplateService(mutation.payload);
+            if (res.success && res.data?.id) {
+              reconcileTemplateId(mutation.clientId, res.data.id);
+              console.log(
+                `[SYNC] Reconciled template clientId=${mutation.clientId} -> id=${res.data.id}`,
+              );
+            } else {
+              markTemplateSynced(mutation.clientId);
+            }
+            break;
+          }
+          case "UPDATE": {
+            if (mutation.payload.id) {
+              await updateTemplateService(
+                mutation.payload.id,
+                mutation.payload,
+              );
+              markTemplateSynced(mutation.clientId);
+            } else {
+              console.warn(
+                "[SYNC] Template UPDATE mutation missing id, skipping",
+                mutation,
+              );
+              return false;
+            }
+            break;
+          }
+          case "DELETE": {
+            if (mutation.payload.id) {
+              await deleteTemplateService(mutation.payload.id);
+            }
+            break;
+          }
+          default:
+            console.warn(`[SYNC] Unknown template mutation type`, mutation);
+            return false;
+        }
+        return true;
+      } catch (error: any) {
+        const status = error?.response?.status;
+
+        console.error("[SYNC ERROR - Template]", {
+          queueId: mutation.queueId,
+          type: mutation.type,
+          clientId: mutation.clientId,
+          status,
+          message: error?.message,
+        });
+
+        if (status && status >= 400 && status < 500) {
+          markTemplateFailed(mutation.clientId);
+          moveTemplateToFailedQueue(mutation.queueId);
+          return true;
         }
 
         return false;
@@ -238,7 +317,33 @@ export function useSyncQueue() {
       }
     }
 
-    // --- Process legacy queue (templates, profile, etc.) ---
+    // --- Process template queue ---
+    const templateQueue = getTemplateQueueForUser(user.userId);
+
+    for (const mutation of templateQueue) {
+      if (mutation.retryCount >= MAX_RETRIES) {
+        console.warn(
+          "[SYNC] Moving dead template mutation to failed queue",
+          mutation,
+        );
+        markTemplateFailed(mutation.clientId);
+        moveTemplateToFailedQueue(mutation.queueId);
+        updateCounts();
+        continue;
+      }
+
+      const success = await processTemplateMutation(mutation);
+
+      if (success) {
+        dequeueTemplate(mutation.queueId);
+        updateCounts();
+      } else {
+        incrementTemplateRetry(mutation.queueId);
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+      }
+    }
+
+    // --- Process legacy queue (profile, etc.) ---
     const legacyQueue = getQueueForUser(user.userId);
 
     for (const mutation of legacyQueue) {
@@ -269,6 +374,7 @@ export function useSyncQueue() {
   }, [
     user?.userId,
     processWorkoutMutation,
+    processTemplateMutation,
     processLegacyMutation,
     updateCounts,
   ]);
