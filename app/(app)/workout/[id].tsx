@@ -1,10 +1,16 @@
 import { Button } from "@/components/ui/Button";
 import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
+import {
+  TemplateExercise,
+  TemplateExerciseGroup,
+} from "@/stores/template/types";
 import { useTemplate } from "@/stores/templateStore";
 import {
   SetType,
   useWorkout,
+  WorkoutHistoryExercise,
+  WorkoutHistorySet,
   WorkoutLogGroup,
   WorkoutLogSet,
 } from "@/stores/workoutStore";
@@ -14,7 +20,6 @@ import {
   formatTimeAgo,
 } from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
-import * as Crypto from "expo-crypto";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -155,48 +160,58 @@ export default function WorkoutDetails() {
     if (!workout) return;
 
     const { startDraftTemplate } = useTemplate.getState();
+    const Crypto = require("expo-crypto");
 
-    // Map history to template draft
-    // We generate new UUIDs for the template entities
-    const exercises = workout.exercises.map((ex: any, exIdx: number) => ({
-      id: Crypto.randomUUID(),
-      exerciseId: ex.exercise.id,
-      exerciseIndex: exIdx,
-      sets: ex.sets.map((s: any, sIdx: number) => ({
-        id: Crypto.randomUUID(),
-        setIndex: sIdx,
-        setType: s.setType,
-        weight: s.weight,
-        reps: s.reps,
-        // rpe: s.rpe, // stored in note? or separate field?
-        // History set usually has rpe/duration if valid
-        // Start types have rpe/duration.
-        // Let's check WorkoutHistorySet type in types.ts
-        // It has no 'rpe'. It has 'note'.
-        // Active workout has 'rpe'. History might store it in note or just miss it if schema didn't have it?
-        // Schema has `rpe` in `WorkoutSet`?
-        // Let's check Prisma schema.
-        // `WorkoutSet` in schema has `weight`, `reps`, `duration`, `distance`. No `rpe`.
-        // `ActiveWorkout` (local) has `rpe`.
-        // If `rpe` isn't persisted to DB, it's lost in history.
-        // Verify `WorkoutHistorySet` type: `weight`, `reps`, `durationSeconds`, `restSeconds`, `note`.
-        // `rpe` is missing from history.
-        // So for template, we leave RPE blank or parse from note?
-        // Leave blank for now.
-        durationSeconds: s.durationSeconds,
-        restSeconds: s.restSeconds,
-      })),
-    }));
+    // 1. Create ID Mappings for Groups
+    // We Map <OldDBGroupId, NewDraftGroupUUID>
+    const groupIdMap = new Map<string, string>();
+    workout.exerciseGroups.forEach((g) => {
+      groupIdMap.set(g.id, Crypto.randomUUID());
+    });
+
+    // 2. Clone Groups with New IDs
+    const exerciseGroups: TemplateExerciseGroup[] = workout.exerciseGroups.map(
+      (g: WorkoutLogGroup, gIdx: number) => ({
+        id: groupIdMap.get(g.id)!, // Use the mapped new UUID
+        groupIndex: gIdx,
+        groupType: g.groupType,
+        restSeconds: g.restSeconds ?? undefined,
+      }),
+    );
+
+    // 3. Clone Exercises & Sets with New IDs
+    const exercises: TemplateExercise[] = workout.exercises.map(
+      (ex: WorkoutHistoryExercise, exIdx: number) => {
+        // Resolve new Group ID if applicable
+        const newGroupId = ex.exerciseGroupId
+          ? groupIdMap.get(ex.exerciseGroupId)
+          : undefined;
+
+        return {
+          id: Crypto.randomUUID(), // New Draft Item UUID
+          exerciseId: ex.exercise.id,
+          exerciseIndex: exIdx,
+          exerciseGroupId: newGroupId,
+          sets: ex.sets.map((s: WorkoutHistorySet, sIdx: number) => ({
+            id: Crypto.randomUUID(), // New Set UUID
+            setIndex: sIdx,
+            setType: s.setType,
+            weight: s.weight ?? undefined,
+            reps: s.reps ?? undefined,
+            note: s.note ?? undefined,
+            rpe: s.rpe ?? undefined,
+            durationSeconds: s.durationSeconds ?? undefined,
+            restSeconds: s.restSeconds ?? undefined,
+          })),
+        };
+      },
+    );
 
     startDraftTemplate({
       title: workout.title || "Untitled Workout",
       notes: "Created from workout history",
-      exercises: exercises as any, // Type cast if needed due to strict types
-      exerciseGroups: [], // Groups logic if needed?
-      // If we want to preserve supersets, we need to map exerciseGroups too.
-      // For MVP "Save as Template", flattening to straight list is acceptable or we map groups.
-      // Let's stick to flat list or simple mapping if easy.
-      // TemplateExerciseGroup follows same structure.
+      exercises: exercises,
+      exerciseGroups: exerciseGroups,
     });
 
     router.push("/(app)/template/editor");
@@ -287,29 +302,36 @@ export default function WorkoutDetails() {
 
               {/* Sets */}
               {ex.sets.map((set: any, setIndex: number) => (
-                <View key={set.id} className="flex-row items-center py-2">
-                  <Text
-                    className={`flex-1 text-base font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
-                  >
-                    {getSetTypeColor(set, set.setType, set.completed).value}
-                  </Text>
+                <>
+                  <View key={set.id} className="flex-row items-center py-2">
+                    <Text
+                      className={`flex-1 text-base font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
+                    >
+                      {getSetTypeColor(set, set.setType, set.completed).value}
+                    </Text>
 
-                  <Text className="flex-1 text-base font-semibold text-black dark:text-white">
-                    {set.weight && set.reps
-                      ? `${set.weight} × ${set.reps}`
-                      : set.durationSeconds
-                        ? `${set.durationSeconds}s`
-                        : `${set.reps} reps`}
-                  </Text>
+                    <Text className="flex-1 text-base font-semibold text-black dark:text-white">
+                      {set.weight && set.reps
+                        ? `${set.weight} × ${set.reps}`
+                        : set.durationSeconds
+                          ? `${set.durationSeconds}s`
+                          : `${set.reps} reps`}
+                    </Text>
 
-                  <Text className="flex-1 text-base font-semibold text-black dark:text-white">
-                    RPE {set.rpe || "-"}
-                  </Text>
+                    <Text className="flex-1 text-base font-semibold text-black dark:text-white">
+                      RPE {set.rpe || "-"}
+                    </Text>
 
-                  <Text className="flex-1 text-sm text-neutral-500">
-                    Rest {formatSeconds(set.restSeconds)}
-                  </Text>
-                </View>
+                    <Text className="flex-1 text-sm text-neutral-500">
+                      Rest {formatSeconds(set.restSeconds)}
+                    </Text>
+                  </View>
+                  {set.note && (
+                    <Text className="mb-4 text-sm text-black dark:text-white">
+                      <Text className="font-semibold">Note:</Text> {set.note}
+                    </Text>
+                  )}
+                </>
               ))}
             </View>
           );

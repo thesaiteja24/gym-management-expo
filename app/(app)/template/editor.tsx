@@ -50,6 +50,7 @@ export default function TemplateEditor() {
     removeSetFromDraft,
     createDraftExerciseGroup,
     removeDraftExerciseGroup,
+    prepareTemplateForSave,
   } = useTemplate();
 
   /* ───── Grouping State ───── */
@@ -124,6 +125,71 @@ export default function TemplateEditor() {
   };
 
   const [saving, setSaving] = useState(false);
+  const [pruneMessage, setPruneMessage] = useState<string | null>(null);
+  const [pendingSave, setPendingSave] = useState<any | null>(null);
+
+  const buildPruneMessage = (pruneReport: {
+    droppedExercises: number;
+    droppedGroups: number;
+  }): string | null => {
+    const parts: string[] = [];
+
+    if (pruneReport.droppedExercises > 0) {
+      parts.push(
+        `${pruneReport.droppedExercises} exercise${pruneReport.droppedExercises > 1 ? "s" : ""} (not found)`,
+      );
+    }
+
+    if (pruneReport.droppedGroups > 0) {
+      parts.push(
+        `${pruneReport.droppedGroups} group${pruneReport.droppedGroups > 1 ? "s" : ""} (invalid)`,
+      );
+    }
+
+    if (parts.length === 0) return null;
+
+    return `The following will be removed:\n• ${parts.join("\n• ")}`;
+  };
+
+  const commitSave = async (template: any) => {
+    setSaving(true);
+    try {
+      let res;
+      if (isEditing && template.id) {
+        res = await updateTemplate(template.id, template);
+      } else {
+        res = await createTemplate(template);
+      }
+
+      if (res.success) {
+        Toast.show({
+          type: "success",
+          text1: isEditing ? "Template updated" : "Template created",
+        });
+        discardDraftTemplate();
+        router.back();
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2:
+            "Failed to save template: " +
+            (res.error?.message || "Unknown error"),
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unexpected error occurred",
+      });
+    } finally {
+      setSaving(false);
+      setPruneMessage(null);
+      setPendingSave(null);
+    }
+  };
 
   // Initialize draft on mount
   useEffect(() => {
@@ -210,41 +276,20 @@ export default function TemplateEditor() {
       return;
     }
 
-    setSaving(true);
-    try {
-      let res;
-      if (isEditing && draftTemplate.id) {
-        res = await updateTemplate(draftTemplate.id, draftTemplate);
-      } else {
-        res = await createTemplate(draftTemplate);
-      }
+    // Prepare template for save (validate and prune)
+    const prepared = prepareTemplateForSave();
+    if (!prepared) return;
 
-      if (res.success) {
-        Toast.show({
-          type: "success",
-          text1: isEditing ? "Template updated" : "Template created",
-        });
-        discardDraftTemplate();
-        router.back();
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2:
-            "Failed to save template: " +
-            (res.error?.message || "Unknown error"),
-        });
-      }
-    } catch (e) {
-      console.error(e);
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Unexpected error occurred",
-      });
-    } finally {
-      setSaving(false);
+    const message = buildPruneMessage(prepared.pruneReport);
+
+    if (message) {
+      setPendingSave(prepared.template);
+      setPruneMessage(message);
+      return; // Stop here, wait for confirmation
     }
+
+    // No pruning → save immediately
+    await commitSave(prepared.template);
   };
 
   if (!draftTemplate)
@@ -268,7 +313,7 @@ export default function TemplateEditor() {
             onChangeText={(t) => updateDraftTemplate({ title: t })}
             placeholder="Template Name e.g. Upper Body A"
             placeholderTextColor="#9ca3af"
-            className="mb-2 text-2xl font-bold text-black dark:text-white"
+            className="mb-2 text-xl font-bold text-black dark:text-white"
           />
           <TextInput
             value={draftTemplate.notes}
@@ -403,6 +448,7 @@ export default function TemplateEditor() {
           setIsMuscleGroupModalVisible(false);
         }}
       />
+
       <DeleteConfirmModal
         visible={isDeleteModalVisible}
         title="Discard Changes?"
@@ -414,6 +460,23 @@ export default function TemplateEditor() {
         }}
         confirmText="Discard"
         onCancel={() => setIsDeleteModalVisible(false)}
+      />
+
+      {/* Prune Confirmation Modal */}
+      <DeleteConfirmModal
+        visible={pruneMessage !== null}
+        title="Confirm Save"
+        description={pruneMessage || ""}
+        onConfirm={async () => {
+          if (pendingSave) {
+            await commitSave(pendingSave);
+          }
+        }}
+        confirmText="Save Anyway"
+        onCancel={() => {
+          setPruneMessage(null);
+          setPendingSave(null);
+        }}
       />
     </SafeAreaView>
   );

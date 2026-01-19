@@ -19,6 +19,12 @@ export default function WorkoutScreen() {
     getAllTemplates();
   }, []);
 
+  // Debugging
+  // const renderCount = React.useRef(0);
+  // renderCount.current += 1;
+
+  // console.log("WorkoutScreen render:", renderCount.current);
+
   return (
     <View
       className="flex-1 bg-white p-4 dark:bg-black"

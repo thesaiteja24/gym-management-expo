@@ -12,6 +12,7 @@ import * as Crypto from "expo-crypto";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useAuth } from "./authStore";
+import { useExercise } from "./exerciseStore";
 import { TemplateExercise, TemplateSet, TemplateState } from "./template/types";
 import { useWorkout } from "./workoutStore";
 
@@ -181,6 +182,83 @@ export const useTemplate = create<TemplateState>()(
         loadTemplate(template);
       },
 
+      // Validate template before saving (prune invalid groups only, allow empty sets)
+      prepareTemplateForSave: () => {
+        const draft = get().draftTemplate;
+        if (!draft) return null;
+
+        const exerciseStore = useExercise.getState();
+        const exerciseMap = new Map(
+          exerciseStore.exerciseList.map((e) => [e.id, e]),
+        );
+
+        let droppedExercises = 0;
+        let droppedGroups = 0;
+
+        // Filter exercises that exist (validate exercise IDs)
+        const validExercises = draft.exercises.filter((ex) => {
+          const exists = exerciseMap.has(ex.exerciseId);
+          if (!exists) {
+            console.warn(
+              `[Template] Exercise ${ex.exerciseId} not found, removing from template`,
+            );
+            droppedExercises += 1;
+          }
+          return exists;
+        });
+
+        // Re-index exercises after filtering
+        const reindexedExercises = validExercises.map((ex, index) => ({
+          ...ex,
+          exerciseIndex: index,
+        }));
+
+        // Validate groups - must have at least 2 exercises
+        const groupCounts = new Map<string, number>();
+        for (const ex of reindexedExercises) {
+          if (ex.exerciseGroupId) {
+            groupCounts.set(
+              ex.exerciseGroupId,
+              (groupCounts.get(ex.exerciseGroupId) ?? 0) + 1,
+            );
+          }
+        }
+
+        const validGroupIds = new Set(
+          [...groupCounts.entries()]
+            .filter(([, count]) => count >= 2)
+            .map(([id]) => id),
+        );
+
+        droppedGroups =
+          draft.exerciseGroups.length -
+          draft.exerciseGroups.filter((g) => validGroupIds.has(g.id)).length;
+
+        // Filter out invalid groups
+        const finalGroups = draft.exerciseGroups.filter((g) =>
+          validGroupIds.has(g.id),
+        );
+
+        // Clear groupId from exercises in invalid groups
+        const finalExercises = reindexedExercises.map((ex) =>
+          ex.exerciseGroupId && !validGroupIds.has(ex.exerciseGroupId)
+            ? { ...ex, exerciseGroupId: undefined }
+            : ex,
+        );
+
+        return {
+          template: {
+            ...draft,
+            exercises: finalExercises,
+            exerciseGroups: finalGroups,
+          },
+          pruneReport: {
+            droppedExercises,
+            droppedGroups,
+          },
+        };
+      },
+
       /* ───── Draft Actions ───── */
 
       startDraftTemplate: (initialData) => {
@@ -211,6 +289,27 @@ export const useTemplate = create<TemplateState>()(
         const draft = get().draftTemplate;
         if (!draft) return;
 
+        // Check if exercise already exists in template
+        if (draft.exercises.some((e) => e.exerciseId === exerciseId)) {
+          console.warn(
+            `[Template] Exercise ${exerciseId} already exists in template`,
+          );
+          return;
+        }
+
+        // Check if exercise exists in exercise store
+        const exerciseStore = useExercise.getState();
+        const exerciseExists = exerciseStore.exerciseList.find(
+          (e) => e.id === exerciseId,
+        );
+
+        if (!exerciseExists) {
+          console.error(
+            `[Template] Exercise ${exerciseId} not found in exercise store`,
+          );
+          return;
+        }
+
         const newExercise: TemplateExercise = {
           id: Crypto.randomUUID(),
           exerciseId,
@@ -231,14 +330,45 @@ export const useTemplate = create<TemplateState>()(
         const draft = get().draftTemplate;
         if (!draft) return;
 
-        const newExercises = draft.exercises
+        // Find the exercise to check if it's in a group
+        const targetExercise = draft.exercises.find(
+          (e) => e.exerciseId === exerciseId,
+        );
+
+        // Remove the exercise
+        let newExercises = draft.exercises
           .filter((e) => e.exerciseId !== exerciseId)
           .map((e, index) => ({ ...e, exerciseIndex: index }));
+
+        let newGroups = draft.exerciseGroups;
+
+        // If exercise was in a group, validate the group is still valid
+        if (targetExercise?.exerciseGroupId) {
+          const groupId = targetExercise.exerciseGroupId;
+          const remainingInGroup = newExercises.filter(
+            (ex) => ex.exerciseGroupId === groupId,
+          );
+
+          // If group becomes invalid (<2 exercises), remove it
+          if (remainingInGroup.length < 2) {
+            newGroups = draft.exerciseGroups
+              .filter((g) => g.id !== groupId)
+              .map((g, index) => ({ ...g, groupIndex: index }));
+
+            // Clear groupId from orphaned exercise
+            newExercises = newExercises.map((ex) =>
+              ex.exerciseGroupId === groupId
+                ? { ...ex, exerciseGroupId: undefined }
+                : ex,
+            );
+          }
+        }
 
         set({
           draftTemplate: {
             ...draft,
             exercises: newExercises,
+            exerciseGroups: newGroups,
           },
         });
       },

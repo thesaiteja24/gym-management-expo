@@ -64,6 +64,15 @@ export interface TemplateState {
   deleteTemplate: (id: string) => Promise<any>;
   startWorkoutFromTemplate: (templateId: string) => void;
 
+  // Validation
+  prepareTemplateForSave: () => {
+    template: DraftTemplate;
+    pruneReport: {
+      droppedExercises: number;
+      droppedGroups: number;
+    };
+  } | null;
+
   // Draft Actions
   startDraftTemplate: (initialData?: Partial<DraftTemplate>) => void;
   updateDraftTemplate: (patch: Partial<DraftTemplate>) => void;

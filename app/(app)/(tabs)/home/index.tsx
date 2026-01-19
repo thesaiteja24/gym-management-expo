@@ -7,8 +7,15 @@ import { FlatList, RefreshControl, Text, View } from "react-native";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const { workoutLoading, workoutHistory, getAllWorkouts } = useWorkout();
-  const { exerciseList, getAllExercises } = useExercise();
+
+  // Workout Store
+  const workoutLoading = useWorkout((s) => s.workoutLoading);
+  const workoutHistory = useWorkout((s) => s.workoutHistory);
+  const getAllWorkouts = useWorkout((s) => s.getAllWorkouts);
+
+  // Exercise Store
+  const exerciseList = useExercise((s) => s.exerciseList);
+  const getAllExercises = useExercise((s) => s.getAllExercises);
   const [refreshing, setRefreshing] = useState(false);
 
   // derived Map of exerciseId -> exerciseType
@@ -19,6 +26,12 @@ export default function HomeScreen() {
     });
     return map;
   }, [exerciseList]);
+
+  // Debugging
+  // const renderCount = React.useRef(0);
+  // renderCount.current += 1;
+
+  // console.log("WorkoutScreen render:", renderCount.current);
 
   /* Side Effects */
   // Load workouts on mount
