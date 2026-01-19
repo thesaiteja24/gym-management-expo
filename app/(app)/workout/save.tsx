@@ -22,15 +22,12 @@ export default function SaveWorkout() {
   const [pendingSave, setPendingSave] = useState<WorkoutLog | null>(null);
   const [pruneMessage, setPruneMessage] = useState<string | null>(null);
 
-  /* Store Related State */
-  const {
-    workoutSaving,
-    workout,
-    getAllWorkouts,
-    updateWorkout,
-    saveWorkout,
-    discardWorkout,
-  } = useWorkout();
+  // Workout Store
+  const workoutSaving = useWorkout((s) => s.workoutSaving);
+  const workout = useWorkout((s) => s.workout);
+  const updateWorkout = useWorkout((s) => s.updateWorkout);
+  const saveWorkout = useWorkout((s) => s.saveWorkout);
+  const discardWorkout = useWorkout((s) => s.discardWorkout);
 
   const { exerciseList, getAllExercises } = useExercise();
 
@@ -72,26 +69,17 @@ export default function SaveWorkout() {
   }, [workout, exerciseTypeMap]);
 
   /* Handlers */
-  const commitSave = async (workoutToSave: WorkoutLog) => {
-    const res = await saveWorkout(workoutToSave);
-
-    if (!res.success) {
-      Toast.show({
-        type: "error",
-        text1: "Failed to save workout",
-      });
-      return;
-    }
+  const commitSave = (workoutToSave: WorkoutLog) => {
+    saveWorkout(workoutToSave);
 
     Toast.show({
       type: "success",
-      text1: "Workout saved successfully",
+      text1: "Workout saved!",
     });
 
     discardWorkout();
-    getAllWorkouts();
-    router.dismissAll();
     router.push("/(app)/(tabs)/workout");
+    router.dismissAll();
   };
 
   const handleConfirmSave = async () => {

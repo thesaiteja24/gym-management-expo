@@ -25,6 +25,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 /* ───────────────── Group Color Logic (shared with ExerciseRow) ───────────────── */
 
@@ -146,14 +147,16 @@ export default function WorkoutDetails() {
   };
 
   const handleDeleteConfirm = async () => {
-    setIsDeleting(true);
-    const success = await deleteWorkout(id);
-    setIsDeleting(false);
+    if (!workout) return;
     setShowDeleteModal(false);
 
-    if (success) {
-      router.back();
-    }
+    Toast.show({
+      type: "success",
+      text1: "Workout deleted",
+    });
+
+    router.back();
+    await deleteWorkout(workout.clientId, workout.id);
   };
 
   const handleSaveAsTemplate = () => {
@@ -302,8 +305,8 @@ export default function WorkoutDetails() {
 
               {/* Sets */}
               {ex.sets.map((set: any, setIndex: number) => (
-                <>
-                  <View key={set.id} className="flex-row items-center py-2">
+                <View key={set.id}>
+                  <View className="flex-row items-center py-2">
                     <Text
                       className={`flex-1 text-base font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
                     >
@@ -331,7 +334,7 @@ export default function WorkoutDetails() {
                       <Text className="font-semibold">Note:</Text> {set.note}
                     </Text>
                   )}
-                </>
+                </View>
               ))}
             </View>
           );

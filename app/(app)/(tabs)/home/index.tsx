@@ -71,7 +71,7 @@ export default function HomeScreen() {
 
       <FlatList
         data={workoutHistory}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.clientId}
         renderItem={({ item }) => (
           <WorkoutCard workout={item} exerciseTypeMap={exerciseTypeMap} />
         )}

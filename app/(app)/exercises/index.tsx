@@ -70,21 +70,33 @@ export default function ExercisesScreen() {
 
   const isSelectionMode = params.mode === "select";
 
-  const { addExercise, removeExercise, replaceExercise, workout } =
-    useWorkout();
+  // Workout Store
+  const addExercise = useWorkout((s) => s.addExercise);
+  const removeExercise = useWorkout((s) => s.removeExercise);
+  const replaceExercise = useWorkout((s) => s.replaceExercise);
+  const workout = useWorkout((s) => s.workout);
 
-  const {
-    draftTemplate,
-    addExerciseToDraft,
-    removeExerciseFromDraft,
-    replaceDraftExercise,
-  } = useTemplate();
+  // Template Store
+  const draftTemplate = useTemplate((s) => s.draftTemplate);
+  const addExerciseToDraft = useTemplate((s) => s.addExerciseToDraft);
+  const removeExerciseFromDraft = useTemplate((s) => s.removeExerciseFromDraft);
+  const replaceDraftExercise = useTemplate((s) => s.replaceDraftExercise);
 
-  const { equipmentList, equipmentLoading, getAllEquipment } = useEquipment();
-  const { muscleGroupList, muscleGroupLoading, getAllMuscleGroups } =
-    useMuscleGroup();
-  const { exerciseList, exerciseLoading, getAllExercises, deleteExercise } =
-    useExercise();
+  // Equipment Store
+  const equipmentList = useEquipment((s) => s.equipmentList);
+  const equipmentLoading = useEquipment((s) => s.equipmentLoading);
+  const getAllEquipment = useEquipment((s) => s.getAllEquipment);
+
+  // Muscle Group Store
+  const muscleGroupList = useMuscleGroup((s) => s.muscleGroupList);
+  const muscleGroupLoading = useMuscleGroup((s) => s.muscleGroupLoading);
+  const getAllMuscleGroups = useMuscleGroup((s) => s.getAllMuscleGroups);
+
+  // Exercise Store
+  const exerciseList = useExercise((s) => s.exerciseList);
+  const exerciseLoading = useExercise((s) => s.exerciseLoading);
+  const getAllExercises = useExercise((s) => s.getAllExercises);
+  const deleteExercise = useExercise((s) => s.deleteExercise);
 
   const initialSelectedIds = useMemo(() => {
     if (context === "template") {

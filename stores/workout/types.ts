@@ -1,3 +1,4 @@
+import { SyncStatus } from "@/lib/sync/types";
 import { WorkoutTemplate } from "@/stores/template/types";
 import { ExerciseType } from "../exerciseStore";
 
@@ -7,8 +8,21 @@ export type SetType = "warmup" | "working" | "dropSet" | "failureSet";
 
 export type ExerciseGroupType = "superSet" | "giantSet";
 
+/**
+ * Re-export SyncStatus for convenience
+ */
+export type { SyncStatus } from "@/lib/sync/types";
+
+/**
+ * Active workout state during a workout session.
+ * - clientId: Always present, generated at creation (stable local identifier)
+ * - id: Backend-generated ID, null until synced
+ * - syncStatus: Track sync state for offline-first
+ */
 export type WorkoutLog = {
-  id?: string;
+  clientId: string;
+  id: string | null;
+  syncStatus: SyncStatus;
   title: string;
   startTime: Date;
   endTime: Date;
@@ -90,8 +104,16 @@ export type WorkoutHistorySet = {
   note: string | null;
 };
 
+/**
+ * Workout history item returned from backend or created optimistically.
+ * - clientId: Client-generated stable identifier (for offline lookup)
+ * - id: Backend-generated ID (always present in synced items)
+ * - syncStatus: Track sync state for UI indicators
+ */
 export type WorkoutHistoryItem = {
+  clientId: string;
   id: string;
+  syncStatus: SyncStatus;
   title: string | null;
   startTime: string;
   endTime: string;
@@ -122,7 +144,8 @@ export interface WorkoutState {
   /* Workout */
   getAllWorkouts: () => Promise<void>;
   upsertWorkoutHistoryItem: (item: WorkoutHistoryItem) => void;
-  deleteWorkout: (id: string) => Promise<boolean>;
+  updateWorkoutSyncStatus: (clientId: string, syncStatus: SyncStatus) => void;
+  deleteWorkout: (clientId: string, dbId: string | null) => Promise<boolean>;
   startWorkout: () => void;
   loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => void;
   updateWorkout: (patch: Partial<WorkoutLog>) => void;

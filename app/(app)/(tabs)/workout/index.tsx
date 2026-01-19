@@ -12,8 +12,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function WorkoutScreen() {
   const colors = useThemeColor();
 
-  const { workout, discardWorkout } = useWorkout();
-  const { templates, getAllTemplates } = useTemplate();
+  // Workout Store
+  const workout = useWorkout((s) => s.workout);
+  const discardWorkout = useWorkout((s) => s.discardWorkout);
+
+  // Template Store
+  const getAllTemplates = useTemplate((s) => s.getAllTemplates);
+  const templates = useTemplate((s) => s.templates);
 
   useEffect(() => {
     getAllTemplates();

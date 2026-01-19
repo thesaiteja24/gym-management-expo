@@ -1,4 +1,5 @@
 import { TEMPLATES_ENDPOINT, TEMPLATE_ITEM_ENDPOINT } from "@/constants/urls";
+import { TemplatePayload } from "@/lib/sync/types";
 import { WorkoutTemplate } from "@/stores/template/types";
 import { handleApiResponse } from "@/utils/handleApiResponse";
 import client from "./api";
@@ -13,7 +14,13 @@ export async function getAllTemplatesService() {
   }
 }
 
-export async function createTemplateService(data: Partial<WorkoutTemplate>) {
+/**
+ * Create a new template.
+ * Accepts TemplatePayload for queue or Partial<WorkoutTemplate> for direct calls.
+ */
+export async function createTemplateService(
+  data: TemplatePayload | Partial<WorkoutTemplate>,
+) {
   try {
     const res = await client.post(TEMPLATES_ENDPOINT, data);
     return handleApiResponse(res);
@@ -33,9 +40,12 @@ export async function deleteTemplateService(id: string) {
   }
 }
 
+/**
+ * Update an existing template.
+ */
 export async function updateTemplateService(
   id: string,
-  data: Partial<WorkoutTemplate>,
+  data: TemplatePayload | Partial<WorkoutTemplate>,
 ) {
   try {
     const res = await client.put(TEMPLATE_ITEM_ENDPOINT(id), data);
