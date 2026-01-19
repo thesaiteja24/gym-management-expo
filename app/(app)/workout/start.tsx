@@ -59,31 +59,31 @@ export default function StartWorkout() {
   const lastIndexRef = useRef<number | null>(null);
   const prevCompletedRef = useRef<Map<string, boolean>>(new Map());
 
-  /* Store Related State */
-  const {
-    workoutSaving,
-    workout,
-    rest,
-    startWorkout,
-    discardWorkout,
-    removeExercise,
-    reorderExercises,
-    createExerciseGroup,
-    removeExerciseFromGroup,
-    addSet,
-    updateSet,
-    toggleSetCompleted,
-    removeSet,
-    startSetTimer,
-    stopSetTimer,
-    startRestTimer,
-    saveRestForSet,
-    stopRestTimer,
-    adjustRestTimer,
-  } = useWorkout();
+  // Workout Store
+  const workoutSaving = useWorkout((s) => s.workoutSaving);
+  const workout = useWorkout((s) => s.workout);
+  const rest = useWorkout((s) => s.rest);
+  const startWorkout = useWorkout((s) => s.startWorkout);
+  const discardWorkout = useWorkout((s) => s.discardWorkout);
+  const removeExercise = useWorkout((s) => s.removeExercise);
+  const reorderExercises = useWorkout((s) => s.reorderExercises);
+  const createExerciseGroup = useWorkout((s) => s.createExerciseGroup);
+  const removeExerciseFromGroup = useWorkout((s) => s.removeExerciseFromGroup);
+  const addSet = useWorkout((s) => s.addSet);
+  const updateSet = useWorkout((s) => s.updateSet);
+  const toggleSetCompleted = useWorkout((s) => s.toggleSetCompleted);
+  const removeSet = useWorkout((s) => s.removeSet);
+  const startSetTimer = useWorkout((s) => s.startSetTimer);
+  const stopSetTimer = useWorkout((s) => s.stopSetTimer);
+  const startRestTimer = useWorkout((s) => s.startRestTimer);
+  const saveRestForSet = useWorkout((s) => s.saveRestForSet);
+  const stopRestTimer = useWorkout((s) => s.stopRestTimer);
+  const adjustRestTimer = useWorkout((s) => s.adjustRestTimer);
 
+  // Exercise Store
   const exerciseList = useExercise((s) => s.exerciseList);
 
+  // Auth Store
   const preferredWeightUnit =
     useAuth((s) => s.user?.preferredWeightUnit) ?? "kg";
 
@@ -298,6 +298,12 @@ export default function StartWorkout() {
       hideSub.remove();
     };
   }, []);
+
+  // Debugging
+  // const renderCount = React.useRef(0);
+  // renderCount.current += 1;
+
+  // console.log("WorkoutStart render:", renderCount.current);
 
   /* UI Rendering */
   if (!workout) {

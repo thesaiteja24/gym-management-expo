@@ -1,9 +1,5 @@
-import { checkNetworkStatus } from "@/hooks/useNetworkStatus";
-import { enqueue } from "@/lib/offlineQueue";
-import {
-  createWorkoutService,
-  updateWorkoutService,
-} from "@/services/workoutServices";
+import { enqueueWorkoutCreate, enqueueWorkoutUpdate } from "@/lib/sync/queue";
+import { SyncStatus } from "@/lib/sync/types";
 import { WorkoutTemplate } from "@/stores/template/types";
 import {
   finalizeSetTimer,
@@ -74,8 +70,14 @@ export const createActiveWorkoutSlice: StateCreator<
   startWorkout: () => {
     if (get().workout) return;
 
+    // Generate clientId at creation time (stable identifier)
+    const clientId = Crypto.randomUUID();
+
     set({
       workout: {
+        clientId,
+        id: null, // No DB ID until synced
+        syncStatus: "pending" as SyncStatus,
         title: "New Workout",
         startTime: new Date(),
         endTime: new Date(),
@@ -192,10 +194,14 @@ export const createActiveWorkoutSlice: StateCreator<
   loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => {
     // Map history item to active workout state
     const workoutLog: WorkoutLog = {
+      clientId: historyItem.clientId,
       id: historyItem.id,
+      syncStatus: "synced" as SyncStatus, // Editing a synced workout
       title: historyItem.title || "Untitled Workout",
       startTime: new Date(historyItem.startTime),
       endTime: new Date(historyItem.endTime),
+      isEdited: true, // Mark as edited since we're modifying
+      editedAt: new Date(),
       exercises: historyItem.exercises.map((ex) => ({
         exerciseId: ex.exerciseId,
         exerciseIndex: ex.exerciseIndex,
@@ -204,9 +210,9 @@ export const createActiveWorkoutSlice: StateCreator<
           id: s.id,
           setIndex: s.setIndex,
           setType: s.setType,
-          weight: s.weight ?? undefined, // handle nulls
+          weight: s.weight ?? undefined,
           reps: s.reps ?? undefined,
-          rpe: undefined, // RPE not strictly typed in history item, assuming undefined or need map
+          rpe: s.rpe ?? undefined,
           durationSeconds: s.durationSeconds ?? undefined,
           restSeconds: s.restSeconds ?? undefined,
           note: s.note ?? undefined,
@@ -221,10 +227,7 @@ export const createActiveWorkoutSlice: StateCreator<
       })),
     };
 
-    set({
-      workout: workoutLog,
-      // For editing mode, we might want to flag specific UI states, but user said "start.tsx" used directly
-    });
+    set({ workout: workoutLog });
   },
 
   /**
@@ -249,18 +252,23 @@ export const createActiveWorkoutSlice: StateCreator<
       return exists;
     });
 
+    // Generate clientId at creation time (stable identifier)
+    const clientId = Crypto.randomUUID();
+
     // Map template to NEW active workout state
     const workoutLog: WorkoutLog = {
-      // No ID initially (create new on save)
+      clientId,
+      id: null, // No DB ID until synced
+      syncStatus: "pending" as SyncStatus,
       title: template.title || "New Workout",
       startTime: new Date(),
-      endTime: new Date(), // Placeholder, updates on save
+      endTime: new Date(),
       exercises: validExercises.map((ex, index) => ({
         exerciseId: ex.exerciseId,
-        exerciseIndex: index, // Re-index after filtering
+        exerciseIndex: index,
         groupId: ex.exerciseGroupId || null,
         sets: ex.sets.map((s) => ({
-          id: Crypto.randomUUID(), // New UUIDs for sets
+          id: Crypto.randomUUID(),
           setIndex: s.setIndex,
           setType: s.setType,
           weight: s.weight,
@@ -268,8 +276,8 @@ export const createActiveWorkoutSlice: StateCreator<
           rpe: s.rpe,
           durationSeconds: s.durationSeconds,
           restSeconds: s.restSeconds,
-          note: s.note, // Preserve notes from template
-          completed: false, // reset completion
+          note: s.note,
+          completed: false,
         })),
       })),
       exerciseGroups: template.exerciseGroups.map((g) => ({
@@ -280,130 +288,100 @@ export const createActiveWorkoutSlice: StateCreator<
       })),
     };
 
-    set({
-      workout: workoutLog,
-    });
+    set({ workout: workoutLog });
   },
 
+  /**
+   * Save workout with optimistic-first approach:
+   * 1. Always update local state immediately (no network delay for user)
+   * 2. Enqueue for background sync (useSyncQueue handles sync reactively)
+   */
   saveWorkout: async (prepared: WorkoutLog) => {
     set({ workoutSaving: true });
 
-    const payload = serializeWorkoutForApi(prepared);
-
-    // Add clientId for idempotency
-    const clientId = Crypto.randomUUID();
-    const payloadWithClientId = { ...payload, clientId };
-
-    try {
-      // Check network status
-      const { isConnected, isInternetReachable } = await checkNetworkStatus();
-      const isOnline = isConnected && isInternetReachable !== false;
-
-      // --- Helper to create optimistic history item ---
-      const createOptimisticItem = (
-        log: WorkoutLog,
-        logId: string,
-      ): WorkoutHistoryItem => ({
-        id: logId,
-        title: log.title || "Untitled Workout",
-        startTime: log.startTime.toISOString(),
-        endTime: log.endTime.toISOString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isEdited: false,
-        editedAt: null,
-        exerciseGroups: log.exerciseGroups.map((g) => ({
-          id: g.id,
-          groupType: g.groupType,
-          groupIndex: g.groupIndex,
-          restSeconds: g.restSeconds ?? null,
-        })),
-        exercises: log.exercises.map((ex) => ({
-          id: Crypto.randomUUID(), // Temp ID
-          exerciseId: ex.exerciseId,
-          exerciseIndex: ex.exerciseIndex,
-          exerciseGroupId: ex.groupId ?? null,
-          exercise: (useExercise
-            .getState()
-            .exerciseList.find((e) => e.id === ex.exerciseId) || {
-            id: ex.exerciseId,
-            title: "Unknown Exercise",
-            thumbnailUrl: "",
-            exerciseType: "repsOnly" as ExerciseType,
-            description: "",
-            muscleGroups: [],
-            equipment: [],
-          }) as any, // Cast to any to avoid strict structural match issues for now
-          sets: ex.sets.map((s) => ({
-            id: s.id,
-            setIndex: s.setIndex,
-            setType: s.setType,
-            weight: s.weight ?? null,
-            reps: s.reps ?? null,
-            rpe: s.rpe ?? null,
-            durationSeconds: s.durationSeconds ?? null,
-            restSeconds: s.restSeconds ?? null,
-            note: s.note ?? null,
-          })),
-        })),
-      });
-
-      if (!isOnline) {
-        const userId = useAuth.getState().user?.userId;
-        if (userId) {
-          if (prepared.id) {
-            enqueue("EDIT_WORKOUT", { id: prepared.id, ...payload }, userId);
-            // Optimistic update for edit
-            get().upsertWorkoutHistoryItem(
-              createOptimisticItem(prepared, prepared.id),
-            );
-          } else {
-            enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
-            get().upsertWorkoutHistoryItem(
-              createOptimisticItem(prepared, clientId),
-            );
-          }
-        }
-        set({ workoutSaving: false });
-        return { success: true, queued: true };
-      }
-
-      // Online
-      if (prepared.id) {
-        // @ts-ignore
-        await updateWorkoutService(prepared.id, payload);
-        // Optimistic update for edit
-        get().upsertWorkoutHistoryItem(
-          createOptimisticItem(prepared, prepared.id),
-        );
-      } else {
-        // @ts-ignore
-        const res = await createWorkoutService(payloadWithClientId);
-        if (res.success && res.data) {
-          // Use the REAL data from backend
-          get().upsertWorkoutHistoryItem(res.data);
-        }
-      }
-
+    const userId = useAuth.getState().user?.userId;
+    if (!userId) {
       set({ workoutSaving: false });
-      // We don't need to refetch all workouts anymore!
-      // get().getAllWorkouts();
-      return { success: true };
-    } catch (error) {
-      // If network error, queue it
-      const userId = useAuth.getState().user?.userId;
-      if (userId) {
-        if (prepared.id) {
-          enqueue("EDIT_WORKOUT", { id: prepared.id, ...payload }, userId);
-        } else {
-          enqueue("CREATE_WORKOUT", payloadWithClientId, userId);
-        }
-        set({ workoutSaving: false });
-        return { success: true, queued: true };
-      }
-      set({ workoutSaving: false });
-      return { success: false, error };
+      return { success: false, error: "No user logged in" };
     }
+
+    // Use the clientId from the prepared workout (set at creation time)
+    const { clientId } = prepared;
+
+    // --- Helper to create optimistic history item ---
+    const createOptimisticItem = (
+      log: WorkoutLog,
+      syncStatus: SyncStatus,
+    ): WorkoutHistoryItem => ({
+      clientId: log.clientId,
+      id: log.id || clientId, // Use DB ID if exists, else clientId temporarily
+      syncStatus,
+      title: log.title || "Untitled Workout",
+      startTime: log.startTime.toISOString(),
+      endTime: log.endTime.toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isEdited: log.isEdited || false,
+      editedAt: log.editedAt?.toISOString() || null,
+      exerciseGroups: log.exerciseGroups.map((g) => ({
+        id: g.id,
+        groupType: g.groupType,
+        groupIndex: g.groupIndex,
+        restSeconds: g.restSeconds ?? null,
+      })),
+      exercises: log.exercises.map((ex) => ({
+        id: Crypto.randomUUID(),
+        exerciseId: ex.exerciseId,
+        exerciseIndex: ex.exerciseIndex,
+        exerciseGroupId: ex.groupId ?? null,
+        exercise: (useExercise
+          .getState()
+          .exerciseList.find((e) => e.id === ex.exerciseId) || {
+          id: ex.exerciseId,
+          title: "Unknown Exercise",
+          thumbnailUrl: "",
+          exerciseType: "repsOnly" as ExerciseType,
+          description: "",
+          muscleGroups: [],
+          equipment: [],
+        }) as any,
+        sets: ex.sets.map((s) => ({
+          id: s.id,
+          setIndex: s.setIndex,
+          setType: s.setType,
+          weight: s.weight ?? null,
+          reps: s.reps ?? null,
+          rpe: s.rpe ?? null,
+          durationSeconds: s.durationSeconds ?? null,
+          restSeconds: s.restSeconds ?? null,
+          note: s.note ?? null,
+        })),
+      })),
+    });
+
+    // Serialize for API
+    const payload = serializeWorkoutForApi(prepared);
+    const workoutPayload = {
+      clientId,
+      id: prepared.id,
+      ...payload,
+    };
+
+    // Step 1: ALWAYS update local state immediately (optimistic-first)
+    const isEdit = prepared.id !== null;
+    const optimisticItem = createOptimisticItem(prepared, "pending");
+    get().upsertWorkoutHistoryItem(optimisticItem);
+
+    // Step 2: Enqueue for background sync
+    // useSyncQueue will automatically sync when online (reactive via queueEvents)
+    if (isEdit) {
+      enqueueWorkoutUpdate(workoutPayload, userId);
+    } else {
+      enqueueWorkoutCreate(workoutPayload, userId);
+    }
+
+    set({ workoutSaving: false });
+    return { success: true };
   },
 
   resetWorkout: () => {
