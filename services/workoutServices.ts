@@ -1,4 +1,5 @@
 import { WORKOUTS_ENDPONT as wokrouts_endpoint } from "@/constants/urls";
+import { WorkoutPayload } from "@/lib/sync/types";
 import { handleApiResponse } from "@/utils/handleApiResponse";
 import client from "./api";
 
@@ -17,7 +18,7 @@ export async function getAllWokroutsService() {
  * Create a new workout.
  * Accepts serialized workout payload with clientId for idempotency.
  */
-export async function createWorkoutService(data: Record<string, any>) {
+export async function createWorkoutService(data: WorkoutPayload) {
   try {
     const res = await client.post(wokrouts_endpoint, data);
 
@@ -31,10 +32,7 @@ export async function createWorkoutService(data: Record<string, any>) {
 /**
  * Update an existing workout by ID.
  */
-export async function updateWorkoutService(
-  id: string,
-  data: Record<string, any>,
-) {
+export async function updateWorkoutService(id: string, data: WorkoutPayload) {
   try {
     const res = await client.put(`${wokrouts_endpoint}/${id}`, data);
 

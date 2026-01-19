@@ -5,5 +5,6 @@
  */
 
 export * from "./queue";
+export { queueEvents } from "./queueEvents";
 export * from "./reconciler";
 export * from "./types";

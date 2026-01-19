@@ -25,6 +25,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 /* ───────────────── Group Color Logic (shared with ExerciseRow) ───────────────── */
 
@@ -148,6 +149,12 @@ export default function WorkoutDetails() {
   const handleDeleteConfirm = async () => {
     if (!workout) return;
     setShowDeleteModal(false);
+
+    Toast.show({
+      type: "success",
+      text1: "Workout deleted",
+    });
+
     router.back();
     await deleteWorkout(workout.clientId, workout.id);
   };

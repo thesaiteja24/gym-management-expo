@@ -71,6 +71,12 @@ export default function SaveWorkout() {
   /* Handlers */
   const commitSave = (workoutToSave: WorkoutLog) => {
     saveWorkout(workoutToSave);
+
+    Toast.show({
+      type: "success",
+      text1: "Workout saved!",
+    });
+
     discardWorkout();
     router.push("/(app)/(tabs)/workout");
     router.dismissAll();

@@ -280,15 +280,24 @@ export function useSyncQueue() {
     }
   }, [isOnline, user?.userId, syncQueue]);
 
-  // Subscribe to queue events for reactive auto-sync
+  // Debounce ref for queue events
+  const debouncedSync = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Subscribe to queue events for reactive auto-sync (debounced)
   useEffect(() => {
     const unsubscribe = queueEvents.subscribe(() => {
       if (isOnline && user?.userId) {
-        console.log("[SYNC] Queue changed, triggering sync...");
-        syncQueue();
+        // Debounce: wait 100ms before triggering sync
+        if (debouncedSync.current) clearTimeout(debouncedSync.current);
+        debouncedSync.current = setTimeout(() => {
+          syncQueue();
+        }, 100);
       }
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (debouncedSync.current) clearTimeout(debouncedSync.current);
+    };
   }, [isOnline, user?.userId, syncQueue]);
 
   return { syncQueue, isOnline };

@@ -128,9 +128,8 @@ export const createHistorySlice: StateCreator<
       return false;
     }
 
-    // check if we have db generated id
+    // Check if we have a db-generated id (not same as clientId)
     const actualDbId = dbId && dbId !== clientId ? dbId : null;
-    console.log(actualDbId);
 
     // If no actual dbId, it was never synced - just remove locally
     if (!actualDbId) {
