@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/Button";
-import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
+import {
+  DeleteConfirmModal,
+  DeleteConfirmModalHandle,
+} from "@/components/ui/DeleteConfrimModal";
 import { useAuth } from "@/stores/authStore";
 import { useExercise } from "@/stores/exerciseStore";
 import { TemplateExercise, TemplateSet } from "@/stores/template/types";
@@ -8,7 +11,7 @@ import { SetType } from "@/stores/workoutStore";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import {
   ScrollView,
   Text,
@@ -90,7 +93,8 @@ export default function TemplateDetails() {
 
   const isOwner = template?.userId === user?.userId;
 
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  // const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false); // Removed
+  const deleteModalRef = useRef<DeleteConfirmModalHandle>(null);
 
   useEffect(() => {
     navigation.setOptions({
@@ -123,7 +127,7 @@ export default function TemplateDetails() {
   };
 
   const handleDelete = () => {
-    setIsDeleteModalVisible(true);
+    deleteModalRef.current?.present();
   };
 
   if (!template) {
@@ -177,7 +181,7 @@ export default function TemplateDetails() {
 
         {/* Delete Button */}
         <TouchableOpacity
-          onPress={() => setIsDeleteModalVisible(true)}
+          onPress={() => deleteModalRef.current?.present()}
           className="items-center py-4"
         >
           <Text className="font-medium text-red-500">Delete Template</Text>
@@ -198,16 +202,15 @@ export default function TemplateDetails() {
         />
       </View>
       <DeleteConfirmModal
-        visible={isDeleteModalVisible}
+        ref={deleteModalRef}
         title="Delete Template?"
         description="Are you sure you want to delete this template?"
         onConfirm={() => {
-          setIsDeleteModalVisible(false);
           deleteTemplate(id);
           router.back();
         }}
         confirmText="Delete"
-        onCancel={() => setIsDeleteModalVisible(false)}
+        onCancel={() => {}}
       />
     </View>
   );

@@ -1,6 +1,11 @@
 import { Button } from "@/components/ui/Button";
-import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
-import ExerciseGroupModal from "@/components/workout/ExerciseGroupModal";
+import {
+  DeleteConfirmModal,
+  DeleteConfirmModalHandle,
+} from "@/components/ui/DeleteConfrimModal";
+import ExerciseGroupModal, {
+  ExerciseGroupModalHandle,
+} from "@/components/workout/ExerciseGroupModal";
 import ExerciseRow from "@/components/workout/ExerciseRow";
 import { useAuth } from "@/stores/authStore";
 import { useExercise } from "@/stores/exerciseStore";
@@ -8,7 +13,7 @@ import { useTemplate } from "@/stores/templateStore";
 import { ExerciseGroupType } from "@/stores/workoutStore";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -54,7 +59,10 @@ export default function TemplateEditor() {
   } = useTemplate();
 
   /* ───── Grouping State ───── */
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  // const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false); // Removed
+  const deleteModalRef = useRef<DeleteConfirmModalHandle>(null);
+  const pruneConfirmModalRef = useRef<DeleteConfirmModalHandle>(null);
+
   const [groupingMode, setGroupingMode] = useState<{
     type: ExerciseGroupType;
     sourceExerciseId: string;
@@ -62,8 +70,9 @@ export default function TemplateEditor() {
   const [selectedGroupExerciseIds, setSelectedGroupExerciseIds] = useState<
     Set<string>
   >(new Set());
-  const [isMuscleGroupModalVisible, setIsMuscleGroupModalVisible] =
-    useState(false);
+  // const [isMuscleGroupModalVisible, setIsMuscleGroupModalVisible] =
+  //   useState(false); // Removed
+  const exerciseGroupModalRef = useRef<ExerciseGroupModalHandle>(null);
 
   // Derive group map
   const groupMap = React.useMemo(() => {
@@ -108,7 +117,7 @@ export default function TemplateEditor() {
       sourceExerciseId: currentExerciseId,
     });
     setSelectedGroupExerciseIds(new Set([currentExerciseId]));
-    setIsMuscleGroupModalVisible(true);
+    exerciseGroupModalRef.current?.present();
   };
 
   const handleConfirmExerciseGroup = () => {
@@ -121,7 +130,7 @@ export default function TemplateEditor() {
 
     setGroupingMode(null);
     setSelectedGroupExerciseIds(new Set());
-    setIsMuscleGroupModalVisible(false);
+    exerciseGroupModalRef.current?.dismiss();
   };
 
   const [saving, setSaving] = useState(false);
@@ -242,12 +251,18 @@ export default function TemplateEditor() {
     });
   }, [navigation, draftTemplate, saving, isEditing]);
 
+  useEffect(() => {
+    if (pruneMessage) {
+      pruneConfirmModalRef.current?.present();
+    }
+  }, [pruneMessage]);
+
   const handleCancel = () => {
     if (
       draftTemplate &&
       (draftTemplate.title || draftTemplate.exercises.length > 0)
     ) {
-      setIsDeleteModalVisible(true);
+      deleteModalRef.current?.present();
     } else {
       discardDraftTemplate();
       router.back();
@@ -414,7 +429,7 @@ export default function TemplateEditor() {
       </KeyboardAvoidingView>
 
       <ExerciseGroupModal
-        visible={isMuscleGroupModalVisible}
+        ref={exerciseGroupModalRef}
         exercises={templateExercisesForGrouping}
         onSelect={(exercise) => {
           if (!exercise || exercise.disabled) return;
@@ -445,26 +460,24 @@ export default function TemplateEditor() {
         onClose={() => {
           setGroupingMode(null);
           setSelectedGroupExerciseIds(new Set());
-          setIsMuscleGroupModalVisible(false);
         }}
       />
 
       <DeleteConfirmModal
-        visible={isDeleteModalVisible}
+        ref={deleteModalRef}
         title="Discard Changes?"
         description="You have unsaved changes. Are you sure you want to discard them?"
         onConfirm={() => {
-          setIsDeleteModalVisible(false);
           discardDraftTemplate();
           router.back();
         }}
         confirmText="Discard"
-        onCancel={() => setIsDeleteModalVisible(false)}
+        onCancel={() => {}}
       />
 
       {/* Prune Confirmation Modal */}
       <DeleteConfirmModal
-        visible={pruneMessage !== null}
+        ref={pruneConfirmModalRef}
         title="Confirm Save"
         description={pruneMessage || ""}
         onConfirm={async () => {

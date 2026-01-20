@@ -3,6 +3,7 @@ import { CustomToast } from "@/components/ui/CustomToast";
 import { useSyncQueue } from "@/hooks/useSyncQueue";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack, useSegments } from "expo-router";
 import * as Updates from "expo-updates";
@@ -103,55 +104,57 @@ export default function RootLayout() {
         backgroundColor: colors.background,
       }}
     >
-      <>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: {
-              backgroundColor: colors.background,
-            },
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(app)" />
-        </Stack>
-        <StatusBar
-          barStyle={theme === "dark" ? "light-content" : "dark-content"}
-          backgroundColor={colors.background}
-        />
+      <BottomSheetModalProvider>
+        <>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: {
+                backgroundColor: colors.background,
+              },
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(app)" />
+          </Stack>
+          <StatusBar
+            barStyle={theme === "dark" ? "light-content" : "dark-content"}
+            backgroundColor={colors.background}
+          />
 
-        <Toast
-          config={{
-            success: (props) => <CustomToast {...props} type="success" />,
-            error: (props) => <CustomToast {...props} type="error" />,
-            info: (props) => <CustomToast {...props} type="info" />,
-          }}
-          topOffset={60}
-        />
+          <Toast
+            config={{
+              success: (props) => <CustomToast {...props} type="success" />,
+              error: (props) => <CustomToast {...props} type="error" />,
+              info: (props) => <CustomToast {...props} type="info" />,
+            }}
+            topOffset={60}
+          />
 
-        {/* OTA Modal */}
-        <OtaUpdateModal
-          visible={showOtaModal}
-          state={updateState}
-          onLater={() => {
-            if (updateState !== "idle") return;
-            setShowOtaModal(false);
-          }}
-          onRestart={async () => {
-            try {
-              setUpdateState("downloading");
-              await Updates.fetchUpdateAsync();
+          {/* OTA Modal */}
+          <OtaUpdateModal
+            visible={showOtaModal}
+            state={updateState}
+            onLater={() => {
+              if (updateState !== "idle") return;
+              setShowOtaModal(false);
+            }}
+            onRestart={async () => {
+              try {
+                setUpdateState("downloading");
+                await Updates.fetchUpdateAsync();
 
-              setUpdateState("restarting");
-              await Updates.reloadAsync();
-            } catch (e) {
-              console.log("OTA update failed:", e);
-              setUpdateState("idle");
-            }
-          }}
-        />
-      </>
+                setUpdateState("restarting");
+                await Updates.reloadAsync();
+              } catch (e) {
+                console.log("OTA update failed:", e);
+                setUpdateState("idle");
+              }
+            }}
+          />
+        </>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 }

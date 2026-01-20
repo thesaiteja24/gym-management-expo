@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/Button";
-import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
+import {
+  DeleteConfirmModal,
+  DeleteConfirmModalHandle,
+} from "@/components/ui/DeleteConfrimModal";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import {
   TemplateExercise,
@@ -22,7 +25,7 @@ import {
 import { calculateWorkoutMetrics } from "@/utils/workout";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -90,8 +93,11 @@ export default function WorkoutDetails() {
   /* Local State */
   const { id } = useLocalSearchParams<{ id: string }>();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showDiscardModal, setShowDiscardModal] = useState(false);
+  // const [showDeleteModal, setShowDeleteModal] = useState(false); // Removed
+  // const [showDiscardModal, setShowDiscardModal] = useState(false); // Removed
+
+  const deleteModalRef = useRef<DeleteConfirmModalHandle>(null);
+  const discardModalRef = useRef<DeleteConfirmModalHandle>(null);
 
   /* Store Related State */
   const { workoutHistory, deleteWorkout } = useWorkout();
@@ -131,7 +137,7 @@ export default function WorkoutDetails() {
       }
 
       // Warn about overwriting
-      setShowDiscardModal(true);
+      discardModalRef.current?.present();
     } else {
       useWorkout.getState().loadWorkoutHistory(workout);
       router.push("/(app)/workout/start");
@@ -142,13 +148,13 @@ export default function WorkoutDetails() {
     if (!workout) return;
     useWorkout.getState().discardWorkout();
     useWorkout.getState().loadWorkoutHistory(workout);
-    setShowDiscardModal(false);
+    // Modal auto dismisses on confirm
     router.push("/(app)/workout/start");
   };
 
   const handleDeleteConfirm = async () => {
     if (!workout) return;
-    setShowDeleteModal(false);
+    // Modal auto dismisses on confirm
 
     Toast.show({
       type: "success",
@@ -356,27 +362,27 @@ export default function WorkoutDetails() {
             title="Delete Workout"
             variant="danger"
             loading={isDeleting}
-            onPress={() => setShowDeleteModal(true)}
+            onPress={() => deleteModalRef.current?.present()}
           />
         </View>
       </ScrollView>
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        visible={showDeleteModal}
+        ref={deleteModalRef}
         title="Delete Workout?"
         description="This workout and all its data will be permanently deleted. This action cannot be undone."
-        onCancel={() => setShowDeleteModal(false)}
+        onCancel={() => {}}
         onConfirm={handleDeleteConfirm}
       />
 
       {/* Discard Confirmation Modal */}
       <DeleteConfirmModal
-        visible={showDiscardModal}
+        ref={discardModalRef}
         title="Discard Current Workout?"
         description="You have an active workout in progress. Editing this history item will discard your current progress."
         confirmText="Discard & Edit"
-        onCancel={() => setShowDiscardModal(false)}
+        onCancel={() => {}}
         onConfirm={handleDiscardConfirm}
       />
     </SafeAreaView>

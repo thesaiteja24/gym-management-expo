@@ -8,9 +8,15 @@ import { useWorkout, WorkoutLog } from "@/stores/workoutStore";
 import { convertWeight } from "@/utils/converter";
 import { buildPruneMessage, calculateWorkoutMetrics } from "@/utils/workout";
 
+import { useThemeColor } from "@/hooks/useThemeColor";
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
-import { Modal, Platform, Text, TextInput, View } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Platform, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
@@ -18,9 +24,12 @@ export default function SaveWorkout() {
   /* Local State */
   const lineHeight = Platform.OS === "ios" ? undefined : 28;
   const insets = useSafeAreaInsets();
+  const colors = useThemeColor();
 
   const [pendingSave, setPendingSave] = useState<WorkoutLog | null>(null);
   const [pruneMessage, setPruneMessage] = useState<string | null>(null);
+
+  const confirmModalRef = useRef<BottomSheetModal>(null);
 
   // Workout Store
   const workoutSaving = useWorkout((s) => s.workoutSaving);
@@ -121,6 +130,7 @@ export default function SaveWorkout() {
     if (message) {
       setPendingSave(prepared.workout);
       setPruneMessage(message);
+      confirmModalRef.current?.present();
       return; // stop here, wait for confirmation
     }
 
@@ -229,45 +239,65 @@ export default function SaveWorkout() {
       </View>
 
       {/* Confirm save modal */}
-      <Modal visible={!!pendingSave} transparent animationType="fade">
-        <View className="flex-1 items-center justify-center bg-black/40">
-          <View className="w-[90%] rounded-xl bg-white p-5 dark:bg-neutral-900">
-            <Text className="text-lg font-semibold text-black dark:text-white">
-              Before saving
-            </Text>
+      <BottomSheetModal
+        ref={confirmModalRef}
+        index={0}
+        enableDynamicSizing={true}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            opacity={0.4}
+          />
+        )}
+        backgroundStyle={{ backgroundColor: colors.background }}
+        handleIndicatorStyle={{ backgroundColor: colors.neutral[500] }}
+        onDismiss={() => {
+          setPendingSave(null);
+          setPruneMessage(null);
+        }}
+      >
+        <BottomSheetView
+          style={{
+            paddingBottom: insets.bottom + 16,
+            paddingHorizontal: 20,
+            paddingTop: 8,
+          }}
+        >
+          <Text className="text-lg font-semibold text-black dark:text-white">
+            Before saving
+          </Text>
 
-            <Text className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-              {pruneMessage}
-            </Text>
+          <Text className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+            {pruneMessage}
+          </Text>
 
-            <View className="mt-4 flex-row gap-3">
-              <View className="flex-1">
-                <Button
-                  title="Cancel"
-                  variant="secondary"
-                  onPress={() => {
-                    setPendingSave(null);
-                    setPruneMessage(null);
-                  }}
-                />
-              </View>
+          <View className="mt-6 flex-row gap-3">
+            <View className="flex-1">
+              <Button
+                title="Cancel"
+                variant="secondary"
+                onPress={() => {
+                  confirmModalRef.current?.dismiss();
+                }}
+              />
+            </View>
 
-              <View className="flex-1">
-                <Button
-                  title="Save anyway"
-                  variant="primary"
-                  onPress={() => {
-                    const workout = pendingSave!;
-                    setPendingSave(null);
-                    setPruneMessage(null);
-                    commitSave(workout);
-                  }}
-                />
-              </View>
+            <View className="flex-1">
+              <Button
+                title="Save anyway"
+                variant="primary"
+                onPress={() => {
+                  const workout = pendingSave!;
+                  confirmModalRef.current?.dismiss();
+                  commitSave(workout);
+                }}
+              />
             </View>
           </View>
-        </View>
-      </Modal>
+        </BottomSheetView>
+      </BottomSheetModal>
     </View>
   );
 }

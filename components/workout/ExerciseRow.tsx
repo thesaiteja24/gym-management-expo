@@ -1,4 +1,5 @@
 import SetRow from "@/components/workout/SetRow";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { Exercise, ExerciseType } from "@/stores/exerciseStore";
 import {
   TemplateExercise,
@@ -11,18 +12,19 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import React, { memo, useEffect, useRef, useState } from "react";
 import {
-  Modal,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
-} from "react-native";
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { Image } from "expo-image";
+import React, { memo, useRef, useState } from "react";
+import { Text, TouchableOpacity, View, useColorScheme } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../ui/Button";
-import RestTimerPickerModal from "./RestTimerPickerModal";
+import RestTimerPickerModal, {
+  RestTimerPickerModalHandle,
+} from "./RestTimerPickerModal";
 
 /* ───────────────── Capabilities ───────────────── */
 
@@ -68,37 +70,67 @@ function getGroupColor(groupId: string) {
 
 /* ───────────────── Props ───────────────── */
 
+/**
+ * Props for the ExerciseRow component.
+ * Handles both Active Workout usage (interactive, timer-aware) and Template usage (static definition).
+ */
 type Props = {
+  /** The exercise data to display. Union of Active and Template types. */
   exercise: WorkoutLogExercise | TemplateExercise;
+  /** Static reference data for the exercise (title, thumbnail, type). */
   exerciseDetails: Exercise;
+  /** Whether this is the currently active exercise in the list (for highlighting). */
   isActive: boolean;
+  /** Whether this exercise is currently being dragged/reordered. */
   isDragging: boolean;
+  /** Grouping details if part of a Superset or Giant Set. */
   groupDetails?: WorkoutLogGroup | TemplateExerciseGroup | null;
+  /** User preference for weight display (kg/lbs). */
   preferredWeightUnit: WeightUnits;
+  /**
+   * If true, renders in "Template Mode":
+   * - Hides "Previous Set" column
+   * - Disables timers
+   * - Enables duration input editing
+   */
   isTemplate?: boolean;
 
+  /* ─── Interactions ─── */
   drag?: () => void;
   onPress?: () => void;
 
+  /* ─── Exercise Actions ─── */
   onReplaceExercise: () => void;
   onCreateSuperSet: () => void;
   onCreateGiantSet: () => void;
   onRemoveExerciseGroup: () => void;
   onDeleteExercise: () => void;
 
+  /* ─── Set Actions ─── */
   onAddSet: () => void;
   onUpdateSet: (setId: string, patch: any) => void;
   onToggleCompleteSet?: (setId: string) => void;
   onDeleteSet: (setId: string) => void;
 
+  /* ─── Timer Actions ─── */
   onStartSetTimer?: (setId: string) => void;
   onStopSetTimer?: (setId: string) => void;
 
+  /* ─── Shortcuts ─── */
   onSaveRestPreset?: (setId: string, seconds: number) => void;
 };
 
 /* ───────────────── Component ───────────────── */
 
+/**
+ * A complex row component representing a single Exercise and its Sets.
+ *
+ * Capabilities:
+ * - **Reorderable**: Supports drag-and-drop handles.
+ * - **Swipeable**: Inner SetRows are swipeable.
+ * - **Grouping**: Visually indicates Supersets/Giant Sets via colored side-bars.
+ * - **Modals**: Manages its own "More Options" menu and "Rest Timer Picker".
+ */
 function ExerciseRow({
   exercise,
   exerciseDetails,
@@ -127,21 +159,16 @@ function ExerciseRow({
   const { hasWeight, hasReps, hasDuration } =
     EXERCISE_CAPABILITIES[exerciseDetails.exerciseType];
 
+  const colors = useThemeColor();
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
   /* ───── Local UI state only ───── */
 
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
-
-  const [restPickerVisible, setRestPickerVisible] = useState(false);
   const [activeRestSetId, setActiveRestSetId] = useState<string | null>(null);
 
-  const menuRef = useRef<View>(null);
+  const restPickerRef = useRef<RestTimerPickerModalHandle>(null);
 
-  useEffect(() => {
-    if (isDragging) {
-      setMenuVisible(false);
-    }
-  }, [isDragging]);
+  /* Note: Removed menuVisible and menuRef logic */
 
   /* ───────────────── Render ───────────────── */
 
@@ -181,15 +208,8 @@ function ExerciseRow({
         </View>
 
         <TouchableOpacity
-          ref={menuRef}
           onPress={() => {
-            menuRef.current?.measureInWindow((x, y, width, height) => {
-              setMenuPosition({
-                x: x + width - 200,
-                y: y + height + 6,
-              });
-              setMenuVisible(true);
-            });
+            bottomSheetModalRef.current?.present();
           }}
         >
           <Entypo
@@ -293,7 +313,7 @@ function ExerciseRow({
           onStopTimer={() => onStopSetTimer?.(set.id)}
           onOpenRestPicker={() => {
             setActiveRestSetId(set.id);
-            setRestPickerVisible(true);
+            restPickerRef.current?.present(set.restSeconds ?? 60);
           }}
         />
       ))}
@@ -302,26 +322,30 @@ function ExerciseRow({
       <Button title="Add Set" variant="secondary" onPress={onAddSet} />
 
       {/* ───── Menu ───── */}
-      <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
+      {/* ───── Menu ───── */}
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={0}
+        enableDynamicSizing={true}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            opacity={0.4}
+          />
+        )}
+        backgroundStyle={{ backgroundColor: colors.background }}
+        handleIndicatorStyle={{ backgroundColor: colors.neutral[500] }}
       >
-        <Pressable className="flex-1" onPress={() => setMenuVisible(false)} />
-
-        <View
+        <BottomSheetView
           style={{
-            position: "absolute",
-            top: menuPosition.y,
-            left: menuPosition.x,
-            width: 200,
+            paddingBottom: useSafeAreaInsets().bottom + 16,
           }}
-          className="rounded-xl border border-neutral-200 bg-white shadow-lg dark:border-neutral-800 dark:bg-neutral-900"
         >
           <TouchableOpacity
             onPress={() => {
-              setMenuVisible(false);
+              bottomSheetModalRef.current?.dismiss();
               onReplaceExercise();
             }}
             className="px-4 py-3"
@@ -336,7 +360,7 @@ function ExerciseRow({
               <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
               <TouchableOpacity
                 onPress={() => {
-                  setMenuVisible(false);
+                  bottomSheetModalRef.current?.dismiss();
                   onRemoveExerciseGroup();
                 }}
                 className="px-4 py-3"
@@ -357,7 +381,7 @@ function ExerciseRow({
 
               <TouchableOpacity
                 onPress={() => {
-                  setMenuVisible(false);
+                  bottomSheetModalRef.current?.dismiss();
                   onCreateSuperSet();
                 }}
                 className="px-4 py-3"
@@ -371,7 +395,7 @@ function ExerciseRow({
 
               <TouchableOpacity
                 onPress={() => {
-                  setMenuVisible(false);
+                  bottomSheetModalRef.current?.dismiss();
                   onCreateGiantSet();
                 }}
                 className="px-4 py-3"
@@ -386,27 +410,20 @@ function ExerciseRow({
 
           <TouchableOpacity
             onPress={() => {
-              setMenuVisible(false);
+              bottomSheetModalRef.current?.dismiss();
               onDeleteExercise();
             }}
             className="px-4 py-3"
           >
             <Text className="text-base text-red-600">Delete Exercise</Text>
           </TouchableOpacity>
-        </View>
-      </Modal>
+        </BottomSheetView>
+      </BottomSheetModal>
 
       {/* ───── Rest picker ───── */}
       <RestTimerPickerModal
-        visible={restPickerVisible}
-        initialSeconds={
-          activeRestSetId
-            ? (exercise.sets.find((s) => s.id === activeRestSetId)
-                ?.restSeconds ?? 60)
-            : 60
-        }
+        ref={restPickerRef}
         onClose={() => {
-          setRestPickerVisible(false);
           setActiveRestSetId(null);
         }}
         onConfirm={(seconds) => {
@@ -414,7 +431,6 @@ function ExerciseRow({
 
           onSaveRestPreset?.(activeRestSetId, seconds);
 
-          setRestPickerVisible(false);
           setActiveRestSetId(null);
         }}
       />
