@@ -1,8 +1,15 @@
-import EquipmentModal from "@/components/exercises/EquipmentModal";
+import EquipmentModal, {
+  EquipmentModalHandle,
+} from "@/components/exercises/EquipmentModal";
 import ExerciseList from "@/components/exercises/ExerciseList";
-import MuscleGroupModal from "@/components/exercises/MuscleGroupModal";
+import MuscleGroupModal, {
+  MuscleGroupModalHandle,
+} from "@/components/exercises/MuscleGroupModal";
 import { Button } from "@/components/ui/Button";
-import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
+import {
+  DeleteConfirmModal,
+  DeleteConfirmModalHandle,
+} from "@/components/ui/DeleteConfrimModal";
 
 import { ROLES as roles } from "@/constants/roles";
 import { useAuth } from "@/stores/authStore";
@@ -118,8 +125,11 @@ export default function ExercisesScreen() {
   const selectedCount = selectedExerciseIds.size;
 
   const [query, setQuery] = useState("");
-  const [showEquipmentModal, setShowEquipmentModal] = useState(false);
-  const [showMuscleGroupsModal, setShowMuscleGroupsModal] = useState(false);
+  // const [showMuscleGroupsModal, setShowMuscleGroupsModal] = useState(false); // Removed
+
+  const equipmentModalRef = React.useRef<EquipmentModalHandle>(null);
+  const muscleGroupsModalRef = React.useRef<MuscleGroupModalHandle>(null);
+  const deleteConfirmModalRef = React.useRef<DeleteConfirmModalHandle>(null);
 
   const [filter, setFilter] = useState({
     equipmentId: "",
@@ -243,7 +253,7 @@ export default function ExercisesScreen() {
           ) : (
             <Button
               title="Equipment"
-              onPress={() => setShowEquipmentModal(true)}
+              onPress={() => equipmentModalRef.current?.present()}
             />
           )}
         </View>
@@ -260,7 +270,7 @@ export default function ExercisesScreen() {
           ) : (
             <Button
               title="Muscle Groups"
-              onPress={() => setShowMuscleGroupsModal(true)}
+              onPress={() => muscleGroupsModalRef.current?.present()}
             />
           )}
         </View>
@@ -276,6 +286,7 @@ export default function ExercisesScreen() {
         onLongPress={(exercise) => {
           if (role !== roles.systemAdmin) return;
           setDeleteExerciseId({ id: exercise.id, title: exercise.title });
+          deleteConfirmModalRef.current?.present();
         }}
       />
 
@@ -338,74 +349,77 @@ export default function ExercisesScreen() {
 
       {/* Modals */}
       <EquipmentModal
-        visible={showEquipmentModal}
+        ref={equipmentModalRef}
         loading={equipmentLoading}
         enableCreate={role === roles.systemAdmin}
         equipment={equipmentList}
-        onClose={() => setShowEquipmentModal(false)}
+        onClose={() => {}}
         onSelect={(item) => {
           setFilter((f) => ({ ...f, equipmentId: item.id }));
-          setShowEquipmentModal(false);
+          equipmentModalRef.current?.dismiss();
         }}
         onLongPress={(item) => {
           if (role !== roles.systemAdmin) return;
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          setShowEquipmentModal(false);
+          equipmentModalRef.current?.dismiss();
           router.push(`/(app)/(system-admin)/equipment/${item.id}`);
         }}
         onCreatePress={() => {
           if (role !== roles.systemAdmin) return;
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          setShowEquipmentModal(false);
+          equipmentModalRef.current?.dismiss();
           router.push(`/(app)/(system-admin)/equipment/create`);
         }}
       />
 
       <MuscleGroupModal
-        visible={showMuscleGroupsModal}
+        ref={muscleGroupsModalRef}
         loading={muscleGroupLoading}
         enableCreate={role === roles.systemAdmin}
         muscleGroups={muscleGroupList}
-        onClose={() => setShowMuscleGroupsModal(false)}
+        onClose={() => {}}
         onSelect={(item) => {
           setFilter((f) => ({ ...f, muscleGroupId: item.id }));
-          setShowMuscleGroupsModal(false);
+          muscleGroupsModalRef.current?.dismiss();
         }}
         onLongPress={(item) => {
           if (role !== roles.systemAdmin) return;
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          setShowMuscleGroupsModal(false);
+          muscleGroupsModalRef.current?.dismiss();
           router.push(`/(app)/(system-admin)/muscle-groups/${item.id}`);
         }}
         onCreatePress={() => {
           if (role !== roles.systemAdmin) return;
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-          setShowMuscleGroupsModal(false);
+          muscleGroupsModalRef.current?.dismiss();
           router.push(`/(app)/(system-admin)/muscle-groups/create`);
         }}
       />
 
-      {deleteExerciseId && (
-        <DeleteConfirmModal
-          visible
-          title={`Delete "${deleteExerciseId.title}"?`}
-          description="This exercise will be permanently removed."
-          onCancel={() => setDeleteExerciseId(null)}
-          onConfirm={async () => {
-            const res = await deleteExercise(deleteExerciseId.id);
-            await getAllExercises();
-            setDeleteExerciseId(null);
+      <DeleteConfirmModal
+        ref={deleteConfirmModalRef}
+        title={
+          deleteExerciseId
+            ? `Delete "${deleteExerciseId.title}"?`
+            : "Delete Exercise?"
+        }
+        description="This exercise will be permanently removed."
+        onCancel={() => setDeleteExerciseId(null)}
+        onConfirm={async () => {
+          if (!deleteExerciseId) return;
+          const res = await deleteExercise(deleteExerciseId.id);
+          await getAllExercises();
+          setDeleteExerciseId(null);
 
-            Toast.show({
-              type: res.success ? "success" : "error",
-              text1: res.success
-                ? "Exercise deleted successfully"
-                : "Error deleting exercise",
-              text2: res.message,
-            });
-          }}
-        />
-      )}
+          Toast.show({
+            type: res.success ? "success" : "error",
+            text1: res.success
+              ? "Exercise deleted successfully"
+              : "Error deleting exercise",
+            text2: res.message,
+          });
+        }}
+      />
     </View>
   );
 }

@@ -1,5 +1,8 @@
 import EditableAvatar from "@/components/EditableAvatar";
-import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
+import {
+  DeleteConfirmModal,
+  DeleteConfirmModalHandle,
+} from "@/components/ui/DeleteConfrimModal";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import { useLocalSearchParams, useNavigation } from "expo-router";
@@ -31,7 +34,7 @@ export default function EditMuscleGroup() {
     deleteMuscleGroup,
   } = useMuscleGroup();
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const deleteConfirmModalRef = React.useRef<DeleteConfirmModalHandle>(null);
 
   // current editable state
   const [title, setTitle] = useState("");
@@ -155,7 +158,7 @@ export default function EditMuscleGroup() {
         {
           name: "trash",
           onPress: async () => {
-            setShowDeleteModal(true);
+            deleteConfirmModalRef.current?.present();
           },
           color: "red",
         },
@@ -205,34 +208,30 @@ export default function EditMuscleGroup() {
       </View>
 
       {/* Delete Modal */}
-      {showDeleteModal && (
-        <DeleteConfirmModal
-          visible
-          title={`Delete "${original.title}"?`}
-          description="This muscle group will be permanently removed."
-          onCancel={() => setShowDeleteModal(false)}
-          onConfirm={async () => {
-            setShowDeleteModal(false);
+      <DeleteConfirmModal
+        ref={deleteConfirmModalRef}
+        title={`Delete "${original.title}"?`}
+        description="This muscle group will be permanently removed."
+        onCancel={() => {}}
+        onConfirm={async () => {
+          const res = await deleteMuscleGroup(id);
 
-            const res = await deleteMuscleGroup(id);
+          if (res?.success) {
+            Toast.show({
+              type: "success",
+              text1: "Muscle group deleted",
+            });
 
-            if (res?.success) {
-              Toast.show({
-                type: "success",
-                text1: "Muscle group deleted",
-              });
-
-              await refreshMuscleGroups();
-              navigation.goBack();
-            } else {
-              Toast.show({
-                type: "error",
-                text1: "Failed to delete muscle group",
-              });
-            }
-          }}
-        />
-      )}
+            await refreshMuscleGroups();
+            navigation.goBack();
+          } else {
+            Toast.show({
+              type: "error",
+              text1: "Failed to delete muscle group",
+            });
+          }
+        }}
+      />
     </View>
   );
 }

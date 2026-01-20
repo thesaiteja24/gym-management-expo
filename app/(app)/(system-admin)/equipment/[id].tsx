@@ -1,5 +1,8 @@
 import EditableAvatar from "@/components/EditableAvatar";
-import { DeleteConfirmModal } from "@/components/ui/DeleteConfrimModal";
+import {
+  DeleteConfirmModal,
+  DeleteConfirmModalHandle,
+} from "@/components/ui/DeleteConfrimModal";
 import { useEquipment } from "@/stores/equipmentStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import { useLocalSearchParams, useNavigation } from "expo-router";
@@ -31,7 +34,7 @@ export default function EditEquipment() {
     deleteEquipment,
   } = useEquipment();
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const deleteConfirmModalRef = React.useRef<DeleteConfirmModalHandle>(null);
 
   // editable state
   const [title, setTitle] = useState("");
@@ -157,7 +160,7 @@ export default function EditEquipment() {
         {
           name: "trash",
           onPress: async () => {
-            setShowDeleteModal(true);
+            deleteConfirmModalRef.current?.present();
           },
           color: "red",
         },
@@ -208,34 +211,30 @@ export default function EditEquipment() {
       </View>
 
       {/* Delete Modal */}
-      {showDeleteModal && (
-        <DeleteConfirmModal
-          visible={showDeleteModal}
-          title={`Delete Equipment "${original.title}"?`}
-          description="This equipment will be permanently removed"
-          onCancel={() => setShowDeleteModal(false)}
-          onConfirm={async () => {
-            setShowDeleteModal(false);
+      <DeleteConfirmModal
+        ref={deleteConfirmModalRef}
+        title={`Delete Equipment "${original.title}"?`}
+        description="This equipment will be permanently removed"
+        onCancel={() => {}}
+        onConfirm={async () => {
+          const res = await deleteEquipment(id);
 
-            const res = await deleteEquipment(id);
+          if (res?.success) {
+            Toast.show({
+              type: "success",
+              text1: "Equipment deleted",
+            });
 
-            if (res?.success) {
-              Toast.show({
-                type: "success",
-                text1: "Equipment deleted",
-              });
-
-              await refreshEquipment();
-              navigation.goBack();
-            } else {
-              Toast.show({
-                type: "error",
-                text1: "Failed to delete equipment",
-              });
-            }
-          }}
-        />
-      )}
+            await refreshEquipment();
+            navigation.goBack();
+          } else {
+            Toast.show({
+              type: "error",
+              text1: "Failed to delete equipment",
+            });
+          }
+        }}
+      />
     </View>
   );
 }

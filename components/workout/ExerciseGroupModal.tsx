@@ -1,14 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import React from "react";
 import {
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetScrollView,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { Image } from "expo-image";
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
+import { Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../ui/Button";
 
@@ -20,45 +25,83 @@ type GroupExerciseItem = {
   disabled: boolean;
 };
 
+export interface ExerciseGroupModalHandle {
+  present: () => void;
+  dismiss: () => void;
+}
+
 type Props = {
-  visible: boolean;
   exercises: GroupExerciseItem[];
   onSelect: (exercise: GroupExerciseItem) => void;
-  onClose: () => void;
+  onClose?: () => void;
   onConfirm?: () => void;
 };
 
-export default function ExerciseGroupModal({
-  visible,
-  exercises,
-  onSelect,
-  onClose,
-  onConfirm,
-}: Props) {
-  return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View
-        className="flex-1 justify-end bg-black/40"
-        style={{ marginBottom: useSafeAreaInsets().bottom }}
-      >
-        {/* Backdrop */}
-        <Pressable className="absolute inset-0" onPress={onClose} />
+const ExerciseGroupModal = forwardRef<ExerciseGroupModalHandle, Props>(
+  ({ exercises, onSelect, onClose, onConfirm }, ref) => {
+    const isDark = useColorScheme() === "dark";
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+    const insets = useSafeAreaInsets();
 
-        {/* Sheet */}
-        <View className="h-[80%] rounded-t-3xl bg-white p-6 dark:bg-[#111]">
+    useImperativeHandle(ref, () => ({
+      present: () => {
+        bottomSheetModalRef.current?.present();
+      },
+      dismiss: () => {
+        bottomSheetModalRef.current?.dismiss();
+      },
+    }));
+
+    const renderBackdrop = useCallback(
+      (props: any) => (
+        <BottomSheetBackdrop
+          {...props}
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+          opacity={0.4}
+        />
+      ),
+      [],
+    );
+
+    const snapPoints = useMemo(() => ["85%"], []);
+
+    return (
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        snapPoints={snapPoints}
+        backdropComponent={renderBackdrop}
+        onDismiss={onClose}
+        backgroundStyle={{
+          backgroundColor: isDark ? "#171717" : "white",
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: isDark ? "#525252" : "#d1d5db",
+        }}
+        enableDynamicSizing={false}
+      >
+        <BottomSheetView
+          style={{ flex: 1, paddingBottom: insets.bottom + 24 }}
+          className="dark:bg-[#111]"
+        >
           {/* Header */}
-          <View className="mb-6 flex-row items-center justify-between">
+          <View className="mb-6 flex-row items-center justify-between px-6 pt-4">
             <Text className="text-xl font-bold text-black dark:text-white">
               Select Exercises
             </Text>
 
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity
+              onPress={() => bottomSheetModalRef.current?.dismiss()}
+            >
               <Ionicons name="close" size={24} color="gray" />
             </TouchableOpacity>
           </View>
 
           {/* Exercise list */}
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <BottomSheetScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 24 }}
+          >
             {exercises.map((exercise) => {
               const opacity = exercise.disabled ? 0.4 : 1;
               const borderColor = exercise.selected
@@ -74,7 +117,7 @@ export default function ExerciseGroupModal({
                   style={{ opacity }}
                 >
                   <Image
-                    source={exercise.thumbnailUrl}
+                    source={{ uri: exercise.thumbnailUrl }}
                     style={{
                       width: 44,
                       height: 44,
@@ -98,16 +141,24 @@ export default function ExerciseGroupModal({
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
+          </BottomSheetScrollView>
 
           {/* Footer */}
           {onConfirm && (
-            <View className="mt-4">
-              <Button title="Confirm" onPress={onConfirm} />
+            <View className="mt-4 px-6">
+              <Button
+                title="Confirm"
+                onPress={() => {
+                  onConfirm();
+                  bottomSheetModalRef.current?.dismiss();
+                }}
+              />
             </View>
           )}
-        </View>
-      </View>
-    </Modal>
-  );
-}
+        </BottomSheetView>
+      </BottomSheetModal>
+    );
+  },
+);
+
+export default ExerciseGroupModal;

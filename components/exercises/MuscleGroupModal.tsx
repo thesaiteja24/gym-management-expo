@@ -1,71 +1,129 @@
-import { Image } from "expo-image";
-import React from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    Pressable,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetScrollView,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { Image } from "expo-image";
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
+import {
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  View,
+  useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+export interface MuscleGroupModalHandle {
+  present: () => void;
+  dismiss: () => void;
+}
+
 type Props = {
-  visible: boolean;
   loading: boolean;
   enableCreate?: boolean;
   muscleGroups: any[];
 
-  onClose: () => void;
+  onClose?: () => void;
   onSelect: (muscleGroup: any) => void;
   onLongPress?: (muscleGroup: any) => void;
   onCreatePress?: () => void;
 };
 
-export default function MuscleGroupModal({
-  visible,
-  loading,
-  enableCreate,
-  muscleGroups,
-  onClose,
-  onSelect,
-  onLongPress,
-  onCreatePress,
-}: Props) {
-  return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View
-        className="flex-1 justify-end bg-black/40"
-        style={{
-          marginBottom: useSafeAreaInsets().bottom,
+const MuscleGroupModal = forwardRef<MuscleGroupModalHandle, Props>(
+  (
+    {
+      loading,
+      enableCreate,
+      muscleGroups,
+      onClose,
+      onSelect,
+      onLongPress,
+      onCreatePress,
+    },
+    ref,
+  ) => {
+    const isDark = useColorScheme() === "dark";
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+    const insets = useSafeAreaInsets();
+
+    useImperativeHandle(ref, () => ({
+      present: () => {
+        bottomSheetModalRef.current?.present();
+      },
+      dismiss: () => {
+        bottomSheetModalRef.current?.dismiss();
+      },
+    }));
+
+    const renderBackdrop = useCallback(
+      (props: any) => (
+        <BottomSheetBackdrop
+          {...props}
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+          opacity={0.4}
+        />
+      ),
+      [],
+    );
+
+    const snapPoints = useMemo(() => ["85%"], []);
+
+    return (
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        snapPoints={snapPoints}
+        backdropComponent={renderBackdrop}
+        onDismiss={onClose}
+        backgroundStyle={{
+          backgroundColor: isDark ? "#171717" : "white",
         }}
+        handleIndicatorStyle={{
+          backgroundColor: isDark ? "#525252" : "#d1d5db",
+        }}
+        enableDynamicSizing={false}
       >
-        <Pressable className="absolute inset-0" onPress={onClose} />
+        <BottomSheetView
+          style={{ flex: 1, paddingBottom: insets.bottom }}
+          className="dark:bg-neutral-900"
+        >
+          <View className="px-6 pt-4">
+            <View
+              className={`flex-row items-center ${
+                onCreatePress && enableCreate
+                  ? "justify-between"
+                  : "justify-center"
+              } mb-6`}
+            >
+              <Text className="text-xl font-bold text-black dark:text-white">
+                Muscle Groups
+              </Text>
 
-        <View className="h-[80%] rounded-t-3xl bg-white px-6 pt-6 dark:bg-neutral-900">
-          <View
-            className={`flex-row items-center ${
-              onCreatePress && enableCreate
-                ? "justify-between"
-                : "justify-center"
-            } mb-6`}
-          >
-            <Text className="text-xl font-bold text-black dark:text-white">
-              Muscle Groups
-            </Text>
-
-            {onCreatePress && enableCreate && (
-              <TouchableOpacity onPress={onCreatePress}>
-                <Text className="text-xl text-primary">Create</Text>
-              </TouchableOpacity>
-            )}
+              {onCreatePress && enableCreate && (
+                <TouchableOpacity onPress={onCreatePress}>
+                  <Text className="text-xl text-primary">Create</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           {loading ? (
-            <ActivityIndicator animating size="large" />
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator animating size="large" />
+            </View>
           ) : (
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <BottomSheetScrollView
+              contentContainerStyle={{ paddingHorizontal: 24 }}
+              showsVerticalScrollIndicator={false}
+            >
               {muscleGroups.map((item) => (
                 <TouchableOpacity
                   key={item.id}
@@ -91,10 +149,12 @@ export default function MuscleGroupModal({
                   />
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </BottomSheetScrollView>
           )}
-        </View>
-      </View>
-    </Modal>
-  );
-}
+        </BottomSheetView>
+      </BottomSheetModal>
+    );
+  },
+);
+
+export default MuscleGroupModal;

@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/Button";
 import { ElapsedTime } from "@/components/workout/ElapsedTime";
-import ExerciseGroupModal from "@/components/workout/ExerciseGroupModal";
+import ExerciseGroupModal, {
+  ExerciseGroupModalHandle,
+} from "@/components/workout/ExerciseGroupModal";
 import ExerciseRow from "@/components/workout/ExerciseRow";
 import RestTimerSnack from "@/components/workout/RestTimerSnack";
 
@@ -52,9 +54,8 @@ export default function StartWorkout() {
   const [selectedGroupExerciseIds, setSelectedGroupExerciseIds] = useState<
     Set<string>
   >(new Set());
-  // state for showing/hiding muscle group modal
-  const [isMuscleGroupModalVisible, setIsMuscleGroupModalVisible] =
-    useState(false);
+
+  const exerciseGroupModalRef = useRef<ExerciseGroupModalHandle>(null);
 
   const lastIndexRef = useRef<number | null>(null);
   const prevCompletedRef = useRef<Map<string, boolean>>(new Map());
@@ -234,7 +235,10 @@ export default function StartWorkout() {
     // reset local UI state
     setGroupingMode(null);
     setSelectedGroupExerciseIds(new Set());
-    setIsMuscleGroupModalVisible(false);
+    // reset local UI state
+    setGroupingMode(null);
+    setSelectedGroupExerciseIds(new Set());
+    exerciseGroupModalRef.current?.dismiss();
   };
 
   /* Effects */
@@ -407,7 +411,7 @@ export default function StartWorkout() {
                 }
                 onRemoveExerciseGroup={() => {
                   removeExerciseFromGroup(item.exerciseId);
-                  setIsMuscleGroupModalVisible(false);
+                  exerciseGroupModalRef.current?.dismiss();
                 }}
                 onCreateSuperSet={() => {
                   setGroupingMode({
@@ -416,7 +420,7 @@ export default function StartWorkout() {
                   });
 
                   setSelectedGroupExerciseIds(new Set([item.exerciseId]));
-                  setIsMuscleGroupModalVisible(true);
+                  exerciseGroupModalRef.current?.present();
                 }}
                 onCreateGiantSet={() => {
                   setGroupingMode({
@@ -425,7 +429,7 @@ export default function StartWorkout() {
                   });
 
                   setSelectedGroupExerciseIds(new Set([item.exerciseId]));
-                  setIsMuscleGroupModalVisible(true);
+                  exerciseGroupModalRef.current?.present();
                 }}
                 onDeleteExercise={() => removeExercise(item.exerciseId)}
                 onAddSet={() => {
@@ -495,7 +499,7 @@ export default function StartWorkout() {
 
       {/* Superset and Giantset Modal */}
       <ExerciseGroupModal
-        visible={isMuscleGroupModalVisible}
+        ref={exerciseGroupModalRef}
         exercises={workoutExercisesForGrouping}
         onSelect={(exercise) => {
           if (!exercise || exercise.disabled) return;
@@ -526,7 +530,6 @@ export default function StartWorkout() {
         onClose={() => {
           setGroupingMode(null);
           setSelectedGroupExerciseIds(new Set());
-          setIsMuscleGroupModalVisible(false);
         }}
       />
     </View>

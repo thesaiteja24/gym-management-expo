@@ -1,8 +1,12 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
-import * as Haptics from "expo-haptics";
-import React, { useEffect, useMemo, useState } from "react";
 import {
-  Modal,
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import * as Haptics from "expo-haptics";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import {
   Pressable,
   Text,
   TouchableOpacity,
@@ -16,9 +20,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
    Types
 -------------------------------------------------- */
 
-/**
- * Props shared between modal and inline modes.
- */
 interface BaseDateTimePickerProps {
   /**
    * Current value of the picker.
@@ -48,9 +49,6 @@ interface BaseDateTimePickerProps {
   is24Hour?: boolean;
 }
 
-/**
- * Props for modal mode.
- */
 export interface DateTimePickerModalProps extends BaseDateTimePickerProps {
   /**
    * Render the picker inside a confirmation modal.
@@ -72,9 +70,6 @@ export interface DateTimePickerModalProps extends BaseDateTimePickerProps {
   textClassName?: string;
 }
 
-/**
- * Props for inline mode.
- */
 export interface DateTimePickerInlineProps extends BaseDateTimePickerProps {
   /**
    * Render the picker inline without a modal.
@@ -82,9 +77,6 @@ export interface DateTimePickerInlineProps extends BaseDateTimePickerProps {
   isModal: false;
 }
 
-/**
- * Props for the DateTimePicker component.
- */
 export type DateTimePickerProps =
   | DateTimePickerModalProps
   | DateTimePickerInlineProps;
@@ -93,55 +85,10 @@ export type DateTimePickerProps =
    Component
 -------------------------------------------------- */
 
-/**
- * DateTimePicker
- *
- * A flexible date / date-time picker component with **modal**
- * and **inline** rendering modes.
- *
- * Features:
- * - Date-only or date + time selection
- * - Modal confirmation or inline immediate updates
- * - Optional 12h / 24h time formatting
- * - Dark mode support
- * - Draft state in modal mode
- *
- * ### Modes
- *
- * **Modal mode (default)**
- * - Displays the current value as text
- * - Opens a bottom-sheet modal on press
- * - Changes are staged until confirmed
- *
- * **Inline mode**
- * - Renders the native picker directly
- * - Updates immediately on change
- *
- * @example
- * // Modal date + time picker
- * <DateTimePicker
- *   value={new Date()}
- *   onUpdate={setDate}
- * />
- *
- * @example
- * // Date-only picker
- * <DateTimePicker
- *   dateOnly
- *   value={new Date()}
- *   onUpdate={setDate}
- * />
- *
- * @example
- * // Inline picker
- * <DateTimePicker
- *   isModal={false}
- *   onUpdate={setDate}
- * />
- */
 export default function DateTimePicker(props: DateTimePickerProps) {
   const isDark = useColorScheme() === "dark";
   const colors = useThemeColor();
+  const insets = useSafeAreaInsets();
 
   const { value, onUpdate, dateOnly = false, is24Hour } = props;
 
@@ -149,20 +96,47 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 
   const initialDate = value ?? new Date();
 
-  const [visible, setVisible] = useState(false);
+  // Ref for the Bottom Sheet
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  // Local state for draft value
   const [draft, setDraft] = useState<Date>(initialDate);
 
-  /* Reset draft when modal opens */
-  useEffect(() => {
-    if (visible) {
-      setDraft(initialDate);
-    }
-  }, [visible, initialDate]);
+  // Update draft whenever the modal opens or value changes
+  // We can hook into the sheet change or just rely on `present` resetting it if we exposed a method,
+  // but here the trigger is internal.
+  // We'll reset draft when we open the modal.
+
+  const handlePresent = useCallback(() => {
+    setDraft(value ?? new Date());
+    bottomSheetModalRef.current?.present();
+  }, [value]);
+
+  const handleDismiss = useCallback(() => {
+    bottomSheetModalRef.current?.dismiss();
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onUpdate(draft);
+    handleDismiss();
+  }, [draft, onUpdate, handleDismiss]);
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.4}
+      />
+    ),
+    [],
+  );
 
   /* ---------------------------------------------
-     Display string (modal mode)
+     Display string
   --------------------------------------------- */
-
   const displayValue = useMemo(() => {
     const d = value ?? initialDate;
 
@@ -204,18 +178,9 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 
   const { textClassName, title = "Select date" } = props;
 
-  const open = () => setVisible(true);
-  const close = () => setVisible(false);
-
-  const confirm = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onUpdate(draft);
-    close();
-  };
-
   return (
     <>
-      <Pressable onPress={open}>
+      <Pressable onPress={handlePresent}>
         <Text
           className={textClassName ?? "text-base font-medium"}
           style={!textClassName ? { color: colors.primary } : undefined}
@@ -224,65 +189,64 @@ export default function DateTimePicker(props: DateTimePickerProps) {
         </Text>
       </Pressable>
 
-      <Modal visible={visible} transparent animationType="slide">
-        <View
-          className="flex-1 justify-end bg-black/40"
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={0}
+        enableDynamicSizing={true}
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{ backgroundColor: colors.background }}
+        handleIndicatorStyle={{ backgroundColor: colors.neutral[500] }}
+      >
+        <BottomSheetView
           style={{
-            marginBottom: useSafeAreaInsets().bottom,
+            paddingBottom: insets.bottom + 16,
+            paddingHorizontal: 24,
+            paddingTop: 8,
           }}
         >
-          <Pressable className="absolute inset-0" onPress={close} />
-
-          <View
-            className="rounded-t-3xl p-6"
-            style={{ backgroundColor: colors.background }}
+          <Text
+            className="mb-4 text-center text-xl font-bold"
+            style={{ color: colors.text }}
           >
-            <Text
-              className="mb-4 text-center text-xl font-bold"
-              style={{ color: colors.text }}
-            >
-              {title}
-            </Text>
+            {title}
+          </Text>
 
-            <DatePicker
-              date={draft}
-              onDateChange={setDraft}
-              mode={dateOnly ? "date" : "datetime"}
-              theme={isDark ? "dark" : "light"}
-              is24hourSource={
-                is24Hour !== undefined
-                  ? is24Hour
-                    ? "locale"
-                    : "device"
+          <DatePicker
+            date={draft}
+            onDateChange={setDraft}
+            mode={dateOnly ? "date" : "datetime"}
+            theme={isDark ? "dark" : "light"}
+            is24hourSource={
+              is24Hour !== undefined
+                ? is24Hour
+                  ? "locale"
                   : "device"
-              }
-              style={{ alignSelf: "center" }}
-            />
+                : "device"
+            }
+            style={{ alignSelf: "center" }}
+          />
 
-            <View className="mt-6 flex-row gap-4">
-              <TouchableOpacity
-                onPress={close}
-                className="h-12 flex-1 items-center justify-center rounded-2xl border"
-                style={{ borderColor: colors.neutral[200] }}
-              >
-                <Text className="text-lg" style={{ color: colors.text }}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
+          <View className="mt-6 flex-row gap-4">
+            <TouchableOpacity
+              onPress={handleDismiss}
+              className="h-12 flex-1 items-center justify-center rounded-2xl border"
+              style={{ borderColor: colors.neutral[200] }}
+            >
+              <Text className="text-lg" style={{ color: colors.text }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={confirm}
-                className="h-12 flex-1 items-center justify-center rounded-2xl"
-                style={{ backgroundColor: colors.primary }}
-              >
-                <Text className="text-lg font-semibold text-white">
-                  Confirm
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={handleConfirm}
+              className="h-12 flex-1 items-center justify-center rounded-2xl"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <Text className="text-lg font-semibold text-white">Confirm</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        </BottomSheetView>
+      </BottomSheetModal>
     </>
   );
 }

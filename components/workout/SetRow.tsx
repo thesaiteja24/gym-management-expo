@@ -27,8 +27,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { ElapsedTime } from "./ElapsedTime";
-import RPESelectionModal from "./RPESelectionModal";
-import SetTypeSelectionModal from "./SetTypeSelectionModal";
+import RPESelectionModal, {
+  RPESelectionModalHandle,
+} from "./RPESelectionModal";
+import SetTypeSelectionModal, {
+  SetTypeSelectionModalHandle,
+} from "./SetTypeSelectionModal";
 
 /* ───────────────── Constants ───────────────── */
 
@@ -37,26 +41,47 @@ const DELETE_REVEAL_WIDTH = SCREEN_WIDTH * 0.25;
 
 /* ───────────────── Props ───────────────── */
 
+/**
+ * Props for the SetRow component.
+ */
 type Props = {
+  /** The set data. Union of Active (WorkoutLogSet) and Template (TemplateSet). */
   set: WorkoutLogSet | TemplateSet;
+  /** Whether the parent exercise involves weight (e.g. Bench Press). */
   hasWeight: boolean;
+  /** Whether the parent exercise involves reps. */
   hasReps: boolean;
+  /** Whether the parent exercise involves duration (e.g. Planks). */
   hasDuration: boolean;
+  /** User preference for display unit (kg vs lbs). */
   preferredWeightUnit: WeightUnits;
+  /** Template mode flag. Affects input interactivity and available actions. */
   isTemplate?: boolean;
 
+  /* ─── Data Actions ─── */
   onUpdate: (patch: Partial<WorkoutLogSet>) => void;
   onDelete: () => void;
   onToggleComplete?: () => void;
 
+  /* ─── Timer Actions (Active Mode Only) ─── */
   onStartTimer?: () => void;
   onStopTimer?: () => void;
 
+  /* ─── UI Actions ─── */
   onOpenRestPicker: () => void;
 };
 
 /* ───────────────── Component ───────────────── */
 
+/**
+ * A collaborative row for a single set.
+ *
+ * Features:
+ * - **Swipe-to-Delete**: Right swipe reveals delete action (Red).
+ * - **Swipe-to-Complete**: Left swipe (Active Mode only) toggles completion (Green).
+ * - **Animations**: Uses `react-native-reanimated` for entry/exit and hint animations.
+ * - **Dual Mode**: Works for both active workouts (timers, completion) and templates (static inputs).
+ */
 function SetRow({
   set,
   hasWeight,
@@ -93,9 +118,11 @@ function SetRow({
   // @ts-ignore
   const [noteText, setNoteText] = useState(set.note || "");
 
-  const [setTypeModalVisible, setSetTypeModalVisible] = useState(false);
+  // const [setTypeModalVisible, setSetTypeModalVisible] = useState(false); // Removed
+  const setTypeModalRef = useRef<SetTypeSelectionModalHandle>(null);
 
-  const [rpeModalVisible, setRpeModalVisible] = useState(false);
+  // const [rpeModalVisible, setRpeModalVisible] = useState(false); // Removed
+  const rpeModalRef = useRef<RPESelectionModalHandle>(null);
 
   /* ───── Sync inputs when NOT editing ───── */
 
@@ -235,7 +262,8 @@ function SetRow({
   const Wrapper = Swipeable;
   const wrapperProps = {
     ref: swipeableRef,
-    enabled: !isEditing && !isDeleting && !setTypeModalVisible,
+    // enabled: !isEditing && !isDeleting && !setTypeModalVisible, // "visible" check removed as it's now imperative
+    enabled: !isEditing && !isDeleting,
     overshootLeft: false,
     overshootRight: false,
     overshootFriction: 4,
@@ -305,7 +333,7 @@ function SetRow({
               <TouchableOpacity
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setSetTypeModalVisible(true);
+                  setTypeModalRef.current?.present();
                 }}
                 className="items-center"
               >
@@ -364,7 +392,7 @@ function SetRow({
               <TouchableOpacity
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setRpeModalVisible(true);
+                  rpeModalRef.current?.present();
                 }}
                 className={`w-12 rounded-full py-1 ${
                   isCompleted
@@ -523,9 +551,9 @@ function SetRow({
       )}
 
       <SetTypeSelectionModal
-        visible={setTypeModalVisible}
+        ref={setTypeModalRef}
         currentType={set.setType}
-        onClose={() => setSetTypeModalVisible(false)}
+        onClose={() => {}}
         onSelect={(type) => {
           if (type !== set.setType) {
             onUpdate({ setType: type });
@@ -534,9 +562,9 @@ function SetRow({
       />
 
       <RPESelectionModal
-        visible={rpeModalVisible}
+        ref={rpeModalRef}
         currentValue={set.rpe}
-        onClose={() => setRpeModalVisible(false)}
+        onClose={() => {}}
         onSelect={(value) => {
           onUpdate({ rpe: value });
         }}
