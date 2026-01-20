@@ -3,11 +3,11 @@ import { useAuth } from "@/stores/authStore";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { ChevronDoubleLeftIcon } from "react-native-heroicons/outline";
 import { OtpInput } from "react-native-otp-entry";
@@ -69,6 +69,10 @@ export default function VerifyOtp() {
           numberOfDigits={6}
           type="numeric"
           onTextChange={(text) => setOtp(text)}
+          textInputProps={{
+            textContentType: "oneTimeCode",
+            autoComplete: "one-time-code", // or "sms-otp" depending on platform versions, usually one-time-code works
+          }}
           theme={{
             focusedPinCodeContainerStyle: { borderColor: colors.primary },
             filledPinCodeContainerStyle: { borderColor: colors.success },

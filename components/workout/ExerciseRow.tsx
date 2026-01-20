@@ -18,7 +18,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
-import React, { memo, useRef, useState } from "react";
+import React, { memo, useRef } from "react";
 import { Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../ui/Button";
@@ -164,7 +164,7 @@ function ExerciseRow({
 
   /* ───── Local UI state only ───── */
 
-  const [activeRestSetId, setActiveRestSetId] = useState<string | null>(null);
+  const activeRestSetId = useRef<string | null>(null);
 
   const restPickerRef = useRef<RestTimerPickerModalHandle>(null);
 
@@ -312,7 +312,7 @@ function ExerciseRow({
           onStartTimer={() => onStartSetTimer?.(set.id)}
           onStopTimer={() => onStopSetTimer?.(set.id)}
           onOpenRestPicker={() => {
-            setActiveRestSetId(set.id);
+            activeRestSetId.current = set.id;
             restPickerRef.current?.present(set.restSeconds ?? 60);
           }}
         />
@@ -335,8 +335,16 @@ function ExerciseRow({
             opacity={0.4}
           />
         )}
-        backgroundStyle={{ backgroundColor: colors.background }}
-        handleIndicatorStyle={{ backgroundColor: colors.neutral[500] }}
+        backgroundStyle={{
+          backgroundColor: isDark ? "#171717" : "white",
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: isDark ? "#525252" : "#d1d5db",
+        }}
+        // Smoother, slightly slower animation
+        animationConfigs={{
+          duration: 350,
+        }}
       >
         <BottomSheetView
           style={{
@@ -424,14 +432,14 @@ function ExerciseRow({
       <RestTimerPickerModal
         ref={restPickerRef}
         onClose={() => {
-          setActiveRestSetId(null);
+          activeRestSetId.current = null;
         }}
         onConfirm={(seconds) => {
-          if (!activeRestSetId) return;
+          if (!activeRestSetId.current) return;
 
-          onSaveRestPreset?.(activeRestSetId, seconds);
+          onSaveRestPreset?.(activeRestSetId.current, seconds);
 
-          setActiveRestSetId(null);
+          activeRestSetId.current = null;
         }}
       />
     </View>

@@ -13,6 +13,7 @@ import React, {
 } from "react";
 import { Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button } from "../ui/Button";
 
 /* ───────────────── Constants ───────────────── */
 
@@ -95,18 +96,22 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(
         handleIndicatorStyle={{
           backgroundColor: isDark ? "#525252" : "#d1d5db",
         }}
+        // Smoother, slightly slower animation
+        animationConfigs={{
+          duration: 350,
+        }}
       >
         <BottomSheetView
-          style={{ flex: 1, paddingBottom: insets.bottom + 24 }}
+          style={{ flex: 1, paddingBottom: insets.bottom }}
           className="dark:bg-neutral-900"
         >
           {/* Header */}
           <Text className="mb-4 text-center text-lg font-bold text-black dark:text-white">
-            Select RPE
+            RPE
           </Text>
 
           <View className="flex-1 px-6">
-            <View className="flex-row">
+            <View className="flex-row items-center justify-evenly">
               {/* ───── Left: Scale ───── */}
               <View className="gap-4 rounded-full bg-slate-50 px-2 py-4 dark:bg-neutral-800">
                 {RPE_VALUES.map((value) => {
@@ -124,7 +129,7 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(
                         } else {
                           onSelect(value);
                         }
-                        bottomSheetModalRef.current?.dismiss();
+                        // Removed auto-dismiss
                       }}
                       className={`flex-row items-center justify-center gap-4 px-2 ${
                         isSelected
@@ -147,7 +152,7 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(
               </View>
 
               {/* ───── Right: Detail ───── */}
-              <View className="flex-1 items-center justify-center pl-4">
+              <View className="flex-col items-center justify-center">
                 <Text className="text-4xl font-bold text-black dark:text-white">
                   {selectedValue ?? "--"}
                 </Text>
@@ -158,8 +163,20 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(
               </View>
             </View>
 
+            {/* Actions */}
+            <View className="mt-4">
+              <Button
+                title="Done"
+                variant="primary"
+                onPress={() => {
+                  // Done
+                  bottomSheetModalRef.current?.dismiss();
+                }}
+              />
+            </View>
+
             {/* Footer hint */}
-            <Text className="mt-6 text-center text-xs text-neutral-400">
+            <Text className="mt-4 text-center text-xs text-neutral-400">
               Tap selected value again to clear RPE
             </Text>
           </View>

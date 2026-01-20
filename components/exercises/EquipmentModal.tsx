@@ -90,6 +90,10 @@ const EquipmentModal = forwardRef<EquipmentModalHandle, Props>(
           backgroundColor: isDark ? "#525252" : "#d1d5db",
         }}
         enableDynamicSizing={false}
+        // Smoother, slightly slower animation
+        animationConfigs={{
+          duration: 350,
+        }}
       >
         <BottomSheetView
           style={{ flex: 1, paddingBottom: insets.bottom }}

@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import {
@@ -17,6 +18,7 @@ import {
 export type ButtonVariant =
   | "primary"
   | "secondary"
+  | "success"
   | "danger"
   | "ghost"
   | "outline";
@@ -124,15 +126,17 @@ export function Button({
   onPress,
   ...props
 }: ButtonProps) {
+  const colors = useThemeColor();
   const isDisabled = disabled || loading;
 
   const baseClass =
     "min-h-[44px] w-full flex-row items-center justify-center gap-2 rounded-2xl px-4 py-2";
 
   const variantClass: Record<ButtonVariant, string> = {
-    primary: "bg-green-600",
+    primary: `bg-[${colors.primary}]`,
     secondary:
       "bg-white border border-neutral-200/60 dark:bg-neutral-900 dark:border-neutral-800",
+    success: "bg-green-600",
     danger:
       "bg-white border border-red-200/60 dark:bg-neutral-900 dark:border-red-800",
     ghost: "bg-transparent",
@@ -142,6 +146,7 @@ export function Button({
   const textVariantClass: Record<ButtonVariant, string> = {
     primary: "text-white",
     secondary: "text-black dark:text-white",
+    success: "text-white",
     danger: "text-red-600",
     ghost: "text-blue-500",
     outline: "text-neutral-700 dark:text-neutral-300",

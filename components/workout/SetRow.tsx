@@ -335,7 +335,7 @@ function SetRow({
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setTypeModalRef.current?.present();
                 }}
-                className="items-center"
+                className="items-center pr-4"
               >
                 <Text
                   className={`text-center text-base font-semibold ${getSetTypeColor(set, set.setType, isCompleted).style}`}

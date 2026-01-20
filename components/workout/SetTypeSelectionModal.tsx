@@ -102,6 +102,10 @@ const SetTypeSelectionModal = forwardRef<SetTypeSelectionModalHandle, Props>(
         handleIndicatorStyle={{
           backgroundColor: isDark ? "#525252" : "#d1d5db",
         }}
+        // Smoother, slightly slower animation
+        animationConfigs={{
+          duration: 350,
+        }}
       >
         <BottomSheetView
           style={{ flex: 1, paddingBottom: insets.bottom + 24 }}

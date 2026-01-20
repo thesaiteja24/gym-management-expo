@@ -19,6 +19,7 @@ export default function SettingsScreen() {
   const isDarkMode = useColorScheme() === "dark";
   const colors = useThemeColor();
   const insets = useSafeAreaInsets();
+  const isDark = useColorScheme() === "dark";
 
   // Ref for the Bottom Sheet
   const unitSheetRef = useRef<BottomSheetModal>(null);
@@ -120,9 +121,17 @@ export default function SettingsScreen() {
             opacity={0.4}
           />
         )}
-        backgroundStyle={{ backgroundColor: colors.background }}
-        handleIndicatorStyle={{ backgroundColor: colors.neutral[500] }}
+        backgroundStyle={{
+          backgroundColor: isDark ? "#171717" : "white",
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: isDark ? "#525252" : "#d1d5db",
+        }}
         onDismiss={onDismiss}
+        // Smoother, slightly slower animation
+        animationConfigs={{
+          duration: 350,
+        }}
       >
         <BottomSheetView
           style={{

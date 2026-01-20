@@ -257,6 +257,10 @@ export default function SaveWorkout() {
           setPendingSave(null);
           setPruneMessage(null);
         }}
+        // Smoother, slightly slower animation
+        animationConfigs={{
+          duration: 350,
+        }}
       >
         <BottomSheetView
           style={{

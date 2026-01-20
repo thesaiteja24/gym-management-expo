@@ -6,15 +6,10 @@ import {
 } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import {
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
-} from "react-native";
+import { Pressable, Text, View, useColorScheme } from "react-native";
 import DatePicker from "react-native-date-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button } from "./Button";
 
 /* --------------------------------------------------
    Types
@@ -194,8 +189,16 @@ export default function DateTimePicker(props: DateTimePickerProps) {
         index={0}
         enableDynamicSizing={true}
         backdropComponent={renderBackdrop}
-        backgroundStyle={{ backgroundColor: colors.background }}
-        handleIndicatorStyle={{ backgroundColor: colors.neutral[500] }}
+        backgroundStyle={{
+          backgroundColor: isDark ? "#171717" : "white",
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: isDark ? "#525252" : "#d1d5db",
+        }}
+        // Smoother, slightly slower animation
+        animationConfigs={{
+          duration: 350,
+        }}
       >
         <BottomSheetView
           style={{
@@ -227,23 +230,20 @@ export default function DateTimePicker(props: DateTimePickerProps) {
           />
 
           <View className="mt-6 flex-row gap-4">
-            <TouchableOpacity
-              onPress={handleDismiss}
-              className="h-12 flex-1 items-center justify-center rounded-2xl border"
-              style={{ borderColor: colors.neutral[200] }}
-            >
-              <Text className="text-lg" style={{ color: colors.text }}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleConfirm}
-              className="h-12 flex-1 items-center justify-center rounded-2xl"
-              style={{ backgroundColor: colors.primary }}
-            >
-              <Text className="text-lg font-semibold text-white">Confirm</Text>
-            </TouchableOpacity>
+            <View className="w-1/2">
+              <Button
+                title="Cancel"
+                variant="outline"
+                onPress={handleDismiss}
+              />
+            </View>
+            <View className="w-1/2">
+              <Button
+                title="Confirm"
+                variant="primary"
+                onPress={handleConfirm}
+              />
+            </View>
           </View>
         </BottomSheetView>
       </BottomSheetModal>
