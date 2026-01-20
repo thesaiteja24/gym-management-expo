@@ -1,8 +1,5 @@
 import { enqueueWorkoutDelete } from "@/lib/sync/queue";
-import {
-  deleteWorkoutService,
-  getAllWokroutsService,
-} from "@/services/workoutServices";
+import { getAllWokroutsService } from "@/services/workoutServices";
 import { StateCreator } from "zustand";
 import { useAuth } from "../authStore";
 import { SyncStatus, WorkoutHistoryItem, WorkoutState } from "./types";
@@ -141,15 +138,6 @@ export const createHistorySlice: StateCreator<
     // Enqueue for background sync
     enqueueWorkoutDelete(clientId, actualDbId, userId);
 
-    // Try immediate sync (non-blocking)
-    try {
-      const res = await deleteWorkoutService(actualDbId);
-      // Success - item already removed from local state
-      return res.success;
-    } catch (error) {
-      // Queue already has the delete, will retry later
-      // Keep local state (item removed) - queue will handle sync
-      return true;
-    }
+    return true;
   },
 });

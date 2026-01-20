@@ -93,11 +93,11 @@ export function useSyncQueue() {
         switch (mutation.type) {
           case "CREATE": {
             const res = await createWorkoutService(mutation.payload);
-            if (res.success && res.data?.id) {
+            if (res.success && res.data?.workout?.id) {
               // CRITICAL: Reconcile the clientId with the backend-generated ID
-              reconcileWorkoutId(mutation.clientId, res.data.id);
+              reconcileWorkoutId(mutation.clientId, res.data.workout.id);
               console.log(
-                `[SYNC] Reconciled clientId=${mutation.clientId} -> id=${res.data.id}`,
+                `[SYNC] Reconciled clientId=${mutation.clientId} -> id=${res.data.workout.id}`,
               );
             } else {
               // Mark as synced even without full response (edge case)
@@ -163,10 +163,10 @@ export function useSyncQueue() {
         switch (mutation.type) {
           case "CREATE": {
             const res = await createTemplateService(mutation.payload);
-            if (res.success && res.data?.id) {
-              reconcileTemplateId(mutation.clientId, res.data.id);
+            if (res.success && res.data?.template?.id) {
+              reconcileTemplateId(mutation.clientId, res.data.template.id);
               console.log(
-                `[SYNC] Reconciled template clientId=${mutation.clientId} -> id=${res.data.id}`,
+                `[SYNC] Reconciled template clientId=${mutation.clientId} -> id=${res.data.template.id}`,
               );
             } else {
               markTemplateSynced(mutation.clientId);

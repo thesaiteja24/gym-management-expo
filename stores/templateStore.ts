@@ -50,7 +50,7 @@ export const useTemplate = create<TemplateState>()(
               // Backend items with synced status
               const backendItems = (res.data || []).map((item: any) => ({
                 ...item,
-                clientId: item.clientId || item.id,
+                clientId: item.clientId || null,
                 syncStatus: "synced" as SyncStatus,
               }));
 
@@ -169,8 +169,9 @@ export const useTemplate = create<TemplateState>()(
           templates: state.templates.filter((t) => t.id !== id),
         }));
 
-        // Check if template was synced (has real backend ID)
-        const actualDbId = id !== clientId ? id : null;
+        // when optimistic update is done then clientId and id will be same
+        // when template is loaded from db then clientId is null and id is the db id
+        const actualDbId = id === clientId ? null : id;
 
         // Enqueue for background sync
         enqueueTemplateDelete(clientId, actualDbId, userId);

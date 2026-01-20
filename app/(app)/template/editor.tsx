@@ -343,6 +343,7 @@ export default function TemplateEditor() {
         <DraggableFlatList
           data={draftTemplate.exercises}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ marginBottom: safeAreaInsets.bottom }}
           onDragEnd={({ data }) => reorderDraftExercises(data)}
           activationDistance={20}
           renderItem={({ item, drag, isActive }) => {
