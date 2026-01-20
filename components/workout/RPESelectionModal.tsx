@@ -111,48 +111,50 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(
           </Text>
 
           <View className="flex-1 px-6">
-            <View className="flex-row items-center justify-evenly">
+            <View className="flex-row">
               {/* ───── Left: Scale ───── */}
-              <View className="gap-4 rounded-full bg-slate-50 px-2 py-4 dark:bg-neutral-800">
-                {RPE_VALUES.map((value) => {
-                  const isSelected = value === selectedValue;
+              <View className="flex-1 items-center">
+                <View className="gap-4 rounded-full bg-slate-50 px-2 py-4 dark:bg-neutral-800">
+                  {RPE_VALUES.map((value) => {
+                    const isSelected = value === selectedValue;
 
-                  return (
-                    <TouchableOpacity
-                      key={value}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    return (
+                      <TouchableOpacity
+                        key={value}
+                        onPress={() => {
+                          Haptics.impactAsync(
+                            Haptics.ImpactFeedbackStyle.Light,
+                          );
 
-                        // Tap again → reset to 0
-                        if (isSelected) {
-                          onSelect(undefined);
-                        } else {
-                          onSelect(value);
-                        }
-                        // Removed auto-dismiss
-                      }}
-                      className={`flex-row items-center justify-center gap-4 px-2 ${
-                        isSelected
-                          ? "rounded-full bg-blue-100 dark:bg-blue-900"
-                          : ""
-                      }`}
-                    >
-                      <Text
-                        className={`text-center text-base ${
+                          if (isSelected) {
+                            onSelect(undefined);
+                          } else {
+                            onSelect(value);
+                          }
+                        }}
+                        className={`flex-row items-center justify-center gap-4 px-2 ${
                           isSelected
-                            ? "font-semibold text-primary"
-                            : "text-neutral-500 dark:text-neutral-400"
+                            ? "rounded-full bg-blue-100 dark:bg-blue-900"
+                            : ""
                         }`}
                       >
-                        {value}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                        <Text
+                          className={`text-center text-base ${
+                            isSelected
+                              ? "font-semibold text-primary"
+                              : "text-neutral-500 dark:text-neutral-400"
+                          }`}
+                        >
+                          {value}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
 
               {/* ───── Right: Detail ───── */}
-              <View className="flex-col items-center justify-center">
+              <View className="flex-1 items-center justify-center px-4">
                 <Text className="text-4xl font-bold text-black dark:text-white">
                   {selectedValue ?? "--"}
                 </Text>

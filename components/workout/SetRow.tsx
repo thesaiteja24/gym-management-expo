@@ -58,17 +58,24 @@ type Props = {
   /** Template mode flag. Affects input interactivity and available actions. */
   isTemplate?: boolean;
 
+  /* ─── Identifiers ─── */
+  exerciseId: string;
+
   /* ─── Data Actions ─── */
-  onUpdate: (patch: Partial<WorkoutLogSet>) => void;
-  onDelete: () => void;
-  onToggleComplete?: () => void;
+  onUpdate: (
+    exerciseId: string,
+    setId: string,
+    patch: Partial<WorkoutLogSet>,
+  ) => void;
+  onDelete: (exerciseId: string, setId: string) => void;
+  onToggleComplete?: (exerciseId: string, setId: string) => void;
 
   /* ─── Timer Actions (Active Mode Only) ─── */
-  onStartTimer?: () => void;
-  onStopTimer?: () => void;
+  onStartTimer?: (exerciseId: string, setId: string) => void;
+  onStopTimer?: (exerciseId: string, setId: string) => void;
 
   /* ─── UI Actions ─── */
-  onOpenRestPicker: () => void;
+  onOpenRestPicker: (setId: string, restSeconds?: number) => void;
 };
 
 /* ───────────────── Component ───────────────── */
@@ -84,6 +91,7 @@ type Props = {
  */
 function SetRow({
   set,
+  exerciseId,
   hasWeight,
   hasReps,
   hasDuration,
@@ -196,7 +204,7 @@ function SetRow({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     swipeableRef.current?.close();
     setIsDeleting(true);
-    setTimeout(onDelete, 400);
+    setTimeout(() => onDelete(exerciseId, set.id), 400);
   };
 
   function getSetTypeColor(
@@ -279,7 +287,7 @@ function SetRow({
         if (!isTemplate) {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           requestAnimationFrame(() => swipeableRef.current?.close());
-          onToggleComplete?.();
+          onToggleComplete?.(exerciseId, set.id);
         }
       }
 
@@ -363,7 +371,11 @@ function SetRow({
             {/* Rest and Note */}
             <View className="basis-[35%] flex-row items-center justify-between">
               {/* Rest */}
-              <TouchableOpacity onPress={onOpenRestPicker}>
+              <TouchableOpacity
+                onPress={() =>
+                  onOpenRestPicker(set.id, set.restSeconds ?? undefined)
+                }
+              >
                 <MaterialCommunityIcons
                   name="timer-outline"
                   size={22}
@@ -430,7 +442,7 @@ function SetRow({
                     setIsEditing(false);
                     const num = Number(weightText);
                     if (!isNaN(num)) {
-                      onUpdate({
+                      onUpdate(exerciseId, set.id, {
                         weight: convertWeight(num, {
                           from: preferredWeightUnit,
                           to: "kg",
@@ -458,7 +470,8 @@ function SetRow({
                   onBlur={() => {
                     setIsEditing(false);
                     const num = Number(repsText);
-                    if (!isNaN(num)) onUpdate({ reps: num });
+                    if (!isNaN(num))
+                      onUpdate(exerciseId, set.id, { reps: num });
                   }}
                   onChangeText={setRepsText}
                   placeholder="0"
@@ -477,7 +490,9 @@ function SetRow({
                     <TouchableOpacity
                       onPress={() =>
                         // @ts-ignore
-                        set.durationStartedAt ? onStopTimer() : onStartTimer()
+                        set.durationStartedAt
+                          ? onStopTimer?.(exerciseId, set.id)
+                          : onStartTimer?.(exerciseId, set.id)
                       }
                       className="flex flex-row items-center justify-center"
                     >
@@ -509,7 +524,10 @@ function SetRow({
                       onBlur={() => {
                         setIsEditing(false);
                         const num = Number(durationText);
-                        if (!isNaN(num)) onUpdate({ durationSeconds: num });
+                        if (!isNaN(num))
+                          onUpdate(exerciseId, set.id, {
+                            durationSeconds: num,
+                          });
                       }}
                       onChangeText={setDurationText}
                       placeholder="0s"
@@ -541,7 +559,7 @@ function SetRow({
             onBlur={() => {
               const trimmed = noteText.trim();
               if (trimmed !== (set.note ?? "")) {
-                onUpdate({ note: trimmed || undefined });
+                onUpdate(exerciseId, set.id, { note: trimmed || undefined });
               }
             }}
             blurOnSubmit
@@ -556,7 +574,7 @@ function SetRow({
         onClose={() => {}}
         onSelect={(type) => {
           if (type !== set.setType) {
-            onUpdate({ setType: type });
+            onUpdate(exerciseId, set.id, { setType: type });
           }
         }}
       />
@@ -566,7 +584,7 @@ function SetRow({
         currentValue={set.rpe}
         onClose={() => {}}
         onSelect={(value) => {
-          onUpdate({ rpe: value });
+          onUpdate(exerciseId, set.id, { rpe: value });
         }}
       />
     </View>

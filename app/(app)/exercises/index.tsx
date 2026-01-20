@@ -193,6 +193,19 @@ export default function ExercisesScreen() {
     Haptics.selectionAsync();
 
     if (replaceExerciseId) {
+      if (
+        exercise.id !== replaceExerciseId &&
+        initialSelectedIds.has(exercise.id)
+      ) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Toast.show({
+          type: "error",
+          text1: "Duplicate Exercise",
+          text2: "This exercise is already in your workout.",
+        });
+        return;
+      }
+
       if (context === "template") {
         replaceDraftExercise(replaceExerciseId, exercise.id);
       } else {

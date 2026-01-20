@@ -432,24 +432,13 @@ export default function StartWorkout() {
                   exerciseGroupModalRef.current?.present();
                 }}
                 onDeleteExercise={() => removeExercise(item.exerciseId)}
-                onAddSet={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  addSet(item.exerciseId);
-                }}
-                onUpdateSet={(setId, patch) =>
-                  updateSet(item.exerciseId, setId, patch)
-                }
-                onToggleCompleteSet={(setId) =>
-                  toggleSetCompleted(item.exerciseId, setId)
-                }
-                onDeleteSet={(setId) => removeSet(item.exerciseId, setId)}
-                onStartSetTimer={(setId) =>
-                  startSetTimer(item.exerciseId, setId)
-                }
-                onStopSetTimer={(setId) => stopSetTimer(item.exerciseId, setId)}
-                onSaveRestPreset={(setId, seconds) =>
-                  saveRestForSet(item.exerciseId, setId, seconds)
-                }
+                onAddSet={addSet}
+                onUpdateSet={updateSet}
+                onToggleCompleteSet={toggleSetCompleted}
+                onDeleteSet={removeSet}
+                onStartSetTimer={startSetTimer}
+                onStopSetTimer={stopSetTimer}
+                onSaveRestPreset={saveRestForSet}
               />
             );
           }}

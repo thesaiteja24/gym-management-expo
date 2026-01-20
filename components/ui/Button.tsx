@@ -1,4 +1,3 @@
-import { useThemeColor } from "@/hooks/useThemeColor";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import {
@@ -81,6 +80,13 @@ export interface ButtonProps extends TouchableOpacityProps {
    * Additional Tailwind classes for the button text.
    */
   textClassName?: string;
+
+  /**
+   * Make the button full width.
+   *
+   * @default false
+   */
+  fullWidth?: boolean;
 }
 
 /* --------------------------------------------------
@@ -126,14 +132,14 @@ export function Button({
   onPress,
   ...props
 }: ButtonProps) {
-  const colors = useThemeColor();
   const isDisabled = disabled || loading;
 
+  const widthClass = props.fullWidth ? "w-full" : "";
   const baseClass =
-    "min-h-[44px] w-full flex-row items-center justify-center gap-2 rounded-2xl px-4 py-2";
+    "min-h-[44px] flex-row items-center justify-center gap-2 rounded-2xl px-4 py-2";
 
   const variantClass: Record<ButtonVariant, string> = {
-    primary: `bg-[${colors.primary}]`,
+    primary: `bg-[#3b82f6]`,
     secondary:
       "bg-white border border-neutral-200/60 dark:bg-neutral-900 dark:border-neutral-800",
     success: "bg-green-600",
@@ -167,6 +173,7 @@ export function Button({
       }}
       className={[
         baseClass,
+        widthClass,
         variantClass[variant],
         isDisabled ? "opacity-50" : "",
         className,

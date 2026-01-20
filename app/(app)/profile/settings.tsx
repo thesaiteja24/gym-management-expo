@@ -91,6 +91,7 @@ export default function SettingsScreen() {
       <Button
         title="Logout"
         variant="danger"
+        fullWidth
         leftIcon={<AntDesign name="logout" size={24} color="red" />}
         onPress={logout}
       />
@@ -105,6 +106,7 @@ export default function SettingsScreen() {
             color={isDarkMode ? "white" : "black"}
           />
         }
+        fullWidth
         onPress={() => unitSheetRef.current?.present()}
       />
 

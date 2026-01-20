@@ -111,6 +111,9 @@ const RestTimerPickerModal = React.memo(
           snapPoints={snapPoints}
           backdropComponent={renderBackdrop}
           onDismiss={onClose}
+          enablePanDownToClose={true}
+          enableDynamicSizing={false}
+          enableContentPanningGesture={false}
           backgroundStyle={{
             backgroundColor: isDark ? "#171717" : "white",
           }}

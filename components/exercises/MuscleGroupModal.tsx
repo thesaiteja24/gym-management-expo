@@ -2,7 +2,6 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
-  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import React, {
@@ -95,7 +94,7 @@ const MuscleGroupModal = forwardRef<MuscleGroupModalHandle, Props>(
           duration: 350,
         }}
       >
-        <BottomSheetView
+        <View
           style={{ flex: 1, paddingBottom: insets.bottom }}
           className="dark:bg-neutral-900"
         >
@@ -125,7 +124,10 @@ const MuscleGroupModal = forwardRef<MuscleGroupModalHandle, Props>(
             </View>
           ) : (
             <BottomSheetScrollView
-              contentContainerStyle={{ paddingHorizontal: 24 }}
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                paddingHorizontal: 24,
+              }}
               showsVerticalScrollIndicator={false}
             >
               {muscleGroups.map((item) => (
@@ -155,7 +157,7 @@ const MuscleGroupModal = forwardRef<MuscleGroupModalHandle, Props>(
               ))}
             </BottomSheetScrollView>
           )}
-        </BottomSheetView>
+        </View>
       </BottomSheetModal>
     );
   },

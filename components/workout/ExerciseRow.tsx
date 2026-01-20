@@ -18,7 +18,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
-import React, { memo, useRef } from "react";
+import React, { memo, useCallback, useRef } from "react";
 import { Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../ui/Button";
@@ -107,17 +107,21 @@ type Props = {
   onDeleteExercise: () => void;
 
   /* ─── Set Actions ─── */
-  onAddSet: () => void;
-  onUpdateSet: (setId: string, patch: any) => void;
-  onToggleCompleteSet?: (setId: string) => void;
-  onDeleteSet: (setId: string) => void;
+  onAddSet: (exerciseId: string) => void;
+  onUpdateSet: (exerciseId: string, setId: string, patch: any) => void;
+  onToggleCompleteSet?: (exerciseId: string, setId: string) => void;
+  onDeleteSet: (exerciseId: string, setId: string) => void;
 
   /* ─── Timer Actions ─── */
-  onStartSetTimer?: (setId: string) => void;
-  onStopSetTimer?: (setId: string) => void;
+  onStartSetTimer?: (exerciseId: string, setId: string) => void;
+  onStopSetTimer?: (exerciseId: string, setId: string) => void;
 
   /* ─── Shortcuts ─── */
-  onSaveRestPreset?: (setId: string, seconds: number) => void;
+  onSaveRestPreset?: (
+    exerciseId: string,
+    setId: string,
+    seconds: number,
+  ) => void;
 };
 
 /* ───────────────── Component ───────────────── */
@@ -169,6 +173,15 @@ function ExerciseRow({
   const restPickerRef = useRef<RestTimerPickerModalHandle>(null);
 
   /* Note: Removed menuVisible and menuRef logic */
+
+  /* ───── Handlers ───── */
+  const handleOpenRestPicker = useCallback(
+    (setId: string, restSeconds?: number) => {
+      activeRestSetId.current = setId;
+      restPickerRef.current?.present(restSeconds ?? 60);
+    },
+    [],
+  );
 
   /* ───────────────── Render ───────────────── */
 
@@ -301,27 +314,28 @@ function ExerciseRow({
         <SetRow
           key={set.id}
           set={set}
+          exerciseId={exercise.exerciseId}
           hasWeight={hasWeight}
           hasReps={hasReps}
           hasDuration={hasDuration}
           preferredWeightUnit={preferredWeightUnit}
           isTemplate={isTemplate}
-          onUpdate={(patch) => onUpdateSet(set.id, patch)}
-          onToggleComplete={() => onToggleCompleteSet?.(set.id)}
-          onDelete={() => onDeleteSet(set.id)}
-          onStartTimer={() => onStartSetTimer?.(set.id)}
-          onStopTimer={() => onStopSetTimer?.(set.id)}
-          onOpenRestPicker={() => {
-            activeRestSetId.current = set.id;
-            restPickerRef.current?.present(set.restSeconds ?? 60);
-          }}
+          onUpdate={onUpdateSet}
+          onToggleComplete={onToggleCompleteSet}
+          onDelete={onDeleteSet}
+          onStartTimer={onStartSetTimer}
+          onStopTimer={onStopSetTimer}
+          onOpenRestPicker={handleOpenRestPicker}
         />
       ))}
 
       {/* ───── Add set ───── */}
-      <Button title="Add Set" variant="secondary" onPress={onAddSet} />
+      <Button
+        title="Add Set"
+        variant="secondary"
+        onPress={() => onAddSet(exercise.exerciseId)}
+      />
 
-      {/* ───── Menu ───── */}
       {/* ───── Menu ───── */}
       <BottomSheetModal
         ref={bottomSheetModalRef}
@@ -435,9 +449,13 @@ function ExerciseRow({
           activeRestSetId.current = null;
         }}
         onConfirm={(seconds) => {
-          if (!activeRestSetId.current) return;
-
-          onSaveRestPreset?.(activeRestSetId.current, seconds);
+          if (activeRestSetId.current && onSaveRestPreset) {
+            onSaveRestPreset(
+              exercise.exerciseId,
+              activeRestSetId.current,
+              seconds,
+            );
+          }
 
           activeRestSetId.current = null;
         }}

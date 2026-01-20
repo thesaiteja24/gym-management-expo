@@ -473,6 +473,11 @@ export const createActiveWorkoutSlice: StateCreator<
     set((state) => {
       if (!state.workout) return state;
 
+      // Prevent replacing with an exercise that already exists
+      if (state.workout.exercises.some((e) => e.exerciseId === newId)) {
+        return state;
+      }
+
       return {
         workout: {
           ...state.workout,

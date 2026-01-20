@@ -366,13 +366,9 @@ export default function TemplateEditor() {
                 onDeleteExercise={() =>
                   removeExerciseFromDraft(item.exerciseId)
                 }
-                onAddSet={() => addSetToDraft(item.exerciseId)}
-                onUpdateSet={(setId, patch) =>
-                  updateDraftSet(item.exerciseId, setId, patch)
-                }
-                onDeleteSet={(setId) =>
-                  removeSetFromDraft(item.exerciseId, setId)
-                }
+                onAddSet={addSetToDraft}
+                onUpdateSet={updateDraftSet}
+                onDeleteSet={removeSetFromDraft}
                 onCreateSuperSet={() => handleCreateGroup(item.id, "superSet")}
                 onCreateGiantSet={() => handleCreateGroup(item.id, "giantSet")}
                 onRemoveExerciseGroup={() => {
@@ -389,8 +385,8 @@ export default function TemplateEditor() {
                     },
                   });
                 }}
-                onSaveRestPreset={(setId, seconds) =>
-                  updateDraftSet(item.exerciseId, setId, {
+                onSaveRestPreset={(exerciseId, setId, seconds) =>
+                  updateDraftSet(exerciseId, setId, {
                     restSeconds: seconds,
                   })
                 }
