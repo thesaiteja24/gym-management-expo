@@ -55,3 +55,13 @@ export async function updateTemplateService(
     throw new Error(errData?.message || error.message || "Network error");
   }
 }
+
+export async function getTemplateByShareIdService(shareId: string) {
+  try {
+    const res = await client.get(`${TEMPLATES_ENDPOINT}/share/${shareId}`);
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}

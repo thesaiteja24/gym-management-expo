@@ -5,7 +5,10 @@ import {
   enqueueTemplateUpdate,
 } from "@/lib/sync/queue";
 import { SyncStatus } from "@/lib/sync/types";
-import { getAllTemplatesService } from "@/services/templateService";
+import {
+  getAllTemplatesService,
+  getTemplateByShareIdService,
+} from "@/services/templateService";
 import { serializeTemplateForApi } from "@/utils/template";
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
@@ -13,6 +16,7 @@ import { persist } from "zustand/middleware";
 import { useAuth } from "./authStore";
 import { useExercise } from "./exerciseStore";
 import {
+  DraftTemplate,
   TemplateExercise,
   TemplateSet,
   TemplateState,
@@ -23,6 +27,7 @@ import { useWorkout } from "./workoutStore";
 // Initial State
 const initialState = {
   templates: [],
+  sharedTemplate: null,
   templateLoading: false,
   draftTemplate: null,
 };
@@ -37,41 +42,60 @@ export const useTemplate = create<TemplateState>()(
        * Merges with pending local items to preserve optimistic updates.
        */
       getAllTemplates: async () => {
-        set({ templateLoading: true });
         try {
           const res = await getAllTemplatesService();
-          if (res.success) {
-            set((state) => {
-              // Keep pending items from local state (not yet synced)
-              const pendingItems = state.templates.filter(
-                (t) => t.syncStatus === "pending",
-              );
 
-              // Backend items with synced status
-              const backendItems = (res.data || []).map((item: any) => ({
-                ...item,
-                clientId: item.clientId || null,
-                syncStatus: "synced" as SyncStatus,
-              }));
-
-              // Merge: pending first, then backend (filter duplicates by clientId)
-              const pendingClientIds = new Set(
-                pendingItems.map((p) => p.clientId),
-              );
-              const mergedTemplates = [
-                ...pendingItems,
-                ...backendItems.filter(
-                  (b: WorkoutTemplate) => !pendingClientIds.has(b.clientId),
-                ),
-              ];
-
-              return { templates: mergedTemplates, templateLoading: false };
-            });
-          } else {
+          if (!res.success) {
             set({ templateLoading: false });
+            return;
           }
+
+          set((state) => {
+            // Client-only pending templates
+            const pending = state.templates.filter(
+              (t) => t.syncStatus === "pending" && t.clientId,
+            );
+
+            // Backend is the source of truth
+            const synced = (res.data || []).map((item: WorkoutTemplate) => ({
+              ...item,
+              clientId: null,
+              syncStatus: "synced" as SyncStatus,
+            }));
+
+            return {
+              templates: [...pending, ...synced],
+              templateLoading: false,
+            };
+          });
         } catch (e) {
           console.error("Failed to fetch templates", e);
+          set({ templateLoading: false });
+        }
+      },
+
+      setSharedTemplate: (template) => {
+        set({ sharedTemplate: template });
+      },
+
+      /**
+       * Fetches the shared template using shareId
+       */
+      getTemplateByShareId: async (shareId: string) => {
+        try {
+          const res = await getTemplateByShareIdService(shareId);
+
+          if (!res.success) {
+            set({ templateLoading: false });
+            return;
+          }
+
+          set(() => ({
+            sharedTemplate: res.data,
+            templateLoading: false,
+          }));
+        } catch (e) {
+          console.error("Failed to fetch template", e);
           set({ templateLoading: false });
         }
       },
@@ -81,7 +105,7 @@ export const useTemplate = create<TemplateState>()(
        * 1. Generate clientId and add optimistically to local state
        * 2. Enqueue for background sync
        */
-      createTemplate: async (data) => {
+      createTemplate: async (data: DraftTemplate) => {
         const userId = useAuth.getState().user?.userId;
         if (!userId) {
           return { success: false, error: "No user logged in" };
@@ -89,18 +113,23 @@ export const useTemplate = create<TemplateState>()(
 
         // Generate clientId for offline tracking
         const clientId = data.clientId || Crypto.randomUUID();
-        const payload = serializeTemplateForApi({ ...data, clientId });
+        const now = new Date().toISOString();
 
-        // Create optimistic template item
+        // Optimistic template item (fully typed)
         const optimisticTemplate: WorkoutTemplate = {
           clientId,
-          id: clientId, // Temp ID until synced
+          id: clientId, // temporary until backend returns real ID
           syncStatus: "pending",
           userId,
           title: data.title || "Untitled Template",
           notes: data.notes,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          authorName:
+            data.authorName ||
+            `${useAuth.getState().user?.firstName} ${useAuth.getState().user?.lastName}`,
+          shareId: undefined,
+          sourceShareId: data.sourceShareId,
+          createdAt: now,
+          updatedAt: now,
           exercises: data.exercises,
           exerciseGroups: data.exerciseGroups,
         };
@@ -110,41 +139,152 @@ export const useTemplate = create<TemplateState>()(
           templates: [optimisticTemplate, ...state.templates],
         }));
 
-        // Enqueue for background sync
-        enqueueTemplateCreate({ clientId, ...payload }, userId);
+        // Serialize payload for background sync
+        const payload = serializeTemplateForApi({
+          ...data,
+          clientId,
+          authorName: optimisticTemplate.authorName,
+          userId,
+        });
 
-        return { success: true };
+        enqueueTemplateCreate(payload, userId);
+
+        return { success: true, id: clientId };
       },
-
       /**
-       * Update template with offline-first support.
-       * 1. Optimistic local update
-       * 2. Enqueue for background sync
+       * Save a shared template to the user's library.
+       * Can overwrite an existing template if overwriteId is provided.
        */
-      updateTemplate: async (id, data) => {
+      saveSharedTemplate: async (
+        template: WorkoutTemplate,
+        options?: { overwriteId?: string },
+      ) => {
         const userId = useAuth.getState().user?.userId;
         if (!userId) {
           return { success: false, error: "No user logged in" };
         }
 
-        // Find the template to get its clientId
+        const { overwriteId } = options || {};
+        const now = new Date().toISOString();
+
+        const clientId = overwriteId
+          ? get().templates.find((t) => t.id === overwriteId)?.clientId ||
+            overwriteId
+          : Crypto.randomUUID();
+
+        // Clone groups and exercises with new IDs
+        const newGroups = template.exerciseGroups.map((g) => ({
+          ...g,
+          id: Crypto.randomUUID(),
+        }));
+
+        const groupMap = new Map<string, string>();
+        template.exerciseGroups.forEach((g, i) =>
+          groupMap.set(g.id, newGroups[i].id),
+        );
+
+        const newExercises = template.exercises.map((e) => ({
+          ...e,
+          id: Crypto.randomUUID(),
+          exerciseGroupId: e.exerciseGroupId
+            ? groupMap.get(e.exerciseGroupId)
+            : undefined,
+        }));
+
+        const optimisticTemplate: WorkoutTemplate = {
+          clientId,
+          id: overwriteId || clientId,
+          syncStatus: "pending",
+          userId,
+          title: template.title,
+          notes: template.notes,
+          authorName: template.authorName || "Unknown",
+          shareId: overwriteId ? template.shareId : undefined,
+          sourceShareId: template.shareId,
+          exercises: newExercises,
+          exerciseGroups: newGroups,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        if (overwriteId) {
+          // Replace existing template
+          set((state) => ({
+            templates: state.templates.map((t) =>
+              t.id === overwriteId ? optimisticTemplate : t,
+            ),
+          }));
+          enqueueTemplateUpdate(
+            serializeTemplateForApi({
+              ...optimisticTemplate,
+              clientId: optimisticTemplate.clientId || Crypto.randomUUID(), // <-- fix
+            }),
+            userId,
+          );
+          return { success: true, id: overwriteId };
+        } else {
+          // New template
+          set((state) => ({
+            templates: [optimisticTemplate, ...state.templates],
+          }));
+          enqueueTemplateCreate(
+            serializeTemplateForApi({
+              ...optimisticTemplate,
+              clientId: optimisticTemplate.clientId || Crypto.randomUUID(), // <-- fix
+            }),
+            userId,
+          );
+          return { success: true, id: clientId };
+        }
+      },
+      /**
+       * Update template with offline-first support.
+       * 1. Optimistic local update
+       * 2. Enqueue for background sync
+       */
+      updateTemplate: async (id: string, data: Partial<WorkoutTemplate>) => {
+        const userId = useAuth.getState().user?.userId;
+        if (!userId) {
+          return { success: false, error: "No user logged in" };
+        }
+
         const template = get().templates.find((t) => t.id === id);
-        const clientId = template?.clientId || id;
+        if (!template) return { success: false, error: "Template not found" };
 
-        const payload =
-          "exercises" in data ? serializeTemplateForApi(data as any) : data;
+        const now = new Date().toISOString();
 
-        // Optimistic local update
+        // Merge data safely
+        const updatedTemplate: WorkoutTemplate = {
+          ...template,
+          ...data,
+          id: template.id, // never override
+          clientId: template.clientId, // never override
+          syncStatus: "pending",
+          updatedAt: now,
+          authorName: data.authorName ?? template.authorName,
+          exercises: data.exercises ?? template.exercises,
+          exerciseGroups: data.exerciseGroups ?? template.exerciseGroups,
+          title: data.title ?? template.title,
+          notes: data.notes ?? template.notes,
+          shareId: data.shareId ?? template.shareId,
+          sourceShareId: data.sourceShareId ?? template.sourceShareId,
+          userId: template.userId,
+          createdAt: template.createdAt,
+        };
+
         set((state) => ({
           templates: state.templates.map((t) =>
-            t.id === id
-              ? { ...t, ...payload, syncStatus: "pending" as SyncStatus }
-              : t,
+            t.id === id ? updatedTemplate : t,
           ),
         }));
 
-        // Enqueue for background sync
-        enqueueTemplateUpdate({ clientId, id, ...payload }, userId);
+        enqueueTemplateUpdate(
+          serializeTemplateForApi({
+            ...updatedTemplate,
+            clientId: updatedTemplate.clientId || Crypto.randomUUID(), // <-- fix
+          }),
+          userId,
+        );
 
         return { success: true };
       },
@@ -162,7 +302,7 @@ export const useTemplate = create<TemplateState>()(
 
         // Find template to get clientId and check sync status
         const template = get().templates.find((t) => t.id === id);
-        const clientId = template?.clientId || id;
+        const clientId = template?.clientId || ""; // It will be null if template is loaded from db
 
         // Optimistic update: remove from list immediately
         set((state) => ({
@@ -174,6 +314,7 @@ export const useTemplate = create<TemplateState>()(
         const actualDbId = id === clientId ? null : id;
 
         // Enqueue for background sync
+        // Pass id as second arg. Logic in queue handles skipping if it's a local CREATE.
         enqueueTemplateDelete(clientId, actualDbId, userId);
 
         return { success: true };

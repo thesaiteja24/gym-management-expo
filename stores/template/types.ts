@@ -39,37 +39,54 @@ export interface TemplateExerciseGroup {
  * - syncStatus: Track sync state for UI indicators
  */
 export interface WorkoutTemplate {
-  clientId: string;
+  clientId: string | null; // as of now client side only
   id: string;
-  syncStatus: SyncStatus;
+  syncStatus: SyncStatus; // client side only
   userId: string;
   title: string;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  shareId?: string;
+  sourceShareId?: string;
+  authorName: string;
+  createdAt?: string;
+  updatedAt?: string;
 
   exercises: TemplateExercise[];
   exerciseGroups: TemplateExerciseGroup[];
 }
 
-export type DraftTemplate = Omit<
-  WorkoutTemplate,
-  "id" | "createdAt" | "updatedAt" | "syncStatus"
-> & {
-  // Optional ID if editing existing
+export interface DraftTemplate {
+  clientId: string;
   id?: string | null;
-};
+
+  userId: string;
+  title: string;
+  notes?: string;
+
+  sourceShareId?: string;
+  authorName?: string;
+
+  exercises: TemplateExercise[];
+  exerciseGroups: TemplateExerciseGroup[];
+}
 
 export interface TemplateState {
   templates: WorkoutTemplate[];
   templateLoading: boolean;
+  sharedTemplate: WorkoutTemplate | null;
+  setSharedTemplate: (template: WorkoutTemplate | null) => void;
 
   // Draft state
   draftTemplate: DraftTemplate | null;
 
   getAllTemplates: () => Promise<void>;
+  getTemplateByShareId: (shareId: string) => Promise<void>;
   createTemplate: (data: DraftTemplate) => Promise<any>;
   updateTemplate: (id: string, data: Partial<WorkoutTemplate>) => Promise<any>;
+  saveSharedTemplate: (
+    template: WorkoutTemplate,
+    options?: { overwriteId?: string },
+  ) => Promise<{ success: boolean; id?: string; error?: string }>;
   deleteTemplate: (id: string) => Promise<any>;
   startWorkoutFromTemplate: (templateId: string) => void;
 

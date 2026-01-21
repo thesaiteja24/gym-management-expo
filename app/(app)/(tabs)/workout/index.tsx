@@ -21,6 +21,7 @@ export default function WorkoutScreen() {
   const templates = useTemplate((s) => s.templates);
 
   useEffect(() => {
+    // Fetches template once on mount
     getAllTemplates();
   }, []);
 

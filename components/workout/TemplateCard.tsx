@@ -14,7 +14,6 @@ export default function TemplateCard({
 
   const previewExercises = template.exercises.slice(0, 3);
   const remaining = template.exercises.length - previewExercises.length;
-  const isOwner = true; // For now assuming all local templates are owned by user
 
   const handleStart = () => {
     startWorkoutFromTemplate(template.id);
@@ -30,7 +29,7 @@ export default function TemplateCard({
             {template.title}
           </Text>
           <Text className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-            {isOwner ? "Created by You" : "App Template"}
+            created by {template.authorName}
           </Text>
         </View>
 

@@ -50,6 +50,22 @@ export default function ExercisesLayout() {
           } as any
         }
       />
+
+      <Stack.Screen
+        name="share/[shareId]"
+        options={
+          {
+            title: "Shared Template",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              if (router.canGoBack()) {
+                router.back();
+              }
+              router.push("/(app)/(tabs)/workout");
+            },
+          } as any
+        }
+      />
     </Stack>
   );
 }

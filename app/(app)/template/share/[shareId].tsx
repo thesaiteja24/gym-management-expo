@@ -1,8 +1,4 @@
 import { Button } from "@/components/ui/Button";
-import {
-  DeleteConfirmModal,
-  DeleteConfirmModalHandle,
-} from "@/components/ui/DeleteConfrimModal";
 import { useAuth } from "@/stores/authStore";
 import { useExercise } from "@/stores/exerciseStore";
 import { TemplateExercise, TemplateSet } from "@/stores/template/types";
@@ -10,8 +6,9 @@ import { useTemplate } from "@/stores/templateStore";
 import { SetType } from "@/stores/workoutStore";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
+  Alert,
   Platform,
   ScrollView,
   Share,
@@ -79,52 +76,140 @@ function getSetTypeColor(
 }
 
 export default function TemplateDetails() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { shareId } = useLocalSearchParams<{ shareId: string }>();
+
   const navigation = useNavigation();
   const isDark = useColorScheme() === "dark";
   const safeAreaInsets = useSafeAreaInsets();
+  const [loading, setLoading] = React.useState(false);
 
-  const template = useTemplate((s) => s.templates.find((t) => t.id === id));
-  const deleteTemplate = useTemplate((s) => s.deleteTemplate);
-  const startWorkoutFromTemplate = useTemplate(
-    (s) => s.startWorkoutFromTemplate,
-  );
-
-  const deleteModalRef = useRef<DeleteConfirmModalHandle>(null);
+  // Stores
+  const sharedTempalte = useTemplate((s) => s.sharedTemplate);
+  const localTemplates = useTemplate((s) => s.templates);
+  const getTemplateByShareId = useTemplate((s) => s.getTemplateByShareId);
+  const saveSharedTemplate = useTemplate((s) => s.saveSharedTemplate);
+  const setSharedTemplate = useTemplate((s) => s.setSharedTemplate);
 
   useEffect(() => {
-    const rightIcons = [{ name: "create-outline", onPress: handleEdit }];
+    getTemplateByShareId(shareId);
+  }, [shareId]);
 
-    if (template?.shareId) {
-      rightIcons.push({
-        name: "share-outline",
-        onPress: handleShare,
-      });
-    }
-
+  useEffect(() => {
     navigation.setOptions({
-      title: template?.title ?? "Template Details",
-      rightIcons,
+      title: sharedTempalte?.title ?? "Template Details",
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => {
+            setSharedTemplate(null);
+            router.back();
+          }}
+          style={{ marginRight: 15 }}
+        >
+          <Text style={{ color: isDark ? "#fff" : "#000", fontSize: 17 }}>
+            Back
+          </Text>
+        </TouchableOpacity>
+      ),
     });
-  }, [navigation, template, isDark]);
+  }, [navigation, sharedTempalte, isDark]);
 
   const groupMap = useMemo(() => {
     const map = new Map<string, any>();
-    template?.exerciseGroups.forEach((g) => map.set(g.id, g));
+    sharedTempalte?.exerciseGroups.forEach((g) => map.set(g.id, g));
     return map;
-  }, [template?.exerciseGroups]);
+  }, [sharedTempalte?.exerciseGroups]);
 
-  const handleEdit = () => {
-    router.push({
-      pathname: "/(app)/template/editor",
-      params: { mode: "edit", id: id },
-    });
+  // Check if we already have this template
+  const existingTemplate = useMemo(() => {
+    if (!sharedTempalte?.shareId) return null;
+    return localTemplates.find(
+      (t) => t.sourceShareId === sharedTempalte.shareId,
+    );
+  }, [localTemplates, sharedTempalte]);
+
+  const handleSave = async () => {
+    if (!sharedTempalte) return;
+    setLoading(true);
+
+    try {
+      if (existingTemplate) {
+        Alert.alert(
+          "Overwrite Template?",
+          "You already have a copy of this template. Do you want to overwrite your local version with this one?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => setLoading(false),
+            },
+            {
+              text: "Overwrite",
+              style: "destructive",
+              onPress: async () => {
+                const res = await saveSharedTemplate(sharedTempalte, {
+                  overwriteId: existingTemplate.id,
+                });
+                setLoading(false);
+                if (res.success) {
+                  Alert.alert("Success", "Template updated!", [
+                    {
+                      text: "View Template",
+                      onPress: () => {
+                        setSharedTemplate(null);
+                        router.replace(`/(app)/template/${res.id}`);
+                      },
+                    },
+                  ]);
+                }
+              },
+            },
+            // Option to save as new copy? Maybe not needed for now based on plan.
+            {
+              text: "Save as New",
+              onPress: async () => {
+                const res = await saveSharedTemplate(sharedTempalte); // No overwriteId = new
+                setLoading(false);
+                if (res.success) {
+                  Alert.alert("Success", "Template saved as new copy!", [
+                    {
+                      text: "View Template",
+                      onPress: () => {
+                        setSharedTemplate(null);
+                        router.replace(`/(app)/template/${res.id}`);
+                      },
+                    },
+                  ]);
+                }
+              },
+            },
+          ],
+        );
+      } else {
+        const res = await saveSharedTemplate(sharedTempalte);
+        setLoading(false);
+        if (res.success) {
+          Alert.alert("Success", "Template saved to your library!", [
+            {
+              text: "View Template",
+              onPress: () => {
+                setSharedTemplate(null);
+                router.replace(`/(app)/template/${res.id}`);
+              },
+            },
+          ]);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+      Alert.alert("Error", "Failed to save template.");
+    }
   };
 
   const handleShare = async () => {
-    if (!template?.shareId) return;
+    if (!sharedTempalte?.shareId) return;
 
-    const url = `pump://template/share/${template.shareId}`;
+    const url = `pump://template/share/${sharedTempalte.shareId}`;
 
     try {
       await Share.share(
@@ -134,7 +219,7 @@ export default function TemplateDetails() {
               ? `Check out this workout template:\n${url}`
               : `Check out this workout template:`,
           url,
-          title: template.title,
+          title: sharedTempalte.title,
         },
         {
           dialogTitle: "Share Workout Template",
@@ -145,37 +230,48 @@ export default function TemplateDetails() {
     }
   };
 
-  if (!template) {
+  if (!sharedTempalte) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        <Text className="text-neutral-500">Template not found.</Text>
+        {loading || !shareId ? (
+          <View>
+            <Text className="text-neutral-500">Loading...</Text>
+          </View>
+        ) : (
+          <Text className="text-neutral-500">Template not found.</Text>
+        )}
       </View>
     );
   }
 
   return (
     <View className="relative flex-1 bg-white dark:bg-black">
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header Info */}
         <View className="border-b border-neutral-100 p-4 dark:border-neutral-900">
           <Text className="mb-2 text-3xl font-bold text-black dark:text-white">
-            {template.title}
+            {sharedTempalte.title}
           </Text>
-          {template.notes && (
+          {/* Author Info */}
+          <Text className="mb-2 text-sm font-medium text-blue-600 dark:text-blue-400">
+            {sharedTempalte.authorName
+              ? `Created by ${sharedTempalte.authorName}`
+              : "Shared Template"}
+          </Text>
+
+          {sharedTempalte.notes && (
             <Text className="mb-4 text-base text-neutral-600 dark:text-neutral-400">
-              {template.notes}
+              {sharedTempalte.notes}
             </Text>
           )}
 
           <View className="flex-row gap-4">
             <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
               <Text className="text-base font-medium text-neutral-500">
-                {template.exercises.length} Exercises
-              </Text>
-            </View>
-            <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
-              <Text className="text-base font-medium text-neutral-500">
-                Last used: Never
+                {sharedTempalte.exerciseGroups.length} Exercises
               </Text>
             </View>
           </View>
@@ -183,7 +279,7 @@ export default function TemplateDetails() {
 
         {/* Read Only Exercise List */}
         <View className="gap-4 p-4">
-          {template.exercises.map((ex, idx) => (
+          {sharedTempalte.exercises.map((ex, idx) => (
             <ReadOnlyExerciseRow
               key={ex.id || idx}
               exercise={ex}
@@ -193,14 +289,6 @@ export default function TemplateDetails() {
             />
           ))}
         </View>
-
-        {/* Delete Button */}
-        <TouchableOpacity
-          onPress={() => deleteModalRef.current?.present()}
-          className="items-center py-4"
-        >
-          <Text className="font-medium text-red-500">Delete Template</Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* Floating Action Button for Starting */}
@@ -209,24 +297,13 @@ export default function TemplateDetails() {
         style={{ paddingBottom: safeAreaInsets.bottom + 16 }}
       >
         <Button
-          title="Start Workout"
-          onPress={() => {
-            if (id) startWorkoutFromTemplate(id);
-            router.push("/(app)/workout/start");
-          }}
+          title={
+            existingTemplate ? "Update Saved Template" : "Save to My Templates"
+          }
+          onPress={handleSave}
+          disabled={loading}
         />
       </View>
-      <DeleteConfirmModal
-        ref={deleteModalRef}
-        title="Delete Template?"
-        description="Are you sure you want to delete this template?"
-        onConfirm={() => {
-          deleteTemplate(id);
-          router.back();
-        }}
-        confirmText="Delete"
-        onCancel={() => {}}
-      />
     </View>
   );
 }

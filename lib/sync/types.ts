@@ -109,6 +109,9 @@ export interface TemplatePayload {
   id?: string | null;
   title?: string;
   notes?: string;
+  shareId?: string;
+  sourceShareId?: string;
+  authorName?: string;
   exercises?: SerializedTemplateExercise[];
   exerciseGroups?: SerializedExerciseGroup[];
 }

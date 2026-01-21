@@ -40,23 +40,25 @@ export default function TemplateEditor() {
 
   const isEditing = params.mode === "edit";
 
-  const {
-    templates,
-    draftTemplate,
-    startDraftTemplate,
-    updateDraftTemplate,
-    createTemplate,
-    updateTemplate,
-    discardDraftTemplate,
-    reorderDraftExercises,
-    removeExerciseFromDraft,
-    addSetToDraft,
-    updateDraftSet,
-    removeSetFromDraft,
-    createDraftExerciseGroup,
-    removeDraftExerciseGroup,
-    prepareTemplateForSave,
-  } = useTemplate();
+  const templates = useTemplate((s) => s.templates);
+  const draftTemplate = useTemplate((s) => s.draftTemplate);
+  const startDraftTemplate = useTemplate((s) => s.startDraftTemplate);
+  const updateDraftTemplate = useTemplate((s) => s.updateDraftTemplate);
+  const createTemplate = useTemplate((s) => s.createTemplate);
+  const updateTemplate = useTemplate((s) => s.updateTemplate);
+  const discardDraftTemplate = useTemplate((s) => s.discardDraftTemplate);
+  const reorderDraftExercises = useTemplate((s) => s.reorderDraftExercises);
+  const removeExerciseFromDraft = useTemplate((s) => s.removeExerciseFromDraft);
+  const addSetToDraft = useTemplate((s) => s.addSetToDraft);
+  const updateDraftSet = useTemplate((s) => s.updateDraftSet);
+  const removeSetFromDraft = useTemplate((s) => s.removeSetFromDraft);
+  const createDraftExerciseGroup = useTemplate(
+    (s) => s.createDraftExerciseGroup,
+  );
+  const removeDraftExerciseGroup = useTemplate(
+    (s) => s.removeDraftExerciseGroup,
+  );
+  const prepareTemplateForSave = useTemplate((s) => s.prepareTemplateForSave);
 
   /* ───── Grouping State ───── */
   // const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false); // Removed

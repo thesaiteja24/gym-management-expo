@@ -1,17 +1,19 @@
-import { DraftTemplate, WorkoutTemplate } from "@/stores/template/types";
+import { TemplatePayload } from "@/lib/sync/types";
+import { DraftTemplate } from "@/stores/template/types";
 
 export function serializeTemplateForApi(
-  template: DraftTemplate | WorkoutTemplate,
-) {
+  template: DraftTemplate & { sourceShareId?: string; authorName?: string },
+): TemplatePayload {
   return {
-    title: template.title, // Title is required for templates usually
+    id: template.id,
+    clientId: template.clientId,
+    title: template.title,
     notes: template.notes ?? undefined,
+    sourceShareId: template.sourceShareId,
+    authorName: template.authorName,
 
     exerciseGroups: template.exerciseGroups.map((group) => {
       const baseGroup = {
-        // If it's a new group in a draft, it has a UUID.
-        // If we are updating, we might want to keep the UUID if the backend tracks it.
-        // For now, pass ID. Backend can ignore if it's creating new.
         id: group.id,
         groupType: group.groupType,
         groupIndex: group.groupIndex,
@@ -30,7 +32,6 @@ export function serializeTemplateForApi(
 
     exercises: template.exercises.map((exercise) => {
       const baseExercise = {
-        id: exercise.id,
         exerciseId: exercise.exerciseId,
         exerciseIndex: exercise.exerciseIndex,
       };
@@ -43,7 +44,6 @@ export function serializeTemplateForApi(
         ...baseExercise,
         ...groupProp,
         sets: exercise.sets.map((set) => ({
-          id: set.id,
           setIndex: set.setIndex,
           setType: set.setType,
           weight: set.weight ? Number(set.weight) : undefined,
