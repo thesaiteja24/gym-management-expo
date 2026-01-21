@@ -12,7 +12,7 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useMemo, useRef } from "react";
 import {
-  Platform,
+  Alert,
   ScrollView,
   Share,
   Text,
@@ -124,24 +124,17 @@ export default function TemplateDetails() {
   const handleShare = async () => {
     if (!template?.shareId) return;
 
-    const url = `pump://template/share/${template.shareId}`;
+    const webLink = `https://pump.thesaiteja.dev/share/${template.shareId}`;
 
     try {
-      await Share.share(
-        {
-          message:
-            Platform.OS === "android"
-              ? `Check out this workout template:\n${url}`
-              : `Check out this workout template:`,
-          url,
-          title: template.title,
-        },
-        {
-          dialogTitle: "Share Workout Template",
-        },
-      );
+      await Share.share({
+        message: `Check out this workout template: ${webLink}`,
+        url: webLink,
+        title: template.title,
+      });
     } catch (error) {
       console.error("Error sharing template:", error);
+      Alert.alert("Error", "Failed to share the template.");
     }
   };
 

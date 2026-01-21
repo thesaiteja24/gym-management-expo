@@ -9,7 +9,6 @@ import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useMemo } from "react";
 import {
   Alert,
-  Platform,
   ScrollView,
   Share,
   Text,
@@ -101,7 +100,11 @@ export default function TemplateDetails() {
         <TouchableOpacity
           onPress={() => {
             setSharedTemplate(null);
-            router.back();
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(app)/(tabs)/workout");
+            }
           }}
           style={{ marginRight: 15 }}
         >
@@ -209,24 +212,17 @@ export default function TemplateDetails() {
   const handleShare = async () => {
     if (!sharedTempalte?.shareId) return;
 
-    const url = `pump://template/share/${sharedTempalte.shareId}`;
+    const webLink = `https://pump.thesaiteja.dev/share/${sharedTempalte.shareId}`;
 
     try {
-      await Share.share(
-        {
-          message:
-            Platform.OS === "android"
-              ? `Check out this workout template:\n${url}`
-              : `Check out this workout template:`,
-          url,
-          title: sharedTempalte.title,
-        },
-        {
-          dialogTitle: "Share Workout Template",
-        },
-      );
+      await Share.share({
+        message: `Check out this workout template: ${webLink}`,
+        url: webLink,
+        title: sharedTempalte.title,
+      });
     } catch (error) {
       console.error("Error sharing template:", error);
+      Alert.alert("Error", "Failed to share the template.");
     }
   };
 

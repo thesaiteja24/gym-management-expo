@@ -10,14 +10,34 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.thesaiteja.pump"
+      "bundleIdentifier": "com.thesaiteja.pump",
+      "associatedDomains": ["applinks:pump.thesaiteja.dev"]
     },
     "android": {
       "package": "com.thesaiteja.pump",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "pump.thesaiteja.dev",
+              "pathPrefix": "/share"
+            },
+            {
+              "scheme": "pump",
+              "host": "share",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "output": "static",
