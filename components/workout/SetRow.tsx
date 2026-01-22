@@ -12,7 +12,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from "react-native";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -107,7 +106,6 @@ function SetRow({
   const colors = useThemeColor();
   // @ts-ignore
   const isCompleted = !isTemplate && set.completed;
-  const isDark = useColorScheme() === "dark";
   const lineHeight = Platform.OS === "ios" ? undefined : 18;
 
   /* ───── Local UI state ───── */

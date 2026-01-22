@@ -1,7 +1,7 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -18,9 +18,47 @@ export default function VerifyOtp() {
   const colors = useThemeColor();
   const { data } = useLocalSearchParams();
   const [otp, setOtp] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const isLoading = useAuth((state: any) => state.isLoading);
   const verifyOtp = useAuth((state: any) => state.verifyOtp);
+  const sendOtp = useAuth((state: any) => state.sendOtp);
+
+  // Countdown timer for resend cooldown
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  const handleResendOtp = useCallback(async () => {
+    if (resendCooldown > 0 || isLoading) return;
+
+    const payload = JSON.parse(Array.isArray(data) ? data[0] : data);
+    const response = await sendOtp({
+      countryCode: payload.countryCode,
+      phone: payload.phone,
+      resend: true,
+    });
+
+    if (response.success) {
+      Toast.show({
+        type: "success",
+        text1: "OTP sent!",
+        text2: "Check your phone for the new code.",
+      });
+      setResendCooldown(60); // 60 second cooldown
+    } else {
+      Toast.show({
+        type: "error",
+        text1: response.error?.message || "Failed to resend OTP",
+      });
+    }
+  }, [data, resendCooldown, isLoading, sendOtp]);
 
   const onVerifyOtp = async () => {
     // Ensure it's a string, not an array as per expo-router behavior
@@ -82,9 +120,14 @@ export default function VerifyOtp() {
           }}
         />
         <Text className="mt-4 text-sm text-gray-400 dark:text-gray-500">
-          You didn’t receive any code?{" "}
-          <Text className="text-primary" onPress={() => {}}>
-            Resend code
+          You didn&apos;t receive any code?{" "}
+          <Text
+            className={resendCooldown > 0 ? "text-gray-400" : "text-primary"}
+            onPress={handleResendOtp}
+          >
+            {resendCooldown > 0
+              ? `Resend in ${resendCooldown}s`
+              : "Resend code"}
           </Text>
         </Text>
       </View>

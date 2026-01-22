@@ -36,7 +36,7 @@ export default function WorkoutScreen() {
       className="flex-1 bg-white p-4 dark:bg-black"
       style={{ paddingBottom: useSafeAreaInsets().bottom }}
     >
-      <View className="px-4">
+      <View>
         {/* Active Workout Control */}
         <View className="mb-4 flex flex-row gap-4">
           <Button

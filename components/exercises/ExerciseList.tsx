@@ -2,11 +2,11 @@ import { Exercise } from "@/stores/exerciseStore";
 import { Image } from "expo-image";
 import React, { useCallback } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 /* ───────────────── Types ───────────────── */
@@ -88,6 +88,8 @@ const ExerciseRow = React.memo(
   },
 );
 
+ExerciseRow.displayName = "ExerciseRow";
+
 /* ───────────────── List ───────────────── */
 
 export default function ExerciseList({
@@ -98,6 +100,20 @@ export default function ExerciseList({
   onPress,
   onLongPress,
 }: Props) {
+  // Move useCallback before any early returns to comply with rules-of-hooks
+  const renderItem = useCallback(
+    ({ item }: { item: Exercise }) => (
+      <ExerciseRow
+        item={item}
+        isSelecting={isSelecting}
+        selected={isSelected?.(item.id) ?? false}
+        onPress={onPress}
+        onLongPress={onLongPress}
+      />
+    ),
+    [isSelecting, isSelected, onPress, onLongPress],
+  );
+
   if (loading) {
     return <ActivityIndicator animating size="large" className="mt-8" />;
   }
@@ -111,19 +127,6 @@ export default function ExerciseList({
       </View>
     );
   }
-
-  const renderItem = useCallback(
-    ({ item }: { item: Exercise }) => (
-      <ExerciseRow
-        item={item}
-        isSelecting={isSelecting}
-        selected={isSelected?.(item.id) ?? false}
-        onPress={onPress}
-        onLongPress={onLongPress}
-      />
-    ),
-    [isSelected, onPress, onLongPress],
-  );
 
   return (
     <FlatList

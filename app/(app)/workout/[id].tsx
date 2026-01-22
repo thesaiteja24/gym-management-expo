@@ -23,9 +23,10 @@ import {
   formatTimeAgo,
 } from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
+import * as Crypto from "expo-crypto";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -92,7 +93,6 @@ function getSetTypeColor(
 export default function WorkoutDetails() {
   /* Local State */
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [isDeleting, setIsDeleting] = useState(false);
   // const [showDeleteModal, setShowDeleteModal] = useState(false); // Removed
   // const [showDiscardModal, setShowDiscardModal] = useState(false); // Removed
 
@@ -169,7 +169,6 @@ export default function WorkoutDetails() {
     if (!workout) return;
 
     const { startDraftTemplate } = useTemplate.getState();
-    const Crypto = require("expo-crypto");
 
     // 1. Create ID Mappings for Groups
     // We Map <OldDBGroupId, NewDraftGroupUUID>
@@ -361,7 +360,6 @@ export default function WorkoutDetails() {
           <Button
             title="Delete Workout"
             variant="danger"
-            loading={isDeleting}
             onPress={() => deleteModalRef.current?.present()}
           />
         </View>

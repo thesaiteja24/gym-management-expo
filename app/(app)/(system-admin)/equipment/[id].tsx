@@ -23,6 +23,7 @@ export default function EditEquipment() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const isDarkMode = useColorScheme() === "dark";
+  const insets = useSafeAreaInsets();
 
   const normalize = (v: string | null | undefined) => v ?? "";
 
@@ -179,7 +180,7 @@ export default function EditEquipment() {
   return (
     <View
       className="flex-1 bg-white p-4 dark:bg-black"
-      style={{ paddingBottom: useSafeAreaInsets().bottom }}
+      style={{ paddingBottom: insets.bottom }}
     >
       {/* Image picker */}
       <View className="mb-6 items-center">

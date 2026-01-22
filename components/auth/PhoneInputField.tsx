@@ -1,20 +1,21 @@
 import type { Country } from "@/constants/countries";
 import { COUNTRIES } from "@/constants/countries";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
-    FlatList,
-    Modal,
-    Platform,
-    Pressable,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    ChevronDownIcon,
-    MagnifyingGlassIcon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
 } from "react-native-heroicons/outline";
 
 // helper: convert ISO country code to emoji flag
@@ -27,8 +28,6 @@ function countryCodeToFlag(iso: string) {
     .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
     .join("");
 }
-
-import { useThemeColor } from "@/hooks/useThemeColor";
 
 type Props = {
   value?: string;
@@ -89,10 +88,7 @@ export default function PhoneInputField({
           <Text className="mr-2 text-lg">
             {countryCodeToFlag(selected.code)}
           </Text>
-          <Text
-            className="mr-1 text-base"
-            style={{ color: colors.text }}
-          >
+          <Text className="mr-1 text-base" style={{ color: colors.text }}>
             {selected.dial_code}
           </Text>
           {/* show chevron; if react-native-heroicons not installed, replace with simple text */}

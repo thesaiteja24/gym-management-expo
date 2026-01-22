@@ -12,6 +12,7 @@ import { useExercise } from "@/stores/exerciseStore";
 import { useTemplate } from "@/stores/templateStore";
 import { ExerciseGroupType } from "@/stores/workoutStore";
 import { Ionicons } from "@expo/vector-icons";
+import { usePreventRemove } from "@react-navigation/native";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -202,6 +203,15 @@ export default function TemplateEditor() {
     }
   };
 
+  const hasUnsavedChanges = (!!draftTemplate &&
+    (draftTemplate.title.trim().length > 0 ||
+      draftTemplate.notes?.trim().length ||
+      draftTemplate.exercises.length > 0)) as boolean;
+
+  usePreventRemove(hasUnsavedChanges, () => {
+    deleteModalRef.current?.present();
+  });
+
   // Initialize draft on mount
   useEffect(() => {
     if (isEditing) {
@@ -241,6 +251,7 @@ export default function TemplateEditor() {
       onLeftPress: () => {
         handleCancel();
       },
+      headerBackButtonMenuEnabled: false,
 
       rightIcons: [
         {
@@ -404,7 +415,7 @@ export default function TemplateEditor() {
             </View>
           }
           ListFooterComponent={
-            <View className="mb-20 p-4">
+            <View className="mb-[50%] p-4">
               <Button
                 title="Add Exercises"
                 variant="outline"

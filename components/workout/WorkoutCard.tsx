@@ -29,28 +29,27 @@ export default function WorkoutCard({
       className="mb-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
     >
       {/* Header */}
-      <View className="mb-3 flex-col justify-between gap-2">
+      <View className="mb-4 flex-col justify-between gap-2">
         <Text className="line-clamp-1 text-lg font-semibold text-black dark:text-white">
           {workout.title || "Workout"}
         </Text>
 
         <View className="flex-row items-center justify-between gap-4">
-          <Text className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+          <Text className="flex-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">
             {timeAgo}
           </Text>
 
-          <Text className="w-1/3 text-base font-semibold text-primary">
+          <Text className="flex-1 text-base font-semibold text-primary">
             <Text className="text-base font-semibold text-black dark:text-white">
               Duration:
             </Text>{" "}
             {duration}
           </Text>
         </View>
+        <Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">
+          Volume: {volume} kg
+        </Text>
       </View>
-
-      <Text className="mb-3 text-base font-medium text-neutral-600 dark:text-neutral-400">
-        Volume: {volume} kg
-      </Text>
 
       {/* Exercise preview */}
       {previewExercises.map((ex: any) => (

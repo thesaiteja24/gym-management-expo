@@ -3,7 +3,6 @@ import {
   DeleteConfirmModal,
   DeleteConfirmModalHandle,
 } from "@/components/ui/DeleteConfirmModal";
-import { useAuth } from "@/stores/authStore";
 import { useExercise } from "@/stores/exerciseStore";
 import { TemplateExercise, TemplateSet } from "@/stores/template/types";
 import { useTemplate } from "@/stores/templateStore";
@@ -232,9 +231,6 @@ function ReadOnlyExerciseRow({
   group: any | null;
 }) {
   const { exerciseList } = useExercise();
-  const isDark = useColorScheme() === "dark";
-  const preferredWeightUnit =
-    useAuth((s) => s.user?.preferredWeightUnit) || "kg";
 
   const details = useMemo(
     () => exerciseList.find((e) => e.id === exercise.exerciseId),

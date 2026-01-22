@@ -21,7 +21,12 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router, useNavigation } from "expo-router";
 
+import {
+  DeleteConfirmModal,
+  DeleteConfirmModalHandle,
+} from "@/components/ui/DeleteConfirmModal";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { usePreventRemove } from "@react-navigation/native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Keyboard,
@@ -56,6 +61,7 @@ export default function StartWorkout() {
   >(new Set());
 
   const exerciseGroupModalRef = useRef<ExerciseGroupModalHandle>(null);
+  const discardConfirmModalRef = useRef<DeleteConfirmModalHandle>(null);
 
   const lastIndexRef = useRef<number | null>(null);
   const prevCompletedRef = useRef<Map<string, boolean>>(new Map());
@@ -238,6 +244,10 @@ export default function StartWorkout() {
     exerciseGroupModalRef.current?.dismiss();
   };
 
+  usePreventRemove(Boolean(workout?.id), () => {
+    discardConfirmModalRef.current?.present();
+  });
+
   /* Effects */
   // Start a new workout if none exists
   useEffect(() => {
@@ -264,17 +274,19 @@ export default function StartWorkout() {
         prevCompletedRef.current.set(key, set.completed);
       });
     });
-  }, [workout?.exercises]);
+  }, [workout?.exercises, startRestTimer, stopRestTimer]);
 
   // Navigation Options Effect
   useEffect(() => {
     navigation.setOptions({
       onLeftPress: () => {
         if (workout?.id) {
-          discardWorkout();
+          discardConfirmModalRef.current?.present();
+          return;
         }
         router.back();
       },
+      headerBackButtonMenuEnabled: false,
       rightIcons: [
         {
           name: "checkmark-done",
@@ -284,7 +296,7 @@ export default function StartWorkout() {
         },
       ],
     });
-  }, [handleOpenSave, workoutSaving]);
+  }, [handleOpenSave, workoutSaving, discardWorkout, navigation, workout]);
 
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () =>
@@ -517,6 +529,18 @@ export default function StartWorkout() {
           setGroupingMode(null);
           setSelectedGroupExerciseIds(new Set());
         }}
+      />
+
+      <DeleteConfirmModal
+        ref={discardConfirmModalRef}
+        title="Discard Changes?"
+        description="You have unsaved changes. Are you sure you want to discard them?"
+        confirmText="Discard"
+        onConfirm={() => {
+          discardWorkout();
+          router.back();
+        }}
+        onCancel={() => {}}
       />
     </View>
   );

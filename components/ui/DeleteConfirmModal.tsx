@@ -143,3 +143,5 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
     );
   },
 );
+
+DeleteConfirmModal.displayName = "DeleteConfirmModal";

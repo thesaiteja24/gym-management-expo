@@ -3,12 +3,7 @@ import { clearTemplateQueue, clearWorkoutQueue } from "@/lib/sync/queue";
 import { sendOtpService, verifyOtpService } from "@/services/authService";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
-import { useEquipment } from "./equipmentStore";
-import { useExercise } from "./exerciseStore";
-import { useMuscleGroup } from "./muscleGroupStore";
-import { useTemplate } from "./templateStore";
 import { LengthUnits, WeightUnits } from "./userStore";
-import { useWorkout } from "./workoutStore";
 
 type User = {
   userId?: string;
@@ -136,9 +131,14 @@ export const useAuth = create<AuthState>((set, get) => ({
       });
 
       // Reset all related stores
-      useEquipment.getState().resetState();
-      useMuscleGroup.getState().resetState();
-      useExercise.getState().resetState();
+      // useEquipment.getState().resetState();
+      // useMuscleGroup.getState().resetState();
+      // useExercise.getState().resetState();
+
+      // Use require to avoid circular dependencies
+      const { useWorkout } = require("./workoutStore");
+      const { useTemplate } = require("./templateStore");
+
       useWorkout.getState().resetState();
       useTemplate.getState().resetState();
 

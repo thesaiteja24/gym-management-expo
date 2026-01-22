@@ -163,4 +163,6 @@ const MuscleGroupModal = forwardRef<MuscleGroupModalHandle, Props>(
   },
 );
 
+MuscleGroupModal.displayName = "MuscleGroupModal";
+
 export default MuscleGroupModal;

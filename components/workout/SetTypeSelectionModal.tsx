@@ -180,4 +180,6 @@ const SetTypeSelectionModal = forwardRef<SetTypeSelectionModalHandle, Props>(
   },
 );
 
+SetTypeSelectionModal.displayName = "SetTypeSelectionModal";
+
 export default SetTypeSelectionModal;

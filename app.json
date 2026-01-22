@@ -1,20 +1,23 @@
 {
   "expo": {
-    "name": "Pump",
-    "slug": "Pump",
-    "version": "1.0.0",
+    "name": "PUMP",
+    "slug": "pump",
+    "version": "0.1.0",
     "orientation": "portrait",
-    "icon": "./assets/images/adaptive-icon.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "pump",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.thesaiteja.pump",
-      "associatedDomains": ["applinks:pump.thesaiteja.dev"]
+      "associatedDomains": [
+        "applinks:pump.thesaiteja.dev"
+      ]
     },
     "android": {
       "package": "com.thesaiteja.pump",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -35,7 +38,10 @@
               "pathPrefix": "/"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -68,7 +74,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "1784e011-6bee-41d3-9554-b1fd3d751ed7"
+        "projectId": "46384027-b755-4a49-9a73-31783f8b85fe"
       }
     },
     "owner": "thesaiteja",

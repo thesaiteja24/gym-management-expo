@@ -188,4 +188,6 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(
   },
 );
 
+RPESelectionModal.displayName = "RPESelectionModal";
+
 export default RPESelectionModal;

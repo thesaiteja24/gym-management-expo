@@ -165,4 +165,6 @@ const ExerciseGroupModal = forwardRef<ExerciseGroupModalHandle, Props>(
   },
 );
 
+ExerciseGroupModal.displayName = "ExerciseGroupModal";
+
 export default ExerciseGroupModal;

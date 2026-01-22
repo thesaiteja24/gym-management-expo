@@ -1,13 +1,7 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import {
-  Platform,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
-} from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SyncStatus from "../ui/SyncStatus";
 
@@ -36,7 +30,6 @@ export default function CustomHeader({
   iconColor,
 }: CustomHeaderProps) {
   const insets = useSafeAreaInsets();
-  const isDark = useColorScheme() === "dark";
   const colors = useThemeColor();
   const headerHeight =
     Platform.OS === "ios" ? 44 + insets.top : 56 + insets.top;

@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/Button";
-import { useAuth } from "@/stores/authStore";
 import { useExercise } from "@/stores/exerciseStore";
 import { TemplateExercise, TemplateSet } from "@/stores/template/types";
 import { useTemplate } from "@/stores/templateStore";
@@ -10,7 +9,6 @@ import React, { useEffect, useMemo } from "react";
 import {
   Alert,
   ScrollView,
-  Share,
   Text,
   TouchableOpacity,
   View,
@@ -209,23 +207,6 @@ export default function TemplateDetails() {
     }
   };
 
-  const handleShare = async () => {
-    if (!sharedTemplate?.shareId) return;
-
-    const webLink = `https://pump.thesaiteja.dev/share/${sharedTemplate.shareId}`;
-
-    try {
-      await Share.share({
-        message: `Check out this workout template: ${webLink}`,
-        url: webLink,
-        title: sharedTemplate.title,
-      });
-    } catch (error) {
-      console.error("Error sharing template:", error);
-      Alert.alert("Error", "Failed to share the template.");
-    }
-  };
-
   if (!sharedTemplate) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
@@ -312,9 +293,6 @@ function ReadOnlyExerciseRow({
   group: any | null;
 }) {
   const { exerciseList } = useExercise();
-  const isDark = useColorScheme() === "dark";
-  const preferredWeightUnit =
-    useAuth((s) => s.user?.preferredWeightUnit) || "kg";
 
   const details = useMemo(
     () => exerciseList.find((e) => e.id === exercise.exerciseId),

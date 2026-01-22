@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/Button";
-import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
 import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -17,15 +16,13 @@ type LengthUnit = "cm" | "inches";
 
 export default function SettingsScreen() {
   const isDarkMode = useColorScheme() === "dark";
-  const colors = useThemeColor();
   const insets = useSafeAreaInsets();
-  const isDark = useColorScheme() === "dark";
 
   // Ref for the Bottom Sheet
   const unitSheetRef = useRef<BottomSheetModal>(null);
 
   const { user, logout } = useAuth();
-  const { updatePreferences, isLoading } = useUser();
+  const { updatePreferences } = useUser();
 
   const storedWeightUnit: WeightUnit = user?.preferredWeightUnit ?? "kg";
   const storedLengthUnit: LengthUnit = user?.preferredLengthUnit ?? "cm";
@@ -124,10 +121,10 @@ export default function SettingsScreen() {
           />
         )}
         backgroundStyle={{
-          backgroundColor: isDark ? "#171717" : "white",
+          backgroundColor: isDarkMode ? "#171717" : "white",
         }}
         handleIndicatorStyle={{
-          backgroundColor: isDark ? "#525252" : "#d1d5db",
+          backgroundColor: isDarkMode ? "#525252" : "#d1d5db",
         }}
         onDismiss={onDismiss}
         // Smoother, slightly slower animation

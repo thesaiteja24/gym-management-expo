@@ -161,4 +161,6 @@ const EquipmentModal = forwardRef<EquipmentModalHandle, Props>(
   },
 );
 
+EquipmentModal.displayName = "EquipmentModal";
+
 export default EquipmentModal;

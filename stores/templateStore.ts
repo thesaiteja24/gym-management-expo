@@ -22,7 +22,6 @@ import {
   TemplateState,
   WorkoutTemplate,
 } from "./template/types";
-import { useWorkout } from "./workoutStore";
 
 // Initial State
 const initialState = {
@@ -329,6 +328,7 @@ export const useTemplate = create<TemplateState>()(
           return;
         }
 
+        const { useWorkout } = require("./workoutStore");
         const { loadTemplate } = useWorkout.getState();
         loadTemplate(template);
       },

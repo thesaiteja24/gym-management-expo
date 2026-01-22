@@ -1,5 +1,4 @@
 import SetRow from "@/components/workout/SetRow";
-import { useThemeColor } from "@/hooks/useThemeColor";
 import { Exercise, ExerciseType } from "@/stores/exerciseStore";
 import {
   TemplateExercise,
@@ -163,7 +162,6 @@ function ExerciseRow({
   const { hasWeight, hasReps, hasDuration } =
     EXERCISE_CAPABILITIES[exerciseDetails.exerciseType];
 
-  const colors = useThemeColor();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   /* ───── Local UI state only ───── */

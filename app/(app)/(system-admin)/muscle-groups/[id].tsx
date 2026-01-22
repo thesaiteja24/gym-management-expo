@@ -23,6 +23,7 @@ export default function EditMuscleGroup() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const isDarkMode = useColorScheme() === "dark";
+  const insets = useSafeAreaInsets();
 
   const normalize = (v: string | null | undefined) => v ?? "";
 
@@ -39,7 +40,7 @@ export default function EditMuscleGroup() {
   // current editable state
   const [title, setTitle] = useState("");
   const [thumbnailUri, setThumbnailUri] = useState<string | null>(null);
-  const [loadingData, setLoadingData] = useState(true);
+
   const [uploading, setUploading] = useState(false);
   const lineHeight = Platform.OS === "ios" ? 0 : 30;
 
@@ -64,8 +65,6 @@ export default function EditMuscleGroup() {
         title: data.title,
         thumbnailUrl: data.thumbnailUrl,
       });
-
-      setLoadingData(false);
     });
   }, [id]);
 
@@ -177,7 +176,7 @@ export default function EditMuscleGroup() {
   return (
     <View
       className="flex-1 bg-white p-4 dark:bg-black"
-      style={{ paddingBottom: useSafeAreaInsets().bottom }}
+      style={{ paddingBottom: insets.bottom }}
     >
       {/* Image picker */}
       <View className="mb-6 items-center">
