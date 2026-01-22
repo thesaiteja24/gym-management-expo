@@ -5,7 +5,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { useFonts } from "expo-font";
-import { SplashScreen, Stack, useSegments } from "expo-router";
+import { SplashScreen, Stack } from "expo-router";
 import * as Updates from "expo-updates";
 import { useEffect, useState } from "react";
 import {
@@ -19,7 +19,7 @@ import Toast from "react-native-toast-message";
 import "./globals.css";
 
 // ─────────────────────────────────────────────
-// Keep splash until we explicitly release it
+// Prevent splash auto-hide (explicit release only)
 // ─────────────────────────────────────────────
 SplashScreen.preventAutoHideAsync();
 
@@ -28,67 +28,99 @@ type UpdateState = "idle" | "downloading" | "restarting";
 export default function RootLayout() {
   const colors = useThemeColor();
   const theme = useColorScheme();
-  const segments = useSegments();
 
   // ───── Fonts ─────
   const [fontsLoaded] = useFonts({
     Monoton: require("../assets/fonts/Monoton-Regular.ttf"),
   });
 
-  // ───── Auth restore ─────
+  // ───── Auth state ─────
   const restoreFromStorage = useAuth((s) => s.restoreFromStorage);
   const hasRestored = useAuth((s) => s.hasRestored);
+  const isAuthenticated = useAuth((s) => s.isAuthenticated);
 
   // ───── OTA state ─────
-  const [otaChecked, setOtaChecked] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   const [showOtaModal, setShowOtaModal] = useState(false);
   const [updateState, setUpdateState] = useState<UpdateState>("idle");
-
-  const isAuthRoute = segments[0] === "(auth)";
 
   // ───── Offline sync ─────
   useSyncQueue();
 
-  // 1️⃣ Restore auth
+  // ─────────────────────────────────────────────
+  // 1️⃣ Restore auth from storage (once)
+  // ─────────────────────────────────────────────
   useEffect(() => {
     restoreFromStorage();
   }, [restoreFromStorage]);
 
-  // 2️⃣ Check OTA (skip auth routes)
+  // ─────────────────────────────────────────────
+  // 2️⃣ Silent OTA check (NO UI, NO splash blocking)
+  // ─────────────────────────────────────────────
   useEffect(() => {
-    async function checkOTA() {
-      if (isAuthRoute) {
-        setOtaChecked(true);
-        return;
-      }
+    if (!hasRestored) return;
 
+    let cancelled = false;
+
+    async function checkForUpdates() {
       try {
         const update = await Updates.checkForUpdateAsync();
-
-        if (update.isAvailable) {
-          setShowOtaModal(true);
-          setOtaChecked(true); // 🔑 never block splash
-          return;
+        if (!cancelled && update.isAvailable) {
+          setUpdateAvailable(true);
         }
       } catch (e) {
-        console.log("OTA check failed:", e);
+        if (__DEV__) {
+          console.log("OTA check failed:", e);
+        }
       }
-
-      setOtaChecked(true);
     }
 
-    checkOTA();
-  }, [isAuthRoute]);
+    checkForUpdates();
 
-  // 3️⃣ Release splash ONLY when all boot work is done
+    return () => {
+      cancelled = true;
+    };
+  }, [hasRestored]);
+
+  // ─────────────────────────────────────────────
+  // 3️⃣ Release splash when boot is complete
+  // ─────────────────────────────────────────────
   useEffect(() => {
-    if (fontsLoaded && hasRestored && otaChecked) {
+    if (fontsLoaded && hasRestored) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, hasRestored, otaChecked]);
+  }, [fontsLoaded, hasRestored]);
 
-  // 4️⃣ Fallback loader (normally never visible)
-  if (!fontsLoaded || !hasRestored || !otaChecked) {
+  // ─────────────────────────────────────────────
+  // 4️⃣ Absolute safety: never hang on splash
+  // ─────────────────────────────────────────────
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!hasRestored) {
+        console.warn("Auth restore timeout — forcing app start");
+        SplashScreen.hideAsync();
+      }
+    }, 4000);
+
+    return () => clearTimeout(timeout);
+  }, [hasRestored]);
+
+  // ─────────────────────────────────────────────
+  // 5️⃣ Show OTA modal ONLY after login
+  // ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (!updateAvailable) return;
+
+    requestAnimationFrame(() => {
+      setShowOtaModal(true);
+    });
+  }, [isAuthenticated, updateAvailable]);
+
+  // ─────────────────────────────────────────────
+  // 6️⃣ Fallback loader (should rarely appear)
+  // ─────────────────────────────────────────────
+  if (!fontsLoaded || !hasRestored) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
         <ActivityIndicator color={colors.primary} />
@@ -96,28 +128,26 @@ export default function RootLayout() {
     );
   }
 
-  // 5️⃣ App UI
+  // ─────────────────────────────────────────────
+  // 7️⃣ App UI
+  // ─────────────────────────────────────────────
   return (
     <GestureHandlerRootView
-      style={{
-        flex: 1,
-        backgroundColor: colors.background,
-      }}
+      style={{ flex: 1, backgroundColor: colors.background }}
     >
       <BottomSheetModalProvider>
         <>
           <Stack
             screenOptions={{
               headerShown: false,
-              contentStyle: {
-                backgroundColor: colors.background,
-              },
+              contentStyle: { backgroundColor: colors.background },
             }}
           >
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(app)" />
           </Stack>
+
           <StatusBar
             barStyle={theme === "dark" ? "light-content" : "dark-content"}
             backgroundColor={colors.background}
@@ -132,13 +162,13 @@ export default function RootLayout() {
             topOffset={60}
           />
 
-          {/* OTA Modal */}
           <OtaUpdateModal
             visible={showOtaModal}
             state={updateState}
             onLater={() => {
-              if (updateState !== "idle") return;
-              setShowOtaModal(false);
+              if (updateState === "idle") {
+                setShowOtaModal(false);
+              }
             }}
             onRestart={async () => {
               try {
@@ -148,7 +178,9 @@ export default function RootLayout() {
                 setUpdateState("restarting");
                 await Updates.reloadAsync();
               } catch (e) {
-                console.log("OTA update failed:", e);
+                if (__DEV__) {
+                  console.log("OTA update failed:", e);
+                }
                 setUpdateState("idle");
               }
             }}

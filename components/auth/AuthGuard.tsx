@@ -1,67 +1,46 @@
 import { useAuth } from "@/stores/authStore";
 import { useRouter } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
-
-SplashScreen.preventAutoHideAsync().catch(() => {});
 
 type Props = {
   children: React.ReactNode;
   redirectTo?: string;
-  Loader?: React.FC;
 };
 
-export const AuthGuard: React.FC<Props> = ({
+export default function AuthGuard({
   children,
-  redirectTo = "/login",
-  Loader,
-}) => {
+  redirectTo = "/(auth)/login",
+}: Props) {
   const router = useRouter();
-
-  const restoreFromStorage = useAuth((s) => s.restoreFromStorage);
   const isAuthenticated = useAuth((s) => s.isAuthenticated);
-  const isLoading = useAuth((s) => s.isLoading);
-
-  const [restored, setRestored] = useState(false);
+  const hasRestored = useAuth((s) => s.hasRestored);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        await restoreFromStorage();
-      } catch (err) {
-        // ignore
-      } finally {
-        if (mounted) setRestored(true);
-        SplashScreen.hideAsync().catch(() => {});
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [restoreFromStorage]);
+    if (!hasRestored) return;
 
-  useEffect(() => {
-    if (restored && !isLoading) {
-      if (!isAuthenticated) {
-        router.replace(redirectTo as any);
-      }
+    if (!isAuthenticated) {
+      router.replace(redirectTo as any);
     }
-  }, [restored, isLoading, isAuthenticated, router, redirectTo]);
+  }, [hasRestored, isAuthenticated, redirectTo, router]);
 
-  if (!restored || isLoading) {
-    if (Loader) return <Loader />;
+  // While booting, never decide
+  if (!hasRestored) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator />
       </View>
     );
   }
 
-  if (!isAuthenticated) return null;
+  // Redirect in progress
+  if (!isAuthenticated) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
   return <>{children}</>;
-};
-
-export default AuthGuard;
+}

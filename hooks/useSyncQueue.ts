@@ -44,49 +44,66 @@ import { useSyncStore } from "@/stores/syncStore";
 import { useCallback, useEffect, useRef } from "react";
 import { useNetworkStatus } from "./useNetworkStatus";
 
+/* ─────────────────────────────────────────────
+   Constants
+───────────────────────────────────────────── */
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
-/**
- * Hook to process the offline mutation queue when network is restored.
- * Handles both legacy queue and new workout-specific queue.
- */
+/* ─────────────────────────────────────────────
+   Dev-only logger
+───────────────────────────────────────────── */
+const log = {
+  info: (...a: any[]) => __DEV__ && console.log(...a),
+  warn: (...a: any[]) => __DEV__ && console.warn(...a),
+  error: (...a: any[]) => __DEV__ && console.error(...a),
+};
+
+/* ─────────────────────────────────────────────
+   Sync Hook
+───────────────────────────────────────────── */
 export function useSyncQueue() {
   const { isConnected, isInternetReachable } = useNetworkStatus();
+  const isAuthenticated = useAuth((s) => s.isAuthenticated);
   const user = useAuth((s) => s.user);
-  const isOnline = isConnected && isInternetReachable !== false;
 
+  const isOnline = isConnected && isInternetReachable !== false;
   const isSyncing = useRef(false);
 
-  // Update global store network status
+  /* ─────────────────────────────────────────────
+     Network status propagation
+  ───────────────────────────────────────────── */
   useEffect(() => {
     useSyncStore.getState().setNetworkStatus(isOnline);
   }, [isOnline]);
 
+  /* ─────────────────────────────────────────────
+     Queue counts
+  ───────────────────────────────────────────── */
   const updateCounts = useCallback(() => {
     if (!user?.userId) return;
-    // Legacy queue counts
-    const queue = getQueueForUser(user.userId);
-    const failed = getFailedQueueForUser(user.userId);
-    // New queue counts
+
+    const legacyQueue = getQueueForUser(user.userId);
+    const legacyFailed = getFailedQueueForUser(user.userId);
+
     const workoutCounts = getWorkoutQueueCounts(user.userId);
     const templateCounts = getTemplateQueueCounts(user.userId);
+
     useSyncStore
       .getState()
       .setQueueCounts(
-        queue.length + workoutCounts.pending + templateCounts.pending,
-        failed.length + workoutCounts.failed + templateCounts.failed,
+        legacyQueue.length + workoutCounts.pending + templateCounts.pending,
+        legacyFailed.length + workoutCounts.failed + templateCounts.failed,
       );
   }, [user?.userId]);
 
-  // Initial count load
   useEffect(() => {
     updateCounts();
   }, [updateCounts]);
 
-  /**
-   * Process a single workout mutation with ID reconciliation
-   */
+  /* ─────────────────────────────────────────────
+     Workout mutation processor
+  ───────────────────────────────────────────── */
   const processWorkoutMutation = useCallback(
     async (mutation: WorkoutMutation): Promise<boolean> => {
       try {
@@ -94,58 +111,43 @@ export function useSyncQueue() {
           case "CREATE": {
             const res = await createWorkoutService(mutation.payload);
             if (res.success && res.data?.workout?.id) {
-              // CRITICAL: Reconcile the clientId with the backend-generated ID
               reconcileWorkoutId(mutation.clientId, res.data.workout.id);
-              console.log(
-                `[SYNC] Reconciled clientId=${mutation.clientId} -> id=${res.data.workout.id}`,
-              );
-            } else {
-              // Mark as synced even without full response (edge case)
-              markWorkoutSynced(mutation.clientId);
             }
-            break;
+            markWorkoutSynced(mutation.clientId);
+            return true;
           }
+
           case "UPDATE": {
-            if (mutation.payload.id) {
-              await updateWorkoutService(mutation.payload.id, mutation.payload);
-              markWorkoutSynced(mutation.clientId);
-            } else {
-              console.warn(
-                "[SYNC] UPDATE mutation missing id, skipping",
-                mutation,
-              );
-              return false;
-            }
-            break;
+            if (!mutation.payload.id) return false;
+            await updateWorkoutService(mutation.payload.id, mutation.payload);
+            markWorkoutSynced(mutation.clientId);
+            return true;
           }
+
           case "DELETE": {
             if (mutation.payload.id) {
               await deleteWorkoutService(mutation.payload.id);
             }
-            // Item already removed from local state, nothing to reconcile
-            break;
+            return true;
           }
+
           default:
-            console.warn(`[SYNC] Unknown workout mutation type`, mutation);
+            log.warn("[SYNC] Unknown workout mutation", mutation);
             return false;
         }
-        return true;
       } catch (error: any) {
         const status = error?.response?.status;
 
-        console.error("[SYNC ERROR - Workout]", {
+        log.error("[SYNC ERROR - Workout]", {
           queueId: mutation.queueId,
           type: mutation.type,
-          clientId: mutation.clientId,
           status,
-          message: error?.message,
         });
 
-        // Non-retryable 4xx errors → move to failed queue
         if (status && status >= 400 && status < 500) {
           markWorkoutFailed(mutation.clientId);
           moveWorkoutToFailedQueue(mutation.queueId);
-          return true; // Handled (removed from main queue)
+          return true;
         }
 
         return false;
@@ -154,9 +156,9 @@ export function useSyncQueue() {
     [],
   );
 
-  /**
-   * Process a single template mutation with ID reconciliation
-   */
+  /* ─────────────────────────────────────────────
+     Template mutation processor
+  ───────────────────────────────────────────── */
   const processTemplateMutation = useCallback(
     async (mutation: TemplateMutation): Promise<boolean> => {
       try {
@@ -165,50 +167,36 @@ export function useSyncQueue() {
             const res = await createTemplateService(mutation.payload);
             if (res.success && res.data?.template?.id) {
               reconcileTemplateId(mutation.clientId, res.data.template.id);
-              console.log(
-                `[SYNC] Reconciled template clientId=${mutation.clientId} -> id=${res.data.template.id}`,
-              );
-            } else {
-              markTemplateSynced(mutation.clientId);
             }
-            break;
+            markTemplateSynced(mutation.clientId);
+            return true;
           }
+
           case "UPDATE": {
-            if (mutation.payload.id) {
-              await updateTemplateService(
-                mutation.payload.id,
-                mutation.payload,
-              );
-              markTemplateSynced(mutation.clientId);
-            } else {
-              console.warn(
-                "[SYNC] Template UPDATE mutation missing id, skipping",
-                mutation,
-              );
-              return false;
-            }
-            break;
+            if (!mutation.payload.id) return false;
+            await updateTemplateService(mutation.payload.id, mutation.payload);
+            markTemplateSynced(mutation.clientId);
+            return true;
           }
+
           case "DELETE": {
             if (mutation.payload.id) {
               await deleteTemplateService(mutation.payload.id);
             }
-            break;
+            return true;
           }
+
           default:
-            console.warn(`[SYNC] Unknown template mutation type`, mutation);
+            log.warn("[SYNC] Unknown template mutation", mutation);
             return false;
         }
-        return true;
       } catch (error: any) {
         const status = error?.response?.status;
 
-        console.error("[SYNC ERROR - Template]", {
+        log.error("[SYNC ERROR - Template]", {
           queueId: mutation.queueId,
           type: mutation.type,
-          clientId: mutation.clientId,
           status,
-          message: error?.message,
         });
 
         if (status && status >= 400 && status < 500) {
@@ -223,155 +211,87 @@ export function useSyncQueue() {
     [],
   );
 
-  /**
-   * Process legacy (non-workout) mutations
-   */
+  /* ─────────────────────────────────────────────
+     Legacy mutation processor
+  ───────────────────────────────────────────── */
   const processLegacyMutation = useCallback(
     async (mutation: QueuedMutation): Promise<boolean> => {
       try {
-        switch (mutation.type) {
-          case "CREATE_WORKOUT":
-          case "EDIT_WORKOUT":
-          case "DELETE_WORKOUT":
-            // These should use the new workout queue now
-            // But handle legacy items gracefully
-            console.warn(
-              "[SYNC] Legacy workout mutation, migrating to new queue",
-              mutation.type,
-            );
-            return true; // Remove from legacy queue
-          case "UPDATE_PROFILE":
-            // await updateProfileService(mutation.payload);
-            break;
-          case "CREATE_TEMPLATE":
-            await createTemplateService(mutation.payload);
-            break;
-          case "EDIT_TEMPLATE":
-            await updateTemplateService(mutation.payload.id, mutation.payload);
-            break;
-          case "DELETE_TEMPLATE":
-            await deleteTemplateService(mutation.payload.id);
-            break;
-          default:
-            console.warn(
-              `[SYNC] Unknown legacy mutation type: ${mutation.type}`,
-            );
-            return false;
-        }
+        log.warn("[SYNC] Legacy mutation encountered, removing", mutation.type);
         return true;
-      } catch (error: any) {
-        const status = error?.response?.status;
-
-        console.error("[SYNC ERROR - Legacy]", {
-          id: mutation.id,
-          type: mutation.type,
-          status,
-          message: error?.message,
-        });
-
-        // Non-retryable → move to failed queue
-        if (status && status >= 400 && status < 500) {
-          moveToFailedQueue(mutation.id);
-          return true;
-        }
-
+      } catch {
         return false;
       }
     },
     [],
   );
 
-  /**
-   * Main sync function - processes both workout and legacy queues
-   */
+  /* ─────────────────────────────────────────────
+     Main sync routine
+  ───────────────────────────────────────────── */
   const syncQueue = useCallback(async () => {
-    if (!user?.userId || isSyncing.current) return;
+    if (!isAuthenticated || !user?.userId || isSyncing.current) return;
 
     isSyncing.current = true;
     useSyncStore.getState().setSyncStatus(true);
     updateCounts();
 
-    // --- Process NEW workout queue first ---
-    const workoutQueue = getWorkoutQueueForUser(user.userId);
+    try {
+      // Workouts
+      for (const m of getWorkoutQueueForUser(user.userId)) {
+        if (m.retryCount >= MAX_RETRIES) {
+          markWorkoutFailed(m.clientId);
+          moveWorkoutToFailedQueue(m.queueId);
+          continue;
+        }
 
-    for (const mutation of workoutQueue) {
-      if (mutation.retryCount >= MAX_RETRIES) {
-        console.warn(
-          "[SYNC] Moving dead workout mutation to failed queue",
-          mutation,
-        );
-        markWorkoutFailed(mutation.clientId);
-        moveWorkoutToFailedQueue(mutation.queueId);
-        updateCounts();
-        continue;
+        const ok = await processWorkoutMutation(m);
+        if (ok) {
+          dequeueWorkout(m.queueId);
+        } else {
+          incrementWorkoutRetry(m.queueId);
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        }
       }
 
-      const success = await processWorkoutMutation(mutation);
+      // Templates
+      for (const m of getTemplateQueueForUser(user.userId)) {
+        if (m.retryCount >= MAX_RETRIES) {
+          markTemplateFailed(m.clientId);
+          moveTemplateToFailedQueue(m.queueId);
+          continue;
+        }
 
-      if (success) {
-        dequeueWorkout(mutation.queueId);
-        updateCounts();
-      } else {
-        incrementWorkoutRetry(mutation.queueId);
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        const ok = await processTemplateMutation(m);
+        if (ok) {
+          dequeueTemplate(m.queueId);
+        } else {
+          incrementTemplateRetry(m.queueId);
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        }
       }
+
+      // Legacy
+      for (const m of getQueueForUser(user.userId)) {
+        if (m.retryCount >= MAX_RETRIES) {
+          moveToFailedQueue(m.id);
+          continue;
+        }
+
+        const ok = await processLegacyMutation(m);
+        if (ok) {
+          dequeue(m.id);
+        } else {
+          incrementRetry(m.id);
+        }
+      }
+    } finally {
+      isSyncing.current = false;
+      useSyncStore.getState().setSyncStatus(false);
+      updateCounts();
     }
-
-    // --- Process template queue ---
-    const templateQueue = getTemplateQueueForUser(user.userId);
-
-    for (const mutation of templateQueue) {
-      if (mutation.retryCount >= MAX_RETRIES) {
-        console.warn(
-          "[SYNC] Moving dead template mutation to failed queue",
-          mutation,
-        );
-        markTemplateFailed(mutation.clientId);
-        moveTemplateToFailedQueue(mutation.queueId);
-        updateCounts();
-        continue;
-      }
-
-      const success = await processTemplateMutation(mutation);
-
-      if (success) {
-        dequeueTemplate(mutation.queueId);
-        updateCounts();
-      } else {
-        incrementTemplateRetry(mutation.queueId);
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-      }
-    }
-
-    // --- Process legacy queue (profile, etc.) ---
-    const legacyQueue = getQueueForUser(user.userId);
-
-    for (const mutation of legacyQueue) {
-      if (mutation.retryCount >= MAX_RETRIES) {
-        console.warn(
-          "[SYNC] Moving dead legacy mutation to failed queue",
-          mutation,
-        );
-        moveToFailedQueue(mutation.id);
-        updateCounts();
-        continue;
-      }
-
-      const success = await processLegacyMutation(mutation);
-
-      if (success) {
-        dequeue(mutation.id);
-        updateCounts();
-      } else {
-        incrementRetry(mutation.id);
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-      }
-    }
-
-    isSyncing.current = false;
-    useSyncStore.getState().setSyncStatus(false);
-    updateCounts();
   }, [
+    isAuthenticated,
     user?.userId,
     processWorkoutMutation,
     processTemplateMutation,
@@ -379,32 +299,38 @@ export function useSyncQueue() {
     updateCounts,
   ]);
 
-  // Sync when coming back online
+  /* ─────────────────────────────────────────────
+     Trigger sync on reconnect
+  ───────────────────────────────────────────── */
   useEffect(() => {
-    if (isOnline && user?.userId) {
+    if (isOnline && isAuthenticated && user?.userId) {
       syncQueue();
     }
-  }, [isOnline, user?.userId, syncQueue]);
+  }, [isOnline, isAuthenticated, user?.userId, syncQueue]);
 
-  // Debounce ref for queue events
-  const debouncedSync = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* ─────────────────────────────────────────────
+     Reactive sync (debounced)
+  ───────────────────────────────────────────── */
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Subscribe to queue events for reactive auto-sync (debounced)
   useEffect(() => {
     const unsubscribe = queueEvents.subscribe(() => {
-      if (isOnline && user?.userId) {
-        // Debounce: wait 100ms before triggering sync
-        if (debouncedSync.current) clearTimeout(debouncedSync.current);
-        debouncedSync.current = setTimeout(() => {
-          syncQueue();
-        }, 100);
+      if (!isOnline || !isAuthenticated || !user?.userId) return;
+
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
+
+      debounceRef.current = setTimeout(syncQueue, 100);
     });
+
     return () => {
       unsubscribe();
-      if (debouncedSync.current) clearTimeout(debouncedSync.current);
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
     };
-  }, [isOnline, user?.userId, syncQueue]);
+  }, [isOnline, isAuthenticated, user?.userId, syncQueue]);
 
   return { syncQueue, isOnline };
 }

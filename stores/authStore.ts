@@ -1,3 +1,4 @@
+import { registerUnauthorizedHandler } from "@/lib/authSession";
 import { sendOtpService, verifyOtpService } from "@/services/authService";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
@@ -20,60 +21,50 @@ type User = {
   weight?: number | null;
   profilePicUrl?: string | null;
   role?: string;
-  createdAt?: string;
-  updatedAt?: string;
 };
 
 type AuthState = {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
+
+  // Boot invariant
   hasRestored: boolean;
+
+  // UI state
+  isLoading: boolean;
 
   sendOtp: (payload: any) => Promise<any>;
   verifyOtp: (payload: any) => Promise<any>;
   restoreFromStorage: () => Promise<void>;
-  setUser: (user: User) => void;
+  setUser: (user: Partial<User>) => void;
   logout: () => Promise<void>;
 };
 
-const initialState = {
+export const useAuth = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
   isAuthenticated: false,
   isLoading: false,
   hasRestored: false,
-};
 
-export const useAuth = create<AuthState>((set, get) => ({
-  ...initialState,
-
-  sendOtp: async (payload: any) => {
+  sendOtp: async (payload) => {
     set({ isLoading: true });
     try {
-      const response = await sendOtpService(payload);
+      return await sendOtpService(payload);
+    } finally {
       set({ isLoading: false });
-      return response;
-    } catch (error: any) {
-      set({ isLoading: false });
-
-      return {
-        success: false,
-        error: error,
-      };
     }
   },
 
-  verifyOtp: async (payload: any) => {
+  verifyOtp: async (payload) => {
     set({ isLoading: true });
     try {
-      const response = await verifyOtpService(payload);
-      if (response.success) {
-        const accessToken = response.data?.accessToken ?? null;
-        const user = response.data?.user ?? null;
+      const res = await verifyOtpService(payload);
 
-        // persist token + user in secure storage
+      if (res.success) {
+        const { accessToken, user } = res.data;
+
         if (accessToken) {
           await SecureStore.setItemAsync("accessToken", accessToken);
         }
@@ -82,65 +73,46 @@ export const useAuth = create<AuthState>((set, get) => ({
         }
 
         set({
-          isLoading: false,
           user,
           accessToken,
           isAuthenticated: true,
         });
-        return response;
-      } else {
-        set({ isLoading: false });
-        return response;
       }
-    } catch (error: any) {
-      set({ isLoading: false });
 
-      return {
-        success: false,
-        error: error,
-      };
+      return res;
+    } finally {
+      set({ isLoading: false });
     }
   },
 
   restoreFromStorage: async () => {
-    set({ isLoading: true });
+    if (get().hasRestored) return; // idempotent
+
     try {
       const token = await SecureStore.getItemAsync("accessToken");
       const userJson = await SecureStore.getItemAsync("user");
-      const user = userJson ? JSON.parse(userJson) : null;
 
       if (token) {
         set({
           accessToken: token,
-          user,
+          user: userJson ? JSON.parse(userJson) : null,
           isAuthenticated: true,
         });
-      } else {
-        set({
-          accessToken: null,
-          user: null,
-          isAuthenticated: false,
-        });
       }
-    } catch (e) {
+    } catch {
       set({
         accessToken: null,
         user: null,
         isAuthenticated: false,
       });
     } finally {
-      set({ isLoading: false, hasRestored: true });
+      set({ hasRestored: true });
     }
   },
 
-  setUser: (partial: User) => {
-    const current = get().user;
-
-    const merged = current ? { ...current, ...partial } : partial;
-
+  setUser: (partial) => {
+    const merged = { ...get().user, ...partial };
     set({ user: merged });
-
-    // persist merged user
     SecureStore.setItemAsync("user", JSON.stringify(merged)).catch(() => {});
   },
 
@@ -150,8 +122,6 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       await SecureStore.deleteItemAsync("accessToken");
       await SecureStore.deleteItemAsync("user");
-    } catch (e) {
-      console.warn("Error clearing secure store on logout", e);
     } finally {
       set({
         user: null,
@@ -160,12 +130,13 @@ export const useAuth = create<AuthState>((set, get) => ({
         isLoading: false,
       });
 
-      // Reset reference data stores but PRESERVE workoutStore
-      // to keep offline queue intact across logout/login cycles
       useEquipment.getState().resetState();
       useMuscleGroup.getState().resetState();
       useExercise.getState().resetState();
-      // NOTE: workoutStore is NOT reset to preserve pending offline mutations
     }
   },
 }));
+
+registerUnauthorizedHandler(() => {
+  useAuth.getState().logout();
+});

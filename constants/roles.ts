@@ -4,3 +4,5 @@ export const ROLES = Object.freeze({
   trainer: "trainer",
   member: "member",
 });
+
+export type Role = (typeof ROLES)[keyof typeof ROLES];

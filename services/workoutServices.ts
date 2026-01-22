@@ -1,4 +1,4 @@
-import { WORKOUTS_ENDPONT as wokrouts_endpoint } from "@/constants/urls";
+import { WORKOUTS_ENDPOINT as wokrouts_endpoint } from "@/constants/urls";
 import { WorkoutPayload } from "@/lib/sync/types";
 import { handleApiResponse } from "@/utils/handleApiResponse";
 import client from "./api";

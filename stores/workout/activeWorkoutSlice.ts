@@ -67,6 +67,10 @@ export const createActiveWorkoutSlice: StateCreator<
   workoutSaving: false,
   workout: null,
 
+  /**
+   * This function is used to start a new workout
+   * used in start.tsx using useEffect to start a new workout when the component mounts
+   */
   startWorkout: () => {
     if (get().workout) return;
 
@@ -87,6 +91,14 @@ export const createActiveWorkoutSlice: StateCreator<
     });
   },
 
+  /**
+   * This function is used to discard the active workout
+   * Used in index.tsx(WorkoutScreen) when the user clicks on the discard button
+   * Used in [id].tsx(WorkoutDetails) when the user decides to edit previous workout
+   * but an workout is already active
+   * Used in save.tsx(SaveWorkout) to save the workout and reset the workout state
+   * Used in start.tsx to reset the workout state when leaving from editing a workout
+   */
   discardWorkout: () => {
     set({
       workout: null,
@@ -98,6 +110,12 @@ export const createActiveWorkoutSlice: StateCreator<
     });
   },
 
+  /**
+   * This function is used to update the active workout
+   * used in index.tsx(WorkoutScreen) when the user updates the workout
+   * used in [id].tsx(WorkoutDetails) when user is editing the workout
+   * used multiple times in save.tsx(SaveWorkout)
+   */
   updateWorkout: (patch) =>
     set((state) => {
       if (!state.workout) return state;
