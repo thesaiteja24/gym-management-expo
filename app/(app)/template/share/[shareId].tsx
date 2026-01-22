@@ -83,7 +83,7 @@ export default function TemplateDetails() {
   const [loading, setLoading] = React.useState(false);
 
   // Stores
-  const sharedTempalte = useTemplate((s) => s.sharedTemplate);
+  const sharedTemplate = useTemplate((s) => s.sharedTemplate);
   const localTemplates = useTemplate((s) => s.templates);
   const getTemplateByShareId = useTemplate((s) => s.getTemplateByShareId);
   const saveSharedTemplate = useTemplate((s) => s.saveSharedTemplate);
@@ -95,7 +95,7 @@ export default function TemplateDetails() {
 
   useEffect(() => {
     navigation.setOptions({
-      title: sharedTempalte?.title ?? "Template Details",
+      title: sharedTemplate?.title ?? "Template Details",
       headerLeft: () => (
         <TouchableOpacity
           onPress={() => {
@@ -114,24 +114,24 @@ export default function TemplateDetails() {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, sharedTempalte, isDark]);
+  }, [navigation, sharedTemplate, isDark]);
 
   const groupMap = useMemo(() => {
     const map = new Map<string, any>();
-    sharedTempalte?.exerciseGroups.forEach((g) => map.set(g.id, g));
+    sharedTemplate?.exerciseGroups.forEach((g) => map.set(g.id, g));
     return map;
-  }, [sharedTempalte?.exerciseGroups]);
+  }, [sharedTemplate?.exerciseGroups]);
 
   // Check if we already have this template
   const existingTemplate = useMemo(() => {
-    if (!sharedTempalte?.shareId) return null;
+    if (!sharedTemplate?.shareId) return null;
     return localTemplates.find(
-      (t) => t.sourceShareId === sharedTempalte.shareId,
+      (t) => t.sourceShareId === sharedTemplate.shareId,
     );
-  }, [localTemplates, sharedTempalte]);
+  }, [localTemplates, sharedTemplate]);
 
   const handleSave = async () => {
-    if (!sharedTempalte) return;
+    if (!sharedTemplate) return;
     setLoading(true);
 
     try {
@@ -149,7 +149,7 @@ export default function TemplateDetails() {
               text: "Overwrite",
               style: "destructive",
               onPress: async () => {
-                const res = await saveSharedTemplate(sharedTempalte, {
+                const res = await saveSharedTemplate(sharedTemplate, {
                   overwriteId: existingTemplate.id,
                 });
                 setLoading(false);
@@ -170,7 +170,7 @@ export default function TemplateDetails() {
             {
               text: "Save as New",
               onPress: async () => {
-                const res = await saveSharedTemplate(sharedTempalte); // No overwriteId = new
+                const res = await saveSharedTemplate(sharedTemplate); // No overwriteId = new
                 setLoading(false);
                 if (res.success) {
                   Alert.alert("Success", "Template saved as new copy!", [
@@ -188,7 +188,7 @@ export default function TemplateDetails() {
           ],
         );
       } else {
-        const res = await saveSharedTemplate(sharedTempalte);
+        const res = await saveSharedTemplate(sharedTemplate);
         setLoading(false);
         if (res.success) {
           Alert.alert("Success", "Template saved to your library!", [
@@ -210,15 +210,15 @@ export default function TemplateDetails() {
   };
 
   const handleShare = async () => {
-    if (!sharedTempalte?.shareId) return;
+    if (!sharedTemplate?.shareId) return;
 
-    const webLink = `https://pump.thesaiteja.dev/share/${sharedTempalte.shareId}`;
+    const webLink = `https://pump.thesaiteja.dev/share/${sharedTemplate.shareId}`;
 
     try {
       await Share.share({
         message: `Check out this workout template: ${webLink}`,
         url: webLink,
-        title: sharedTempalte.title,
+        title: sharedTemplate.title,
       });
     } catch (error) {
       console.error("Error sharing template:", error);
@@ -226,7 +226,7 @@ export default function TemplateDetails() {
     }
   };
 
-  if (!sharedTempalte) {
+  if (!sharedTemplate) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
         {loading || !shareId ? (
@@ -249,25 +249,25 @@ export default function TemplateDetails() {
         {/* Header Info */}
         <View className="border-b border-neutral-100 p-4 dark:border-neutral-900">
           <Text className="mb-2 text-3xl font-bold text-black dark:text-white">
-            {sharedTempalte.title}
+            {sharedTemplate.title}
           </Text>
           {/* Author Info */}
           <Text className="mb-2 text-sm font-medium text-blue-600 dark:text-blue-400">
-            {sharedTempalte.authorName
-              ? `Created by ${sharedTempalte.authorName}`
+            {sharedTemplate.authorName
+              ? `Created by ${sharedTemplate.authorName}`
               : "Shared Template"}
           </Text>
 
-          {sharedTempalte.notes && (
+          {sharedTemplate.notes && (
             <Text className="mb-4 text-base text-neutral-600 dark:text-neutral-400">
-              {sharedTempalte.notes}
+              {sharedTemplate.notes}
             </Text>
           )}
 
           <View className="flex-row gap-4">
             <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
               <Text className="text-base font-medium text-neutral-500">
-                {sharedTempalte.exerciseGroups.length} Exercises
+                {sharedTemplate.exerciseGroups.length} Exercises
               </Text>
             </View>
           </View>
@@ -275,7 +275,7 @@ export default function TemplateDetails() {
 
         {/* Read Only Exercise List */}
         <View className="gap-4 p-4">
-          {sharedTempalte.exercises.map((ex, idx) => (
+          {sharedTemplate.exercises.map((ex, idx) => (
             <ReadOnlyExerciseRow
               key={ex.id || idx}
               exercise={ex}

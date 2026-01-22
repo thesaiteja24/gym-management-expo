@@ -232,10 +232,7 @@ export default function StartWorkout() {
       Array.from(selectedGroupExerciseIds),
     );
 
-    // reset local UI state
-    setGroupingMode(null);
-    setSelectedGroupExerciseIds(new Set());
-    // reset local UI state
+    // Reset local UI state
     setGroupingMode(null);
     setSelectedGroupExerciseIds(new Set());
     exerciseGroupModalRef.current?.dismiss();

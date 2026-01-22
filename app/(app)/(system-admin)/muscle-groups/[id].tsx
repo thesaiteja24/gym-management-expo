@@ -2,7 +2,7 @@ import EditableAvatar from "@/components/EditableAvatar";
 import {
   DeleteConfirmModal,
   DeleteConfirmModalHandle,
-} from "@/components/ui/DeleteConfrimModal";
+} from "@/components/ui/DeleteConfirmModal";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import { useLocalSearchParams, useNavigation } from "expo-router";

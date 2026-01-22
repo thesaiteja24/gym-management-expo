@@ -683,6 +683,8 @@ export const useTemplate = create<TemplateState>()(
           },
         });
       },
+
+      resetState: () => set({ ...initialState }),
     }),
     {
       name: "template-store",

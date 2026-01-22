@@ -69,7 +69,7 @@ export const useMuscleGroup = create<MuscleGroupState>()(
           set({ muscleGroupLoading: false });
 
           return {
-            succss: false,
+            success: false,
             error: error,
           };
         }
@@ -86,7 +86,7 @@ export const useMuscleGroup = create<MuscleGroupState>()(
           set({ muscleGroupLoading: false });
 
           return {
-            succss: false,
+            success: false,
             error: error,
           };
         }
@@ -102,7 +102,7 @@ export const useMuscleGroup = create<MuscleGroupState>()(
           set({ muscleGroupLoading: false });
 
           return {
-            succss: false,
+            success: false,
             error: error,
           };
         }

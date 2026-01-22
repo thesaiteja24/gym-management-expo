@@ -1,12 +1,4 @@
 import {
-  dequeue,
-  getFailedQueueForUser,
-  getQueueForUser,
-  incrementRetry,
-  moveToFailedQueue,
-  QueuedMutation,
-} from "@/lib/offlineQueue";
-import {
   dequeueTemplate,
   dequeueWorkout,
   getTemplateQueueCounts,
@@ -83,17 +75,14 @@ export function useSyncQueue() {
   const updateCounts = useCallback(() => {
     if (!user?.userId) return;
 
-    const legacyQueue = getQueueForUser(user.userId);
-    const legacyFailed = getFailedQueueForUser(user.userId);
-
     const workoutCounts = getWorkoutQueueCounts(user.userId);
     const templateCounts = getTemplateQueueCounts(user.userId);
 
     useSyncStore
       .getState()
       .setQueueCounts(
-        legacyQueue.length + workoutCounts.pending + templateCounts.pending,
-        legacyFailed.length + workoutCounts.failed + templateCounts.failed,
+        workoutCounts.pending + templateCounts.pending,
+        workoutCounts.failed + templateCounts.failed,
       );
   }, [user?.userId]);
 
@@ -212,21 +201,6 @@ export function useSyncQueue() {
   );
 
   /* ─────────────────────────────────────────────
-     Legacy mutation processor
-  ───────────────────────────────────────────── */
-  const processLegacyMutation = useCallback(
-    async (mutation: QueuedMutation): Promise<boolean> => {
-      try {
-        log.warn("[SYNC] Legacy mutation encountered, removing", mutation.type);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    [],
-  );
-
-  /* ─────────────────────────────────────────────
      Main sync routine
   ───────────────────────────────────────────── */
   const syncQueue = useCallback(async () => {
@@ -270,21 +244,6 @@ export function useSyncQueue() {
           await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
         }
       }
-
-      // Legacy
-      for (const m of getQueueForUser(user.userId)) {
-        if (m.retryCount >= MAX_RETRIES) {
-          moveToFailedQueue(m.id);
-          continue;
-        }
-
-        const ok = await processLegacyMutation(m);
-        if (ok) {
-          dequeue(m.id);
-        } else {
-          incrementRetry(m.id);
-        }
-      }
     } finally {
       isSyncing.current = false;
       useSyncStore.getState().setSyncStatus(false);
@@ -295,7 +254,6 @@ export function useSyncQueue() {
     user?.userId,
     processWorkoutMutation,
     processTemplateMutation,
-    processLegacyMutation,
     updateCounts,
   ]);
 

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import {
   DeleteConfirmModal,
   DeleteConfirmModalHandle,
-} from "@/components/ui/DeleteConfrimModal";
+} from "@/components/ui/DeleteConfirmModal";
 import ExerciseGroupModal, {
   ExerciseGroupModalHandle,
 } from "@/components/workout/ExerciseGroupModal";

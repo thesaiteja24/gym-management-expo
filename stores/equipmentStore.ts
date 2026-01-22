@@ -69,7 +69,7 @@ export const useEquipment = create<EquipmentState>()(
           set({ equipmentLoading: false });
 
           return {
-            succss: false,
+            success: false,
             error: error,
           };
         }

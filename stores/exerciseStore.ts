@@ -97,7 +97,7 @@ export const useExercise = create<ExerciseState>()(
           set({ exerciseLoading: false });
 
           return {
-            succss: false,
+            success: false,
             error: error,
           };
         }

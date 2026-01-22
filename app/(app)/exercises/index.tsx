@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import {
   DeleteConfirmModal,
   DeleteConfirmModalHandle,
-} from "@/components/ui/DeleteConfrimModal";
+} from "@/components/ui/DeleteConfirmModal";
 
 import { ROLES as roles } from "@/constants/roles";
 import { useAuth } from "@/stores/authStore";

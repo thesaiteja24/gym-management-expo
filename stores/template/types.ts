@@ -122,4 +122,7 @@ export interface TemplateState {
     type: ExerciseGroupType,
   ) => void;
   removeDraftExerciseGroup: (groupId: string) => void;
+
+  // State Management
+  resetState: () => void;
 }

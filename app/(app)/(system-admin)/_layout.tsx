@@ -105,46 +105,6 @@ export default function SystemAdminLayout() {
           } as any
         }
       />
-
-      {/* Exercises */}
-      <Stack.Screen
-        name="exercise/create"
-        options={
-          {
-            title: "Create Exercise",
-            leftIcon: "chevron-back-outline",
-            onLeftPress: () => {
-              router.back();
-            },
-            rightIcons: [
-              {
-                name: "checkmark-done",
-                disabled: true,
-                color: "green",
-              },
-            ],
-          } as any
-        }
-      />
-      <Stack.Screen
-        name="exercise/[id]"
-        options={
-          {
-            title: "Edit Exercise",
-            leftIcon: "chevron-back-outline",
-            onLeftPress: () => {
-              router.back();
-            },
-            rightIcons: [
-              {
-                name: "checkmark-done",
-                disabled: true,
-                color: "green",
-              },
-            ],
-          } as any
-        }
-      />
     </Stack>
   );
 }

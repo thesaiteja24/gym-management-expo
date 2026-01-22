@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/Button";
 import {
   DeleteConfirmModal,
   DeleteConfirmModalHandle,
-} from "@/components/ui/DeleteConfrimModal";
+} from "@/components/ui/DeleteConfirmModal";
 import { useAuth } from "@/stores/authStore";
 import { useExercise } from "@/stores/exerciseStore";
 import { TemplateExercise, TemplateSet } from "@/stores/template/types";

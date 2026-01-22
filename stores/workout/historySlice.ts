@@ -1,5 +1,5 @@
 import { enqueueWorkoutDelete } from "@/lib/sync/queue";
-import { getAllWokroutsService } from "@/services/workoutServices";
+import { getAllWorkoutsService } from "@/services/workoutServices";
 import { StateCreator } from "zustand";
 import { useAuth } from "../authStore";
 import { SyncStatus, WorkoutHistoryItem, WorkoutState } from "./types";
@@ -25,7 +25,7 @@ export const createHistorySlice: StateCreator<
   getAllWorkouts: async () => {
     set({ workoutLoading: true });
     try {
-      const res = await getAllWokroutsService();
+      const res = await getAllWorkoutsService();
 
       if (res.success && res.data) {
         set((state) => {
