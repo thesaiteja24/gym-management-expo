@@ -1,11 +1,8 @@
 import { enqueueWorkoutCreate, enqueueWorkoutUpdate } from "@/lib/sync/queue";
 import { SyncStatus } from "@/lib/sync/types";
 import { WorkoutTemplate } from "@/stores/template/types";
-import {
-  finalizeSetTimer,
-  isValidCompletedSet,
-  serializeWorkoutForApi,
-} from "@/utils/workout";
+import { serializeWorkoutForApi } from "@/utils/serializeForApi";
+import { finalizeSetTimer, isValidCompletedSet } from "@/utils/workout";
 import * as Crypto from "expo-crypto";
 import { StateCreator } from "zustand";
 import { useAuth } from "../authStore";

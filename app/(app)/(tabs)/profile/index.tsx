@@ -1,8 +1,7 @@
 // app/(app)/(tabs)/profile.tsx
 import EditableAvatar from "@/components/EditableAvatar";
 import { useAuth } from "@/stores/authStore";
-import { useUser } from "@/stores/userStore";
-import React, { memo, useEffect } from "react";
+import React, { memo } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -28,14 +27,6 @@ const InfoRow = memo(function InfoRow({
 export default function ProfileScreen() {
   const user = useAuth((state) => state.user);
   const dob = new Date(user?.dateOfBirth ?? "");
-
-  const getUserData = useUser((s: any) => s.getUserData);
-
-  useEffect(() => {
-    if (user?.userId) {
-      getUserData(user.userId); // background refresh
-    }
-  }, [user?.userId]);
 
   return (
     <View

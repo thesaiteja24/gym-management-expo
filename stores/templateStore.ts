@@ -9,7 +9,7 @@ import {
   getAllTemplatesService,
   getTemplateByShareIdService,
 } from "@/services/templateService";
-import { serializeTemplateForApi } from "@/utils/template";
+import { serializeTemplateForApi } from "@/utils/serializeForApi";
 import * as Crypto from "expo-crypto";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";

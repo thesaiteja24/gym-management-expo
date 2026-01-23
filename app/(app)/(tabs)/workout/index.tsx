@@ -5,7 +5,7 @@ import { useTemplate } from "@/stores/templateStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -17,13 +17,7 @@ export default function WorkoutScreen() {
   const discardWorkout = useWorkout((s) => s.discardWorkout);
 
   // Template Store
-  const getAllTemplates = useTemplate((s) => s.getAllTemplates);
   const templates = useTemplate((s) => s.templates);
-
-  useEffect(() => {
-    // Fetches template once on mount
-    getAllTemplates();
-  }, []);
 
   // Debugging
   // const renderCount = React.useRef(0);

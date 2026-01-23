@@ -33,17 +33,6 @@ export default function HomeScreen() {
 
   // console.log("WorkoutScreen render:", renderCount.current);
 
-  /* Side Effects */
-  // Load workouts on mount
-  useEffect(() => {
-    if (!exerciseList.length) {
-      getAllExercises();
-    }
-    if (!workoutHistory.length) {
-      getAllWorkouts();
-    }
-  }, [exerciseList.length, workoutHistory.length]);
-
   // Inject reload button
   useEffect(() => {
     navigation.setOptions({

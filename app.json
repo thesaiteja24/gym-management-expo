@@ -11,9 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.thesaiteja.pump",
-      "associatedDomains": [
-        "applinks:pump.thesaiteja.dev"
-      ]
+      "associatedDomains": ["applinks:pump.thesaiteja.dev"]
     },
     "android": {
       "package": "com.thesaiteja.pump",
@@ -21,29 +19,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      },
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "pump.thesaiteja.dev",
-              "pathPrefix": "/share"
-            },
-            {
-              "scheme": "pump",
-              "host": "share",
-              "pathPrefix": "/"
-            }
-          ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
-        }
-      ]
+      }
     },
     "web": {
       "output": "static",
@@ -84,7 +60,7 @@
     "updates": {
       "checkAutomatically": "NEVER",
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/1784e011-6bee-41d3-9554-b1fd3d751ed7"
+      "url": "https://u.expo.dev/46384027-b755-4a49-9a73-31783f8b85fe"
     }
   }
 }

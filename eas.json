@@ -11,10 +11,17 @@
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "developmentClient": false,
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_USE_PRODUCTION_OPTIMIZATIONS": "true"
+      }
     },
     "production": {
-      "autoIncrement": false,
+      "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
       },

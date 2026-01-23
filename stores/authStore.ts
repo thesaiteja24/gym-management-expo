@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
 import { LengthUnits, WeightUnits } from "./userStore";
 
-type User = {
+export interface User {
   userId?: string;
   countryCode?: string;
   phone?: string;
@@ -21,7 +21,7 @@ type User = {
   role?: string;
   createdAt?: string;
   updatedAt?: string;
-};
+}
 
 type AuthState = {
   user: User | null;
