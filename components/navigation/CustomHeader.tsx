@@ -44,7 +44,6 @@ export default function CustomHeader({
         paddingTop: insets.top,
         backgroundColor: colors.background,
         borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200], // or a specific border token if available, defaulting to neutral-200 equivalent
       }}
     >
       {/* Left icon */}
@@ -61,7 +60,7 @@ export default function CustomHeader({
           style={{ marginTop: insets.top }}
         >
           <Text
-            className="text-xl font-semibold"
+            className="text-2xl font-semibold"
             style={{ color: colors.text }}
             numberOfLines={1}
           >
@@ -70,7 +69,7 @@ export default function CustomHeader({
         </View>
       ) : (
         <Text
-          className="text-xl font-semibold"
+          className="text-2xl font-semibold"
           style={{ color: colors.text }}
           numberOfLines={1}
         >

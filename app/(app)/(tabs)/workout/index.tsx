@@ -59,7 +59,7 @@ export default function WorkoutScreen() {
         {/* Templates Section */}
         <View className="flex flex-col gap-4">
           <View className="flex flex-row items-center justify-between">
-            <Text className="text-xl font-bold text-black dark:text-white">
+            <Text className="text-xl font-semibold text-black dark:text-white">
               My Templates
             </Text>
 

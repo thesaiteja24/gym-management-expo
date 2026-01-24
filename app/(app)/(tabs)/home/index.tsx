@@ -3,7 +3,13 @@ import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { router, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { FlatList, RefreshControl, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -54,7 +60,7 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-white px-4 pt-4 dark:bg-black">
-      <Text className="mb-4 text-lg font-semibold text-black dark:text-white">
+      <Text className="mb-4 text-xl font-semibold text-black dark:text-white">
         Your Workouts
       </Text>
 
@@ -69,11 +75,13 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
-          !workoutLoading ? (
+          workoutLoading && !refreshing ? (
+            <ActivityIndicator />
+          ) : (
             <Text className="mt-12 text-center text-base text-neutral-500 dark:text-neutral-400">
               No workouts logged yet
             </Text>
-          ) : null
+          )
         }
       />
     </View>

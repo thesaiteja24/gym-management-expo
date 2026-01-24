@@ -3,6 +3,7 @@ import { useExercise } from "@/stores/exerciseStore";
 import { TemplateExercise, TemplateSet } from "@/stores/template/types";
 import { useTemplate } from "@/stores/templateStore";
 import { SetType } from "@/stores/workoutStore";
+import { usePreventRemove } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useMemo } from "react";
@@ -87,6 +88,10 @@ export default function TemplateDetails() {
   const saveSharedTemplate = useTemplate((s) => s.saveSharedTemplate);
   const setSharedTemplate = useTemplate((s) => s.setSharedTemplate);
 
+  usePreventRemove(true, (e) => {
+    router.replace("/(app)/(tabs)/workout");
+  });
+
   useEffect(() => {
     getTemplateByShareId(shareId);
   }, [shareId]);
@@ -98,11 +103,7 @@ export default function TemplateDetails() {
         <TouchableOpacity
           onPress={() => {
             setSharedTemplate(null);
-            if (router.canGoBack()) {
-              router.back();
-            } else {
-              router.replace("/(app)/(tabs)/workout");
-            }
+            router.replace("/(app)/(tabs)/workout");
           }}
           style={{ marginRight: 15 }}
         >
