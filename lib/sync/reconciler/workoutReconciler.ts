@@ -31,6 +31,28 @@ export function reconcileWorkoutId(clientId: string, dbId: string): void {
 }
 
 /**
+ * Reconcile a workout with full backend data after successful UPDATE/CREATE.
+ * Replaces the local history item with the backend version, preserving clientId.
+ */
+export function reconcileWorkout(clientId: string, backendWorkout: any): void {
+  const state = useWorkout.getState();
+  const history = state.workoutHistory;
+
+  const updatedHistory = history.map((item) => {
+    if (item.clientId === clientId) {
+      return {
+        ...backendWorkout,
+        clientId: clientId, // Ensure clientId is preserved
+        syncStatus: "synced" as SyncStatus,
+      };
+    }
+    return item;
+  });
+
+  useWorkout.setState({ workoutHistory: updatedHistory });
+}
+
+/**
  * Update sync status for a workout by clientId
  */
 export function updateWorkoutSyncStatus(

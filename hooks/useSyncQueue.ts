@@ -18,7 +18,9 @@ import {
   markTemplateSynced,
   markWorkoutFailed,
   markWorkoutSynced,
+  reconcileTemplate,
   reconcileTemplateId,
+  reconcileWorkout,
   reconcileWorkoutId,
 } from "@/lib/sync/reconciler";
 import {
@@ -99,17 +101,28 @@ export function useSyncQueue() {
         switch (mutation.type) {
           case "CREATE": {
             const res = await createWorkoutService(mutation.payload);
-            if (res.success && res.data?.workout?.id) {
+            if (res.success && res.data?.workout) {
+              reconcileWorkout(mutation.clientId, res.data.workout);
+            } else if (res.success && res.data?.workout?.id) {
               reconcileWorkoutId(mutation.clientId, res.data.workout.id);
+              markWorkoutSynced(mutation.clientId);
             }
-            markWorkoutSynced(mutation.clientId);
             return true;
           }
 
           case "UPDATE": {
             if (!mutation.payload.id) return false;
-            await updateWorkoutService(mutation.payload.id, mutation.payload);
-            markWorkoutSynced(mutation.clientId);
+            const res = await updateWorkoutService(
+              mutation.payload.id,
+              mutation.payload,
+            );
+            if (res.success && res.data) {
+              // res.data is the full workout object now
+              reconcileWorkout(mutation.clientId, res.data);
+            } else {
+              // Fallback
+              markWorkoutSynced(mutation.clientId);
+            }
             return true;
           }
 
@@ -154,17 +167,26 @@ export function useSyncQueue() {
         switch (mutation.type) {
           case "CREATE": {
             const res = await createTemplateService(mutation.payload);
-            if (res.success && res.data?.template?.id) {
+            if (res.success && res.data?.template) {
+              reconcileTemplate(mutation.clientId, res.data.template);
+            } else if (res.success && res.data?.template?.id) {
               reconcileTemplateId(mutation.clientId, res.data.template.id);
+              markTemplateSynced(mutation.clientId);
             }
-            markTemplateSynced(mutation.clientId);
             return true;
           }
 
           case "UPDATE": {
             if (!mutation.payload.id) return false;
-            await updateTemplateService(mutation.payload.id, mutation.payload);
-            markTemplateSynced(mutation.clientId);
+            const res = await updateTemplateService(
+              mutation.payload.id,
+              mutation.payload,
+            );
+            if (res.success && res.data) {
+              reconcileTemplate(mutation.clientId, res.data);
+            } else {
+              markTemplateSynced(mutation.clientId);
+            }
             return true;
           }
 

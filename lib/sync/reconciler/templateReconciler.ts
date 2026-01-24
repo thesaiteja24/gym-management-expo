@@ -31,6 +31,31 @@ export function reconcileTemplateId(clientId: string, dbId: string): void {
 }
 
 /**
+ * Reconcile a template with full backend data after successful UPDATE/CREATE.
+ * Replaces the local item with the backend version, preserving clientId.
+ */
+export function reconcileTemplate(
+  clientId: string,
+  backendTemplate: any,
+): void {
+  const state = useTemplate.getState();
+  const templates = state.templates;
+
+  const updatedTemplates = templates.map((item) => {
+    if ((item as any).clientId === clientId) {
+      return {
+        ...backendTemplate,
+        clientId: clientId, // Ensure clientId is preserved
+        syncStatus: "synced" as SyncStatus,
+      };
+    }
+    return item;
+  });
+
+  useTemplate.setState({ templates: updatedTemplates as any });
+}
+
+/**
  * Update sync status for a template by clientId
  */
 export function updateTemplateSyncStatus(
