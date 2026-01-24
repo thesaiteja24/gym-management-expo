@@ -10,83 +10,21 @@ import {
 } from "@/stores/template/types";
 import { useTemplate } from "@/stores/templateStore";
 import {
-  SetType,
   useWorkout,
   WorkoutHistoryExercise,
   WorkoutHistorySet,
   WorkoutLogGroup,
-  WorkoutLogSet,
 } from "@/stores/workoutStore";
-import {
-  formatDurationFromDates,
-  formatSeconds,
-  formatTimeAgo,
-} from "@/utils/time";
+import { formatDurationFromDates, formatTimeAgo } from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
 import * as Crypto from "expo-crypto";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useRef } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-/* ───────────────── Group Color Logic (shared with ExerciseRow) ───────────────── */
-
-const GROUP_COLORS = [
-  "#4C1D95", // deep purple
-  "#7C2D12", // dark orange / brown
-  "#14532D", // dark green
-  "#7F1D1D", // dark red
-  "#1E3A8A", // deep blue
-  "#581C87", // violet
-  "#0F766E", // teal
-  "#1F2937", // slate
-];
-
-function hashStringToIndex(str: string, modulo: number) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash) % modulo;
-}
-
-function getGroupColor(groupId: string) {
-  const index = hashStringToIndex(groupId, GROUP_COLORS.length);
-  return GROUP_COLORS[index];
-}
-
-/* ───────────────── Set Type Color Logic ───────────────── */
-function getSetTypeColor(
-  set: WorkoutLogSet,
-  type: SetType,
-  completed: boolean,
-): { style: string; value: string | number } {
-  switch (type) {
-    case "warmup":
-      if (completed) {
-        return { style: "text-white", value: "W" };
-      }
-      return { style: "text-yellow-500", value: "W" };
-    case "dropSet":
-      if (completed) {
-        return { style: "text-white", value: "D" };
-      }
-      return { style: "text-purple-500", value: "D" };
-    case "failureSet":
-      if (completed) {
-        return { style: "text-white", value: "F" };
-      }
-      return { style: "text-red-500", value: "F" };
-    default:
-      if (completed) {
-        return { style: "text-white", value: set.setIndex + 1 };
-      }
-      return { style: "text-black dark:text-white", value: set.setIndex + 1 };
-  }
-}
+import { ReadOnlyExerciseRow } from "@/components/workout/ReadOnlyExerciseRow";
 
 /* ───────────────── Component ───────────────── */
 
@@ -278,70 +216,11 @@ export default function WorkoutDetails() {
             : null;
 
           return (
-            <View
+            <ReadOnlyExerciseRow
               key={ex.id}
-              className="mb-6 rounded-2xl border border-neutral-200 p-4 dark:border-neutral-800"
-            >
-              {/* Exercise header */}
-              <View className="mb-3 flex-row items-center gap-3">
-                <Image
-                  source={ex.exercise.thumbnailUrl}
-                  style={{ width: 44, height: 44, borderRadius: 999 }}
-                />
-
-                <Text className="text-lg font-semibold text-black dark:text-white">
-                  {ex.exercise.title}
-                </Text>
-              </View>
-
-              {/* Group badge  */}
-              {groupDetails && (
-                <View
-                  className="mb-3 self-start rounded-full"
-                  style={{ backgroundColor: getGroupColor(groupDetails.id) }}
-                >
-                  <Text className="font-regular px-3 py-1 text-sm text-white">
-                    {`${groupDetails.groupType.toUpperCase()} ${String.fromCharCode(
-                      "A".charCodeAt(0) + groupDetails.groupIndex,
-                    )}`}
-                  </Text>
-                </View>
-              )}
-
-              {/* Sets */}
-              {ex.sets.map((set: any, setIndex: number) => (
-                <View key={set.id}>
-                  <View className="flex-row items-center py-2">
-                    <Text
-                      className={`flex-1 text-base font-bold ${getSetTypeColor(set, set.setType, set.completed).style}`}
-                    >
-                      {getSetTypeColor(set, set.setType, set.completed).value}
-                    </Text>
-
-                    <Text className="flex-1 text-base font-semibold text-black dark:text-white">
-                      {set.weight && set.reps
-                        ? `${set.weight} × ${set.reps}`
-                        : set.durationSeconds
-                          ? `${set.durationSeconds}s`
-                          : `${set.reps} reps`}
-                    </Text>
-
-                    <Text className="flex-1 text-base font-semibold text-black dark:text-white">
-                      RPE {set.rpe || "-"}
-                    </Text>
-
-                    <Text className="flex-1 text-sm text-neutral-500">
-                      Rest {formatSeconds(set.restSeconds)}
-                    </Text>
-                  </View>
-                  {set.note && (
-                    <Text className="mb-4 text-sm text-black dark:text-white">
-                      <Text className="font-semibold">Note:</Text> {set.note}
-                    </Text>
-                  )}
-                </View>
-              ))}
-            </View>
+              exercise={ex}
+              group={groupDetails}
+            />
           );
         })}
 

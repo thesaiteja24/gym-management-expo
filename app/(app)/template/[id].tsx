@@ -3,11 +3,7 @@ import {
   DeleteConfirmModal,
   DeleteConfirmModalHandle,
 } from "@/components/ui/DeleteConfirmModal";
-import { useExercise } from "@/stores/exerciseStore";
-import { TemplateExercise, TemplateSet } from "@/stores/template/types";
 import { useTemplate } from "@/stores/templateStore";
-import { SetType } from "@/stores/workoutStore";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useMemo, useRef } from "react";
 import {
@@ -21,61 +17,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-/* ───────────────── Group Color Logic ───────────────── */
-
-const GROUP_COLORS = [
-  "#4C1D95",
-  "#7C2D12",
-  "#14532D",
-  "#7F1D1D",
-  "#1E3A8A",
-  "#581C87",
-  "#0F766E",
-  "#1F2937",
-];
-
-function hashStringToIndex(str: string, modulo: number) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash) % modulo;
-}
-
-function getGroupColor(groupId: string) {
-  return GROUP_COLORS[hashStringToIndex(groupId, GROUP_COLORS.length)];
-}
-
-/* ───────────────── Set Type Color Logic ───────────────── */
-function getSetTypeColor(
-  set: TemplateSet,
-  type: SetType,
-  completed: boolean,
-): { style: string; value: string | number } {
-  switch (type) {
-    case "warmup":
-      if (completed) {
-        return { style: "text-white", value: "W" };
-      }
-      return { style: "text-yellow-500", value: "W" };
-    case "dropSet":
-      if (completed) {
-        return { style: "text-white", value: "D" };
-      }
-      return { style: "text-purple-500", value: "D" };
-    case "failureSet":
-      if (completed) {
-        return { style: "text-white", value: "F" };
-      }
-      return { style: "text-red-500", value: "F" };
-    default:
-      if (completed) {
-        return { style: "text-white", value: set.setIndex + 1 };
-      }
-      return { style: "text-black dark:text-white", value: set.setIndex + 1 };
-  }
-}
+import { ReadOnlyExerciseRow } from "@/components/workout/ReadOnlyExerciseRow";
 
 export default function TemplateDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -219,102 +161,6 @@ export default function TemplateDetails() {
         confirmText="Delete"
         onCancel={() => {}}
       />
-    </View>
-  );
-}
-
-function ReadOnlyExerciseRow({
-  exercise,
-  group,
-}: {
-  exercise: TemplateExercise;
-  group: any | null;
-}) {
-  const { exerciseList } = useExercise();
-
-  const details = useMemo(
-    () => exerciseList.find((e) => e.id === exercise.exerciseId),
-    [exerciseList, exercise.exerciseId],
-  );
-
-  if (!details) return null;
-
-  return (
-    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      <View className="mb-3 flex-row items-center gap-3">
-        <Image
-          source={details.thumbnailUrl}
-          style={{ width: 40, height: 40, borderRadius: 6 }}
-        />
-        <View>
-          <Text className="text-base font-semibold text-black dark:text-white">
-            {details.title}
-          </Text>
-          <Text className="text-base capitalize text-neutral-500">
-            {details.exerciseType}
-          </Text>
-        </View>
-      </View>
-
-      {group && (
-        <View
-          className="mb-3 self-start rounded-full"
-          style={{ backgroundColor: getGroupColor(group.id) }}
-        >
-          <Text className="px-3 py-1 text-sm font-medium text-white">
-            {`${group.groupType.toUpperCase()} ${String.fromCharCode(
-              "A".charCodeAt(0) + group.groupIndex,
-            )}`}
-          </Text>
-        </View>
-      )}
-
-      <View className="gap-2">
-        {exercise.sets.map((set, idx) => (
-          <View
-            key={set.id || idx}
-            className="flex-row items-center rounded bg-neutral-50 p-2 dark:bg-neutral-800/50"
-          >
-            {/* Set index */}
-            <Text
-              className={`w-6 text-center text-base font-semibold ${getSetTypeColor(set, set.setType, false).style}`}
-            >
-              {getSetTypeColor(set, set.setType, true).value}
-            </Text>
-
-            {/* Main values */}
-            <View className="flex-1 flex-row items-center gap-3">
-              {set.weight != null && (
-                <Text className="text-base font-medium text-neutral-700 dark:text-neutral-300">
-                  {set.weight} kg
-                </Text>
-              )}
-
-              {set.reps != null && (
-                <Text className="text-base font-medium text-neutral-700 dark:text-neutral-300">
-                  × {set.reps}
-                </Text>
-              )}
-
-              {set.durationSeconds != null && (
-                <Text className="text-base font-medium text-neutral-700 dark:text-neutral-300">
-                  {set.durationSeconds}s
-                </Text>
-              )}
-            </View>
-
-            {/* RPE */}
-            <Text className="w-14 text-center text-base text-neutral-400">
-              {set.rpe != null ? `RPE ${set.rpe}` : "—"}
-            </Text>
-
-            {/* Rest */}
-            <Text className="w-14 text-right text-base text-neutral-400">
-              {set.restSeconds != null ? `${set.restSeconds}s` : "—"}
-            </Text>
-          </View>
-        ))}
-      </View>
     </View>
   );
 }

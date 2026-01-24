@@ -2,6 +2,7 @@ import { ExerciseType } from "@/stores/exerciseStore";
 import { WorkoutHistoryItem } from "@/stores/workoutStore";
 import { formatDurationFromDates, formatTimeAgo } from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -25,7 +26,10 @@ export default function WorkoutCard({
   return (
     <TouchableOpacity
       activeOpacity={0.9}
-      onPress={() => router.push(`/(app)/workout/${workout.id}`)}
+      onPress={() => {
+        router.push(`/(app)/workout/${workout.id}`);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }}
       className="mb-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
     >
       {/* Header */}

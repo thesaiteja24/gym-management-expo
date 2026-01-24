@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import { WorkoutTemplate } from "@/stores/template/types";
 import { useTemplate } from "@/stores/templateStore";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
@@ -21,7 +22,11 @@ export default function TemplateCard({
   };
 
   return (
-    <Link href={`/(app)/template/${template.id}`} asChild>
+    <Link
+      href={`/(app)/template/${template.id}`}
+      onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+      asChild
+    >
       <Pressable className="mr-4 w-72 rounded-2xl border border-neutral-200 bg-white p-4 active:opacity-80 dark:border-neutral-800 dark:bg-neutral-900">
         {/* Header */}
         <View className="mb-3 flex-col justify-between gap-1">
