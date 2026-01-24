@@ -10,7 +10,7 @@ module.exports = {
       },
       colors: {
         primary: "#3b82f6", // blue-500
-        success: "#22c55e", // green-500
+        success: "#16a34a", // green-600
         danger: "#dc2626", // red-600
         // surface colors could be added here if we want to override defaults
       },

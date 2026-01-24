@@ -12,6 +12,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from "react-native";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -40,6 +41,25 @@ const DELETE_REVEAL_WIDTH = SCREEN_WIDTH * 0.25;
 const COL_SET = "w-[40%] flex-row items-center justify-evenly";
 const COL_STD = "w-[20%] flex-row items-center justify-evenly";
 const COL_RPE = "w-[20%] flex-row items-center justify-evenly";
+
+const INPUT_STYLE_BASE = {
+  borderRadius: 6,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  textAlign: "center" as const,
+};
+
+const INPUT_STYLE_ACTIVE = {
+  backgroundColor: "#f5f5f5", // neutral-100
+};
+
+const INPUT_STYLE_ACTIVE_DARK = {
+  backgroundColor: "#262626", // neutral-800
+};
+
+const INPUT_STYLE_COMPLETED = {
+  backgroundColor: "rgba(255,255,255,0.2)",
+};
 
 /* ───────────────── Props ───────────────── */
 
@@ -109,6 +129,7 @@ function SetRow({
   notesExpanded = false,
 }: Props) {
   const colors = useThemeColor();
+  const isDark = useColorScheme() === "dark";
   // @ts-ignore
   const isCompleted = !isTemplate && set.completed;
   const lineHeight = Platform.OS === "ios" ? undefined : 18;
@@ -231,7 +252,7 @@ function SetRow({
         if (completed) {
           return { style: "text-white", value: "F" };
         }
-        return { style: "text-danger", value: "F" };
+        return { style: "text-red-600", value: "F" };
       default:
         if (completed) {
           return { style: "text-white", value: set.setIndex + 1 };
@@ -253,7 +274,7 @@ function SetRow({
   const renderLeftActions = () => {
     if (isTemplate) return null; // Disable left swipe (green) for templates
     return (
-      <View className="flex-1 items-start justify-center rounded-md bg-success px-6">
+      <View className="flex-1 items-start justify-center rounded-md bg-green-700 px-6">
         <Ionicons name="checkmark-circle" size={28} color="white" />
       </View>
     );
@@ -262,7 +283,7 @@ function SetRow({
   const renderRightActions = () => (
     <TouchableOpacity
       onPress={handleDelete}
-      className="items-end justify-center rounded-md bg-danger px-6"
+      className="items-end justify-center rounded-md bg-red-600 px-6"
     >
       <Ionicons name="trash" size={22} color="white" />
     </TouchableOpacity>
@@ -314,7 +335,7 @@ function SetRow({
               {/* Left background */}
               <Animated.View
                 entering={FadeIn.duration(1000)}
-                className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-success px-4"
+                className="absolute inset-y-0 left-0 w-20 items-start justify-center bg-green-700 px-4"
               >
                 <Ionicons name="checkmark-circle" size={22} color="white" />
               </Animated.View>
@@ -324,7 +345,7 @@ function SetRow({
           {/* Right background - Always present */}
           <Animated.View
             entering={FadeIn.duration(1000)}
-            className="absolute inset-y-0 right-0 w-20 items-end justify-center bg-danger px-4"
+            className="absolute inset-y-0 right-0 w-20 items-end justify-center bg-red-600 px-4"
           >
             <Ionicons name="trash" size={22} color="white" />
           </Animated.View>
@@ -333,10 +354,10 @@ function SetRow({
           <Animated.View
             entering={FadeIn}
             exiting={FadeOut.duration(400)}
-            style={[hintStyle, { height: 48 }]}
+            style={[hintStyle, { height: 42 }]}
             className={`flex-row items-center rounded-md ${
               isCompleted
-                ? "bg-success dark:bg-success"
+                ? "bg-green-600 dark:bg-green-600"
                 : "bg-white dark:bg-black"
             }`}
           >
@@ -350,7 +371,7 @@ function SetRow({
                 className="mr-3"
               >
                 <Text
-                  className={`text-base font-semibold ${
+                  className={`green text-base font-medium ${
                     getSetTypeColor(set, set.setType, isCompleted).style
                   }`}
                 >
@@ -360,7 +381,7 @@ function SetRow({
 
               {!isTemplate && (
                 <Text
-                  className={`text-base font-semibold ${
+                  className={`text-base font-medium ${
                     isCompleted
                       ? "text-white"
                       : "text-neutral-500 dark:text-neutral-400"
@@ -390,11 +411,21 @@ function SetRow({
                       });
                     }
                   }}
+                  selectTextOnFocus
                   onChangeText={setWeightText}
                   placeholder="0"
                   placeholderTextColor={isCompleted ? "#ffffff" : "#737373"}
-                  style={{ lineHeight }}
-                  className={`text-center text-base font-semibold ${
+                  style={[
+                    { width: "90%" },
+                    { lineHeight },
+                    INPUT_STYLE_BASE,
+                    isCompleted
+                      ? INPUT_STYLE_COMPLETED
+                      : isDark
+                        ? INPUT_STYLE_ACTIVE_DARK
+                        : INPUT_STYLE_ACTIVE,
+                  ]}
+                  className={`text-center text-base font-medium ${
                     isCompleted ? "text-white" : "text-primary"
                   }`}
                 />
@@ -417,11 +448,21 @@ function SetRow({
                       onUpdate(exerciseId, set.id, { reps: num });
                     }
                   }}
+                  selectTextOnFocus
                   onChangeText={setRepsText}
                   placeholder="0"
                   placeholderTextColor={isCompleted ? "#ffffff" : "#737373"}
-                  style={{ lineHeight }}
-                  className={`text-center text-base font-semibold ${
+                  style={[
+                    { width: "90%" },
+                    { lineHeight },
+                    INPUT_STYLE_BASE,
+                    isCompleted
+                      ? INPUT_STYLE_COMPLETED
+                      : isDark
+                        ? INPUT_STYLE_ACTIVE_DARK
+                        : INPUT_STYLE_ACTIVE,
+                  ]}
+                  className={`text-center text-base font-medium ${
                     isCompleted ? "text-white" : "text-primary"
                   }`}
                 />
@@ -455,8 +496,8 @@ function SetRow({
                         runningSince={set.durationStartedAt}
                         textClassName={
                           isCompleted
-                            ? "text-base font-semibold text-white"
-                            : "text-base font-semibold text-primary"
+                            ? "text-base font-medium text-white"
+                            : "text-base font-medium text-primary"
                         }
                       />
                     </TouchableOpacity>
@@ -491,7 +532,7 @@ function SetRow({
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   rpeModalRef.current?.present();
                 }}
-                className={`rounded-full px-3 py-1 ${
+                className={`w-3/4 rounded-full px-3 py-1 ${
                   isCompleted
                     ? "bg-white"
                     : set.rpe
@@ -501,7 +542,7 @@ function SetRow({
               >
                 <Text
                   numberOfLines={1}
-                  className={`text-base font-semibold ${
+                  className={`text-center text-sm font-medium ${
                     isCompleted
                       ? "text-black"
                       : set.rpe
@@ -520,14 +561,14 @@ function SetRow({
       {/* Per set Rest Timer */}
       <TouchableOpacity
         onPress={() => onOpenRestPicker(set.id, set.restSeconds ?? undefined)}
-        className="flex-row items-center px-4 py-2"
+        className="flex-row items-center px-4 pt-2"
       >
         {/* Left line */}
         <View className="h-[1px] flex-1 bg-neutral-300 dark:bg-neutral-700" />
 
         <ElapsedTime
           baseSeconds={set.restSeconds}
-          textClassName={`mx-3 text-base font-semibold ${
+          textClassName={`mx-3 text-base font-medium ${
             set.restSeconds === undefined
               ? "text-neutral-500 dark:text-neutral-400"
               : "text-blue-500"

@@ -67,7 +67,7 @@ const ExerciseRow = React.memo(
               </Text>
             )}
 
-            <Text className="text-sm text-danger">PR</Text>
+            <Text className="text-sm text-red-600">PR</Text>
           </View>
         </View>
 

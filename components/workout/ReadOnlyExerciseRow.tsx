@@ -56,7 +56,7 @@ export function getSetTypeColor(
       if (completed) {
         return { style: "text-white", value: "F" };
       }
-      return { style: "text-red-500", value: "F" };
+      return { style: "text-red-600", value: "F" };
     default:
       if (completed) {
         return { style: "text-white", value: set.setIndex + 1 };

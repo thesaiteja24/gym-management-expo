@@ -39,7 +39,7 @@ const SET_TYPES: {
     key: "failureSet",
     title: "Failure",
     description: "Performed until no further reps are possible.",
-    titleClass: "text-danger",
+    titleClass: "text-red-600",
   },
   {
     key: "dropSet",

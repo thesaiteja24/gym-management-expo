@@ -8,7 +8,7 @@ const fullConfig = resolveConfig(tailwindConfig);
 // In a full nativewind setup we might rely on CSS vars, but this is a safe bridge.
 const COLORS = {
   primary: "#3b82f6",
-  success: "#22c55e",
+  success: "#16a34a",
   danger: "#dc2626",
   warning: "#f97316",
   black: "#000000",

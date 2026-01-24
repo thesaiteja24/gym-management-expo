@@ -312,7 +312,7 @@ export default function ExercisesScreen() {
               router.back();
             }}
           >
-            <Text className="text-lg font-semibold text-red-500">Cancel</Text>
+            <Text className="text-lg font-semibold text-red-600">Cancel</Text>
           </TouchableOpacity>
 
           <Text className="text-lg font-semibold text-black dark:text-white">
@@ -351,7 +351,7 @@ export default function ExercisesScreen() {
           >
             <Text
               className={`text-lg font-semibold ${
-                selectedCount === 0 ? "text-neutral-400" : "text-green-500"
+                selectedCount === 0 ? "text-neutral-400" : "text-green-600"
               }`}
             >
               Done

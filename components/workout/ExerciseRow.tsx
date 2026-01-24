@@ -186,7 +186,7 @@ function ExerciseRow({
 
   return (
     <View
-      className="m-4 flex gap-4"
+      className="m-4 flex gap-2"
       style={{
         opacity: isActive ? 0.95 : 1,
         transform: [{ scale: isActive ? 1.02 : 1 }],
@@ -213,7 +213,7 @@ function ExerciseRow({
               }}
             />
 
-            <Text className="text-lg font-semibold text-black dark:text-white">
+            <Text className="text-lg font-bold text-black dark:text-white">
               {exerciseDetails.title}
             </Text>
           </TouchableOpacity>
