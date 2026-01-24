@@ -50,9 +50,16 @@ export default function WorkoutCard({
             {duration}
           </Text>
         </View>
-        <Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">
-          Volume: {volume} kg
-        </Text>
+        <View className="flex-row items-center justify-between gap-4">
+          <Text className="flex-1 text-base font-medium text-neutral-600 dark:text-neutral-400">
+            Volume: {volume} kg
+          </Text>
+          {/* Need to decide where to show this */}
+          {/* <Text className="flex-1 text-base font-semibold text-primary">
+
+            {workout?.user?.firstName + " " + workout?.user?.lastName}
+          </Text> */}
+        </View>
       </View>
 
       {/* Exercise preview */}

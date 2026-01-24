@@ -379,6 +379,7 @@ export default function StartWorkout() {
           data={workout.exercises}
           keyExtractor={(item) => item.exerciseId}
           activationDistance={12}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={{ marginBottom: safeAreaInsets.bottom }}
           onPlaceholderIndexChange={(index) => {
             if (lastIndexRef.current !== index) {

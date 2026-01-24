@@ -37,6 +37,9 @@ import SetTypeSelectionModal, {
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const DELETE_REVEAL_WIDTH = SCREEN_WIDTH * 0.25;
+const COL_SET = "w-[40%] flex-row items-center justify-evenly";
+const COL_STD = "w-[20%] flex-row items-center justify-evenly";
+const COL_RPE = "w-[20%] flex-row items-center justify-evenly";
 
 /* ───────────────── Props ───────────────── */
 
@@ -75,6 +78,7 @@ type Props = {
 
   /* ─── UI Actions ─── */
   onOpenRestPicker: (setId: string, restSeconds?: number) => void;
+  notesExpanded?: boolean;
 };
 
 /* ───────────────── Component ───────────────── */
@@ -102,6 +106,7 @@ function SetRow({
   onStartTimer,
   onStopTimer,
   onOpenRestPicker,
+  notesExpanded = false,
 }: Props) {
   const colors = useThemeColor();
   // @ts-ignore
@@ -120,7 +125,8 @@ function SetRow({
   const swipeableRef = useRef<SwipeableMethods>(null);
   const hasTriggeredHaptic = useRef(false);
 
-  const [isNoteOpen, setIsNoteOpen] = useState(false);
+  const isNoteOpen = notesExpanded;
+
   // @ts-ignore
   const [noteText, setNoteText] = useState(set.note || "");
 
@@ -327,33 +333,34 @@ function SetRow({
           <Animated.View
             entering={FadeIn}
             exiting={FadeOut.duration(400)}
-            style={[hintStyle, { height: 44 }]}
+            style={[hintStyle, { height: 48 }]}
             className={`flex-row items-center rounded-md ${
               isCompleted
                 ? "bg-success dark:bg-success"
                 : "bg-white dark:bg-black"
             }`}
           >
-            <View className="basis-[35%] flex-row items-center justify-evenly">
-              {/* Set number */}
+            {/* ───── Set + Previous ───── */}
+            <View className={COL_SET}>
               <TouchableOpacity
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setTypeModalRef.current?.present();
                 }}
-                className="items-center pr-4"
+                className="mr-3"
               >
                 <Text
-                  className={`text-center text-base font-semibold ${getSetTypeColor(set, set.setType, isCompleted).style}`}
+                  className={`text-base font-semibold ${
+                    getSetTypeColor(set, set.setType, isCompleted).style
+                  }`}
                 >
                   {getSetTypeColor(set, set.setType, isCompleted).value}
                 </Text>
               </TouchableOpacity>
 
-              {/* Previous */}
-              {!isTemplate ? (
+              {!isTemplate && (
                 <Text
-                  className={`text-center text-base font-medium ${
+                  className={`text-base font-semibold ${
                     isCompleted
                       ? "text-white"
                       : "text-neutral-500 dark:text-neutral-400"
@@ -361,80 +368,15 @@ function SetRow({
                 >
                   --
                 </Text>
-              ) : (
-                <View className="w-8" /> // Spacer
               )}
             </View>
 
-            {/* Rest and Note */}
-            <View className="basis-[35%] flex-row items-center justify-between">
-              {/* Rest */}
-              <TouchableOpacity
-                onPress={() =>
-                  onOpenRestPicker(set.id, set.restSeconds ?? undefined)
-                }
-              >
-                <MaterialCommunityIcons
-                  name="timer-outline"
-                  size={22}
-                  color={restColor}
-                />
-              </TouchableOpacity>
-
-              {/* Note - Enabled for Templates too */}
-              <TouchableOpacity
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setIsNoteOpen((v) => !v);
-                }}
-                className="items-center"
-              >
-                <MaterialCommunityIcons
-                  name={
-                    set.note || isNoteOpen ? "note-text" : "note-text-outline"
-                  }
-                  size={22}
-                  color={isCompleted ? "white" : "#6b7280"}
-                />
-              </TouchableOpacity>
-
-              {/* RPE */}
-              <TouchableOpacity
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  rpeModalRef.current?.present();
-                }}
-                className={`w-12 rounded-full py-1 ${
-                  isCompleted
-                    ? "bg-white"
-                    : set.rpe
-                      ? "bg-primary"
-                      : "bg-neutral-200 dark:bg-neutral-700"
-                }`}
-              >
-                <Text
-                  numberOfLines={1}
-                  className={`text-center text-sm font-semibold ${
-                    isCompleted
-                      ? "text-black"
-                      : set.rpe
-                        ? "text-white"
-                        : "text-neutral-600 dark:text-neutral-300"
-                  }`}
-                >
-                  {set.rpe ? `${set.rpe}` : "RPE"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Load */}
-            <View className="basis-[30%] flex-row items-center justify-evenly">
-              {/* Weight */}
-              {hasWeight && (
+            {/* ───── Weight ───── */}
+            <View className={COL_STD}>
+              {hasWeight ? (
                 <TextInput
                   value={weightText}
                   keyboardType="decimal-pad"
-                  // selectTextOnFocus
                   onFocus={() => setIsEditing(true)}
                   onBlur={() => {
                     setIsEditing(false);
@@ -452,30 +394,34 @@ function SetRow({
                   placeholder="0"
                   placeholderTextColor={isCompleted ? "#ffffff" : "#737373"}
                   style={{ lineHeight }}
-                  className={`text-center text-base ${
+                  className={`text-center text-base font-semibold ${
                     isCompleted ? "text-white" : "text-primary"
                   }`}
                 />
+              ) : (
+                <View />
               )}
+            </View>
 
-              {/* Reps */}
+            {/* ───── Reps OR Duration ───── */}
+            <View className={COL_STD}>
               {hasReps && (
                 <TextInput
                   value={repsText}
                   keyboardType="number-pad"
-                  // selectTextOnFocus
                   onFocus={() => setIsEditing(true)}
                   onBlur={() => {
                     setIsEditing(false);
                     const num = Number(repsText);
-                    if (!isNaN(num))
+                    if (!isNaN(num)) {
                       onUpdate(exerciseId, set.id, { reps: num });
+                    }
                   }}
                   onChangeText={setRepsText}
                   placeholder="0"
                   placeholderTextColor={isCompleted ? "#ffffff" : "#737373"}
                   style={{ lineHeight }}
-                  className={`text-center text-base ${
+                  className={`text-center text-base font-semibold ${
                     isCompleted ? "text-white" : "text-primary"
                   }`}
                 />
@@ -537,10 +483,62 @@ function SetRow({
                 </>
               )}
             </View>
+
+            {/* ───── RPE ───── */}
+            <View className={COL_RPE}>
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  rpeModalRef.current?.present();
+                }}
+                className={`rounded-full px-3 py-1 ${
+                  isCompleted
+                    ? "bg-white"
+                    : set.rpe
+                      ? "bg-primary"
+                      : "bg-neutral-200 dark:bg-neutral-700"
+                }`}
+              >
+                <Text
+                  numberOfLines={1}
+                  className={`text-base font-semibold ${
+                    isCompleted
+                      ? "text-black"
+                      : set.rpe
+                        ? "text-white"
+                        : "text-neutral-600 dark:text-neutral-300"
+                  }`}
+                >
+                  {set.rpe ?? "RPE"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </Animated.View>
         </View>
       </Wrapper>
-      {/* Show Note Input if Open (for both modes now) */}
+
+      {/* Per set Rest Timer */}
+      <TouchableOpacity
+        onPress={() => onOpenRestPicker(set.id, set.restSeconds ?? undefined)}
+        className="flex-row items-center px-4 py-2"
+      >
+        {/* Left line */}
+        <View className="h-[1px] flex-1 bg-neutral-300 dark:bg-neutral-700" />
+
+        <ElapsedTime
+          baseSeconds={set.restSeconds}
+          textClassName={`mx-3 text-base font-semibold ${
+            set.restSeconds === undefined
+              ? "text-neutral-500 dark:text-neutral-400"
+              : "text-blue-500"
+          }`}
+        />
+
+        {/* Right line */}
+        <View className="h-[1px] flex-1 bg-neutral-300 dark:bg-neutral-700" />
+      </TouchableOpacity>
+
+      {/* Per set notes */}
       {isNoteOpen && (
         <Animated.View
           entering={FadeIn.duration(150)}

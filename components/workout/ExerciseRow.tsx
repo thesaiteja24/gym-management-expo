@@ -6,18 +6,14 @@ import {
 } from "@/stores/template/types";
 import { WeightUnits } from "@/stores/userStore";
 import { WorkoutLogExercise, WorkoutLogGroup } from "@/stores/workoutStore";
-import {
-  Entypo,
-  MaterialCommunityIcons,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { Entypo } from "@expo/vector-icons";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
-import React, { memo, useCallback, useRef } from "react";
+import React, { memo, useCallback, useRef, useState } from "react";
 import { Text, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../ui/Button";
@@ -36,6 +32,10 @@ const EXERCISE_CAPABILITIES: Record<
   assisted: { hasWeight: false, hasReps: true, hasDuration: false },
   durationOnly: { hasWeight: false, hasReps: false, hasDuration: true },
 };
+
+const COL_SET = "w-[40%] flex-row items-center justify-evenly";
+const COL_STD = "w-[20%] flex-row items-center justify-evenly";
+const COL_RPE = "w-[20%] flex-row items-center justify-evenly";
 
 // Colors for different groups
 const GROUP_COLORS = [
@@ -158,6 +158,7 @@ function ExerciseRow({
   onSaveRestPreset,
 }: Props) {
   const isDark = useColorScheme() === "dark";
+  const [notesExpanded, setNotesExpanded] = useState(false);
 
   const { hasWeight, hasReps, hasDuration } =
     EXERCISE_CAPABILITIES[exerciseDetails.exerciseType];
@@ -235,7 +236,7 @@ function ExerciseRow({
           className="self-start rounded-full"
           style={{ backgroundColor: getGroupColor(groupDetails.id) }}
         >
-          <Text className="w-full px-3 py-1 text-xs font-semibold text-white">
+          <Text className="w-full px-3 py-1 text-sm font-semibold text-white">
             {`${groupDetails.groupType.toUpperCase()} ${String.fromCharCode("A".charCodeAt(0) + groupDetails.groupIndex)}`}
           </Text>
         </View>
@@ -243,67 +244,50 @@ function ExerciseRow({
 
       {/* ───── Sets header ───── */}
       <View className="flex-row items-center bg-white py-1 dark:bg-black">
-        <View className="basis-[35%] flex-row items-center justify-evenly">
-          <Text className="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+        {/* ───── SET / PREV ───── */}
+        <View className={COL_SET}>
+          <Text className="mr-3 text-sm font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             SET
           </Text>
 
           {!isTemplate && (
-            <Text className="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            <Text className="text-sm font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               PREV
             </Text>
           )}
-          {isTemplate && <View className="w-8" />}
         </View>
 
-        {/* Rest and Note */}
-        <View className="basis-[35%] flex-row items-center justify-between">
-          <MaterialIcons
-            name="restore"
-            size={16}
-            color={isDark ? "#a3a3a3" : "#737373"}
-          />
+        {/* ───── WEIGHT ───── */}
+        <View className={COL_STD}>
+          {hasWeight ? (
+            <Text className="text-sm font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              {preferredWeightUnit}
+            </Text>
+          ) : (
+            <Text className="text-sm text-neutral-400">—</Text>
+          )}
+        </View>
 
-          <MaterialCommunityIcons
-            name="note-plus-outline"
-            size={16}
-            color={isDark ? "#a3a3a3" : "#737373"}
-          />
+        {/* ───── REPS / TIME ───── */}
+        <View className={COL_STD}>
+          {hasReps && (
+            <Text className="text-sm font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              REPS
+            </Text>
+          )}
 
-          <Text className="w-11 text-center text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+          {hasDuration && !hasReps && (
+            <Text className="text-sm font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              TIME
+            </Text>
+          )}
+        </View>
+
+        {/* ───── RPE ───── */}
+        <View className={COL_RPE}>
+          <Text className="text-sm font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             RPE
           </Text>
-        </View>
-
-        {/* Load */}
-        <View className="basis-[30%] flex-row items-center justify-evenly">
-          {hasWeight && (
-            <MaterialCommunityIcons
-              name={
-                preferredWeightUnit === "kg"
-                  ? "weight-kilogram"
-                  : "weight-pound"
-              }
-              size={16}
-              color={isDark ? "#a3a3a3" : "#737373"}
-            />
-          )}
-
-          {hasReps && (
-            <Entypo
-              name="cycle"
-              size={16}
-              color={isDark ? "#a3a3a3" : "#737373"}
-            />
-          )}
-
-          {hasDuration && (
-            <MaterialCommunityIcons
-              name="timer-outline"
-              size={16}
-              color={isDark ? "#a3a3a3" : "#737373"}
-            />
-          )}
         </View>
       </View>
 
@@ -318,6 +302,7 @@ function ExerciseRow({
           hasDuration={hasDuration}
           preferredWeightUnit={preferredWeightUnit}
           isTemplate={isTemplate}
+          notesExpanded={notesExpanded}
           onUpdate={onUpdateSet}
           onToggleComplete={onToggleCompleteSet}
           onDelete={onDeleteSet}
@@ -426,6 +411,20 @@ function ExerciseRow({
               </TouchableOpacity>
             </>
           )}
+          <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
+
+          <TouchableOpacity
+            onPress={() => {
+              bottomSheetModalRef.current?.dismiss();
+              setNotesExpanded((o) => !o);
+            }}
+            className="px-4 py-3"
+          >
+            <Text className="text-base text-black dark:text-white">
+              {notesExpanded ? "Hide Notes" : "Take Notes"}
+            </Text>
+          </TouchableOpacity>
+
           <View className="h-px bg-neutral-200 dark:bg-neutral-800" />
 
           <TouchableOpacity
