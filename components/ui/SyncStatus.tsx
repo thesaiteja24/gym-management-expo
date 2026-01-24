@@ -43,16 +43,16 @@ export default function SyncStatus() {
   }
 
   // 2. Failed Items -> Red Warning
-  if (failedCount > 0) {
-    return (
-      <View className="mr-2 flex-row items-center space-x-1 rounded-full bg-red-100 px-2 py-1 dark:bg-red-900">
-        <Ionicons name="alert-circle" size={16} color={colors.danger} />
-        <Text className="text-xs font-medium text-red-600 dark:text-red-300">
-          {failedCount}
-        </Text>
-      </View>
-    );
-  }
+  // if (failedCount > 0) {
+  //   return (
+  //     <View className="mr-2 flex-row items-center space-x-1 rounded-full bg-red-100 px-2 py-1 dark:bg-red-900">
+  //       <Ionicons name="alert-circle" size={16} color={colors.danger} />
+  //       <Text className="text-xs font-medium text-red-600 dark:text-red-300">
+  //         {failedCount}
+  //       </Text>
+  //     </View>
+  //   );
+  // }
 
   // 3. Syncing -> Spinning Arrows
   if (isSyncing) {

@@ -8,7 +8,6 @@ import { useWorkout, WorkoutLog } from "@/stores/workoutStore";
 import { convertWeight } from "@/utils/converter";
 import { buildPruneMessage, calculateWorkoutMetrics } from "@/utils/workout";
 
-import { useThemeColor } from "@/hooks/useThemeColor";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -16,7 +15,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Text, TextInput, View } from "react-native";
+import { Platform, Text, TextInput, useColorScheme, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
@@ -24,7 +23,8 @@ export default function SaveWorkout() {
   /* Local State */
   const lineHeight = Platform.OS === "ios" ? undefined : 28;
   const insets = useSafeAreaInsets();
-  const colors = useThemeColor();
+
+  const isDark = useColorScheme() === "dark";
 
   const [pendingSave, setPendingSave] = useState<WorkoutLog | null>(null);
   const [pruneMessage, setPruneMessage] = useState<string | null>(null);
@@ -251,8 +251,12 @@ export default function SaveWorkout() {
             opacity={0.4}
           />
         )}
-        backgroundStyle={{ backgroundColor: colors.background }}
-        handleIndicatorStyle={{ backgroundColor: colors.neutral[500] }}
+        backgroundStyle={{
+          backgroundColor: isDark ? "#171717" : "white",
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: isDark ? "#525252" : "#d1d5db",
+        }}
         onDismiss={() => {
           setPendingSave(null);
           setPruneMessage(null);
@@ -263,11 +267,8 @@ export default function SaveWorkout() {
         }}
       >
         <BottomSheetView
-          style={{
-            paddingBottom: insets.bottom + 16,
-            paddingHorizontal: 20,
-            paddingTop: 8,
-          }}
+          style={{ paddingBottom: insets.bottom + 24 }}
+          className="px-6 pt-2 dark:bg-neutral-900"
         >
           <Text className="text-lg font-semibold text-black dark:text-white">
             Before saving

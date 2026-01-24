@@ -41,7 +41,11 @@ export function reconcileWorkout(clientId: string, backendWorkout: any): void {
   const updatedHistory = history.map((item) => {
     if (item.clientId === clientId) {
       return {
-        ...backendWorkout,
+        ...item, // Keep existing fields as base
+        ...backendWorkout, // Overwrite with backend data
+        // Explicitly preserve arrays if missing in backend response
+        exercises: backendWorkout.exercises ?? item.exercises,
+        exerciseGroups: backendWorkout.exerciseGroups ?? item.exerciseGroups,
         clientId: clientId, // Ensure clientId is preserved
         syncStatus: "synced" as SyncStatus,
       };

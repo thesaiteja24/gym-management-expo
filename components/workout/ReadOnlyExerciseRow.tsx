@@ -125,14 +125,16 @@ export function ReadOnlyExerciseRow({
             className="flex-row items-center rounded bg-neutral-50 p-2 dark:bg-neutral-800/50"
           >
             {/* Set index */}
-            <Text
-              className={`w-6 text-center text-base font-semibold ${getSetTypeColor(set, set.setType, false).style}`}
-            >
-              {getSetTypeColor(set, set.setType, true).value}
-            </Text>
+            <View className="w-10 items-center">
+              <Text
+                className={`text-base font-semibold ${getSetTypeColor(set, set.setType, false).style}`}
+              >
+                {getSetTypeColor(set, set.setType, true).value}
+              </Text>
+            </View>
 
-            {/* Main values */}
-            <View className="flex-1 flex-row items-center gap-3">
+            {/* Main value (weight × reps OR duration) */}
+            <View className="flex-1 flex-row items-center gap-2">
               {set.weight != null && (
                 <Text className="text-base font-medium text-neutral-700 dark:text-neutral-300">
                   {set.weight} kg
@@ -150,17 +152,27 @@ export function ReadOnlyExerciseRow({
                   {set.durationSeconds}s
                 </Text>
               )}
+
+              {set.weight == null &&
+                set.reps == null &&
+                set.durationSeconds == null && (
+                  <Text className="text-base text-neutral-400">—</Text>
+                )}
             </View>
 
             {/* RPE */}
-            <Text className="w-14 text-center text-base text-neutral-400">
-              {set.rpe != null ? `RPE ${set.rpe}` : "—"}
-            </Text>
+            <View className="w-20 items-center">
+              <Text className="text-base text-neutral-400">
+                {set.rpe != null ? `RPE ${set.rpe}` : "—"}
+              </Text>
+            </View>
 
             {/* Rest */}
-            <Text className="w-14 text-right text-base text-neutral-400">
-              {set.restSeconds != null ? `${set.restSeconds}s` : "—"}
-            </Text>
+            <View className="w-24 items-end">
+              <Text className="text-base text-neutral-400">
+                {set.restSeconds != null ? `Rest ${set.restSeconds}s` : "—"}
+              </Text>
+            </View>
           </View>
         ))}
       </View>

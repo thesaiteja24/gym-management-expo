@@ -18,10 +18,13 @@ import {
 import { formatDurationFromDates, formatTimeAgo } from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
 import * as Crypto from "expo-crypto";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useRef } from "react";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import React, { useEffect, useMemo, useRef } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 import { ReadOnlyExerciseRow } from "@/components/workout/ReadOnlyExerciseRow";
@@ -31,8 +34,8 @@ import { ReadOnlyExerciseRow } from "@/components/workout/ReadOnlyExerciseRow";
 export default function WorkoutDetails() {
   /* Local State */
   const { id } = useLocalSearchParams<{ id: string }>();
-  // const [showDeleteModal, setShowDeleteModal] = useState(false); // Removed
-  // const [showDiscardModal, setShowDiscardModal] = useState(false); // Removed
+  const safeAreaInsets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   const deleteModalRef = useRef<DeleteConfirmModalHandle>(null);
   const discardModalRef = useRef<DeleteConfirmModalHandle>(null);
@@ -51,7 +54,7 @@ export default function WorkoutDetails() {
   }, [exerciseList]);
 
   const workout = useMemo(
-    () => workoutHistory.find((w) => w.id === id),
+    () => workoutHistory.find((w) => w.id === id || w.clientId === id),
     [workoutHistory, id],
   );
 
@@ -163,6 +166,13 @@ export default function WorkoutDetails() {
     router.push("/(app)/template/editor");
   };
 
+  useEffect(() => {
+    const rightIcons = [{ name: "create-outline", onPress: handleEdit }];
+
+    navigation.setOptions({
+      rightIcons,
+    });
+  }, [navigation]);
   if (!workout) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
@@ -187,7 +197,11 @@ export default function WorkoutDetails() {
       edges={["bottom"]}
       className="bg-white dark:bg-black"
     >
-      <ScrollView className="flex-1 bg-white p-4 dark:bg-black">
+      <ScrollView
+        className="flex-1 bg-white p-4 dark:bg-black"
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View className="mb-6 flex-col gap-2">
           <View className="flex-row items-center justify-between">
@@ -223,26 +237,28 @@ export default function WorkoutDetails() {
             />
           );
         })}
+      </ScrollView>
 
-        {/* Actions */}
-        <View className="mb-8 mt-4 flex-col gap-3">
+      {/* Floating Action Button */}
+      <View
+        className="absolute bottom-0 left-0 right-0 border-t border-neutral-100 bg-white p-4 dark:border-neutral-900 dark:bg-black"
+        style={{ paddingBottom: safeAreaInsets.bottom + 16 }}
+      >
+        <View className="flex-row items-center justify-center gap-4">
           <Button
-            title="Edit Workout"
-            onPress={handleEdit}
-            variant="secondary"
-          />
-          <Button
+            variant="primary"
             title="Save as Template"
+            className="w-2/3"
             onPress={handleSaveAsTemplate}
-            variant="secondary"
           />
           <Button
-            title="Delete Workout"
+            title="Delete"
+            className="w-1/3"
             variant="danger"
             onPress={() => deleteModalRef.current?.present()}
           />
         </View>
-      </ScrollView>
+      </View>
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

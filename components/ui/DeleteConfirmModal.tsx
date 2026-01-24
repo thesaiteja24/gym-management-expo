@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import {
   BottomSheetBackdrop,
@@ -9,8 +10,9 @@ import React, {
   useCallback,
   useImperativeHandle,
   useRef,
+  useState,
 } from "react";
-import { Pressable, Text, View, useColorScheme } from "react-native";
+import { Text, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export interface DeleteConfirmModalHandle {
@@ -41,11 +43,12 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
     const isDark = useColorScheme() === "dark";
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const insets = useSafeAreaInsets();
-    const lockedRef = useRef(false);
+
+    const [isLoading, setIsLoading] = useState(false);
 
     useImperativeHandle(ref, () => ({
       present: () => {
-        lockedRef.current = false;
+        setIsLoading(false);
         bottomSheetModalRef.current?.present();
       },
       dismiss: () => {
@@ -65,16 +68,23 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
       [],
     );
 
-    // Dynamic sizing or fixed height? Dynamic is better for varying descriptions.
-    // enableDynamicSizing={true} is default in v5 if snapPoints not provided?
-    // Let's use enableDynamicSizing explicitly or just omit snapPoints implies it?
-    // Actually best to provide no snapPoints and enableDynamicSizing.
+    const handleConfirm = async () => {
+      if (isLoading) return;
+
+      try {
+        setIsLoading(true);
+        await onConfirm();
+        bottomSheetModalRef.current?.dismiss();
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
     return (
       <BottomSheetModal
         ref={bottomSheetModalRef}
         backdropComponent={renderBackdrop}
-        enableDynamicSizing={true}
+        enableDynamicSizing
         onDismiss={onCancel}
         backgroundStyle={{
           backgroundColor: isDark ? "#171717" : "white",
@@ -82,10 +92,7 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
         handleIndicatorStyle={{
           backgroundColor: isDark ? "#525252" : "#d1d5db",
         }}
-        // Smoother, slightly slower animation
-        animationConfigs={{
-          duration: 350,
-        }}
+        animationConfigs={{ duration: 350 }}
       >
         <BottomSheetView
           style={{ paddingBottom: insets.bottom + 24 }}
@@ -105,38 +112,27 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
             {description}
           </Text>
 
-          <View className="mt-8 flex-row gap-3">
+          <View className="mt-8 flex-1 flex-row gap-3">
             {/* Cancel */}
-            <Pressable
+            <Button
+              className="flex-1"
+              title="Cancel"
+              variant="secondary"
+              disabled={isLoading}
               onPress={() => {
                 onCancel?.();
                 bottomSheetModalRef.current?.dismiss();
               }}
-              className="flex-1 rounded-xl border py-4"
-              style={{ borderColor: colors.neutral[200] }}
-            >
-              <Text
-                className="text-center text-base font-medium"
-                style={{ color: colors.text }}
-              >
-                Cancel
-              </Text>
-            </Pressable>
+            />
+
             {/* Delete */}
-            <Pressable
-              onPress={async () => {
-                if (lockedRef.current) return;
-                lockedRef.current = true;
-                await onConfirm();
-                bottomSheetModalRef.current?.dismiss();
-              }}
-              className="flex-1 rounded-xl py-4"
-              style={{ backgroundColor: colors.danger }}
-            >
-              <Text className="text-center text-base font-bold text-white">
-                {confirmText}
-              </Text>
-            </Pressable>
+            <Button
+              className="flex-1"
+              title={confirmText}
+              variant="danger"
+              loading={isLoading}
+              onPress={handleConfirm}
+            />
           </View>
         </BottomSheetView>
       </BottomSheetModal>

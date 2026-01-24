@@ -44,7 +44,11 @@ export function reconcileTemplate(
   const updatedTemplates = templates.map((item) => {
     if ((item as any).clientId === clientId) {
       return {
-        ...backendTemplate,
+        ...item, // Keep existing fields as base
+        ...backendTemplate, // Overwrite with backend data
+        // Explicitly preserve arrays if missing in backend response
+        exercises: backendTemplate.exercises ?? item.exercises,
+        exerciseGroups: backendTemplate.exerciseGroups ?? item.exerciseGroups,
         clientId: clientId, // Ensure clientId is preserved
         syncStatus: "synced" as SyncStatus,
       };

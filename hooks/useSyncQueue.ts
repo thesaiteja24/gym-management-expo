@@ -101,9 +101,12 @@ export function useSyncQueue() {
         switch (mutation.type) {
           case "CREATE": {
             const res = await createWorkoutService(mutation.payload);
+            console.log(JSON.stringify(res));
             if (res.success && res.data?.workout) {
+              console.log("Reconciling workout resource");
               reconcileWorkout(mutation.clientId, res.data.workout);
             } else if (res.success && res.data?.workout?.id) {
+              console.log("Reconciling workout id");
               reconcileWorkoutId(mutation.clientId, res.data.workout.id);
               markWorkoutSynced(mutation.clientId);
             }
@@ -167,10 +170,13 @@ export function useSyncQueue() {
         switch (mutation.type) {
           case "CREATE": {
             const res = await createTemplateService(mutation.payload);
+            console.log(JSON.stringify(res));
             if (res.success && res.data?.template) {
               reconcileTemplate(mutation.clientId, res.data.template);
+              console.log("reconciled template resource");
             } else if (res.success && res.data?.template?.id) {
               reconcileTemplateId(mutation.clientId, res.data.template.id);
+              console.log("reconciled template id");
               markTemplateSynced(mutation.clientId);
             }
             return true;

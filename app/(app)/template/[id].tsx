@@ -11,7 +11,6 @@ import {
   ScrollView,
   Share,
   Text,
-  TouchableOpacity,
   View,
   useColorScheme,
 } from "react-native";
@@ -25,7 +24,9 @@ export default function TemplateDetails() {
   const isDark = useColorScheme() === "dark";
   const safeAreaInsets = useSafeAreaInsets();
 
-  const template = useTemplate((s) => s.templates.find((t) => t.id === id));
+  const template = useTemplate((s) =>
+    s.templates.find((t) => t.id === id || t.clientId === id),
+  );
   const deleteTemplate = useTemplate((s) => s.deleteTemplate);
   const startWorkoutFromTemplate = useTemplate(
     (s) => s.startWorkoutFromTemplate,
@@ -44,7 +45,7 @@ export default function TemplateDetails() {
     }
 
     navigation.setOptions({
-      title: template?.title ?? "Template Details",
+      title: "Template Details",
       rightIcons,
     });
   }, [navigation, template, isDark]);
@@ -89,7 +90,10 @@ export default function TemplateDetails() {
 
   return (
     <View className="relative flex-1 bg-white dark:bg-black">
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header Info */}
         <View className="border-b border-neutral-100 p-4 dark:border-neutral-900">
           <Text className="mb-2 text-3xl font-bold text-black dark:text-white">
@@ -127,28 +131,32 @@ export default function TemplateDetails() {
             />
           ))}
         </View>
-
-        {/* Delete Button */}
-        <TouchableOpacity
-          onPress={() => deleteModalRef.current?.present()}
-          className="items-center py-4"
-        >
-          <Text className="font-medium text-red-500">Delete Template</Text>
-        </TouchableOpacity>
       </ScrollView>
 
-      {/* Floating Action Button for Starting */}
+      {/* Floating Action Button */}
       <View
         className="absolute bottom-0 left-0 right-0 border-t border-neutral-100 bg-white p-4 dark:border-neutral-900 dark:bg-black"
         style={{ paddingBottom: safeAreaInsets.bottom + 16 }}
       >
-        <Button
-          title="Start Workout"
-          onPress={() => {
-            if (id) startWorkoutFromTemplate(id);
-            router.push("/(app)/workout/start");
-          }}
-        />
+        <View className="flex-row items-center justify-center gap-4">
+          <Button
+            variant="success"
+            title="Start Workout"
+            className="w-2/3"
+            onPress={() => {
+              if (id) startWorkoutFromTemplate(id);
+              router.push("/(app)/workout/start");
+            }}
+          />
+          <Button
+            title="Delete"
+            className="w-1/3"
+            variant="danger"
+            onPress={() => {
+              deleteModalRef.current?.present();
+            }}
+          />
+        </View>
       </View>
       <DeleteConfirmModal
         ref={deleteModalRef}
