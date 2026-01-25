@@ -12,11 +12,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import StreakCard, { StreakDay } from "@/components/home/StreakCard";
 import WorkoutCard from "@/components/home/WorkoutCard";
 
+import { useAnalytics } from "@/stores/analyticsStore";
 import { useAuth } from "@/stores/authStore";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout, WorkoutHistoryItem } from "@/stores/workoutStore";
 import { getMotivationLine } from "@/utils/motivation";
-import { parseUTCToLocalDate, toDateKey } from "@/utils/time";
+import { toDateKey } from "@/utils/time";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -65,22 +66,26 @@ export default function HomeScreen() {
     ];
   }, [sortedWorkoutHistory]);
 
-  // ───────────────── Streak builder ─────────────────
+  // ───────────────── Analytics & Motivation ─────────────────
+  const {
+    streakDays,
+    workoutsThisWeek,
+    daysSinceLastWorkout,
+    weeklyVolume,
+    lastWeekVolume,
+    workoutDates,
+  } = useAnalytics();
+
   const { streakData, motivation } = useMemo(() => {
-    const workouts = sortedWorkoutHistory;
     const today = new Date();
     const todayKey = toDateKey(today);
 
-    // 1. Calculate Streak Data for UI
+    // 1. Build Calendar Days for UI
     const start = new Date(today);
     start.setDate(today.getDate() - 3);
 
     const end = new Date(today);
     end.setDate(today.getDate() + 3);
-
-    const workoutDays = new Set(
-      workouts.map((w) => toDateKey(parseUTCToLocalDate(w.startTime))),
-    );
 
     const days: StreakDay[] = [];
     const cursor = new Date(start);
@@ -89,7 +94,7 @@ export default function HomeScreen() {
       const key = toDateKey(cursor);
 
       let status: StreakDay["status"];
-      if (workoutDays.has(key)) status = "active";
+      if (workoutDates.has(key)) status = "active";
       else if (key === todayKey) status = "today";
       else if (cursor > today) status = "future";
       else status = "missed";
@@ -98,53 +103,11 @@ export default function HomeScreen() {
       cursor.setDate(cursor.getDate() + 1);
     }
 
-    // 2. Calculate Stats for Motivation
-    let currentStreak = 0;
-    // Check backwards from today to find current streak
-    const checkDate = new Date(today);
-    while (workoutDays.has(toDateKey(checkDate))) {
-      currentStreak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    }
-
-    // Calculate Weekly Volume (This week vs Last week)
-    // Note: detailed volume calc is expensive, we can use a simpler proxy like workout count
-    // or do a lightweight volume sum if performant.
-    // For now, let's strictly follow the plan using workoutsThisWeek count as a primary driver for consistency
-    // and rely on a simplified volume heuristic if needed.
-
-    // Get start of current week (Sunday)
-    const currentWeekStart = new Date(today);
-    currentWeekStart.setDate(today.getDate() - today.getDay());
-    currentWeekStart.setHours(0, 0, 0, 0);
-
-    const lastWeekStart = new Date(currentWeekStart);
-    lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-    const lastWeekEnd = new Date(currentWeekStart);
-
-    let workoutsThisWeek = 0;
-    let lastWeekVolume = 0; // Placeholder if we don't do full volume scan
-    let weeklyVolume = 0; // Placeholder
-
-    workouts.forEach((w) => {
-      const wDate = parseUTCToLocalDate(w.startTime);
-      if (wDate >= currentWeekStart) {
-        workoutsThisWeek++;
-      }
-    });
-
-    const lastWorkoutDate =
-      workouts.length > 0 ? parseUTCToLocalDate(workouts[0].startTime) : null;
-    const daysSinceLastWorkout = lastWorkoutDate
-      ? Math.floor(
-          (today.getTime() - lastWorkoutDate.getTime()) / (1000 * 60 * 60 * 24),
-        )
-      : 999;
-
+    // 2. Get Motivation Line
     const motivationLine = getMotivationLine({
-      weeklyVolume, // TODO: Implement full volume calc if critical, currently 0 (relies on workout count logic mostly)
+      weeklyVolume,
       lastWeekVolume,
-      streakDays: currentStreak,
+      streakDays,
       workoutsThisWeek,
       daysSinceLastWorkout,
     });
@@ -160,7 +123,14 @@ export default function HomeScreen() {
       },
       motivation: motivationLine,
     };
-  }, [sortedWorkoutHistory]);
+  }, [
+    streakDays,
+    workoutsThisWeek,
+    daysSinceLastWorkout,
+    weeklyVolume,
+    lastWeekVolume,
+    workoutDates,
+  ]);
 
   // ───────────────── Navigation ─────────────────
   useEffect(() => {
@@ -224,11 +194,7 @@ export default function HomeScreen() {
             />
           );
         }}
-        ListHeaderComponent={
-          sortedWorkoutHistory.length > 0 ? (
-            <StreakCard {...streakData} />
-          ) : null
-        }
+        ListHeaderComponent={<StreakCard {...streakData} />}
         stickyHeaderIndices={[1]}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -243,6 +209,7 @@ export default function HomeScreen() {
             </Text>
           )
         }
+        ListFooterComponent={<View className="mb-[20%] p-4"></View>}
       />
     </SafeAreaView>
   );

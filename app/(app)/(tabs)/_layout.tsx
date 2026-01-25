@@ -1,15 +1,56 @@
 import CustomHeader from "@/components/navigation/CustomHeader";
-import CustomTabs from "@/components/navigation/CustomTabs";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
+import { Pressable, useColorScheme } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
+  const colors = useThemeColor();
+  const isDark = useColorScheme() === "dark";
+  const insets = useSafeAreaInsets();
+
+  const [home, setHome] = useState(true);
+  const [workout, setworkout] = useState(false);
+  const [profile, setProfile] = useState(false);
+
+  const pillBg = isDark ? "#111111" : "#F2F2F2";
+  const barBg = colors.background;
+  const barBorder = isDark ? "#222222" : "#DDDDDD";
+  const activeColor = colors.text;
+  const inactiveColor = "#A8A8A8";
+
   return (
     <Tabs
-      tabBar={(props) => <CustomTabs {...props} />}
       screenOptions={{
         tabBarShowLabel: false,
+
+        // ---- COLORS ----
+        tabBarActiveTintColor: activeColor,
+        tabBarInactiveTintColor: inactiveColor,
+
+        // ---- BAR CONTAINER ----
+        tabBarStyle: {
+          position: "absolute",
+          left: 0,
+          right: 0,
+          marginHorizontal: "15%",
+          bottom: insets.bottom,
+          height: 52,
+          borderRadius: 100,
+          backgroundColor: barBg,
+          borderWidth: 1,
+          borderColor: barBorder,
+
+          shadowColor: isDark ? "#fff" : "#000",
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 2 },
+          elevation: 2,
+        },
+
+        // ---- HEADER ----
         header: (props) => {
           const { options } = props;
           const custom = options as any;
@@ -27,38 +68,73 @@ export default function TabsLayout() {
         },
       }}
     >
-      {/* HOME (simple screen → Tabs owns header) */}
       <Tabs.Screen
         name="home"
-        options={
-          {
-            title: "Home",
-            headerShown: false,
-            tabBarIcon: ({
-              color,
-              focused,
-              size,
-            }: {
-              focused: boolean;
-              color: string;
-              size: number;
-            }) => (
-              <Ionicons
-                name={focused ? "home" : "home-outline"}
-                size={size ?? 22}
-                color={color}
+        options={{
+          title: "Home",
+          headerShown: false,
+          tabBarItemStyle: {
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 24,
+            marginHorizontal: 6,
+            marginVertical: 6,
+            height: 40,
+            // backgroundColor: home ? pillBg : "transparent",
+          },
+          tabBarButton: (props) => {
+            const { ref, ...rest } = props;
+            return (
+              <Pressable
+                {...rest}
+                onPress={(e) => {
+                  props.onPress?.(e);
+                  setHome(true);
+                  setworkout(false);
+                  setProfile(false);
+                }}
               />
-            ),
-          } as any
-        }
+            );
+          },
+          tabBarIcon: ({ color, focused, size }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={size ?? 22}
+              color={color}
+            />
+          ),
+        }}
       />
 
-      {/* EXERCISES (stacked section → disable tab header) */}
       <Tabs.Screen
         name="workout"
         options={{
           title: "Workout",
           headerShown: false,
+          // ---- ITEM ----
+          tabBarItemStyle: {
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 100,
+            marginHorizontal: 6,
+            marginVertical: 6,
+            height: 40,
+            // backgroundColor: workout ? pillBg : "transparent",
+          },
+          tabBarButton: (props) => {
+            const { ref, ...rest } = props;
+            return (
+              <Pressable
+                {...rest}
+                onPress={(e) => {
+                  props.onPress?.(e);
+                  setHome(false);
+                  setworkout(true);
+                  setProfile(false);
+                }}
+              />
+            );
+          },
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons
               name={focused ? "accessibility-sharp" : "accessibility-outline"}
@@ -69,12 +145,35 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* PROFILE (stacked section → disable tab header) */}
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
           headerShown: false,
+          // ---- ITEM ----
+          tabBarItemStyle: {
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 24,
+            marginHorizontal: 6,
+            marginVertical: 6,
+            height: 40,
+            // backgroundColor: profile ? pillBg : "transparent",
+          },
+          tabBarButton: (props) => {
+            const { ref, ...rest } = props;
+            return (
+              <Pressable
+                {...rest}
+                onPress={(e) => {
+                  props.onPress?.(e);
+                  setHome(false);
+                  setworkout(false);
+                  setProfile(true);
+                }}
+              />
+            );
+          },
           tabBarIcon: ({ color, focused, size }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}

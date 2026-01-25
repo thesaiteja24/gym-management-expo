@@ -30,10 +30,10 @@ export default function TemplateCard({
       <Pressable className="mr-4 w-72 rounded-2xl border border-neutral-200 bg-white p-4 active:opacity-80 dark:border-neutral-800 dark:bg-neutral-900">
         {/* Header */}
         <View className="mb-3 flex-col justify-between gap-1">
-          <Text className="line-clamp-1 text-lg font-semibold text-black dark:text-white">
+          <Text className="line-clamp-1 text-lg font-medium text-black dark:text-white">
             {template.title}
           </Text>
-          <Text className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+          <Text className="text-sm font-normal text-neutral-500 dark:text-neutral-400">
             created by {template.authorName}
           </Text>
         </View>
