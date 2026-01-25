@@ -7,6 +7,7 @@ export default function HomeLayout() {
   return (
     <Stack
       screenOptions={{
+        headerShown: false,
         contentStyle: {
           backgroundColor: useColorScheme() === "dark" ? "#000000" : "#ffffff",
         },

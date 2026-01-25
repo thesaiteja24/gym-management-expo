@@ -1,10 +1,6 @@
 import { ExerciseType } from "@/stores/exerciseStore";
 import { WorkoutHistoryItem } from "@/stores/workoutStore";
-import {
-  formatDate,
-  formatDurationFromDates,
-  formatTimeAgo,
-} from "@/utils/time";
+import { formatDate, formatDurationFromDates } from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -19,7 +15,6 @@ export default function WorkoutCard({
   exerciseTypeMap: Map<string, ExerciseType>;
 }) {
   const duration = formatDurationFromDates(workout.startTime, workout.endTime);
-  const timeAgo = formatTimeAgo(workout.endTime);
   const volume = calculateWorkoutMetrics(workout, exerciseTypeMap).tonnage;
 
   // Guard against missing exercises array
