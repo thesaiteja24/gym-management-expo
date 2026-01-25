@@ -136,7 +136,7 @@ export function Button({
 
   const widthClass = props.fullWidth ? "w-full" : "";
   const baseClass =
-    "min-h-[44px] flex-row items-center justify-center gap-2 rounded-2xl px-4 py-2";
+    "min-h-[42px] flex-row items-center justify-center gap-2 rounded-2xl px-4 py-2";
 
   const variantClass: Record<ButtonVariant, string> = {
     primary: `bg-[#3b82f6]`,

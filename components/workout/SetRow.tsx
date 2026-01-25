@@ -364,6 +364,7 @@ function SetRow({
             {/* ───── Set + Previous ───── */}
             <View className={COL_SET}>
               <TouchableOpacity
+                hitSlop={20}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setTypeModalRef.current?.present();

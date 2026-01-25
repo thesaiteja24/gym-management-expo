@@ -26,6 +26,7 @@ import Fuse from "fuse.js";
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Keyboard,
   Platform,
   Text,
   TextInput,
@@ -261,12 +262,18 @@ export default function ExercisesScreen() {
                 equipmentList.find((e) => e.id === filter.equipmentId)?.title ??
                 "Equipment"
               }
-              onRemove={() => setFilter((f) => ({ ...f, equipmentId: "" }))}
+              onRemove={() => {
+                setFilter((f) => ({ ...f, equipmentId: "" }));
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }}
             />
           ) : (
             <Button
               title="Equipment"
-              onPress={() => equipmentModalRef.current?.present()}
+              onPress={() => {
+                equipmentModalRef.current?.present();
+                Keyboard.dismiss;
+              }}
             />
           )}
         </View>
@@ -278,12 +285,18 @@ export default function ExercisesScreen() {
                 muscleGroupList.find((m) => m.id === filter.muscleGroupId)
                   ?.title ?? "Muscle Groups"
               }
-              onRemove={() => setFilter((f) => ({ ...f, muscleGroupId: "" }))}
+              onRemove={() => {
+                setFilter((f) => ({ ...f, muscleGroupId: "" }));
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }}
             />
           ) : (
             <Button
               title="Muscle Groups"
-              onPress={() => muscleGroupsModalRef.current?.present()}
+              onPress={() => {
+                muscleGroupsModalRef.current?.present();
+                Keyboard.dismiss();
+              }}
             />
           )}
         </View>

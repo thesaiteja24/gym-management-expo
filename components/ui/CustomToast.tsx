@@ -27,21 +27,18 @@ export function CustomToast({
         styles.container,
         {
           backgroundColor: colors.background,
-          borderLeftColor: borderColors[type],
+          borderColor: borderColors[type],
+          borderWidth: 1,
           shadowColor: "#000", // Shadow usually stays black, or use colors.shadow if exists
-          marginTop: insets.top,
+          marginTop: 30,
         },
       ]}
     >
       {text1 && (
-        <Text style={[styles.title, { color: colors.text }]}>
-          {text1}
-        </Text>
+        <Text style={[styles.title, { color: colors.text }]}>{text1}</Text>
       )}
       {text2 && (
-        <Text style={[styles.subtitle, { color: colors.text }]}>
-          {text2}
-        </Text>
+        <Text style={[styles.subtitle, { color: colors.text }]}>{text2}</Text>
       )}
     </View>
   );
@@ -52,7 +49,7 @@ const styles = StyleSheet.create({
     width: "90%",
     padding: 12,
     borderRadius: 12,
-    borderLeftWidth: 4,
+    borderLeftWidth: 6,
     marginHorizontal: 16,
 
     // soft shadow for both iOS + Android

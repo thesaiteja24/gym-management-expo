@@ -163,7 +163,6 @@ export default function RootLayout() {
               error: (props) => <CustomToast {...props} type="error" />,
               info: (props) => <CustomToast {...props} type="info" />,
             }}
-            topOffset={60}
           />
 
           <OtaUpdateModal
