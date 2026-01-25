@@ -2,7 +2,7 @@ import WorkoutCard from "@/components/workout/WorkoutCard";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { router, useNavigation } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -32,6 +32,15 @@ export default function HomeScreen() {
     });
     return map;
   }, [exerciseList]);
+
+  const sortedWorkoutHistory = useMemo(
+    () =>
+      [...workoutHistory].sort(
+        (a, b) =>
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
+      ),
+    [workoutHistory],
+  );
 
   // Debugging
   // const renderCount = React.useRef(0);
@@ -65,7 +74,7 @@ export default function HomeScreen() {
       </Text>
 
       <FlatList
-        data={workoutHistory}
+        data={sortedWorkoutHistory}
         keyExtractor={(item) => item.clientId}
         renderItem={({ item }) => (
           <WorkoutCard workout={item} exerciseTypeMap={exerciseTypeMap} />

@@ -1,6 +1,10 @@
 import { ExerciseType } from "@/stores/exerciseStore";
 import { WorkoutHistoryItem } from "@/stores/workoutStore";
-import { formatDurationFromDates, formatTimeAgo } from "@/utils/time";
+import {
+  formatDate,
+  formatDurationFromDates,
+  formatTimeAgo,
+} from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -40,7 +44,7 @@ export default function WorkoutCard({
 
         <View className="flex-row items-center justify-between gap-4">
           <Text className="flex-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            {timeAgo}
+            {formatDate(workout.startTime)}
           </Text>
 
           <Text className="flex-1 text-base font-semibold text-primary">

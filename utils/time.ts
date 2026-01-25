@@ -26,6 +26,60 @@ export function formatTimeAgo(dateString: string) {
   return `${months}mo ago`;
 }
 
+/**
+ * Formats a date into the format: "Mon Dec 5th 2026 17:36"
+ *
+ * @param date - A Date object or a value convertible to Date
+ * @returns Formatted date string
+ *
+ * @example
+ * formatDate(new Date("2026-12-05T17:36:00"));
+ * // "Mon Dec 5th 2026 17:36"
+ */
+export function formatDate(date: Date | string | number): string {
+  const d = new Date(date);
+
+  const days: string[] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months: string[] = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const dayName: string = days[d.getDay()];
+  const month: string = months[d.getMonth()];
+  const day: number = d.getDate();
+  const year: number = d.getFullYear();
+
+  const hours: string = String(d.getHours()).padStart(2, "0");
+  const minutes: string = String(d.getMinutes()).padStart(2, "0");
+
+  const getOrdinal = (n: number): string => {
+    if (n > 3 && n < 21) return "th";
+    switch (n % 10) {
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
+    }
+  };
+
+  return `${dayName} ${month} ${day}${getOrdinal(day)} ${year} ${hours}:${minutes}`;
+}
+
 export function formatSeconds(totalSeconds: number) {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
