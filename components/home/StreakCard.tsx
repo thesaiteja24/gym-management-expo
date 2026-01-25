@@ -18,12 +18,12 @@ const StreakCard = React.memo(function StreakCard({
   return (
     <View className="mb-4 rounded-2xl border border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900">
       {/* Month */}
-      <Text className="text-base font-semibold text-black dark:text-white">
+      <Text className="text-xl font-semibold text-black dark:text-white">
         {monthLabel}
       </Text>
 
       {/* Motivational line */}
-      <Text className="mt-1 text-sm font-medium text-neutral-600 dark:text-neutral-400">
+      <Text className="mt-2 text-base font-normal text-neutral-600 dark:text-neutral-400">
         {message}
       </Text>
 
@@ -43,7 +43,7 @@ const StreakCard = React.memo(function StreakCard({
 
           return (
             <View key={day.date} className="items-center">
-              <Text className="mb-1 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+              <Text className="mb-1 text-xs font-normal text-neutral-500 dark:text-neutral-400">
                 {dayLabel}
               </Text>
 
@@ -53,9 +53,9 @@ const StreakCard = React.memo(function StreakCard({
                   isActive
                     ? "bg-orange-500"
                     : isToday
-                      ? "border-2 border-primary bg-black"
+                      ? "border-2 border-primary bg-white dark:bg-black"
                       : isFuture
-                        ? "border border-neutral-600 bg-black"
+                        ? "border border-neutral-600 bg-white dark:bg-black"
                         : "bg-neutral-300 dark:bg-neutral-700"
                 } `}
               >
@@ -77,7 +77,7 @@ const StreakCard = React.memo(function StreakCard({
 
                 {/* Date text */}
                 <Text
-                  className={`text-sm font-semibold ${
+                  className={`text-sm font-medium ${
                     isActive
                       ? "text-white"
                       : isToday

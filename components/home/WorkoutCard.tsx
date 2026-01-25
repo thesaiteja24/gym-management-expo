@@ -33,31 +33,29 @@ export default function WorkoutCard({
     >
       {/* Header */}
       <View className="mb-4 flex-col justify-between gap-2">
-        <Text className="line-clamp-1 text-lg font-semibold text-black dark:text-white">
+        <Text className="line-clamp-1 text-lg font-medium text-black dark:text-white">
           {workout.title || "Workout"}
         </Text>
-
         <View className="flex-row items-center justify-between gap-4">
-          <Text className="flex-1 text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            {formatDate(workout.startTime)}
+          <Text className="flex-1 text-base font-medium text-primary">
+            {/* @ts-ignore */}
+            {workout?.user?.firstName + " " + workout?.user?.lastName}
           </Text>
 
-          <Text className="flex-1 text-base font-semibold text-primary">
-            <Text className="text-base font-semibold text-black dark:text-white">
+          <Text className="flex-1 text-sm font-normal text-primary">
+            <Text className="text-sm font-medium text-black dark:text-white">
               Duration:
             </Text>{" "}
             {duration}
           </Text>
         </View>
         <View className="flex-row items-center justify-between gap-4">
-          <Text className="flex-1 text-base font-medium text-neutral-600 dark:text-neutral-400">
+          <Text className="flex-1 text-sm font-normal text-neutral-500 dark:text-neutral-400">
+            {formatDate(workout.startTime)}
+          </Text>
+          <Text className="flex-1 text-sm font-normal text-neutral-600 dark:text-neutral-400">
             Volume: {volume} kg
           </Text>
-          {/* Need to decide where to show this */}
-          {/* <Text className="flex-1 text-base font-semibold text-primary">
-
-            {workout?.user?.firstName + " " + workout?.user?.lastName}
-          </Text> */}
         </View>
       </View>
 
@@ -65,14 +63,21 @@ export default function WorkoutCard({
       {previewExercises.map((ex: any) => (
         <View key={ex.id} className="mb-2 flex-row items-center gap-3">
           <Image
+            cachePolicy="disk"
             source={ex.exercise.thumbnailUrl}
-            style={{ width: 44, height: 44, borderRadius: 999 }}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 999,
+              borderColor: "#ccc",
+              borderWidth: 1,
+            }}
             contentFit="cover"
           />
 
           <Text
             numberOfLines={1}
-            className="flex-1 text-base font-semibold text-black dark:text-white"
+            className="flex-1 text-base font-medium text-black dark:text-white"
           >
             {ex.sets.length} sets of {ex.exercise.title}
           </Text>

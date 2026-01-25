@@ -43,7 +43,6 @@ export default function CustomHeader({
         height: headerHeight,
         paddingTop: insets.top,
         backgroundColor: colors.background,
-        borderBottomWidth: 1,
       }}
     >
       {/* Left icon */}

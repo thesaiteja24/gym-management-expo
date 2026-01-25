@@ -1,13 +1,7 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import * as React from "react";
-import {
-    Platform,
-    Text,
-    TouchableOpacity,
-    View,
-    useColorScheme,
-} from "react-native";
+import { Platform, TouchableOpacity, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function CustomTabs({
@@ -84,7 +78,7 @@ export default function CustomTabs({
                 borderRadius: 24,
                 flex: 1,
                 alignItems: "center",
-                minWidth: isFocused ? 112 : 88,
+                // minWidth: isFocused ? 112 : 88,
               }}
             >
               <View
@@ -94,7 +88,7 @@ export default function CustomTabs({
                   justifyContent: "center",
                   paddingVertical: 8,
                   minHeight: 40,
-                  minWidth: 112,
+                  // minWidth: 100,
                   borderRadius: 24,
                   marginHorizontal: 12,
                 }}
@@ -108,7 +102,7 @@ export default function CustomTabs({
                 ) : null}
 
                 {/* label only when focused */}
-                <Text
+                {/* <Text
                   numberOfLines={1}
                   style={{
                     marginLeft: isFocused ? 8 : 0,
@@ -121,7 +115,7 @@ export default function CustomTabs({
                   }}
                 >
                   {String(label)}
-                </Text>
+                </Text> */}
               </View>
             </TouchableOpacity>
           );
