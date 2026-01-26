@@ -5,14 +5,27 @@ import { calculateWorkoutMetrics } from "@/utils/workout";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
+import { useEffect } from "react";
+import { Pressable, Text, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function WorkoutCard({
   workout,
   exerciseTypeMap,
+  index = 0,
 }: {
   workout: WorkoutHistoryItem;
   exerciseTypeMap: Map<string, ExerciseType>;
+  index?: number;
 }) {
   const duration = formatDurationFromDates(workout.startTime, workout.endTime);
   const volume = calculateWorkoutMetrics(workout, exerciseTypeMap).tonnage;
@@ -22,9 +35,38 @@ export default function WorkoutCard({
   const previewExercises = exercises.slice(0, 3);
   const remaining = exercises.length - previewExercises.length;
 
+  // Animation values
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(50);
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    const delay = index * 100 + 500;
+    opacity.value = withDelay(delay, withTiming(1, { duration: 500 }));
+    translateY.value = withDelay(
+      delay,
+      withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }),
+    );
+  }, [index]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }, { translateY: translateY.value }],
+  }));
+
+  const onPressIn = () => {
+    scale.value = withSpring(0.97, { damping: 10, stiffness: 300 });
+  };
+
+  const onPressOut = () => {
+    scale.value = withSpring(1, { damping: 10, stiffness: 300 });
+  };
+
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
+    <AnimatedPressable
+      style={animatedStyle}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       onPress={() => {
         router.push(`/(app)/workout/${workout.id}`);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -89,6 +131,6 @@ export default function WorkoutCard({
           See {remaining} more exercise{remaining > 1 ? "s" : ""}
         </Text>
       )}
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 }

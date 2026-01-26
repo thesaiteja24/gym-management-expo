@@ -1,5 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Text, View } from "react-native";
+import Animated, {
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 export interface StreakDay {
   date: string; // YYYY-MM-DD
@@ -16,7 +24,10 @@ const StreakCard = React.memo(function StreakCard({
   message: string;
 }) {
   return (
-    <View className="mb-4 rounded-2xl border border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <Animated.View
+      entering={FadeInDown.delay(500).duration(500)}
+      className="mb-4 rounded-2xl border border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900"
+    >
       {/* Month */}
       <Text className="text-xl font-semibold text-black dark:text-white">
         {monthLabel}
@@ -59,6 +70,9 @@ const StreakCard = React.memo(function StreakCard({
                         : "bg-neutral-300 dark:bg-neutral-700"
                 } `}
               >
+                {/* Pulsing effect for Today */}
+                {isToday && <PulsingIndicator />}
+
                 {/* 45° stripes for missed days ONLY */}
                 {isMissed && !isFuture && (
                   <View className="absolute -inset-6 rotate-[-45deg] flex-row">
@@ -94,8 +108,34 @@ const StreakCard = React.memo(function StreakCard({
           );
         })}
       </View>
-    </View>
+    </Animated.View>
   );
 });
+
+function PulsingIndicator() {
+  const opacity = useSharedValue(0.3);
+
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.1, { duration: 1000 }),
+        withTiming(0.3, { duration: 1000 }),
+      ),
+      -1,
+      true,
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={animatedStyle}
+      className="absolute inset-0 bg-primary/30"
+    />
+  );
+}
 
 export default StreakCard;

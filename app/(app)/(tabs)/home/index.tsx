@@ -7,6 +7,13 @@ import {
   Text,
   View,
 } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import StreakCard, { StreakDay } from "@/components/home/StreakCard";
@@ -151,6 +158,23 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, [getAllWorkouts, getAllExercises]);
 
+  // Animation shared values
+  const headerOpacity = useSharedValue(0);
+  const headerTranslateY = useSharedValue(-20);
+
+  useEffect(() => {
+    headerOpacity.value = withTiming(1, { duration: 600 });
+    headerTranslateY.value = withTiming(0, {
+      duration: 600,
+      easing: Easing.out(Easing.quad),
+    });
+  }, []);
+
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: headerOpacity.value,
+    transform: [{ translateY: headerTranslateY.value }],
+  }));
+
   // ───────────────── Render ─────────────────
   return (
     <SafeAreaView
@@ -158,7 +182,7 @@ export default function HomeScreen() {
       edges={["top"]}
     >
       {/* Fixed header */}
-      <View className="mb-4">
+      <Animated.View style={headerAnimatedStyle} className="mb-4">
         <Text
           numberOfLines={1}
           className="text-2xl font-semibold text-black dark:text-white"
@@ -169,7 +193,7 @@ export default function HomeScreen() {
         <Text className="text-base font-normal text-neutral-600 dark:text-neutral-400">
           Ready to get pumped?
         </Text>
-      </View>
+      </Animated.View>
 
       {/* Two-stage scrolling */}
       <FlatList
@@ -180,21 +204,16 @@ export default function HomeScreen() {
               ? "section-header"
               : item.workout.clientId // Using clientId as stable key
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           if (item.type === "section-header") {
-            return (
-              <View className="mb-4 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-black">
-                <Text className="mb-2 text-xl font-semibold text-black dark:text-white">
-                  Your Workouts
-                </Text>
-              </View>
-            );
+            return <SectionHeader />;
           }
 
           return (
             <WorkoutCard
               workout={item.workout}
               exerciseTypeMap={exerciseTypeMap}
+              index={index}
             />
           );
         }}
@@ -216,5 +235,34 @@ export default function HomeScreen() {
         ListFooterComponent={<View className="mb-[20%] p-4"></View>}
       />
     </SafeAreaView>
+  );
+}
+
+function SectionHeader() {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20);
+
+  useEffect(() => {
+    opacity.value = withDelay(500, withTiming(1, { duration: 500 }));
+    translateY.value = withDelay(
+      500,
+      withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }),
+    );
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return (
+    <Animated.View
+      style={style}
+      className="mb-4 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-black"
+    >
+      <Text className="mb-2 text-xl font-semibold text-black dark:text-white">
+        Your Workouts
+      </Text>
+    </Animated.View>
   );
 }

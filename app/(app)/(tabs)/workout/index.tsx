@@ -97,7 +97,7 @@ export default function WorkoutScreen() {
                 modeConfig={{
                   parallaxAdjacentItemScale: 0.9,
                   parallaxScrollingScale: 1,
-                  parallaxScrollingOffset: 200,
+                  parallaxScrollingOffset: 160,
                 }}
               />
               {/* Pagination Dots */}
