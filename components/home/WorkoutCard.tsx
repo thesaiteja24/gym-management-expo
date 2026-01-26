@@ -65,8 +65,8 @@ export default function WorkoutCard({
   return (
     <AnimatedPressable
       style={animatedStyle}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
+      // onPressIn={onPressIn}
+      // onPressOut={onPressOut}
       onPress={() => {
         router.push(`/(app)/workout/${workout.id}`);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

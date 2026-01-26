@@ -5,13 +5,20 @@ import { useTemplate } from "@/stores/templateStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Text,
   TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 import Carousel from "react-native-reanimated-carousel";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -27,6 +34,52 @@ export default function WorkoutScreen() {
   // Template Store
   const templates = useTemplate((s) => s.templates);
 
+  // Animation values initialized at 0 opacity
+  const activeWorkoutOpacity = useSharedValue(0);
+  const activeWorkoutTranslateY = useSharedValue(20);
+
+  const libraryOpacity = useSharedValue(0);
+  const libraryTranslateY = useSharedValue(20);
+
+  const templatesOpacity = useSharedValue(0);
+  const templatesTranslateY = useSharedValue(20);
+
+  useEffect(() => {
+    // Staggered sequence
+    activeWorkoutOpacity.value = withTiming(1, { duration: 500 });
+    activeWorkoutTranslateY.value = withTiming(0, {
+      duration: 500,
+      easing: Easing.out(Easing.quad),
+    });
+
+    libraryOpacity.value = withDelay(100, withTiming(1, { duration: 500 }));
+    libraryTranslateY.value = withDelay(
+      100,
+      withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }),
+    );
+
+    templatesOpacity.value = withDelay(200, withTiming(1, { duration: 500 }));
+    templatesTranslateY.value = withDelay(
+      200,
+      withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }),
+    );
+  }, []);
+
+  const activeWorkoutStyle = useAnimatedStyle(() => ({
+    opacity: activeWorkoutOpacity.value,
+    transform: [{ translateY: activeWorkoutTranslateY.value }],
+  }));
+
+  const libraryStyle = useAnimatedStyle(() => ({
+    opacity: libraryOpacity.value,
+    transform: [{ translateY: libraryTranslateY.value }],
+  }));
+
+  const templatesStyle = useAnimatedStyle(() => ({
+    opacity: templatesOpacity.value,
+    transform: [{ translateY: templatesTranslateY.value }],
+  }));
+
   return (
     <View
       className="flex-1 bg-white p-4 dark:bg-black"
@@ -34,7 +87,10 @@ export default function WorkoutScreen() {
     >
       <View>
         {/* Active Workout Control */}
-        <View className="mb-4 flex flex-row gap-4">
+        <Animated.View
+          style={activeWorkoutStyle}
+          className="mb-4 flex flex-row gap-4"
+        >
           <Button
             title={workout ? "Continue the Pump" : "Ready to Get Pumped?"}
             variant="primary"
@@ -49,17 +105,19 @@ export default function WorkoutScreen() {
               className="max-w-[35%]"
             />
           )}
-        </View>
+        </Animated.View>
 
-        <Button
-          title="View Exercise Library"
-          variant="secondary"
-          onPress={() => router.push("/(app)/exercises/")}
-          className="mb-6"
-        />
+        <Animated.View style={libraryStyle}>
+          <Button
+            title="View Exercise Library"
+            variant="secondary"
+            onPress={() => router.push("/(app)/exercises/")}
+            className="mb-6"
+          />
+        </Animated.View>
 
         {/* Templates Section */}
-        <View className="flex flex-col gap-4">
+        <Animated.View style={templatesStyle} className="flex flex-col gap-4">
           <View className="flex flex-row items-center justify-between">
             <Text className="text-xl font-semibold text-black dark:text-white">
               My Templates
@@ -115,7 +173,7 @@ export default function WorkoutScreen() {
               </View>
             </View>
           )}
-        </View>
+        </Animated.View>
       </View>
     </View>
   );
