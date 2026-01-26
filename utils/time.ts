@@ -184,3 +184,22 @@ export const parseUTCToLocalDate = (iso: string) => {
   const d = new Date(iso);
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 };
+
+/**
+ * Returns a time-based greeting.
+ * @param date - Optional date object (defaults to now).
+ *
+ * @example
+ * getGreeting(new Date("2023-12-25T10:00:00"));
+ * // Output: "Good Morning"
+ *
+ * @usage
+ * Used in:
+ * - `HomeScreen` (app/(app)/(tabs)/home/index.tsx)
+ */
+export function getGreeting(date: Date = new Date()): string {
+  const hours = date.getHours();
+  if (hours < 12) return "Good Morning";
+  if (hours < 18) return "Good Afternoon";
+  return "Good Evening";
+}

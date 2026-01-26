@@ -17,7 +17,7 @@ import { useAuth } from "@/stores/authStore";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout, WorkoutHistoryItem } from "@/stores/workoutStore";
 import { getMotivationLine } from "@/utils/motivation";
-import { toDateKey } from "@/utils/time";
+import { getGreeting, toDateKey } from "@/utils/time";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -159,8 +159,12 @@ export default function HomeScreen() {
     >
       {/* Fixed header */}
       <View className="mb-4">
-        <Text className="text-2xl font-semibold text-black dark:text-white">
-          Welcome Back, {user?.firstName?.split(" ").slice(0, 2).join(" ")}!
+        <Text
+          numberOfLines={1}
+          className="text-2xl font-semibold text-black dark:text-white"
+        >
+          {getGreeting()}
+          {user?.firstName ? `, ${user.firstName.split(" ").at(-1)}` : ""}!
         </Text>
         <Text className="text-base font-normal text-neutral-600 dark:text-neutral-400">
           Ready to get pumped?
