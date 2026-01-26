@@ -5,12 +5,20 @@ import { useTemplate } from "@/stores/templateStore";
 import { useWorkout } from "@/stores/workoutStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import {
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import Carousel from "react-native-reanimated-carousel";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function WorkoutScreen() {
   const colors = useThemeColor();
+  const { width } = useWindowDimensions();
+  const [activeIndex, setActiveIndex] = useState(0);
 
   // Workout Store
   const workout = useWorkout((s) => s.workout);
@@ -18,12 +26,6 @@ export default function WorkoutScreen() {
 
   // Template Store
   const templates = useTemplate((s) => s.templates);
-
-  // Debugging
-  // const renderCount = React.useRef(0);
-  // renderCount.current += 1;
-
-  // console.log("WorkoutScreen render:", renderCount.current);
 
   return (
     <View
@@ -81,15 +83,37 @@ export default function WorkoutScreen() {
               </Text>
             </View>
           ) : (
-            <FlatList
-              horizontal
-              data={templates}
-              renderItem={({ item }) => <TemplateCard template={item} />}
-              keyExtractor={(item) => item.id}
-              showsHorizontalScrollIndicator={false}
-              className="overflow-visible"
-              contentContainerStyle={{ paddingRight: 20 }}
-            />
+            <View>
+              <Carousel
+                loop={false}
+                width={width}
+                height={160}
+                autoPlay={false}
+                data={templates}
+                scrollAnimationDuration={700}
+                onSnapToItem={(index) => setActiveIndex(index)}
+                renderItem={({ item }) => <TemplateCard template={item} />}
+                mode="parallax"
+                modeConfig={{
+                  parallaxAdjacentItemScale: 0.9,
+                  parallaxScrollingScale: 1,
+                  parallaxScrollingOffset: 200,
+                }}
+              />
+              {/* Pagination Dots */}
+              <View className="flex-row justify-center gap-2">
+                {templates.map((_, index) => (
+                  <View
+                    key={index}
+                    className={`h-2 w-2 rounded-full ${
+                      index === activeIndex
+                        ? "w-6 bg-blue-600"
+                        : "bg-neutral-300 dark:bg-neutral-700"
+                    }`}
+                  />
+                ))}
+              </View>
+            </View>
           )}
         </View>
       </View>
