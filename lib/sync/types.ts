@@ -5,6 +5,8 @@
  * These types are used across the sync infrastructure.
  */
 
+import { LengthUnits, WeightUnits } from "@/stores/userStore";
+
 /**
  * Sync status for any syncable entity (workout, template, etc.)
  */
@@ -139,4 +141,45 @@ export interface SyncResult<T = unknown> {
   data?: T;
   error?: Error | string;
   shouldRetry?: boolean;
+}
+/* ───────────────── User Types ───────────────── */
+
+/**
+ * Mutation types for the user domain
+ */
+export type UserMutationType = "UPDATE_USER" | "UPDATE_PREFERENCES";
+
+/**
+ * Serialized user payload for API/queue
+ */
+export interface UserPayload {
+  // Common fields
+  userId: string;
+
+  // For UPDATE_USER
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string | null;
+  height?: number | null;
+  weight?: number | null;
+
+  // For UPDATE_PREFERENCES
+  preferredWeightUnit?: WeightUnits;
+  preferredLengthUnit?: LengthUnits;
+
+  // For profile pic (separate handling might be needed but keeping simple for now)
+  // Profile pic upload usually involves FormData and is harder to serialize in JSON queue.
+  // For now, we focusing on data updates.
+}
+
+/**
+ * User mutation stored in the queue
+ */
+export interface UserMutation {
+  queueId: string;
+  type: UserMutationType;
+  payload: UserPayload;
+  userId: string;
+  createdAt: number;
+  retryCount: number;
 }

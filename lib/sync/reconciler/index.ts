@@ -5,4 +5,5 @@
  */
 
 export * from "./templateReconciler";
+export * from "./userReconciler";
 export * from "./workoutReconciler";

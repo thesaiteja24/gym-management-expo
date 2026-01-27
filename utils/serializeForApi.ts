@@ -1,4 +1,4 @@
-import { TemplatePayload } from "@/lib/sync/types";
+import { TemplatePayload, UserPayload } from "@/lib/sync/types";
 import { DraftTemplate } from "@/stores/template/types";
 import { WorkoutLog } from "@/stores/workoutStore";
 
@@ -125,4 +125,45 @@ export function serializeWorkoutForApi(workout: WorkoutLog) {
       };
     }),
   };
+}
+
+export function serializeUserUpdateForApi(user: UserPayload): UserPayload {
+  // @ts-ignore
+  const payload: UserPayload = {};
+
+  if (user.userId !== undefined) {
+    payload.userId = user.userId;
+  }
+
+  if (user.firstName !== undefined) {
+    payload.firstName = user.firstName;
+  }
+
+  if (user.lastName !== undefined) {
+    payload.lastName = user.lastName;
+  }
+
+  if (user.height !== undefined) {
+    payload.height = user.height !== null ? Number(user.height) : null;
+  }
+
+  if (user.weight !== undefined) {
+    payload.weight = user.weight !== null ? Number(user.weight) : null;
+  }
+
+  if (user.dateOfBirth !== undefined) {
+    payload.dateOfBirth = user.dateOfBirth
+      ? new Date(user.dateOfBirth).toISOString()
+      : null;
+  }
+
+  if (user.preferredWeightUnit !== undefined) {
+    payload.preferredWeightUnit = user.preferredWeightUnit;
+  }
+
+  if (user.preferredLengthUnit !== undefined) {
+    payload.preferredLengthUnit = user.preferredLengthUnit;
+  }
+
+  return payload;
 }

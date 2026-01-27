@@ -1,15 +1,19 @@
 import {
   dequeueTemplate,
+  dequeueUser,
   dequeueWorkout,
   getTemplateQueueCounts,
   getTemplateQueueForUser,
+  getUserQueue,
   getWorkoutQueueCounts,
   getWorkoutQueueForUser,
   incrementTemplateRetry,
+  incrementUserRetry,
   incrementWorkoutRetry,
   moveTemplateToFailedQueue,
   moveWorkoutToFailedQueue,
   TemplateMutation,
+  UserMutation,
   WorkoutMutation,
 } from "@/lib/sync/queue";
 import { queueEvents } from "@/lib/sync/queueEvents";
@@ -28,6 +32,7 @@ import {
   deleteTemplateService,
   updateTemplateService,
 } from "@/services/templateService";
+import { updateUserDataService } from "@/services/userService";
 import {
   createWorkoutService,
   deleteWorkoutService,
@@ -79,11 +84,12 @@ export function useSyncQueue() {
 
     const workoutCounts = getWorkoutQueueCounts(user.userId);
     const templateCounts = getTemplateQueueCounts(user.userId);
+    const userQueue = getUserQueue();
 
     useSyncStore
       .getState()
       .setQueueCounts(
-        workoutCounts.pending + templateCounts.pending,
+        workoutCounts.pending + templateCounts.pending + userQueue.length,
         workoutCounts.failed + templateCounts.failed,
       );
   }, [user?.userId]);
@@ -101,7 +107,7 @@ export function useSyncQueue() {
         switch (mutation.type) {
           case "CREATE": {
             const res = await createWorkoutService(mutation.payload);
-            console.log(JSON.stringify(res));
+
             if (res.success && res.data?.workout) {
               console.log("Reconciling workout resource");
               reconcileWorkout(mutation.clientId, res.data.workout);
@@ -170,7 +176,7 @@ export function useSyncQueue() {
         switch (mutation.type) {
           case "CREATE": {
             const res = await createTemplateService(mutation.payload);
-            console.log(JSON.stringify(res));
+
             if (res.success && res.data?.template) {
               reconcileTemplate(mutation.clientId, res.data.template);
               console.log("reconciled template resource");
@@ -229,6 +235,33 @@ export function useSyncQueue() {
   );
 
   /* ─────────────────────────────────────────────
+     User mutation processor
+  ───────────────────────────────────────────── */
+  const processUserMutation = useCallback(
+    async (mutation: UserMutation): Promise<boolean> => {
+      try {
+        const res = await updateUserDataService(
+          mutation.userId,
+          mutation.payload,
+        );
+        if (res.success) {
+          return true;
+        } else {
+        }
+        return false;
+      } catch (error: any) {
+        log.error("[SYNC ERROR - User]", {
+          queueId: mutation.queueId,
+          type: mutation.type,
+          error,
+        });
+        return false;
+      }
+    },
+    [],
+  );
+
+  /* ─────────────────────────────────────────────
      Main sync routine
   ───────────────────────────────────────────── */
   const syncQueue = useCallback(async () => {
@@ -272,6 +305,28 @@ export function useSyncQueue() {
           await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
         }
       }
+
+      // User Profile
+      // Filter for current user and process
+      const userQueue = getUserQueue().filter((m) => m.userId === user.userId);
+      for (const m of userQueue) {
+        if (m.retryCount >= MAX_RETRIES) {
+          // For user mutations, we just drop them if they fail too many times?
+          // Or maybe we should have a failed queue.
+          // For now, simpler approach: drop and log.
+          log.error("Dropping failed user mutation", m);
+          dequeueUser(m.queueId);
+          continue;
+        }
+
+        const ok = await processUserMutation(m);
+        if (ok) {
+          dequeueUser(m.queueId);
+        } else {
+          incrementUserRetry(m.queueId);
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        }
+      }
     } finally {
       isSyncing.current = false;
       useSyncStore.getState().setSyncStatus(false);
@@ -282,6 +337,7 @@ export function useSyncQueue() {
     user?.userId,
     processWorkoutMutation,
     processTemplateMutation,
+    processUserMutation,
     updateCounts,
   ]);
 

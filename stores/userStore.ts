@@ -1,8 +1,10 @@
+import { enqueueUserUpdate } from "@/lib/sync/queue/userQueue";
+import { UserPayload } from "@/lib/sync/types";
 import {
   getUserDataService,
   updateProfilePicService,
-  updateUserDataService,
 } from "@/services/userService";
+import { serializeUserUpdateForApi } from "@/utils/serializeForApi";
 import { create } from "zustand";
 import { useAuth } from "./authStore";
 
@@ -91,63 +93,66 @@ export const useUser = create<UserState>((set) => ({
   },
 
   updateUserData: async (userId: string, data: Record<string, any>) => {
-    set({ isLoading: true });
+    // offline-first implementation
+    const currentUser = useAuth.getState().user;
+
+    // Optimistically update
+    useAuth.getState().setUser({
+      ...currentUser,
+      ...data,
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Queue update
+    const payload: UserPayload = {
+      userId,
+      ...data,
+    };
+
     try {
-      const res = await updateUserDataService(userId, data);
-      const currentUser = useAuth.getState().user;
-
-      if (res.success) {
-        useAuth.getState().setUser({
-          ...currentUser,
-          firstName: res.data?.firstName ?? currentUser?.firstName,
-          lastName: res.data?.lastName ?? currentUser?.lastName,
-          dateOfBirth: res.data?.dateOfBirth ?? currentUser?.dateOfBirth,
-          preferredWeightUnit:
-            res.data?.preferredWeightUnit ?? currentUser?.preferredWeightUnit,
-          preferredLengthUnit:
-            res.data?.preferredLengthUnit ?? currentUser?.preferredLengthUnit,
-          height: res.data?.height ?? currentUser?.height,
-          weight: res.data?.weight ?? currentUser?.weight,
-          updatedAt: res.data?.updatedAt ?? currentUser?.updatedAt,
-        });
-      }
-      set({ isLoading: false });
-      return res;
+      enqueueUserUpdate(
+        "UPDATE_USER",
+        serializeUserUpdateForApi(payload),
+        userId,
+      );
+      return { success: true };
     } catch (error) {
-      set({ isLoading: false });
-
-      return {
-        success: false,
-        error: error,
-      };
+      return { success: false, error };
     }
   },
 
   updatePreferences(userId, data: Preferences) {
-    set({ isLoading: true });
     return new Promise(async (resolve) => {
+      // offline-first implementation
+      const currentUser = useAuth.getState().user;
+
+      const updateData: Record<string, any> = {};
+      if (data.preferredWeightUnit)
+        updateData.preferredWeightUnit = data.preferredWeightUnit;
+      if (data.preferredLengthUnit)
+        updateData.preferredLengthUnit = data.preferredLengthUnit;
+
+      // Optimistically update
+      useAuth.getState().setUser({
+        ...currentUser,
+        ...updateData,
+      });
+
+      // Queue update
+      const payload: UserPayload = {
+        userId,
+        ...updateData,
+      };
+
       try {
-        const res = await updateUserDataService(userId, data);
-        const currentUser = useAuth.getState().user;
-
-        if (res.success) {
-          useAuth.getState().setUser({
-            ...currentUser,
-            preferredWeightUnit:
-              res.data?.preferredWeightUnit ?? currentUser?.preferredWeightUnit,
-            preferredLengthUnit:
-              res.data?.preferredLengthUnit ?? currentUser?.preferredLengthUnit,
-          });
-        }
-        set({ isLoading: false });
-        resolve(res);
+        enqueueUserUpdate(
+          "UPDATE_PREFERENCES",
+          serializeUserUpdateForApi(payload),
+          userId,
+        );
+        resolve({ success: true });
       } catch (error) {
-        set({ isLoading: false });
-
-        resolve({
-          success: false,
-          error: error,
-        });
+        resolve({ success: false, error });
       }
     });
   },

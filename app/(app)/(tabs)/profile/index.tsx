@@ -8,7 +8,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -49,7 +48,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     // 1. Avatar: Fade In + Scale Up
     avatarOpacity.value = withTiming(1, { duration: 500 });
-    avatarScale.value = withSpring(1, { damping: 12, stiffness: 200 });
+    // avatarScale.value = withSpring(1, { damping: 12, stiffness: 200 });
 
     // 2. Name: Fade In + Slide Up (delayed 100ms)
     nameOpacity.value = withDelay(100, withTiming(1, { duration: 500 }));
