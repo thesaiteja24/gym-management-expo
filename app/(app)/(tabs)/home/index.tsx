@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import StreakCard, { StreakDay } from "@/components/home/StreakCard";
 import WorkoutCard from "@/components/home/WorkoutCard";
 
-import { useAnalytics } from "@/stores/analyticsStore";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAuth } from "@/stores/authStore";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
 import { useWorkout, WorkoutHistoryItem } from "@/stores/workoutStore";
@@ -74,6 +74,8 @@ export default function HomeScreen() {
   }, [sortedWorkoutHistory]);
 
   // ───────────────── Analytics & Motivation ─────────────────
+
+  const { userAnalytics } = useAnalytics();
   const {
     streakDays,
     workoutsThisWeek,
@@ -81,7 +83,7 @@ export default function HomeScreen() {
     weeklyVolume,
     lastWeekVolume,
     workoutDates,
-  } = useAnalytics();
+  } = userAnalytics;
 
   const { streakData, motivation } = useMemo(() => {
     const today = new Date();
@@ -169,6 +171,10 @@ export default function HomeScreen() {
       easing: Easing.out(Easing.quad),
     });
   }, []);
+
+  useEffect(() => {
+    Promise.all([getAllWorkouts(), getAllExercises()]);
+  }, [getAllWorkouts, getAllExercises]);
 
   const headerAnimatedStyle = useAnimatedStyle(() => ({
     opacity: headerOpacity.value,

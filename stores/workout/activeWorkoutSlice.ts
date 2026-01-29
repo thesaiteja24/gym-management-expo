@@ -372,6 +372,10 @@ export const createActiveWorkoutSlice: StateCreator<
           note: s.note ?? null,
         })),
       })),
+      user: {
+        firstName: useAuth.getState().user?.firstName as string,
+        lastName: useAuth.getState().user?.lastName as string,
+      },
     });
 
     // Serialize for API

@@ -6,8 +6,9 @@ import {
   WorkoutHistorySet,
 } from "@/stores/workout/types";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import React, { useMemo } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 /* ───────────────── Group Color Logic ───────────────── */
 
@@ -95,9 +96,15 @@ export function ReadOnlyExerciseRow({
           style={{ width: 40, height: 40, borderRadius: 6 }}
         />
         <View>
-          <Text className="text-base font-semibold text-black dark:text-white">
-            {details.title}
-          </Text>
+          <Pressable
+            onPress={() => {
+              router.push(`/(app)/exercises/${details.id}/(tabs)/summary`);
+            }}
+          >
+            <Text className="text-lg font-semibold text-black dark:text-white">
+              {details.title}
+            </Text>
+          </Pressable>
           {/* Some types use 'exerciseType' directly on details */}
           <Text className="text-base capitalize text-neutral-500">
             {details.exerciseType}

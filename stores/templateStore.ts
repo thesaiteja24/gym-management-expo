@@ -41,34 +41,49 @@ export const useTemplate = create<TemplateState>()(
        * Merges with pending local items to preserve optimistic updates.
        */
       getAllTemplates: async () => {
+        set({ templateLoading: true });
+
         try {
           const res = await getAllTemplatesService();
 
-          if (!res.success) {
+          if (res.success && res.data) {
+            set((state) => {
+              // Keep pending local templates
+              const pendingTemplates = state.templates.filter(
+                (t) => t.syncStatus === "pending",
+              );
+
+              // Backend templates (synced)
+              const backendTemplates = res.data.map(
+                (item: WorkoutTemplate) => ({
+                  ...item,
+                  clientId: item.clientId,
+                  syncStatus: "synced" as SyncStatus,
+                }),
+              );
+
+              // Deduplicate by clientId (local wins)
+              const pendingClientIds = new Set(
+                pendingTemplates.map((t) => t.clientId),
+              );
+
+              const mergedTemplates = [
+                ...pendingTemplates,
+                ...backendTemplates.filter(
+                  (b: WorkoutTemplate) => !pendingClientIds.has(b.clientId),
+                ),
+              ];
+
+              return {
+                templates: mergedTemplates,
+                templateLoading: false,
+              };
+            });
+          } else {
             set({ templateLoading: false });
-            return;
           }
-
-          set((state) => {
-            // Client-only pending templates
-            const pending = state.templates.filter(
-              (t) => t.syncStatus === "pending" && t.clientId,
-            );
-
-            // Backend is the source of truth
-            const synced = (res.data || []).map((item: WorkoutTemplate) => ({
-              ...item,
-              clientId: null,
-              syncStatus: "synced" as SyncStatus,
-            }));
-
-            return {
-              templates: [...pending, ...synced],
-              templateLoading: false,
-            };
-          });
         } catch (e) {
-          console.error("Failed to fetch templates", e);
+          // console.error("Failed to fetch templates", e);
           set({ templateLoading: false });
         }
       },

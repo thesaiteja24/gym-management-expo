@@ -1,14 +1,15 @@
 import CustomHeader from "@/components/navigation/CustomHeader";
 import { router, Stack } from "expo-router";
-import React from "react";
 import { useColorScheme } from "react-native";
 
-export default function ExercisesLayout() {
+export default function ExerciseDetailsStack() {
+  const scheme = useColorScheme();
+
   return (
     <Stack
       screenOptions={{
         contentStyle: {
-          backgroundColor: useColorScheme() === "dark" ? "#000000" : "#ffffff",
+          backgroundColor: scheme === "dark" ? "#000" : "#fff",
         },
         header: (props) => {
           const { options } = props;
@@ -27,26 +28,15 @@ export default function ExercisesLayout() {
         },
       }}
     >
-      {/* EXERCISES LIST */}
       <Stack.Screen
-        name="index"
+        name="(tabs)"
         options={
           {
-            title: "Exercises",
+            title: "Exercise",
             leftIcon: "chevron-back-outline",
             onLeftPress: () => {
               router.back();
             },
-          } as any
-        }
-      />
-
-      {/* EXERCISE DETAIL */}
-      <Stack.Screen
-        name="[id]"
-        options={
-          {
-            headerShown: false,
           } as any
         }
       />

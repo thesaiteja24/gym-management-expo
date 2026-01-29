@@ -33,6 +33,7 @@ export default function WorkoutScreen() {
 
   // Template Store
   const templates = useTemplate((s) => s.templates);
+  const getAllTemplates = useTemplate((s) => s.getAllTemplates);
 
   // Animation values initialized at 0 opacity
   const activeWorkoutOpacity = useSharedValue(0);
@@ -43,6 +44,10 @@ export default function WorkoutScreen() {
 
   const templatesOpacity = useSharedValue(0);
   const templatesTranslateY = useSharedValue(20);
+
+  useEffect(() => {
+    getAllTemplates();
+  }, []);
 
   useEffect(() => {
     // Staggered sequence
@@ -111,7 +116,7 @@ export default function WorkoutScreen() {
           <Button
             title="View Exercise Library"
             variant="secondary"
-            onPress={() => router.push("/(app)/exercises/")}
+            onPress={() => router.push("/(app)/exercises")}
             className="mb-6"
           />
         </Animated.View>

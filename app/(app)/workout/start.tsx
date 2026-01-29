@@ -411,7 +411,9 @@ export default function StartWorkout() {
                 drag={drag}
                 preferredWeightUnit={preferredWeightUnit}
                 onPress={() =>
-                  router.navigate(`/(app)/exercises/${item.exerciseId}`)
+                  router.navigate(
+                    `/(app)/exercises/${item.exerciseId}/(tabs)/summary`,
+                  )
                 }
                 onReplaceExercise={() =>
                   router.push({

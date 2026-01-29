@@ -1,6 +1,7 @@
 // app/(app)/(tabs)/profile.tsx
 import EditableAvatar from "@/components/EditableAvatar";
 import { useAuth } from "@/stores/authStore";
+import { useUser } from "@/stores/userStore";
 import React, { memo, useEffect } from "react";
 import { Text, View } from "react-native";
 import Animated, {
@@ -33,6 +34,7 @@ const InfoRow = memo(function InfoRow({
 
 export default function ProfileScreen() {
   const user = useAuth((state) => state.user);
+  const getUserData = useUser((state) => state.getUserData);
   const dob = new Date(user?.dateOfBirth ?? "");
 
   // Animation Values
@@ -44,6 +46,10 @@ export default function ProfileScreen() {
 
   const infoOpacity = useSharedValue(0);
   const infoTranslateY = useSharedValue(20);
+
+  useEffect(() => {
+    getUserData(user?.userId ?? "");
+  }, [user?.userId]);
 
   useEffect(() => {
     // 1. Avatar: Fade In + Scale Up

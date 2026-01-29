@@ -341,7 +341,7 @@ export default function TemplateEditor() {
             onChangeText={(t) => updateDraftTemplate({ title: t })}
             placeholder="Template Name e.g. Upper Body A"
             placeholderTextColor="#9ca3af"
-            className="mb-2 text-xl font-bold text-black dark:text-white"
+            className="mb-2 text-xl font-semibold text-black dark:text-white"
           />
           <TextInput
             value={draftTemplate.notes}
@@ -359,6 +359,7 @@ export default function TemplateEditor() {
           contentContainerStyle={{ marginBottom: safeAreaInsets.bottom }}
           onDragEnd={({ data }) => reorderDraftExercises(data)}
           activationDistance={20}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item, drag, isActive }) => {
             const details = exerciseMap.get(item.exerciseId);
             if (!details) return null;

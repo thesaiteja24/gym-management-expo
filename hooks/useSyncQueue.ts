@@ -285,6 +285,7 @@ export function useSyncQueue() {
           dequeueWorkout(m.queueId);
         } else {
           incrementWorkoutRetry(m.queueId);
+          console.log("Retrying workout mutation", m.queueId);
           await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
         }
       }

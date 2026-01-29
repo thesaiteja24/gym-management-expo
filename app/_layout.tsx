@@ -1,6 +1,5 @@
 import { OtaUpdateModal } from "@/components/auth/OtaUpdateModal";
 import { CustomToast } from "@/components/ui/CustomToast";
-import { useInitialDataFetch } from "@/hooks/useInitialDataFetch";
 import { useSyncQueue } from "@/hooks/useSyncQueue";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
@@ -17,6 +16,7 @@ import {
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
+import { vexo } from "vexo-analytics";
 import "./globals.css";
 
 // ─────────────────────────────────────────────
@@ -25,6 +25,10 @@ import "./globals.css";
 SplashScreen.preventAutoHideAsync();
 
 type UpdateState = "idle" | "downloading" | "restarting";
+
+if (!__DEV__) {
+  vexo("8f13f010-99f1-4a89-881b-b1b0d2321412");
+}
 
 export default function RootLayout() {
   const colors = useThemeColor();
@@ -49,7 +53,7 @@ export default function RootLayout() {
   useSyncQueue();
 
   // ───── Initial Data Fetch ─────
-  useInitialDataFetch();
+  // useInitialDataFetch();
 
   // ─────────────────────────────────────────────
   // 1️⃣ Restore auth from storage (once)

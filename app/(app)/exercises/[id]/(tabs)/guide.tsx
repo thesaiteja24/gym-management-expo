@@ -1,13 +1,13 @@
 import { useExercise } from "@/stores/exerciseStore";
-import { useLocalSearchParams } from "expo-router";
+import { useGlobalSearchParams } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Dimensions, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
-export default function ViewExerciseScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+export default function GuideScreen() {
+  const { id } = useGlobalSearchParams<{ id: string }>();
   const exerciseList = useExercise((s) => s.exerciseList);
   const exercise = exerciseList.find((e) => e.id === id);
   const videoSource = exercise?.videoUrl ?? "";
@@ -39,7 +39,7 @@ export default function ViewExerciseScreen() {
         nativeControls={false}
       />
 
-      <Text className="self-start p-4 text-lg font-semibold text-black dark:text-white">
+      <Text className="self-start p-4 text-xl font-semibold text-black dark:text-white">
         {exercise?.title}
       </Text>
 

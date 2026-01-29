@@ -231,7 +231,7 @@ export default function ExercisesScreen() {
       return;
     }
 
-    router.push(`/(app)/exercises/${exercise.id}`);
+    router.push(`/(app)/exercises/${exercise.id}/(tabs)/summary`);
   };
 
   /* ───────────────── Render ───────────────── */

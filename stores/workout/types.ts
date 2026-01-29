@@ -121,6 +121,7 @@ export type WorkoutHistoryItem = {
   updatedAt: string;
   isEdited: boolean;
   editedAt: string | null;
+  user: { firstName: string; lastName: string };
 
   exerciseGroups: WorkoutHistoryGroup[];
   exercises: WorkoutHistoryExercise[];

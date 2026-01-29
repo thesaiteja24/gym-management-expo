@@ -75,14 +75,20 @@ export default function WorkoutCard({
     >
       {/* Header */}
       <View className="mb-4 flex-col justify-between gap-2">
-        <Text className="line-clamp-1 text-lg font-medium text-black dark:text-white">
-          {workout.title || "Workout"}
-        </Text>
         <View className="flex-row items-center justify-between gap-4">
-          <Text className="flex-1 text-base font-medium text-primary">
-            {/* @ts-ignore */}
-            {workout?.user?.firstName + " " + workout?.user?.lastName}
+          <Text className="line-clamp-1 text-lg font-medium text-black dark:text-white">
+            {workout.title || "Workout"}
           </Text>
+          <Text className="self-end rounded-full bg-blue-200 px-2 py-1 text-right text-xs font-normal text-blue-600">
+            {workout.syncStatus}
+          </Text>
+        </View>
+        <View className="flex-row items-center justify-between gap-4">
+          {workout.user.firstName && (
+            <Text className="flex-1 text-base font-medium text-primary">
+              {workout?.user?.firstName + " " + workout?.user?.lastName}
+            </Text>
+          )}
 
           <Text className="flex-1 text-sm font-normal text-primary">
             <Text className="text-sm font-medium text-black dark:text-white">
@@ -95,7 +101,7 @@ export default function WorkoutCard({
           <Text className="flex-1 text-sm font-normal text-neutral-500 dark:text-neutral-400">
             {formatDate(workout.startTime)}
           </Text>
-          <Text className="flex-1 text-sm font-normal text-neutral-600 dark:text-neutral-400">
+          <Text className="flex-1 text-sm font-normal text-neutral-500 dark:text-neutral-400">
             Volume: {volume} kg
           </Text>
         </View>
