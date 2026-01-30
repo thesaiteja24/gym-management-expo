@@ -38,44 +38,58 @@ export default function VerifyOtp() {
   const handleResendOtp = useCallback(async () => {
     if (resendCooldown > 0 || isLoading) return;
 
-    const payload = JSON.parse(Array.isArray(data) ? data[0] : data);
-    const response = await sendOtp({
-      countryCode: payload.countryCode,
-      phone: payload.phone,
-      resend: true,
-    });
-
-    if (response.success) {
-      Toast.show({
-        type: "success",
-        text1: "OTP sent!",
-        text2: "Check your phone for the new code.",
+    try {
+      const payload = JSON.parse(Array.isArray(data) ? data[0] : data);
+      const response = await sendOtp({
+        countryCode: payload.countryCode,
+        phone: payload.phone,
+        resend: true,
       });
-      setResendCooldown(60); // 60 second cooldown
-    } else {
+
+      if (response.success) {
+        Toast.show({
+          type: "success",
+          text1: "OTP sent!",
+          text2: "Check your phone for the new code.",
+        });
+        setResendCooldown(60); // 60 second cooldown
+      } else {
+        Toast.show({
+          type: "error",
+          text1: response.error?.message || "Failed to resend OTP",
+        });
+      }
+    } catch (error: any) {
       Toast.show({
         type: "error",
-        text1: response.error?.message || "Failed to resend OTP",
+        text1: error?.message || "Failed to resend OTP",
       });
     }
   }, [data, resendCooldown, isLoading, sendOtp]);
 
   const onVerifyOtp = async () => {
     // Ensure it's a string, not an array as per expo-router behavior
-    const payload = JSON.parse(Array.isArray(data) ? data[0] : data);
-    const response = await verifyOtp({ ...payload, otp });
+    try {
+      const payload = JSON.parse(Array.isArray(data) ? data[0] : data);
+      const response = await verifyOtp({ ...payload, otp });
 
-    if (response.success) {
-      // Navigate to the next screen or home screen after successful verification
-      router.replace("/home"); // Adjust the path as needed
-      Toast.show({
-        type: "success",
-        text1: response.message || "OTP verified successfully",
-      });
-    } else {
+      if (response.success) {
+        // Navigate to the next screen or home screen after successful verification
+        router.replace("/home"); // Adjust the path as needed
+        Toast.show({
+          type: "success",
+          text1: response.message || "OTP verified successfully",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: response.error?.message || "Failed to verify OTP",
+        });
+      }
+    } catch (error: any) {
       Toast.show({
         type: "error",
-        text1: response.error?.message || "Failed to verify OTP",
+        text1: error?.message || "Failed to verify OTP",
       });
     }
   };
@@ -109,7 +123,7 @@ export default function VerifyOtp() {
           onTextChange={(text) => setOtp(text)}
           textInputProps={{
             textContentType: "oneTimeCode",
-            autoComplete: "one-time-code", // or "sms-otp" depending on platform versions, usually one-time-code works
+            autoComplete: "sms-otp",
           }}
           theme={{
             focusedPinCodeContainerStyle: { borderColor: colors.primary },

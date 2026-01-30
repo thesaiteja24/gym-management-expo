@@ -4,12 +4,12 @@ import { useAuth } from "@/stores/authStore";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
-    Keyboard,
-    KeyboardAvoidingView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Keyboard,
+  KeyboardAvoidingView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -29,28 +29,35 @@ export default function Login() {
   const onContinue = async () => {
     Keyboard.dismiss();
 
-    const payload = { countryCode: country.dial_code, phone, resend: false };
-    const response = await sendOtp(payload);
+    try {
+      const payload = { countryCode: country.dial_code, phone, resend: false };
+      const response = await sendOtp(payload);
 
-    if (response.success) {
-      // Navigate to OTP verification screen
-      router.push({
-        pathname: "/(auth)/verify-otp",
-        params: {
-          data: JSON.stringify({
-            countryCode: payload.countryCode,
-            phone: payload.phone,
-          }),
-        },
-      });
-      Toast.show({
-        type: "success",
-        text1: response.message || "OTP sent successfully",
-      });
-    } else {
+      if (response.success) {
+        // Navigate to OTP verification screen
+        router.push({
+          pathname: "/(auth)/verify-otp",
+          params: {
+            data: JSON.stringify({
+              countryCode: payload.countryCode,
+              phone: payload.phone,
+            }),
+          },
+        });
+        Toast.show({
+          type: "success",
+          text1: response.message || "OTP sent successfully",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: response.error?.message || "Failed to send OTP",
+        });
+      }
+    } catch (error: any) {
       Toast.show({
         type: "error",
-        text1: response.error?.message || "Failed to send OTP",
+        text1: error?.message || "Failed to send OTP",
       });
     }
   };

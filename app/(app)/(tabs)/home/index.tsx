@@ -32,11 +32,12 @@ export default function HomeScreen() {
   // ───────────────── Stores ─────────────────
   const user = useAuth((s) => s.user);
 
-  const workoutLoading = useWorkout((s) => s.workoutLoading);
   const workoutHistory = useWorkout((s) => s.workoutHistory);
+  const workoutLoading = useWorkout((s) => s.workoutLoading);
   const getAllWorkouts = useWorkout((s) => s.getAllWorkouts);
 
   const exerciseList = useExercise((s) => s.exerciseList);
+  const exerciseLoading = useExercise((s) => s.exerciseLoading);
   const getAllExercises = useExercise((s) => s.getAllExercises);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -48,33 +49,19 @@ export default function HomeScreen() {
     return map;
   }, [exerciseList]);
 
-  const sortedWorkoutHistory = useMemo(
-    () =>
-      [...workoutHistory].sort(
-        (a, b) =>
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
-      ),
-    [workoutHistory],
-  );
-
   type ListItem =
     | { type: "section-header" }
     | { type: "workout"; workout: WorkoutHistoryItem };
 
   const listData: ListItem[] = useMemo(() => {
-    if (sortedWorkoutHistory.length === 0) return [];
-
+    if (workoutHistory.length === 0) return [];
     return [
       { type: "section-header" },
-      ...sortedWorkoutHistory.map((w) => ({
-        type: "workout" as const,
-        workout: w,
-      })),
+      ...workoutHistory.map((w) => ({ type: "workout" as const, workout: w })),
     ];
-  }, [sortedWorkoutHistory]);
+  }, [workoutHistory]);
 
   // ───────────────── Analytics & Motivation ─────────────────
-
   const { userAnalytics } = useAnalytics();
   const {
     streakDays,
@@ -85,11 +72,10 @@ export default function HomeScreen() {
     workoutDates,
   } = userAnalytics;
 
-  const { streakData, motivation } = useMemo(() => {
+  const { streakData } = useMemo(() => {
     const today = new Date();
     const todayKey = toDateKey(today);
 
-    // 1. Build Calendar Days for UI
     const start = new Date(today);
     start.setDate(today.getDate() - 3);
 
@@ -101,8 +87,8 @@ export default function HomeScreen() {
 
     while (cursor <= end) {
       const key = toDateKey(cursor);
-
       let status: StreakDay["status"];
+
       if (workoutDates.has(key)) status = "active";
       else if (key === todayKey) status = "today";
       else if (cursor > today) status = "future";
@@ -112,7 +98,6 @@ export default function HomeScreen() {
       cursor.setDate(cursor.getDate() + 1);
     }
 
-    // 2. Get Motivation Line
     const motivationLine = getMotivationLine({
       weeklyVolume,
       lastWeekVolume,
@@ -130,7 +115,6 @@ export default function HomeScreen() {
         days,
         message: motivationLine.text,
       },
-      motivation: motivationLine,
     };
   }, [
     streakDays,
@@ -160,7 +144,7 @@ export default function HomeScreen() {
     setRefreshing(false);
   }, [getAllWorkouts, getAllExercises]);
 
-  // Animation shared values
+  // ───────────────── Header animation ─────────────────
   const headerOpacity = useSharedValue(0);
   const headerTranslateY = useSharedValue(-20);
 
@@ -183,7 +167,7 @@ export default function HomeScreen() {
       className="flex-1 bg-white px-4 pt-4 dark:bg-black"
       edges={["top"]}
     >
-      {/* Fixed header */}
+      {/* Header */}
       <Animated.View style={headerAnimatedStyle} className="mb-4">
         <Text
           numberOfLines={1}
@@ -197,44 +181,48 @@ export default function HomeScreen() {
         </Text>
       </Animated.View>
 
-      {/* Two-stage scrolling */}
-      <FlatList
-        data={listData}
-        keyExtractor={(item, index) =>
-          item.type === "section-header"
-            ? `section-header-${index}`
-            : item.workout.clientId
-        }
-        renderItem={({ item, index }) => {
-          if (item.type === "section-header") {
-            return <SectionHeader />;
+      {/* Workouts List */}
+      {!exerciseList.length ? (
+        <ActivityIndicator />
+      ) : (
+        <FlatList
+          data={listData}
+          keyExtractor={(item, index) =>
+            item.type === "section-header"
+              ? `section-header-${index}`
+              : item.workout.clientId
           }
-
-          return (
-            <WorkoutCard
-              workout={item.workout}
-              exerciseTypeMap={exerciseTypeMap}
-              index={index}
-            />
-          );
-        }}
-        ListHeaderComponent={<StreakCard {...streakData} />}
-        stickyHeaderIndices={listData.length > 0 ? [1] : []}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          workoutLoading && !refreshing ? (
-            <ActivityIndicator />
-          ) : (
-            <Text className="mt-12 text-center text-base text-neutral-500 dark:text-neutral-400">
-              No workouts logged yet
-            </Text>
-          )
-        }
-        ListFooterComponent={<View className="mb-[20%] p-4"></View>}
-      />
+          renderItem={({ item, index }) => {
+            if (item.type === "section-header") return <SectionHeader />;
+            if (!exerciseList.length) return null;
+            return (
+              <WorkoutCard
+                workout={item.workout}
+                exerciseTypeMap={exerciseTypeMap}
+                index={index}
+              />
+            );
+          }}
+          ListHeaderComponent={<StreakCard {...streakData} />}
+          stickyHeaderIndices={listData.length > 0 ? [1] : []}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            workoutLoading || exerciseLoading ? (
+              <View className="mt-12 items-center">
+                <ActivityIndicator />
+              </View>
+            ) : (
+              <Text className="mt-12 text-center text-base text-neutral-500 dark:text-neutral-400">
+                No workouts logged yet
+              </Text>
+            )
+          }
+          ListFooterComponent={<View className="mb-[20%] p-4" />}
+        />
+      )}
     </SafeAreaView>
   );
 }

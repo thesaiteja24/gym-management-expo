@@ -13,6 +13,14 @@ export interface HistorySlice {
   deleteWorkout: (clientId: string, dbId: string | null) => Promise<boolean>;
 }
 
+const sortWorkouts = (workouts: WorkoutHistoryItem[]) => {
+  return [...workouts].sort(
+    (a, b) =>
+      new Date(b.startTime ?? 0).getTime() -
+      new Date(a.startTime ?? 0).getTime(),
+  );
+};
+
 export const createHistorySlice: StateCreator<
   WorkoutState,
   [],
@@ -24,38 +32,44 @@ export const createHistorySlice: StateCreator<
 
   getAllWorkouts: async () => {
     set({ workoutLoading: true });
+
     try {
       const res = await getAllWorkoutsService();
+      if (!res.success || !res.data) return;
 
-      if (res.success && res.data) {
-        set((state) => {
-          // Keep pending items from local state (not yet synced)
-          const pendingItems = state.workoutHistory.filter(
-            (w) => w.syncStatus === "pending",
+      set((state) => {
+        const pending = new Map(
+          state.workoutHistory
+            .filter((w) => w.syncStatus === "pending")
+            .map((w) => [w.clientId, w]),
+        );
+
+        const merged = [];
+        const seen = new Set<string>();
+
+        for (const item of res.data) {
+          const clientId = item.clientId ?? item.id;
+          if (seen.has(clientId)) continue;
+          seen.add(clientId);
+
+          merged.push(
+            pending.get(clientId) ?? {
+              ...item,
+              clientId,
+              syncStatus: "synced" as SyncStatus,
+            },
           );
 
-          // Backend items with clientId and synced status
-          const backendItems = res.data.map((item: any) => ({
-            ...item,
-            clientId: item.clientId,
-            syncStatus: "synced" as SyncStatus,
-          }));
+          pending.delete(clientId);
+        }
 
-          // Merge: pending first, then backend (filter duplicates by clientId)
-          const pendingClientIds = new Set(pendingItems.map((p) => p.clientId));
-          const mergedHistory = [
-            ...pendingItems,
-            ...backendItems.filter(
-              (b: WorkoutHistoryItem) => !pendingClientIds.has(b.clientId),
-            ),
-          ];
-
-          return { workoutHistory: mergedHistory, workoutLoading: false };
-        });
-      } else {
-        set({ workoutLoading: false });
-      }
-    } catch (error) {
+        return {
+          workoutHistory: sortWorkouts([...pending.values(), ...merged]),
+        };
+      });
+    } catch (e) {
+      console.error("getAllWorkouts failed", e);
+    } finally {
       set({ workoutLoading: false });
     }
   },
@@ -91,7 +105,7 @@ export const createHistorySlice: StateCreator<
 
       // New item - add to beginning
       return {
-        workoutHistory: [item, ...state.workoutHistory],
+        workoutHistory: sortWorkouts([item, ...state.workoutHistory]),
       };
     });
   },
