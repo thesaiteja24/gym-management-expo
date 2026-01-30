@@ -1,12 +1,6 @@
 import { router, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, RefreshControl, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -19,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import StreakCard, { StreakDay } from "@/components/home/StreakCard";
 import WorkoutCard from "@/components/home/WorkoutCard";
 
+import ShimmerHomeScreen from "@/components/home/ShimmerHomeScreen";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useAuth } from "@/stores/authStore";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
@@ -42,6 +37,11 @@ export default function HomeScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  // ───────────────── Derived UI state ─────────────────
+  const hasExercises = exerciseList.length > 0;
+  const isLoading = workoutLoading || exerciseLoading;
+  const showShimmer = !hasExercises || isLoading;
+
   // ───────────────── Derived data ─────────────────
   const exerciseTypeMap = useMemo(() => {
     const map = new Map<string, ExerciseType>();
@@ -54,12 +54,14 @@ export default function HomeScreen() {
     | { type: "workout"; workout: WorkoutHistoryItem };
 
   const listData: ListItem[] = useMemo(() => {
+    if (showShimmer) return [];
     if (workoutHistory.length === 0) return [];
+
     return [
       { type: "section-header" },
       ...workoutHistory.map((w) => ({ type: "workout" as const, workout: w })),
     ];
-  }, [workoutHistory]);
+  }, [workoutHistory, showShimmer]);
 
   // ───────────────── Analytics & Motivation ─────────────────
   const { userAnalytics } = useAnalytics();
@@ -139,9 +141,7 @@ export default function HomeScreen() {
 
   // ───────────────── Refresh ─────────────────
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
     await Promise.all([getAllWorkouts(), getAllExercises()]);
-    setRefreshing(false);
   }, [getAllWorkouts, getAllExercises]);
 
   // ───────────────── Header animation ─────────────────
@@ -181,9 +181,8 @@ export default function HomeScreen() {
         </Text>
       </Animated.View>
 
-      {/* Workouts List */}
-      {!exerciseList.length ? (
-        <ActivityIndicator />
+      {showShimmer ? (
+        <ShimmerHomeScreen />
       ) : (
         <FlatList
           data={listData}
@@ -194,7 +193,7 @@ export default function HomeScreen() {
           }
           renderItem={({ item, index }) => {
             if (item.type === "section-header") return <SectionHeader />;
-            if (!exerciseList.length) return null;
+
             return (
               <WorkoutCard
                 workout={item.workout}
@@ -208,17 +207,6 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          ListEmptyComponent={
-            workoutLoading || exerciseLoading ? (
-              <View className="mt-12 items-center">
-                <ActivityIndicator />
-              </View>
-            ) : (
-              <Text className="mt-12 text-center text-base text-neutral-500 dark:text-neutral-400">
-                No workouts logged yet
-              </Text>
-            )
           }
           ListFooterComponent={<View className="mb-[20%] p-4" />}
         />

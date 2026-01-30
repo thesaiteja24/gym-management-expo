@@ -87,8 +87,7 @@ export default function SaveWorkout() {
     });
 
     discardWorkout();
-    router.push("/(app)/(tabs)/workout");
-    router.dismissAll();
+    router.replace("/(app)/(tabs)/workout");
   };
 
   const handleConfirmSave = async () => {
