@@ -172,10 +172,6 @@ export default function HomeScreen() {
     });
   }, []);
 
-  useEffect(() => {
-    Promise.all([getAllWorkouts(), getAllExercises()]);
-  }, [getAllWorkouts, getAllExercises]);
-
   const headerAnimatedStyle = useAnimatedStyle(() => ({
     opacity: headerOpacity.value,
     transform: [{ translateY: headerTranslateY.value }],
@@ -204,11 +200,10 @@ export default function HomeScreen() {
       {/* Two-stage scrolling */}
       <FlatList
         data={listData}
-        keyExtractor={
-          (item, index) =>
-            item.type === "section-header"
-              ? "section-header"
-              : item.workout.clientId // Using clientId as stable key
+        keyExtractor={(item, index) =>
+          item.type === "section-header"
+            ? `section-header-${index}`
+            : item.workout.clientId
         }
         renderItem={({ item, index }) => {
           if (item.type === "section-header") {
@@ -224,7 +219,7 @@ export default function HomeScreen() {
           );
         }}
         ListHeaderComponent={<StreakCard {...streakData} />}
-        stickyHeaderIndices={[1]}
+        stickyHeaderIndices={listData.length > 0 ? [1] : []}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

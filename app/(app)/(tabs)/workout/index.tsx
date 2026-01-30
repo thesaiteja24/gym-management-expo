@@ -46,10 +46,6 @@ export default function WorkoutScreen() {
   const templatesTranslateY = useSharedValue(20);
 
   useEffect(() => {
-    getAllTemplates();
-  }, []);
-
-  useEffect(() => {
     // Staggered sequence
     activeWorkoutOpacity.value = withTiming(1, { duration: 500 });
     activeWorkoutTranslateY.value = withTiming(0, {

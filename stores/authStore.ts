@@ -1,5 +1,6 @@
 import { registerUnauthorizedHandler } from "@/lib/authSession";
 import { clearTemplateQueue, clearWorkoutQueue } from "@/lib/sync/queue";
+import { setAccessToken } from "@/services/api";
 import { sendOtpService, verifyOtpService } from "@/services/authService";
 import * as SecureStore from "expo-secure-store";
 import { create } from "zustand";
@@ -67,6 +68,7 @@ export const useAuth = create<AuthState>((set, get) => ({
 
         if (accessToken) {
           await SecureStore.setItemAsync("accessToken", accessToken);
+          setAccessToken(accessToken);
         }
         if (user) {
           await SecureStore.setItemAsync("user", JSON.stringify(user));
@@ -93,6 +95,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       const userJson = await SecureStore.getItemAsync("user");
 
       if (token) {
+        setAccessToken(token);
         set({
           accessToken: token,
           user: userJson ? JSON.parse(userJson) : null,

@@ -84,7 +84,7 @@ export default function WorkoutCard({
           </Text>
         </View>
         <View className="flex-row items-center justify-between gap-4">
-          {workout.user.firstName && (
+          {workout?.user?.firstName && (
             <Text className="flex-1 text-base font-medium text-primary">
               {workout?.user?.firstName + " " + workout?.user?.lastName}
             </Text>

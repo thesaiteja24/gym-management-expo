@@ -48,10 +48,6 @@ export default function ProfileScreen() {
   const infoTranslateY = useSharedValue(20);
 
   useEffect(() => {
-    getUserData(user?.userId ?? "");
-  }, [user?.userId]);
-
-  useEffect(() => {
     // 1. Avatar: Fade In + Scale Up
     avatarOpacity.value = withTiming(1, { duration: 500 });
     // avatarScale.value = withSpring(1, { damping: 12, stiffness: 200 });
