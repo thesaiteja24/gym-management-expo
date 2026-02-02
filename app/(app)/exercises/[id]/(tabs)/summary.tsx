@@ -1,3 +1,4 @@
+import ExerciseCharts from "@/components/exercises/ExerciseCharts";
 import { CustomModal, ModalHandle } from "@/components/ui/CustomModal";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -165,6 +166,12 @@ export default function ViewExerciseScreen() {
             {preferredWeightUnit}s
           </Text>
         </View>
+
+        <ExerciseCharts
+          best1RMRecords={metrics.best1RMRecords}
+          bestSetVolumeRecords={metrics.bestSetVolumeRecords}
+          heaviestWeightRecords={metrics.heaviestWeightRecords}
+        />
 
         <Text className="px-4 pt-4 text-justify text-sm font-normal text-neutral-500 dark:text-neutral-400">
           Set Records track your strongest performance at each rep range. Beat a

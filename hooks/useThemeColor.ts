@@ -29,6 +29,7 @@ export function useThemeColor() {
   const colors = {
     ...COLORS,
     // Add semantic overrides if needed for dark mode specifically
+    scheme: isDark ? "dark" : "light",
     text: isDark ? COLORS.white : COLORS.black,
     background: isDark ? COLORS.black : COLORS.white,
     icon: isDark ? COLORS.white : COLORS.black,
