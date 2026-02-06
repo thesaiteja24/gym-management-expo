@@ -67,6 +67,10 @@ export default function ProfileScreen() {
     );
   }, []);
 
+  useEffect(() => {
+    getUserData(user?.userId ?? "");
+  }, []);
+
   const avatarStyle = useAnimatedStyle(() => ({
     opacity: avatarOpacity.value,
     transform: [{ scale: avatarScale.value }],

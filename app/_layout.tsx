@@ -1,6 +1,5 @@
 import { OtaUpdateModal } from "@/components/auth/OtaUpdateModal";
 import { CustomToast } from "@/components/ui/CustomToast";
-import { useInitialDataFetch } from "@/hooks/useInitialDataFetch";
 import { useSyncQueue } from "@/hooks/useSyncQueue";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
@@ -54,7 +53,7 @@ export default function RootLayout() {
   useSyncQueue();
 
   // ───── Initial Data Fetch ─────
-  useInitialDataFetch();
+  // useInitialDataFetch();
 
   // ─────────────────────────────────────────────
   // 1️⃣ Restore auth from storage (once)

@@ -161,6 +161,10 @@ export default function HomeScreen() {
     transform: [{ translateY: headerTranslateY.value }],
   }));
 
+  useEffect(() => {
+    Promise.all([getAllWorkouts(), getAllExercises()]);
+  }, []);
+
   // ───────────────── Render ─────────────────
   return (
     <SafeAreaView

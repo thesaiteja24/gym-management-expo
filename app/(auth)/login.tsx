@@ -1,8 +1,11 @@
 import PhoneInputField from "@/components/auth/PhoneInputField";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth } from "@/stores/authStore";
+import { useEquipment } from "@/stores/equipmentStore";
+import { useExercise } from "@/stores/exerciseStore";
+import { useMuscleGroup } from "@/stores/muscleGroupStore";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -61,6 +64,17 @@ export default function Login() {
       });
     }
   };
+
+  // fetch intialization data
+  const getAllExercises = useExercise((s) => s.getAllExercises);
+  const getAllEquipment = useEquipment((s) => s.getAllEquipment);
+  const getAllMuscleGroups = useMuscleGroup((s) => s.getAllMuscleGroups);
+
+  useEffect(() => {
+    getAllExercises();
+    getAllEquipment();
+    getAllMuscleGroups();
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black">

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/Button";
+import SkeletonTemplateCard from "@/components/workout/SkeletonTemplateCard";
 import TemplateCard from "@/components/workout/TemplateCard";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useTemplate } from "@/stores/templateStore";
@@ -33,6 +34,7 @@ export default function WorkoutScreen() {
 
   // Template Store
   const templates = useTemplate((s) => s.templates);
+  const templateLoading = useTemplate((s) => s.templateLoading);
   const getAllTemplates = useTemplate((s) => s.getAllTemplates);
 
   // Animation values initialized at 0 opacity
@@ -64,6 +66,10 @@ export default function WorkoutScreen() {
       200,
       withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }),
     );
+  }, []);
+
+  useEffect(() => {
+    getAllTemplates();
   }, []);
 
   const activeWorkoutStyle = useAnimatedStyle(() => ({
@@ -135,7 +141,32 @@ export default function WorkoutScreen() {
             </TouchableOpacity>
           </View>
 
-          {templates.length === 0 ? (
+          {templateLoading ? (
+            <View>
+              <Carousel
+                loop={false}
+                width={width}
+                height={160}
+                autoPlay={false}
+                data={[1, 2]} // two skeleton cards
+                scrollAnimationDuration={700}
+                enabled={false}
+                renderItem={() => <SkeletonTemplateCard />}
+                mode="parallax"
+                modeConfig={{
+                  parallaxAdjacentItemScale: 0.9,
+                  parallaxScrollingScale: 1,
+                  parallaxScrollingOffset: 160,
+                }}
+              />
+
+              {/* fake pagination */}
+              <View className="flex-row justify-center gap-2">
+                <View className="h-2 w-6 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+                <View className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+              </View>
+            </View>
+          ) : templates.length === 0 ? (
             <View className="mb-4 h-32 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
               <Text className="text-neutral-500 dark:text-neutral-400">
                 No templates yet. Create one!
