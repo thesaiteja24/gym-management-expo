@@ -1,5 +1,9 @@
 import { CHAT_AUDIO_ENDPOINT as chat_audio_endpoint } from "@/constants/urls";
-import { askQuestionService, startChatService } from "@/services/coachService";
+import {
+  answerQuestionService,
+  askQuestionService,
+  startChatService,
+} from "@/services/coachService";
 import {
   AudioModule,
   RecorderState,
@@ -160,7 +164,7 @@ export function useCoach(): CoachVoice {
 
   const askQuestion = async () => {
     try {
-      // 1️⃣ stop recording safely
+      // 1️⃣ Stop recording safely
       await setAudioModeAsync({
         playsInSilentMode: true,
         allowsRecording: false,
@@ -174,7 +178,7 @@ export function useCoach(): CoachVoice {
       setCoachState(CoachState.stopped);
       setRecordedAudioUri(uri);
 
-      // 2️⃣ create temporary user message ("Sending...")
+      // 2️⃣ Temporary user message while uploading
       const userMessageId = Crypto.randomUUID();
 
       setMessages((prev) => [
@@ -189,7 +193,7 @@ export function useCoach(): CoachVoice {
 
       setIsThinking(true);
 
-      // 3️⃣ prepare form data
+      // 3️⃣ Send audio for transcription
       const formData = new FormData();
       formData.append("audioFile", {
         uri,
@@ -197,61 +201,58 @@ export function useCoach(): CoachVoice {
         type: "audio/m4a",
       } as any);
 
-      // 4️⃣ send audio for transcription
-      const response = await askQuestionService(formData);
+      const transcriptionResponse = await askQuestionService(formData);
 
-      if (!response?.success) {
+      if (!transcriptionResponse?.success) {
         throw new Error("Transcription failed");
       }
 
-      const { text: transcription } = response.data;
+      const transcription = transcriptionResponse.data.text;
 
-      // 5️⃣ replace "Sending..." with actual transcription
+      // 4️⃣ Replace temporary message with actual transcription
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === userMessageId
-            ? {
-                ...msg,
-                text: transcription,
-                thinking: false,
-              }
+            ? { ...msg, text: transcription, thinking: false }
             : msg,
         ),
       );
 
-      // 6️⃣ add coach thinking placeholder
-      const thinkingId = Crypto.randomUUID();
+      // 5️⃣ Add coach thinking placeholder
+      const coachThinkingId = Crypto.randomUUID();
 
       setMessages((prev) => [
         ...prev,
         {
-          id: thinkingId,
+          id: coachThinkingId,
           role: "coach",
           text: "",
           thinking: true,
         },
       ]);
 
-      // ---- MOCK COACH RESPONSE (temporary) ----
-      await new Promise((res) => setTimeout(res, 1200));
+      // 6️⃣ Ask backend for answer (memory + AI + TTS)
+      const answerResponse = await answerQuestionService(transcription);
 
-      const mockCoachReply =
-        "Got it. Let's keep the movement controlled and focus on good form.";
+      if (!answerResponse?.success) {
+        throw new Error("Answer generation failed");
+      }
 
-      // 7️⃣ replace coach thinking with mock response
+      const { text, ttsId } = answerResponse.data;
+
+      // 7️⃣ Replace thinking message with coach replyd
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === thinkingId
-            ? {
-                ...msg,
-                text: mockCoachReply,
-                thinking: false,
-              }
-            : msg,
+          msg.id === coachThinkingId ? { ...msg, text, thinking: false } : msg,
         ),
       );
 
+      // 8️⃣ Play TTS audio
+      const audioUri = chat_audio_endpoint(ttsId);
+      await startPlaying(audioUri);
+
       setIsThinking(false);
+      setCoachState(CoachState.idle);
     } catch (error) {
       console.log("askQuestion error:", error);
 
@@ -268,6 +269,7 @@ export function useCoach(): CoachVoice {
       );
 
       setIsThinking(false);
+      setCoachState(CoachState.idle);
     }
   };
 
@@ -295,6 +297,10 @@ export function useCoach(): CoachVoice {
   // useEffect(() => {
   //   console.log("isPlaying", isPlaying);
   // }, [isPlaying, audioPlayer.playing]);
+
+  useEffect(() => {
+    console.log("messages", messages);
+  }, [messages]);
 
   return {
     messages,

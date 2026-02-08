@@ -69,6 +69,8 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
   const colors = useThemeColor();
   const isDark = useColorScheme() === "dark";
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const insets = useSafeAreaInsets();
   const {
     messages,
@@ -133,6 +135,10 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
   return (
     <BottomSheetModal
       ref={bottomSheetModalRef}
@@ -162,22 +168,27 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
         className="dark:bg-neutral-900"
       >
         <View className="flex-1 flex-col gap-4">
-          <ScrollView className="flex-col gap-4 p-4">
+          <ScrollView
+            ref={scrollViewRef}
+            className="flex-col gap-4"
+            contentContainerStyle={{ padding: 16 }}
+            showsVerticalScrollIndicator={false}
+            onContentSizeChange={() =>
+              scrollViewRef.current?.scrollToEnd({ animated: true })
+            }
+          >
             {messages.map((message) => (
               <ChatBubble key={message.id} message={message} />
             ))}
           </ScrollView>
-          <View className="flex-row items-center justify-center gap-4 p-4">
+
+          <View className="flex-row items-center justify-center gap-4 px-2 pb-4">
             {recorderState.isRecording ? (
               <Button
                 title=""
                 className="w-1/3 rounded-full"
                 leftIcon={
-                  <MaterialCommunityIcons
-                    name="microphone"
-                    size={24}
-                    color="white"
-                  />
+                  <MaterialCommunityIcons name="stop" size={24} color="white" />
                 }
                 disabled={isThinking}
                 variant="danger"

@@ -1,4 +1,5 @@
 import {
+  ANSWER_QUESTION_ENDPOINT as answer_question_endpoint,
   ASK_QUESTION_ENDPOINT as ask_question_endpoint,
   CHAT_AUDIO_ENDPOINT as chat_audio_endpoint,
   START_CHAT_ENDPOINT as start_chat_endpoint,
@@ -33,6 +34,17 @@ export async function askQuestionService(data: FormData) {
     const res = await client.post(ask_question_endpoint, data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}
+
+export async function answerQuestionService(question: string) {
+  try {
+    const res = await client.post(answer_question_endpoint, { question });
 
     return handleApiResponse(res);
   } catch (error: any) {
