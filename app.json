@@ -11,7 +11,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.thesaiteja.pump",
-      "associatedDomains": ["applinks:pump.thesaiteja.dev"]
+      "associatedDomains": [
+        "applinks:pump.thesaiteja.dev"
+      ]
     },
     "android": {
       "package": "com.thesaiteja.pump",
@@ -31,7 +33,10 @@
               "pathPrefix": "/share"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -55,7 +60,8 @@
         }
       ],
       "expo-font",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,

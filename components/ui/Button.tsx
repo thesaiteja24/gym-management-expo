@@ -188,17 +188,19 @@ export function Button({
       ) : (
         <>
           {leftIcon}
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            className={[
-              "text-lg font-semibold",
-              textVariantClass[variant],
-              textClassName,
-            ].join(" ")}
-          >
-            {title}
-          </Text>
+          {title && (
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              className={[
+                "text-lg font-semibold",
+                textVariantClass[variant],
+                textClassName,
+              ].join(" ")}
+            >
+              {title}
+            </Text>
+          )}
           {rightIcon}
         </>
       )}

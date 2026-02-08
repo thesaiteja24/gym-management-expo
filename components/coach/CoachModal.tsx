@@ -1,4 +1,6 @@
+import { useCoach } from "@/hooks/useCoach";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -15,6 +17,7 @@ import React, {
 } from "react";
 import { BackHandler, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button } from "../ui/Button";
 
 export interface CoachModalHandle {
   present: () => void;
@@ -30,6 +33,16 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
   const isDark = useColorScheme() === "dark";
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
+  const {
+    coachState,
+    recorderState,
+    isPlaying,
+    recordedAudioUri,
+    startRecording,
+    stopRecording,
+    playRecording,
+    clearRecording,
+  } = useCoach();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -95,13 +108,60 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
     >
       <BottomSheetView
         style={{
+          height: "90%",
           flex: 1,
           paddingBottom: insets.bottom,
         }}
         className="dark:bg-neutral-900"
       >
         {/* Groundwork only */}
-        <View className="flex-1" />
+        <View className="flex-1 flex-col items-center justify-center">
+          <View className="flex flex-col gap-4">
+            {recorderState.isRecording ? (
+              <Button
+                title="Stop Recording"
+                variant="danger"
+                onPress={() => {
+                  stopRecording();
+                }}
+              />
+            ) : (
+              <Button
+                title="Start Recording"
+                variant="success"
+                onPress={() => {
+                  startRecording();
+                }}
+              />
+            )}
+            <View className="flex-row items-center gap-4">
+              <Button
+                title={isPlaying ? "Stop Playing" : "Play Recording"}
+                variant="primary"
+                disabled={!recordedAudioUri}
+                onPress={() => {
+                  playRecording();
+                }}
+              />
+
+              <Button
+                title=""
+                rightIcon={
+                  <MaterialCommunityIcons
+                    name="delete"
+                    size={24}
+                    color="white"
+                  />
+                }
+                variant="danger"
+                disabled={!recordedAudioUri}
+                onPress={() => {
+                  clearRecording();
+                }}
+              />
+            </View>
+          </View>
+        </View>
       </BottomSheetView>
     </BottomSheetModal>
   );
