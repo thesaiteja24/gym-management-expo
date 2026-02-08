@@ -1,5 +1,5 @@
 import { CHAT_AUDIO_ENDPOINT as chat_audio_endpoint } from "@/constants/urls";
-import { startChatService } from "@/services/coachService";
+import { askQuestionService, startChatService } from "@/services/coachService";
 import {
   AudioModule,
   RecorderState,
@@ -41,7 +41,21 @@ interface CoachVoice {
   clearRecording: () => void;
 
   startChat: () => Promise<void>;
+  askQuestion: () => Promise<void>;
+  clearMessages: () => void;
 }
+
+export const mockAskQuestionService = async (audioUri: string) => {
+  // simulate network + processing time
+  await new Promise((res) => setTimeout(res, 1200));
+
+  return {
+    success: true,
+    data: {
+      text: "Alright, I heard you. Let's push one more set — controlled reps.",
+    },
+  };
+};
 
 export function useCoach(): CoachVoice {
   const [coachState, setCoachState] = useState<CoachState>(CoachState.idle);
@@ -144,6 +158,122 @@ export function useCoach(): CoachVoice {
     }
   };
 
+  const askQuestion = async () => {
+    try {
+      // 1️⃣ stop recording safely
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        allowsRecording: false,
+      });
+
+      await audioRecorder.stop();
+
+      const uri = audioRecorder.uri;
+      if (!uri) return;
+
+      setCoachState(CoachState.stopped);
+      setRecordedAudioUri(uri);
+
+      // 2️⃣ create temporary user message ("Sending...")
+      const userMessageId = Crypto.randomUUID();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: userMessageId,
+          role: "user",
+          text: "Sending...",
+          thinking: true,
+        },
+      ]);
+
+      setIsThinking(true);
+
+      // 3️⃣ prepare form data
+      const formData = new FormData();
+      formData.append("audioFile", {
+        uri,
+        name: `recording-${Date.now()}.m4a`,
+        type: "audio/m4a",
+      } as any);
+
+      // 4️⃣ send audio for transcription
+      const response = await askQuestionService(formData);
+
+      if (!response?.success) {
+        throw new Error("Transcription failed");
+      }
+
+      const { text: transcription } = response.data;
+
+      // 5️⃣ replace "Sending..." with actual transcription
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === userMessageId
+            ? {
+                ...msg,
+                text: transcription,
+                thinking: false,
+              }
+            : msg,
+        ),
+      );
+
+      // 6️⃣ add coach thinking placeholder
+      const thinkingId = Crypto.randomUUID();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: thinkingId,
+          role: "coach",
+          text: "",
+          thinking: true,
+        },
+      ]);
+
+      // ---- MOCK COACH RESPONSE (temporary) ----
+      await new Promise((res) => setTimeout(res, 1200));
+
+      const mockCoachReply =
+        "Got it. Let's keep the movement controlled and focus on good form.";
+
+      // 7️⃣ replace coach thinking with mock response
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === thinkingId
+            ? {
+                ...msg,
+                text: mockCoachReply,
+                thinking: false,
+              }
+            : msg,
+        ),
+      );
+
+      setIsThinking(false);
+    } catch (error) {
+      console.log("askQuestion error:", error);
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.thinking
+            ? {
+                ...msg,
+                text: "I couldn’t process that right now. Try again.",
+                thinking: false,
+              }
+            : msg,
+        ),
+      );
+
+      setIsThinking(false);
+    }
+  };
+
+  const clearMessages = () => {
+    setMessages([]);
+  };
   useEffect(() => {
     (async () => {
       const status = await AudioModule.requestRecordingPermissionsAsync();
@@ -180,5 +310,7 @@ export function useCoach(): CoachVoice {
     clearRecording,
 
     startChat,
+    askQuestion,
+    clearMessages,
   };
 }

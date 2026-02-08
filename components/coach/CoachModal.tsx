@@ -77,10 +77,10 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
     isPlaying,
     recordedAudioUri,
     startRecording,
-    stopRecording,
+    askQuestion,
     startPlaying,
     stopPlaying,
-    clearRecording,
+    clearMessages,
 
     startChat,
   } = useCoach();
@@ -127,6 +127,12 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
 
   const snapPoints = useMemo(() => ["90%"], []);
 
+  useEffect(() => {
+    if (messages.length === 0 && isOpen) {
+      startChat();
+    }
+  }, [isOpen]);
+
   return (
     <BottomSheetModal
       ref={bottomSheetModalRef}
@@ -149,76 +155,66 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
     >
       <BottomSheetView
         style={{
-          height: "90%",
+          height: "100%",
           flex: 1,
           paddingBottom: insets.bottom,
         }}
         className="dark:bg-neutral-900"
       >
-        <ScrollView className="flex-col gap-4 bg-red-600 p-4">
-          {messages.map((message) => (
-            <ChatBubble key={message.id} message={message} />
-          ))}
-        </ScrollView>
-        {/* Groundwork only */}
-        <View className="flex-1 flex-col items-center justify-center">
-          <View className="flex flex-col gap-4">
+        <View className="flex-1 flex-col gap-4">
+          <ScrollView className="flex-col gap-4 p-4">
+            {messages.map((message) => (
+              <ChatBubble key={message.id} message={message} />
+            ))}
+          </ScrollView>
+          <View className="flex-row items-center justify-center gap-4 p-4">
             {recorderState.isRecording ? (
               <Button
-                title="Stop Recording"
+                title=""
+                className="w-1/3 rounded-full"
+                leftIcon={
+                  <MaterialCommunityIcons
+                    name="microphone"
+                    size={24}
+                    color="white"
+                  />
+                }
+                disabled={isThinking}
                 variant="danger"
                 onPress={() => {
-                  stopRecording();
+                  askQuestion();
                 }}
               />
             ) : (
               <Button
-                title="Start Recording"
-                variant="success"
+                title=""
+                className="w-1/3 rounded-full"
+                leftIcon={
+                  <MaterialCommunityIcons
+                    name="microphone"
+                    size={24}
+                    color="white"
+                  />
+                }
+                disabled={isThinking}
+                variant="primary"
                 onPress={() => {
                   startRecording();
                 }}
               />
             )}
-            <View className="flex-row items-center gap-4">
-              <Button
-                title={
-                  isPlaying && recordedAudioUri
-                    ? "Stop Playing"
-                    : "Play Recording"
-                }
-                variant="primary"
-                disabled={!recordedAudioUri}
-                onPress={() => {
-                  if (isPlaying) {
-                    stopPlaying();
-                  } else {
-                    startPlaying(recordedAudioUri ?? "");
-                  }
-                }}
-              />
-
-              <Button
-                title=""
-                rightIcon={
-                  <MaterialCommunityIcons
-                    name="delete"
-                    size={24}
-                    color="white"
-                  />
-                }
-                variant="danger"
-                disabled={!recordedAudioUri}
-                onPress={() => {
-                  clearRecording();
-                }}
-              />
-            </View>
             <Button
-              title="Start Chat"
-              variant="primary"
+              title=""
+              leftIcon={
+                <MaterialCommunityIcons
+                  name="trash-can"
+                  size={24}
+                  color="red"
+                />
+              }
               onPress={() => {
-                startChat();
+                clearMessages();
+                setIsOpen(false);
               }}
             />
           </View>

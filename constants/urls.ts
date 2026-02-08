@@ -39,5 +39,6 @@ export const TEMPLATES_ENDPOINT = `/templates`;
 export const TEMPLATE_ITEM_ENDPOINT = (id: string) => `/templates/${id}`;
 
 export const START_CHAT_ENDPOINT = `/coach/start`;
+export const ASK_QUESTION_ENDPOINT = `/coach/ask`;
 export const CHAT_AUDIO_ENDPOINT = (id: string) =>
   `${API_BASE_URL}/coach/tts/${id}`;
