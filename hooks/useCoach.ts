@@ -1,3 +1,5 @@
+import { CHAT_AUDIO_ENDPOINT as chat_audio_endpoint } from "@/constants/urls";
+import { startChatService } from "@/services/coachService";
 import {
   AudioModule,
   RecorderState,
@@ -8,6 +10,7 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
+import * as Crypto from "expo-crypto";
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 
@@ -17,32 +20,51 @@ enum CoachState {
   stopped,
 }
 
+export interface CoachMessage {
+  id: string;
+  role: "coach" | "user";
+  text: string;
+  thinking: boolean;
+}
+
 interface CoachVoice {
+  messages: CoachMessage[];
   coachState: CoachState;
   recorderState: RecorderState;
   isPlaying: boolean;
+  isThinking: boolean;
   recordedAudioUri: string | null;
   startRecording: () => Promise<void>;
   stopRecording: () => Promise<void>;
-  playRecording: () => Promise<void>;
+  startPlaying: (uri: string) => Promise<void>;
+  stopPlaying: () => Promise<void>;
   clearRecording: () => void;
+
+  startChat: () => Promise<void>;
 }
 
 export function useCoach(): CoachVoice {
   const [coachState, setCoachState] = useState<CoachState>(CoachState.idle);
   const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
+  const [messages, setMessages] = useState<CoachMessage[]>([]);
+  const [isThinking, setIsThinking] = useState(false);
 
   const audioRecorder = useAudioRecorder({
     ...RecordingPresets.HIGH_QUALITY,
     isMeteringEnabled: true,
   });
-  const audioPlayer = useAudioPlayer(recordedAudioUri);
+  const audioPlayer = useAudioPlayer();
   const recorderState = useAudioRecorderState(audioRecorder);
   const playerStatus = useAudioPlayerStatus(audioPlayer);
   const isPlaying = playerStatus.playing;
 
   // Function to start recording the audio
   const startRecording = async () => {
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      allowsRecording: true,
+    });
+
     await audioRecorder.prepareToRecordAsync();
     audioRecorder.record();
     setCoachState(CoachState.recording);
@@ -50,6 +72,11 @@ export function useCoach(): CoachVoice {
 
   // Function to stop recording the audio
   const stopRecording = async () => {
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      allowsRecording: false,
+    });
+
     await audioRecorder.stop();
     const uri = audioRecorder.uri;
     setCoachState(CoachState.stopped);
@@ -57,15 +84,64 @@ export function useCoach(): CoachVoice {
   };
 
   // Function to clear the recorded audio
-  const playRecording = async () => {
+  const startPlaying = async (uri: string) => {
+    console.log("Playing audio from:", uri);
+    audioPlayer.replace(uri);
     audioPlayer.seekTo(0);
     audioPlayer.play();
+  };
+
+  // Function to stop playing the audio
+  const stopPlaying = async () => {
+    audioPlayer.pause();
+    audioPlayer.seekTo(0);
+    setCoachState(CoachState.idle);
   };
 
   // Function to clear the recorded audio
   const clearRecording = () => {
     setRecordedAudioUri(null);
     setCoachState(CoachState.idle);
+  };
+
+  const startChat = async () => {
+    const thinkingId = Crypto.randomUUID();
+
+    // insert thinking placeholder
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: thinkingId,
+        role: "coach",
+        text: "",
+        thinking: true,
+      },
+    ]);
+
+    try {
+      const response = await startChatService();
+
+      if (!response.success) {
+        setIsThinking(false);
+        return;
+      }
+
+      const { text, ttsId } = response.data;
+
+      // 1. show message instantly
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === thinkingId ? { ...msg, text, thinking: false } : msg,
+        ),
+      );
+
+      // 2. fetch audio
+      const audioUri = chat_audio_endpoint(ttsId);
+      startPlaying(audioUri);
+    } catch (e) {
+      console.log(e);
+      setIsThinking(false);
+    }
   };
 
   useEffect(() => {
@@ -77,27 +153,32 @@ export function useCoach(): CoachVoice {
 
       setAudioModeAsync({
         playsInSilentMode: true,
-        allowsRecording: true,
+        allowsRecording: false,
       });
     })();
   }, []);
 
-  useEffect(() => {
-    console.log(recorderState.metering);
-  }, [recorderState.metering]);
+  // useEffect(() => {
+  //   console.log(recorderState.metering);
+  // }, [recorderState.metering]);
 
-  useEffect(() => {
-    console.log("isPlaying", isPlaying);
-  }, [isPlaying, audioPlayer.playing]);
+  // useEffect(() => {
+  //   console.log("isPlaying", isPlaying);
+  // }, [isPlaying, audioPlayer.playing]);
 
   return {
+    messages,
     coachState,
     recorderState,
     isPlaying,
+    isThinking,
     recordedAudioUri,
     startRecording,
     stopRecording,
-    playRecording,
+    startPlaying,
+    stopPlaying,
     clearRecording,
+
+    startChat,
   };
 }

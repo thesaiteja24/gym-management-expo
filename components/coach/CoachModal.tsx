@@ -1,4 +1,4 @@
-import { useCoach } from "@/hooks/useCoach";
+import { CoachMessage, useCoach } from "@/hooks/useCoach";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
@@ -15,7 +15,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { BackHandler, View, useColorScheme } from "react-native";
+import { BackHandler, Text, View, useColorScheme } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "../ui/Button";
 
@@ -28,20 +29,60 @@ type Props = {
   onClose?: () => void;
 };
 
+const ChatBubble = ({ message }: { message: CoachMessage }) => {
+  const isCoach = message.role === "coach";
+
+  return (
+    <View
+      className={`my-2 w-full flex-row ${
+        isCoach ? "justify-start" : "justify-end"
+      }`}
+    >
+      <View className="relative max-w-[85%]">
+        {/* Bubble */}
+        <View
+          className={`px-4 py-2 ${
+            isCoach
+              ? "rounded-2xl rounded-bl-sm bg-blue-600"
+              : "rounded-2xl rounded-br-sm bg-green-600"
+          }`}
+        >
+          {message.thinking && isCoach ? (
+            <Text className="text-sm text-white">Thinking...</Text>
+          ) : (
+            <Text className="text-sm text-white">{message.text}</Text>
+          )}
+        </View>
+
+        {/* Tail */}
+        {/* <View
+          className={`absolute bottom-0 h-3 w-3 rotate-45 ${
+            isCoach ? "-left-1 bg-blue-600" : "-right-1 bg-green-600"
+          }`}
+        /> */}
+      </View>
+    </View>
+  );
+};
+
 const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
   const colors = useThemeColor();
   const isDark = useColorScheme() === "dark";
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
   const {
-    coachState,
+    messages,
+    isThinking,
     recorderState,
     isPlaying,
     recordedAudioUri,
     startRecording,
     stopRecording,
-    playRecording,
+    startPlaying,
+    stopPlaying,
     clearRecording,
+
+    startChat,
   } = useCoach();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -114,6 +155,11 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
         }}
         className="dark:bg-neutral-900"
       >
+        <ScrollView className="flex-col gap-4 bg-red-600 p-4">
+          {messages.map((message) => (
+            <ChatBubble key={message.id} message={message} />
+          ))}
+        </ScrollView>
         {/* Groundwork only */}
         <View className="flex-1 flex-col items-center justify-center">
           <View className="flex flex-col gap-4">
@@ -136,11 +182,19 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
             )}
             <View className="flex-row items-center gap-4">
               <Button
-                title={isPlaying ? "Stop Playing" : "Play Recording"}
+                title={
+                  isPlaying && recordedAudioUri
+                    ? "Stop Playing"
+                    : "Play Recording"
+                }
                 variant="primary"
                 disabled={!recordedAudioUri}
                 onPress={() => {
-                  playRecording();
+                  if (isPlaying) {
+                    stopPlaying();
+                  } else {
+                    startPlaying(recordedAudioUri ?? "");
+                  }
                 }}
               />
 
@@ -160,6 +214,13 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
                 }}
               />
             </View>
+            <Button
+              title="Start Chat"
+              variant="primary"
+              onPress={() => {
+                startChat();
+              }}
+            />
           </View>
         </View>
       </BottomSheetView>

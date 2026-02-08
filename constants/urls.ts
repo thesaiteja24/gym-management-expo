@@ -37,3 +37,7 @@ export const WORKOUT_ITEM_ENDPOINT = (id: string) => `/workouts/${id}`;
 
 export const TEMPLATES_ENDPOINT = `/templates`;
 export const TEMPLATE_ITEM_ENDPOINT = (id: string) => `/templates/${id}`;
+
+export const START_CHAT_ENDPOINT = `/coach/start`;
+export const CHAT_AUDIO_ENDPOINT = (id: string) =>
+  `${API_BASE_URL}/coach/tts/${id}`;
