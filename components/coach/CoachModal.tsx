@@ -76,15 +76,11 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
     messages,
     isThinking,
     recorderState,
-    isPlaying,
-    recordedAudioUri,
     startRecording,
-    askQuestion,
-    startPlaying,
-    stopPlaying,
+    sendVoiceMessage,
     clearMessages,
 
-    startChat,
+    initializeConversation,
   } = useCoach();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -131,7 +127,7 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
 
   useEffect(() => {
     if (messages.length === 0 && isOpen) {
-      startChat();
+      initializeConversation();
     }
   }, [isOpen]);
 
@@ -193,7 +189,7 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
                 disabled={isThinking}
                 variant="danger"
                 onPress={() => {
-                  askQuestion();
+                  sendVoiceMessage();
                 }}
               />
             ) : (

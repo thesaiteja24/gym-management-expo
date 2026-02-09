@@ -1,9 +1,11 @@
-import { CHAT_AUDIO_ENDPOINT as chat_audio_endpoint } from "@/constants/urls";
+import { COACH_SPEECH_ENDPOINT } from "@/constants/urls";
 import {
-  answerQuestionService,
-  askQuestionService,
-  startChatService,
+  getActiveConversationService,
+  sendMessageService,
+  startConversationService,
+  transcribeMessageService,
 } from "@/services/coachService";
+
 import {
   AudioModule,
   RecorderState,
@@ -32,20 +34,23 @@ export interface CoachMessage {
 }
 
 interface CoachVoice {
+  conversationId: string | null;
   messages: CoachMessage[];
   coachState: CoachState;
   recorderState: RecorderState;
   isPlaying: boolean;
   isThinking: boolean;
   recordedAudioUri: string | null;
+
   startRecording: () => Promise<void>;
   stopRecording: () => Promise<void>;
   startPlaying: (uri: string) => Promise<void>;
   stopPlaying: () => Promise<void>;
   clearRecording: () => void;
 
-  startChat: () => Promise<void>;
-  askQuestion: () => Promise<void>;
+  initializeConversation: () => Promise<void>;
+  startConversation: () => Promise<void>;
+  sendVoiceMessage: () => Promise<void>;
   clearMessages: () => void;
 }
 
@@ -62,6 +67,7 @@ export const mockAskQuestionService = async (audioUri: string) => {
 };
 
 export function useCoach(): CoachVoice {
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [coachState, setCoachState] = useState<CoachState>(CoachState.idle);
   const [recordedAudioUri, setRecordedAudioUri] = useState<string | null>(null);
   const [messages, setMessages] = useState<CoachMessage[]>([]);
@@ -122,7 +128,31 @@ export function useCoach(): CoachVoice {
     setCoachState(CoachState.idle);
   };
 
-  const startChat = async () => {
+  const initializeConversation = async () => {
+    try {
+      const active = await getActiveConversationService();
+
+      if (active?.data?.id) {
+        setConversationId(active.data.id);
+
+        const restoredMessages = active.data.messages.map((m: any) => ({
+          id: Crypto.randomUUID(),
+          role: m.role === "assistant" ? "coach" : "user",
+          text: m.content,
+          thinking: false,
+        }));
+
+        setMessages(restoredMessages);
+        return;
+      }
+
+      await startConversation();
+    } catch (err) {
+      console.log("init conversation failed", err);
+    }
+  };
+
+  const startConversation = async () => {
     const thinkingId = Crypto.randomUUID();
 
     // insert thinking placeholder
@@ -137,7 +167,7 @@ export function useCoach(): CoachVoice {
     ]);
 
     try {
-      const response = await startChatService();
+      const response = await startConversationService();
 
       if (!response.success) {
         setIsThinking(false);
@@ -154,7 +184,7 @@ export function useCoach(): CoachVoice {
       );
 
       // 2. fetch audio
-      const audioUri = chat_audio_endpoint(ttsId);
+      const audioUri = COACH_SPEECH_ENDPOINT(ttsId);
       startPlaying(audioUri);
     } catch (e) {
       console.log(e);
@@ -162,7 +192,7 @@ export function useCoach(): CoachVoice {
     }
   };
 
-  const askQuestion = async () => {
+  const sendVoiceMessage = async () => {
     try {
       // 1️⃣ Stop recording safely
       await setAudioModeAsync({
@@ -201,7 +231,7 @@ export function useCoach(): CoachVoice {
         type: "audio/m4a",
       } as any);
 
-      const transcriptionResponse = await askQuestionService(formData);
+      const transcriptionResponse = await transcribeMessageService(formData);
 
       if (!transcriptionResponse?.success) {
         throw new Error("Transcription failed");
@@ -232,7 +262,10 @@ export function useCoach(): CoachVoice {
       ]);
 
       // 6️⃣ Ask backend for answer (memory + AI + TTS)
-      const answerResponse = await answerQuestionService(transcription);
+      const answerResponse = await sendMessageService(
+        conversationId!,
+        transcription,
+      );
 
       if (!answerResponse?.success) {
         throw new Error("Answer generation failed");
@@ -248,7 +281,7 @@ export function useCoach(): CoachVoice {
       );
 
       // 8️⃣ Play TTS audio
-      const audioUri = chat_audio_endpoint(ttsId);
+      const audioUri = COACH_SPEECH_ENDPOINT(ttsId);
       await startPlaying(audioUri);
 
       setIsThinking(false);
@@ -303,20 +336,23 @@ export function useCoach(): CoachVoice {
   }, [messages]);
 
   return {
+    conversationId,
     messages,
     coachState,
     recorderState,
     isPlaying,
     isThinking,
     recordedAudioUri,
+
     startRecording,
     stopRecording,
     startPlaying,
     stopPlaying,
     clearRecording,
 
-    startChat,
-    askQuestion,
+    initializeConversation,
+    startConversation,
+    sendVoiceMessage,
     clearMessages,
   };
 }

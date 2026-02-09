@@ -38,8 +38,14 @@ export const WORKOUT_ITEM_ENDPOINT = (id: string) => `/workouts/${id}`;
 export const TEMPLATES_ENDPOINT = `/templates`;
 export const TEMPLATE_ITEM_ENDPOINT = (id: string) => `/templates/${id}`;
 
-export const START_CHAT_ENDPOINT = `/coach/start`;
-export const ASK_QUESTION_ENDPOINT = `/coach/ask`;
-export const CHAT_AUDIO_ENDPOINT = (id: string) =>
-  `${API_BASE_URL}/coach/tts/${id}`;
-export const ANSWER_QUESTION_ENDPOINT = `/coach/answer`;
+// Coach Conversation Endpoints
+export const COACH_CONVERSATIONS_ENDPOINT = `/coach/conversations`;
+
+export const COACH_ACTIVE_CONVERSATION_ENDPOINT = `/coach/conversations/active`;
+export const COACH_CONVERSATION_ENDPOINT = (id: string) =>
+  `/coach/conversations/${id}`;
+export const COACH_CONVERSATION_MESSAGES_ENDPOINT = (id: string) =>
+  `/coach/conversations/${id}/messages`;
+export const COACH_TRANSCRIPTION_ENDPOINT = `/coach/transcriptions`;
+export const COACH_SPEECH_ENDPOINT = (id: string) =>
+  `${API_BASE_URL}/coach/speech/${id}`;
