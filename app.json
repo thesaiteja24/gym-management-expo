@@ -11,9 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.thesaiteja.pump",
-      "associatedDomains": [
-        "applinks:pump.thesaiteja.dev"
-      ]
+      "associatedDomains": ["applinks:pump.thesaiteja.dev"]
     },
     "android": {
       "package": "com.thesaiteja.pump",
@@ -33,10 +31,7 @@
               "pathPrefix": "/share"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
@@ -50,10 +45,12 @@
         "expo-build-properties",
         {
           "android": {
-            "enableProguardInReleaseBuilds": true
+            "enableProguardInReleaseBuilds": true,
+            "extraProguardRules": "-keep class coil3.** { *; }\n-dontwarn coil3.**"
           }
         }
       ],
+
       [
         "expo-splash-screen",
         {
