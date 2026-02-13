@@ -169,7 +169,6 @@ export default function Login() {
     }
   };
 
-  console.log(getPayload());
   const handlePostLogin = async (user: User) => {
     // 1. Sync Onboarding Data if exists
     if (hasData()) {

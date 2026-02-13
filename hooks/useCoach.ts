@@ -331,9 +331,9 @@ export function useCoach(): CoachVoice {
   //   console.log("isPlaying", isPlaying);
   // }, [isPlaying, audioPlayer.playing]);
 
-  useEffect(() => {
-    console.log("messages", messages);
-  }, [messages]);
+  // useEffect(() => {
+  //   console.log("messages", messages);
+  // }, [messages]);
 
   return {
     conversationId,

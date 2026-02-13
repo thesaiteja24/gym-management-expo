@@ -50,7 +50,6 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
   setGender: (gender) => set({ gender }),
   setDateOfBirth: (date) => {
     set({ dateOfBirth: date });
-    console.log(get().dateOfBirth);
   },
 
   setWeight: (val, unit) => {

@@ -15,8 +15,7 @@ export default function Index() {
     );
   }
 
-  console.log("hasSeenOnboarding", hasSeenOnboarding);
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !hasSeenOnboarding) {
     return <Redirect href="/(auth)/onboarding" />;
   }
 
