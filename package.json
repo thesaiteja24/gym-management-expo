@@ -44,7 +44,7 @@
     "expo-symbols": "~1.0.8",
     "expo-system-ui": "~6.0.9",
     "expo-updates": "~29.0.16",
-    "expo-video": "~3.0.15",
+    "expo-video": "~3.0.16",
     "expo-web-browser": "~15.0.10",
     "fuse.js": "^7.1.0",
     "nativewind": "^4.2.1",
@@ -70,6 +70,7 @@
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1",
     "vexo-analytics": "^1.5.3",
+    "yaml": "^2.8.2",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
