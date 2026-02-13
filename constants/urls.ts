@@ -12,6 +12,7 @@ export const API_BASE_URL = (() => {
 export const SEND_OTP_ENDPOINT = `/auth/send-otp`;
 export const VERIFY_OTP_ENDPOINT = `/auth/verify-otp`;
 export const REFRESH_TOKEN_ENDPOINT = `/auth/refresh-token`;
+export const GOOGLE_LOGIN_ENDPOINT = `/auth/google`;
 
 // User Endpoints
 export const USER_ENDPOINT = (id: string) => `/users/${id}`;

@@ -34,9 +34,11 @@ type AuthState = {
 
   // UI state
   isLoading: boolean;
+  isGoogleLoading: boolean;
 
   sendOtp: (payload: any) => Promise<any>;
   verifyOtp: (payload: any) => Promise<any>;
+  googleLogin: (idToken: string) => Promise<any>;
   restoreFromStorage: () => Promise<void>;
   setUser: (user: Partial<User>) => void;
   logout: () => Promise<void>;
@@ -47,7 +49,35 @@ export const useAuth = create<AuthState>((set, get) => ({
   accessToken: null,
   isAuthenticated: false,
   isLoading: false,
+  isGoogleLoading: false,
   hasRestored: false,
+
+  googleLogin: async (idToken) => {
+    set({ isGoogleLoading: true });
+    try {
+      const { googleLoginService } = require("@/services/authService"); // Lazy import to avoid cycle if any
+      const res = await googleLoginService(idToken);
+
+      if (res.success) {
+        const { accessToken, user } = res.data;
+        if (accessToken) {
+          await SecureStore.setItemAsync("accessToken", accessToken);
+          setAccessToken(accessToken);
+        }
+        if (user) {
+          await SecureStore.setItemAsync("user", JSON.stringify(user));
+        }
+        set({
+          user,
+          accessToken,
+          isAuthenticated: true,
+        });
+      }
+      return res;
+    } finally {
+      set({ isLoading: false, isGoogleLoading: false });
+    }
+  },
 
   sendOtp: async (payload) => {
     set({ isLoading: true });

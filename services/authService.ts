@@ -1,4 +1,5 @@
 import {
+  GOOGLE_LOGIN_ENDPOINT,
   SEND_OTP_ENDPOINT as send_otp_endpoint,
   VERIFY_OTP_ENDPOINT as verify_otp_endpoint,
 } from "@/constants/urls";
@@ -30,6 +31,16 @@ export async function sendOtpService(payload: SendOtpPayload) {
 export async function verifyOtpService(payload: VerifyOtpPayload) {
   try {
     const res = await client.post(verify_otp_endpoint, payload);
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}
+
+export async function googleLoginService(idToken: string) {
+  try {
+    const res = await client.post(GOOGLE_LOGIN_ENDPOINT, { idToken });
     return handleApiResponse(res);
   } catch (error: any) {
     const errData = error.response?.data;
