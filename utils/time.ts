@@ -209,3 +209,16 @@ export function getGreeting(date: Date = new Date()): string {
   if (hours < 18) return "Good Afternoon";
   return "Good Evening";
 }
+
+/**
+ * Converts a local Date object to a UTC ISO string with the same calendar date.
+ * Effectively sets the time to 00:00:00 UTC for the given local date.
+ *
+ * @param date - The local Date object.
+ * @returns ISO string (e.g., "2023-11-24T00:00:00.000Z").
+ */
+export function toUTCISOString(date: Date): string {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  ).toISOString();
+}

@@ -5,6 +5,7 @@ import { ActivityIndicator, View } from "react-native";
 export default function Index() {
   const isAuthenticated = useAuth((s) => s.isAuthenticated);
   const hasRestored = useAuth((s) => s.hasRestored);
+  const hasSeenOnboarding = useAuth((s) => s.hasSeenOnboarding);
 
   if (!hasRestored) {
     return (
@@ -12,6 +13,11 @@ export default function Index() {
         <ActivityIndicator />
       </View>
     );
+  }
+
+  console.log("hasSeenOnboarding", hasSeenOnboarding);
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/onboarding" />;
   }
 
   return (

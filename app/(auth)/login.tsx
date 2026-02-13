@@ -2,10 +2,11 @@ import GoogleIcon from "@/assets/components/icons/Google";
 import PhoneInputField from "@/components/auth/PhoneInputField";
 import { Button } from "@/components/ui/Button";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useAuth } from "@/stores/authStore";
+import { useAuth, User } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
 import { useExercise } from "@/stores/exerciseStore";
 import { useMuscleGroup } from "@/stores/muscleGroupStore";
+import { useUser } from "@/stores/userStore";
 import {
   GoogleSignin,
   isErrorWithCode,
@@ -21,6 +22,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
@@ -37,6 +45,13 @@ export default function Login() {
   const isLoading = useAuth((state: any) => state.isLoading);
   const googleLogin = useAuth((state: any) => state.googleLogin);
   const isGoogleLoading = useAuth((state: any) => state.isGoogleLoading);
+
+  const updateUserData = useUser((state) => state.updateUserData);
+  const updatePreferences = useUser((state) => state.updatePreferences);
+
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20);
+  const pumpScale = useSharedValue(0.8);
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -56,11 +71,7 @@ export default function Login() {
         googleLogin(idToken)
           .then((res: any) => {
             if (res.success) {
-              Toast.show({
-                type: "success",
-                text1: "Google Login Successful",
-              });
-              router.replace("/home");
+              handlePostLogin(res.data?.user);
             } else {
               Toast.show({
                 type: "error",
@@ -114,6 +125,14 @@ export default function Login() {
 
   const PHONE_ENABLED = false;
 
+  // Onboarding Store
+  const {
+    hasData,
+    getPayload,
+    reset: resetOnboarding,
+  } = require("@/stores/onboardingStore").useOnboarding.getState();
+  const completeOnboarding = useAuth((s) => s.completeOnboarding);
+
   const onContinue = async () => {
     Keyboard.dismiss();
 
@@ -150,6 +169,42 @@ export default function Login() {
     }
   };
 
+  console.log(getPayload());
+  const handlePostLogin = async (user: User) => {
+    // 1. Sync Onboarding Data if exists
+    if (hasData()) {
+      const onBoardingPayload = getPayload();
+
+      const userData = {
+        height: onBoardingPayload.height,
+        weight: onBoardingPayload.weight,
+        dateOfBirth: onBoardingPayload.dateOfBirth,
+      };
+      const preferences = {
+        preferredWeightUnit: onBoardingPayload.weightUnit,
+        preferredLengthUnit: onBoardingPayload.heightUnit,
+      };
+      const { setUser } = useAuth.getState();
+      setUser({ ...userData, ...preferences });
+
+      await updateUserData(user.userId!, userData);
+      await updatePreferences(user.userId!, preferences);
+
+      // Reset onboarding store
+      resetOnboarding();
+    }
+
+    // 2. Mark onboarding as seen
+    completeOnboarding();
+
+    // 3. Redirect
+    Toast.show({
+      type: "success",
+      text1: "Login Successful",
+    });
+    router.replace("/home");
+  };
+
   // fetch intialization data
   const getAllExercises = useExercise((s) => s.getAllExercises);
   const getAllEquipment = useEquipment((s) => s.getAllEquipment);
@@ -161,10 +216,33 @@ export default function Login() {
     getAllMuscleGroups();
   }, []);
 
+  useEffect(() => {
+    opacity.value = withTiming(1, { duration: 2000 });
+    translateY.value = withTiming(0, {
+      duration: 2000,
+      easing: Easing.out(Easing.cubic),
+    });
+
+    pumpScale.value = withDelay(
+      500,
+      withTiming(1, { duration: 600, easing: Easing.out(Easing.exp) }),
+    );
+  }, []);
+
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const animatedPumpStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pumpScale.value }],
+    fontFamily: "Monoton",
+  }));
+
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black">
       <View className="flex-[2] justify-center px-6">
-        <View className="flex flex-row items-center gap-2">
+        {/* <View className="flex flex-row items-center gap-2">
           <Text className="mb-2 text-3xl font-extrabold text-black dark:text-white">
             Welcome to
           </Text>
@@ -177,7 +255,8 @@ export default function Login() {
           >
             PUMP
           </Text>
-        </View>
+        </View> */}
+
         {PHONE_ENABLED && (
           <Text className="text-base text-gray-500 dark:text-gray-400">
             Lock in today’s pump. Earn a bigger one tomorrow.
@@ -185,11 +264,21 @@ export default function Login() {
         )}
       </View>
 
-      <View className="justify-center px-6">
+      <Animated.View
+        style={[animatedContainerStyle]}
+        className="justify-center px-6"
+      >
         <Text className="text-5xl text-gray-500 dark:text-gray-400">
-          Lock in today’s pump. Earn a bigger one tomorrow.
+          Lock in today’s{" "}
+          <Animated.Text
+            style={[animatedPumpStyle]}
+            className="text-4xl text-black dark:text-white"
+          >
+            PUMP
+          </Animated.Text>{" "}
+          Earn a bigger one tomorrow.
         </Text>
-      </View>
+      </Animated.View>
 
       {PHONE_ENABLED && (
         <View className="flex-[2] justify-center px-6">
@@ -208,7 +297,7 @@ export default function Login() {
 
       <KeyboardAvoidingView
         behavior="position"
-        className="flex-[4] justify-center px-6 pb-6"
+        className="flex-[4] justify-center gap-4 px-6"
       >
         {PHONE_ENABLED && (
           <TouchableOpacity
@@ -228,6 +317,14 @@ export default function Login() {
             <Text className="text-gray-500 dark:text-gray-400">Or</Text>
           </View>
         )}
+
+        <View className="mb-4 flex-row items-center justify-center gap-4 px-6">
+          <View className="w-full border-t-[0.25px] border-gray-500 dark:border-gray-400"></View>
+          <Text className="text-sm text-gray-500 dark:text-gray-400">
+            {hasData() ? "Complete Signup" : "Welcome Back"}
+          </Text>
+          <View className="w-full border-t-[0.25px] border-gray-500 dark:border-gray-400"></View>
+        </View>
         <Button
           title="Continue with Google"
           onPress={onGoogleButtonPress}

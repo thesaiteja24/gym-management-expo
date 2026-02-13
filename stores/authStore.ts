@@ -36,6 +36,9 @@ type AuthState = {
   isLoading: boolean;
   isGoogleLoading: boolean;
 
+  hasSeenOnboarding: boolean;
+  completeOnboarding: () => Promise<void>;
+
   sendOtp: (payload: any) => Promise<any>;
   verifyOtp: (payload: any) => Promise<any>;
   googleLogin: (idToken: string) => Promise<any>;
@@ -51,6 +54,12 @@ export const useAuth = create<AuthState>((set, get) => ({
   isLoading: false,
   isGoogleLoading: false,
   hasRestored: false,
+  hasSeenOnboarding: false,
+
+  completeOnboarding: async () => {
+    set({ hasSeenOnboarding: true });
+    await SecureStore.setItemAsync("hasSeenOnboarding", "true");
+  },
 
   googleLogin: async (idToken) => {
     set({ isGoogleLoading: true });
@@ -123,6 +132,10 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       const token = await SecureStore.getItemAsync("accessToken");
       const userJson = await SecureStore.getItemAsync("user");
+      const hasSeenOnboarding =
+        await SecureStore.getItemAsync("hasSeenOnboarding");
+
+      set({ hasSeenOnboarding: hasSeenOnboarding === "true" });
 
       if (token) {
         setAccessToken(token);
