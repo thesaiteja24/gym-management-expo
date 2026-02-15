@@ -1,6 +1,9 @@
 import GoogleIcon from "@/assets/components/icons/Google";
 import PhoneInputField from "@/components/auth/PhoneInputField";
 import { Button } from "@/components/ui/Button";
+import PrivacyPolicyModal, {
+  PrivacyPolicyModalHandle,
+} from "@/components/ui/PrivacyPolicyModal";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAuth, User } from "@/stores/authStore";
 import { useEquipment } from "@/stores/equipmentStore";
@@ -13,11 +16,12 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
+  Pressable,
   Text,
   TouchableOpacity,
   View,
@@ -40,6 +44,11 @@ export default function Login() {
     dial_code: "+91",
     code: "IN",
   });
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [privacyPolicyVersion, setPrivacyPolicyVersion] = useState<
+    string | null
+  >(null);
+  const privacyModalRef = useRef<PrivacyPolicyModalHandle>(null);
 
   const sendOtp = useAuth((state: any) => state.sendOtp);
   const isLoading = useAuth((state: any) => state.isLoading);
@@ -68,7 +77,7 @@ export default function Login() {
       const idToken = userInfo.data?.idToken;
 
       if (idToken) {
-        googleLogin(idToken)
+        googleLogin(idToken, true, privacyPolicyVersion)
           .then((res: any) => {
             if (res.success) {
               handlePostLogin(res.data?.user);
@@ -148,6 +157,8 @@ export default function Login() {
             data: JSON.stringify({
               countryCode: payload.countryCode,
               phone: payload.phone,
+              privacyAccepted: true, // Phone login implies acceptance if checkbox is checked
+              privacyPolicyVersion: privacyPolicyVersion,
             }),
           },
         });
@@ -178,6 +189,7 @@ export default function Login() {
         height: onBoardingPayload.height,
         weight: onBoardingPayload.weight,
         dateOfBirth: onBoardingPayload.dateOfBirth,
+        gender: onBoardingPayload.gender,
       };
       const preferences = {
         preferredWeightUnit: onBoardingPayload.weightUnit,
@@ -300,8 +312,11 @@ export default function Login() {
       >
         {PHONE_ENABLED && (
           <TouchableOpacity
-            className="w-full items-center rounded-full bg-primary py-2"
+            className={`w-full items-center rounded-full py-2 ${
+              !privacyAccepted ? "bg-gray-400" : "bg-primary"
+            }`}
             onPress={onContinue}
+            disabled={!privacyAccepted}
           >
             {isLoading ? (
               <ActivityIndicator color={colors.white} />
@@ -328,10 +343,54 @@ export default function Login() {
           title="Continue with Google"
           onPress={onGoogleButtonPress}
           variant="secondary"
+          disabled={!privacyAccepted}
           loading={isGoogleLoading}
           rightIcon={<GoogleIcon />}
+          onDisabledPress={() => privacyModalRef.current?.present()}
         />
+        <View className="mt-4 flex-row items-center justify-center gap-4 px-6">
+          <Pressable
+            onPress={() => {
+              if (privacyAccepted) {
+                setPrivacyAccepted(false);
+                setPrivacyPolicyVersion(null);
+              } else {
+                privacyModalRef.current?.present();
+              }
+            }}
+            className="flex-row items-center gap-2"
+          >
+            <View
+              className={`h-5 w-5 items-center justify-center rounded border ${
+                privacyAccepted
+                  ? "border-primary bg-primary"
+                  : "border-gray-500 bg-transparent"
+              }`}
+            >
+              {privacyAccepted && (
+                <Text className="text-xs font-bold text-white">✓</Text>
+              )}
+            </View>
+          </Pressable>
+          <Text className="text-sm text-gray-500 dark:text-gray-400">
+            I agree to the{" "}
+            <Text
+              className="text-primary underline"
+              onPress={() => privacyModalRef.current?.present()}
+            >
+              Privacy Policy
+            </Text>
+          </Text>
+        </View>
       </KeyboardAvoidingView>
+      <PrivacyPolicyModal
+        ref={privacyModalRef}
+        onAgree={(version) => {
+          setPrivacyAccepted(true);
+          setPrivacyPolicyVersion(version || "1.0");
+          console.log("Accepted policy version:", version);
+        }}
+      />
     </SafeAreaView>
   );
 }

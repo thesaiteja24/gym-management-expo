@@ -16,6 +16,8 @@ type VerifyOtpPayload = {
   countryCode: string;
   phone: string;
   otp: string;
+  privacyAccepted?: boolean;
+  privacyPolicyVersion?: string;
 };
 
 export async function sendOtpService(payload: SendOtpPayload) {
@@ -38,9 +40,17 @@ export async function verifyOtpService(payload: VerifyOtpPayload) {
   }
 }
 
-export async function googleLoginService(idToken: string) {
+export async function googleLoginService(
+  idToken: string,
+  privacyAccepted?: boolean,
+  privacyPolicyVersion?: string | null,
+) {
   try {
-    const res = await client.post(GOOGLE_LOGIN_ENDPOINT, { idToken });
+    const res = await client.post(GOOGLE_LOGIN_ENDPOINT, {
+      idToken,
+      privacyAccepted,
+      privacyPolicyVersion,
+    });
     return handleApiResponse(res);
   } catch (error: any) {
     const errData = error.response?.data;

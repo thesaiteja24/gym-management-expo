@@ -1,7 +1,6 @@
 import AnimatedButton from "@/components/coach/AnimatedButton";
 import CoachModal, { CoachModalHandle } from "@/components/coach/CoachModal";
 import CustomHeader from "@/components/navigation/CustomHeader";
-import { useCoach } from "@/hooks/useCoach";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,7 +14,6 @@ export default function TabsLayout() {
   const colors = useThemeColor();
   const isDark = useColorScheme() === "dark";
   const insets = useSafeAreaInsets();
-  const { startChat } = useCoach();
 
   const [home, setHome] = useState(true);
   const [workout, setworkout] = useState(false);

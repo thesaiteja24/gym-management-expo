@@ -183,7 +183,7 @@ export default function WorkoutDetails() {
 
   const duration = formatDurationFromDates(workout.startTime, workout.endTime);
 
-  const timeAgo = formatTimeAgo(workout.endTime);
+  const timeAgo = formatTimeAgo(new Date(workout.endTime));
 
   const { tonnage, completedSets } = calculateWorkoutMetrics(
     workout,

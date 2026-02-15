@@ -71,7 +71,12 @@ export default function VerifyOtp() {
     // Ensure it's a string, not an array as per expo-router behavior
     try {
       const payload = JSON.parse(Array.isArray(data) ? data[0] : data);
-      const response = await verifyOtp({ ...payload, otp });
+      const response = await verifyOtp({
+        ...payload,
+        otp,
+        privacyAccepted: payload.privacyAccepted,
+        privacyPolicyVersion: payload.privacyPolicyVersion,
+      });
 
       if (response.success) {
         // Navigate to the next screen or home screen after successful verification

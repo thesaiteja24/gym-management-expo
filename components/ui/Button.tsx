@@ -87,6 +87,11 @@ export interface ButtonProps extends TouchableOpacityProps {
    * @default false
    */
   fullWidth?: boolean;
+
+  /**
+   * Optional callback when the button is disabled.
+   */
+  onDisabledPress?: () => void;
 }
 
 /* --------------------------------------------------
@@ -130,6 +135,7 @@ export function Button({
   className = "",
   textClassName = "",
   onPress,
+  onDisabledPress,
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
@@ -161,9 +167,12 @@ export function Button({
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      disabled={isDisabled}
+      // disabled={isDisabled}
       onPress={(e) => {
-        if (isDisabled) return;
+        if (isDisabled) {
+          onDisabledPress?.();
+          return;
+        }
 
         if (haptic) {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

@@ -22,6 +22,7 @@ export interface User {
   role?: string;
   createdAt?: string;
   updatedAt?: string;
+  privacyPolicyAcceptedAt?: string | null;
 }
 
 type AuthState = {
@@ -41,7 +42,11 @@ type AuthState = {
 
   sendOtp: (payload: any) => Promise<any>;
   verifyOtp: (payload: any) => Promise<any>;
-  googleLogin: (idToken: string) => Promise<any>;
+  googleLogin: (
+    idToken: string,
+    privacyAccepted?: boolean,
+    privacyPolicyVersion?: string | null,
+  ) => Promise<any>;
   restoreFromStorage: () => Promise<void>;
   setUser: (user: Partial<User>) => void;
   logout: () => Promise<void>;
@@ -61,11 +66,15 @@ export const useAuth = create<AuthState>((set, get) => ({
     await SecureStore.setItemAsync("hasSeenOnboarding", "true");
   },
 
-  googleLogin: async (idToken) => {
+  googleLogin: async (idToken, privacyAccepted, privacyPolicyVersion) => {
     set({ isGoogleLoading: true });
     try {
       const { googleLoginService } = require("@/services/authService"); // Lazy import to avoid cycle if any
-      const res = await googleLoginService(idToken);
+      const res = await googleLoginService(
+        idToken,
+        privacyAccepted,
+        privacyPolicyVersion,
+      );
 
       if (res.success) {
         const { accessToken, user } = res.data;
