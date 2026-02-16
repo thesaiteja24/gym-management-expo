@@ -184,7 +184,11 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
                 title=""
                 className="w-1/3 rounded-full"
                 leftIcon={
-                  <MaterialCommunityIcons name="stop" size={24} color="white" />
+                  <MaterialCommunityIcons
+                    name="stop"
+                    size={24}
+                    color={colors.isDark ? "white" : "red"}
+                  />
                 }
                 disabled={isThinking}
                 variant="danger"
