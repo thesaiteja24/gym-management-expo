@@ -1,4 +1,5 @@
 import {
+  SEARCH_USERS_ENDPOINT as search_users_endpoint,
   UPDATE_PROFILE_PIC_ENDPOINT as update_profile_pic_endpoint,
   UPDATE_USER_DATA_ENDPOINT as update_user_data_endpoint,
   USER_ENDPOINT as user_endpoint,
@@ -32,10 +33,21 @@ export async function updateProfilePicService(userId: string, data: FormData) {
 
 export async function updateUserDataService(
   userId: string,
-  data: Record<string, any>
+  data: Record<string, any>,
 ) {
   try {
     const res = await client.patch(update_user_data_endpoint(userId), data);
+
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}
+
+export async function searchUsersService(query: string) {
+  try {
+    const res = await client.get(search_users_endpoint(query));
 
     return handleApiResponse(res);
   } catch (error: any) {

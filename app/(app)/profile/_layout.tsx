@@ -59,6 +59,48 @@ export default function ProfileLayout() {
           } as any
         }
       />
+
+      {/* FOLLOWING */}
+      <Stack.Screen
+        name="following"
+        options={
+          {
+            title: "Following",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
+          } as any
+        }
+      />
+
+      {/* FOLLOWERS */}
+      <Stack.Screen
+        name="followers"
+        options={
+          {
+            title: "Followers",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
+          } as any
+        }
+      />
+
+      {/* SEARCH */}
+      <Stack.Screen
+        name="search"
+        options={
+          {
+            title: "Search",
+            leftIcon: "chevron-back-outline",
+            onLeftPress: () => {
+              router.back();
+            },
+          } as any
+        }
+      />
     </Stack>
   );
 }

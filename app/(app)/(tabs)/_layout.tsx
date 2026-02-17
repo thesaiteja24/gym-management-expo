@@ -77,6 +77,44 @@ export default function TabsLayout() {
         }}
       >
         <Tabs.Screen
+          name="discover"
+          options={{
+            title: "Discover",
+            headerShown: false,
+            tabBarItemStyle: {
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 24,
+              marginHorizontal: 6,
+              marginVertical: 6,
+              height: 40,
+              // backgroundColor: home ? pillBg : "transparent",
+            },
+            tabBarButton: (props) => {
+              const { ref, ...rest } = props;
+              return (
+                <Pressable
+                  {...rest}
+                  onPress={(e) => {
+                    props.onPress?.(e);
+                    setHome(true);
+                    setworkout(false);
+                    setProfile(false);
+                  }}
+                />
+              );
+            },
+            tabBarIcon: ({ color, focused, size }) => (
+              <Ionicons
+                name={focused ? "globe" : "globe-outline"}
+                size={size ?? 24}
+                color={color}
+              />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
           name="home"
           options={{
             title: "Home",

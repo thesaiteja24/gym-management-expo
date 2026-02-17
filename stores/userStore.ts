@@ -2,6 +2,7 @@ import { enqueueUserUpdate } from "@/lib/sync/queue/userQueue";
 import { UserPayload } from "@/lib/sync/types";
 import {
   getUserDataService,
+  searchUsersService,
   updateProfilePicService,
 } from "@/services/userService";
 import { serializeUserUpdateForApi } from "@/utils/serializeForApi";
@@ -16,8 +17,17 @@ type Preferences = {
   preferredLengthUnit?: LengthUnits;
 };
 
+export interface SearchedUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  profilePicUrl: string | null;
+}
+
 type UserState = {
   isLoading: boolean;
+  searchLoading: boolean;
+  searchResult: SearchedUser[] | null;
 
   getUserData: (userId: string) => Promise<void>;
   updateProfilePic: (userId: string, data: FormData) => Promise<any>;
@@ -26,10 +36,14 @@ type UserState = {
     userId: string,
     data: Record<string, string>,
   ) => Promise<any>;
+  searchUsers: (query: string) => Promise<any>;
+  resetSearchedUser: () => void;
 };
 
 const initialState = {
   isLoading: false,
+  searchLoading: false,
+  searchResult: null,
 };
 
 export const useUser = create<UserState>((set) => ({
@@ -155,5 +169,24 @@ export const useUser = create<UserState>((set) => ({
         resolve({ success: false, error });
       }
     });
+  },
+
+  searchUsers(query) {
+    return new Promise(async (resolve) => {
+      try {
+        set({ searchLoading: true });
+        const res = await searchUsersService(query);
+        set({ searchResult: res.data || [] });
+        resolve(res);
+      } catch (error) {
+        resolve({ success: false, error });
+      } finally {
+        set({ searchLoading: false });
+      }
+    });
+  },
+
+  resetSearchedUser: () => {
+    set({ searchResult: null });
   },
 }));

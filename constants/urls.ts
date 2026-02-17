@@ -19,6 +19,8 @@ export const USER_ENDPOINT = (id: string) => `/users/${id}`;
 export const UPDATE_PROFILE_PIC_ENDPOINT = (id: string) =>
   `/users/${id}/profile-picture`;
 export const UPDATE_USER_DATA_ENDPOINT = (id: string) => `/users/${id}`;
+export const SEARCH_USERS_ENDPOINT = (query: string) =>
+  `/users/search?query=${query}`;
 
 // Equipment Endpoints
 export const EQUIPMENT_ENDPOINT = `/equipment`;

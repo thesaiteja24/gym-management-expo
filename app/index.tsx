@@ -1,5 +1,6 @@
 import { useAuth } from "@/stores/authStore";
 import { Redirect } from "expo-router";
+import React from "react";
 import { ActivityIndicator, View } from "react-native";
 
 export default function Index() {
@@ -18,8 +19,13 @@ export default function Index() {
   }
 
   // Strict Privacy Policy Enforcement
+  React.useEffect(() => {
+    if (isAuthenticated && !user?.privacyPolicyAcceptedAt) {
+      logout();
+    }
+  }, [isAuthenticated, user?.privacyPolicyAcceptedAt]);
+
   if (isAuthenticated && !user?.privacyPolicyAcceptedAt) {
-    logout();
     return <Redirect href="/(auth)/login" />;
   }
 
@@ -28,6 +34,8 @@ export default function Index() {
   }
 
   return (
-    <Redirect href={isAuthenticated ? "/(app)/(tabs)/home" : "/(auth)/login"} />
+    <Redirect
+      href={isAuthenticated ? "/(app)/(tabs)/discover" : "/(auth)/login"}
+    />
   );
 }

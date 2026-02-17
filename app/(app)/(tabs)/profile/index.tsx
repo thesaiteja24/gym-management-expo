@@ -2,8 +2,9 @@
 import EditableAvatar from "@/components/EditableAvatar";
 import { useAuth } from "@/stores/authStore";
 import { useUser } from "@/stores/userStore";
+import { router } from "expo-router";
 import React, { memo, useEffect } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -92,26 +93,56 @@ export default function ProfileScreen() {
       style={{ paddingBottom: useSafeAreaInsets().bottom }}
     >
       {/* Avatar */}
-      <Animated.View style={avatarStyle} className="mb-6 items-center">
-        <EditableAvatar
-          uri={user?.profilePicUrl ? user.profilePicUrl : null}
-          size={132}
-          editable={false}
-        />
-      </Animated.View>
+      <View className="flex-row items-center gap-4">
+        <Animated.View style={avatarStyle} className="mb-6 items-center">
+          <EditableAvatar
+            uri={user?.profilePicUrl ? user.profilePicUrl : null}
+            size={132}
+            editable={false}
+          />
+        </Animated.View>
 
-      {/* Name as prominent line */}
-      <Animated.View style={nameStyle} className="mb-3">
-        <Text className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-          {(user?.firstName ?? "") +
-            (user?.lastName ? ` ${user.lastName}` : "")}
-        </Text>
-        {user?.phoneE164 ? (
-          <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {user.phoneE164}
+        {/* Name as prominent line */}
+        <Animated.View style={nameStyle} className="mb-3 flex-grow gap-2">
+          <Text className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            {(user?.firstName ?? "") +
+              (user?.lastName ? ` ${user.lastName}` : "")}
           </Text>
-        ) : null}
-      </Animated.View>
+
+          {/* {user?.phoneE164 ? (
+            <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+              {user.phoneE164}
+            </Text>
+          ) : null} */}
+
+          <View className="flex-row gap-4">
+            <Pressable
+              onPress={() => {
+                router.push("/(app)/profile/followers");
+              }}
+            >
+              <Text className="text-sm font-normal text-neutral-500 dark:text-neutral-400">
+                Followers
+              </Text>
+              <Text className="text-base font-medium text-neutral-900 dark:text-neutral-100">
+                100
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                router.push("/(app)/profile/following");
+              }}
+            >
+              <Text className="text-sm font-normal text-neutral-500 dark:text-neutral-400">
+                Following
+              </Text>
+              <Text className="text-base font-medium text-neutral-900 dark:text-neutral-100">
+                100
+              </Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </View>
 
       {/* Info Card */}
       <Animated.View
