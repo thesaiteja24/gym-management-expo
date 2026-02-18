@@ -1,7 +1,8 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
-import { Pressable, Text, useColorScheme } from "react-native";
+import { Pressable, Text } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -11,7 +12,7 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DiscoverScreen() {
-  const colors = useColorScheme();
+  const colors = useThemeColor();
 
   const headerOpacity = useSharedValue(0);
   const headerTranslateY = useSharedValue(-20);
@@ -46,7 +47,11 @@ export default function DiscoverScreen() {
             router.push("/(app)/profile/search");
           }}
         >
-          <MaterialCommunityIcons name="magnify" size={24} color="black" />
+          <MaterialCommunityIcons
+            name="magnify"
+            size={24}
+            color={colors.isDark ? "white" : "black"}
+          />
         </Pressable>
       </Animated.View>
     </SafeAreaView>

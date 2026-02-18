@@ -5,6 +5,7 @@ import {
   getSuggestedUsersService,
   getUserDataService,
   searchUsersService,
+  unFollowUserService,
   updateProfilePicService,
 } from "@/services/userService";
 import { serializeUserUpdateForApi } from "@/utils/serializeForApi";
@@ -24,13 +25,14 @@ export interface SearchedUser {
   firstName: string;
   lastName: string;
   profilePicUrl: string | null;
+  isFollowing?: boolean;
 }
 
 type UserState = {
   isLoading: boolean;
   searchLoading: boolean;
   suggestedLoading: boolean;
-  followLoading: boolean;
+  followLoading: Record<string, boolean>;
   searchResult: SearchedUser[] | null;
   suggestedUsers: SearchedUser[] | null;
 
@@ -42,15 +44,17 @@ type UserState = {
     data: Record<string, string>,
   ) => Promise<any>;
   searchUsers: (query: string) => Promise<any>;
-  getSuggestedUsers: () => Promise<any>;
   resetSearchedUser: () => void;
+  getSuggestedUsers: () => Promise<any>;
+  followUser: (targetUserId: string) => Promise<any>;
+  unFollowUser: (targetUserId: string) => Promise<any>;
 };
 
 const initialState = {
   isLoading: false,
   searchLoading: false,
   suggestedLoading: false,
-  followLoading: false,
+  followLoading: {},
   searchResult: null,
   suggestedUsers: null,
 };
@@ -180,19 +184,6 @@ export const useUser = create<UserState>((set) => ({
     });
   },
 
-  followUser: async (currentUserId: string, targetUserId: string) => {
-    set({ followLoading: true });
-    try {
-      const res = await followUserService(currentUserId, targetUserId);
-
-      return res;
-    } catch (error) {
-      return { success: false, error };
-    } finally {
-      set({ followLoading: false });
-    }
-  },
-
   searchUsers(query) {
     return new Promise(async (resolve) => {
       set({ searchLoading: true });
@@ -209,6 +200,10 @@ export const useUser = create<UserState>((set) => ({
     });
   },
 
+  resetSearchedUser: () => {
+    set({ searchResult: null });
+  },
+
   getSuggestedUsers: async () => {
     set({ suggestedLoading: true });
     try {
@@ -223,7 +218,83 @@ export const useUser = create<UserState>((set) => ({
     }
   },
 
-  resetSearchedUser: () => {
-    set({ searchResult: null });
+  followUser: async (targetUserId: string) => {
+    // Optimistic update
+    set((state) => ({
+      followLoading: {
+        ...state.followLoading,
+        [targetUserId]: true,
+      },
+      searchResult: state.searchResult?.map((u) =>
+        u.id === targetUserId ? { ...u, isFollowing: true } : u,
+      ),
+      suggestedUsers: state.suggestedUsers?.map((u) =>
+        u.id === targetUserId ? { ...u, isFollowing: true } : u,
+      ),
+    }));
+
+    try {
+      const res = await followUserService(targetUserId);
+      return res;
+    } catch (error) {
+      // rollback
+      set((state) => ({
+        searchResult: state.searchResult?.map((u) =>
+          u.id === targetUserId ? { ...u, isFollowing: false } : u,
+        ),
+        suggestedUsers: state.suggestedUsers?.map((u) =>
+          u.id === targetUserId ? { ...u, isFollowing: false } : u,
+        ),
+      }));
+
+      return { success: false, error };
+    } finally {
+      set((state) => ({
+        followLoading: {
+          ...state.followLoading,
+          [targetUserId]: false,
+        },
+      }));
+    }
+  },
+
+  unFollowUser: async (targetUserId: string) => {
+    // Optimistic update
+    set((state) => ({
+      followLoading: {
+        ...state.followLoading,
+        [targetUserId]: true,
+      },
+      searchResult: state.searchResult?.map((u) =>
+        u.id === targetUserId ? { ...u, isFollowing: false } : u,
+      ),
+      suggestedUsers: state.suggestedUsers?.map((u) =>
+        u.id === targetUserId ? { ...u, isFollowing: false } : u,
+      ),
+    }));
+
+    try {
+      const res = await unFollowUserService(targetUserId);
+      return res;
+    } catch (error) {
+      // rollback
+      set((state) => ({
+        searchResult: state.searchResult?.map((u) =>
+          u.id === targetUserId ? { ...u, isFollowing: true } : u,
+        ),
+        suggestedUsers: state.suggestedUsers?.map((u) =>
+          u.id === targetUserId ? { ...u, isFollowing: true } : u,
+        ),
+      }));
+
+      return { success: false, error };
+    } finally {
+      set((state) => ({
+        followLoading: {
+          ...state.followLoading,
+          [targetUserId]: false,
+        },
+      }));
+    }
   },
 }));

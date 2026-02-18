@@ -69,14 +69,20 @@ export async function getSuggestedUsersService() {
   }
 }
 
-export async function followUserService(
-  currentUserId: string,
-  targetUserId: string,
-) {
+export async function followUserService(targetUserId: string) {
   try {
-    const res = await client.post(follow_user_endpoint(currentUserId), {
-      body: { currentUserId, targetUserId },
-    });
+    const res = await client.post(follow_user_endpoint(targetUserId));
+
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}
+
+export async function unFollowUserService(targetUserId: string) {
+  try {
+    const res = await client.delete(follow_user_endpoint(targetUserId));
 
     return handleApiResponse(res);
   } catch (error: any) {
