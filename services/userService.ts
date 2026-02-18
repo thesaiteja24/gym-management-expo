@@ -1,5 +1,7 @@
 import {
+  FOLLOW_USER_ENDPOINT as follow_user_endpoint,
   SEARCH_USERS_ENDPOINT as search_users_endpoint,
+  SUGGESTED_USERS_ENDPOINT as suggested_users_endpoint,
   UPDATE_PROFILE_PIC_ENDPOINT as update_profile_pic_endpoint,
   UPDATE_USER_DATA_ENDPOINT as update_user_data_endpoint,
   USER_ENDPOINT as user_endpoint,
@@ -48,6 +50,33 @@ export async function updateUserDataService(
 export async function searchUsersService(query: string) {
   try {
     const res = await client.get(search_users_endpoint(query));
+
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}
+
+export async function getSuggestedUsersService() {
+  try {
+    const res = await client.get(suggested_users_endpoint);
+
+    return handleApiResponse(res);
+  } catch (error: any) {
+    const errData = error.response?.data;
+    throw new Error(errData?.message || error.message || "Network error");
+  }
+}
+
+export async function followUserService(
+  currentUserId: string,
+  targetUserId: string,
+) {
+  try {
+    const res = await client.post(follow_user_endpoint(currentUserId), {
+      body: { currentUserId, targetUserId },
+    });
 
     return handleApiResponse(res);
   } catch (error: any) {

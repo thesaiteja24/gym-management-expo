@@ -2,15 +2,22 @@ import { Button } from "@/components/ui/Button";
 import { SearchedUser, useUser } from "@/stores/userStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Text, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const SearchItem = ({ firstName, lastName, profilePicUrl }: SearchedUser) => {
+const UserItem = ({ firstName, lastName, profilePicUrl }: SearchedUser) => {
   return (
-    <View className="w-full flex-row items-center justify-between gap-2">
-      <View className="flex-row items-center justify-center gap-4">
+    <View className="w-full flex-row items-center justify-between py-3">
+      <View className="flex-row items-center gap-4">
         <Image
           source={
             profilePicUrl
@@ -25,13 +32,11 @@ const SearchItem = ({ firstName, lastName, profilePicUrl }: SearchedUser) => {
           }}
           contentFit="cover"
         />
-        <Text className="text-black dark:text-white">
+        <Text className="text-base text-black dark:text-white">
           {firstName} {lastName}
         </Text>
       </View>
-      <View>
-        <Button title="Follow" onPress={() => console.log("Hello")} />
-      </View>
+      <Button title="Follow" onPress={() => console.log("Follow")} />
     </View>
   );
 };
@@ -41,22 +46,54 @@ export default function Search() {
   const safeAreaInsets = useSafeAreaInsets();
 
   const [query, setQuery] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { searchUsers, resetSearchedUser, searchResult, searchLoading } =
-    useUser();
+  const searchUsers = useUser((state) => state.searchUsers);
+  const resetSearchedUser = useUser((state) => state.resetSearchedUser);
+  const getSuggestedUsers = useUser((state) => state.getSuggestedUsers);
+  const searchResult = useUser((state) => state.searchResult);
+  const searchLoading = useUser((state) => state.searchLoading);
+  const suggestedUsers = useUser((state) => state.suggestedUsers);
+  const suggestedLoading = useUser((state) => state.suggestedLoading);
 
+  const isSearching = query.trim().length >= 3;
+
+  const data = useMemo(() => {
+    return isSearching ? (searchResult ?? []) : (suggestedUsers ?? []);
+  }, [isSearching, searchResult, suggestedUsers]);
+
+  // 🔎 Debounced Search
   useEffect(() => {
-    if (query.length < 3) {
+    if (!isSearching) {
       resetSearchedUser();
+      return;
     }
 
     const timer = setTimeout(() => {
-      if (query.length >= 3) {
-        searchUsers(query);
-      }
+      searchUsers(query.trim());
     }, 500);
+
     return () => clearTimeout(timer);
   }, [query]);
+
+  // 🔄 Initial suggestions
+  useEffect(() => {
+    getSuggestedUsers();
+  }, []);
+
+  // 🔄 Pull to refresh
+  const onRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      if (!isSearching) {
+        await getSuggestedUsers();
+      } else {
+        await searchUsers(query.trim());
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [isSearching, query, getSuggestedUsers, searchUsers]);
 
   return (
     <View
@@ -82,19 +119,41 @@ export default function Search() {
           style={{ lineHeight: lineHeight }}
         />
       </View>
-      {!searchResult ? (
-        <View className="mt-4 flex-1 flex-col items-center justify-center">
-          <Text className="text-black dark:text-white">
-            Please type more to search
-          </Text>
-        </View>
-      ) : (
-        <View className="m-4 flex-1 flex-col items-start justify-start">
-          {searchResult?.map((user) => (
-            <SearchItem key={user.id} {...user} />
-          ))}
-        </View>
-      )}
+
+      {/* 👥 Users List */}
+      <FlatList
+        data={data}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={
+          isSearching ? null : (
+            <View className="mt-4">
+              <Text className="font-semibold text-black dark:text-white">
+                Suggested Users
+              </Text>
+            </View>
+          )
+        }
+        renderItem={({ item }) => <UserItem {...item} />}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={
+          suggestedLoading && isSearching ? (
+            <ActivityIndicator style={{ marginTop: 40 }} />
+          ) : (
+            <View className="mt-20 items-center">
+              <Text className="text-black dark:text-white">
+                {searchLoading
+                  ? "Searching..."
+                  : isSearching
+                    ? "No users found"
+                    : "No suggestions available"}
+              </Text>
+            </View>
+          )
+        }
+      />
     </View>
   );
 }

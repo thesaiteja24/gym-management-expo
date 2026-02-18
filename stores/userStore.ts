@@ -1,6 +1,8 @@
 import { enqueueUserUpdate } from "@/lib/sync/queue/userQueue";
 import { UserPayload } from "@/lib/sync/types";
 import {
+  followUserService,
+  getSuggestedUsersService,
   getUserDataService,
   searchUsersService,
   updateProfilePicService,
@@ -27,7 +29,10 @@ export interface SearchedUser {
 type UserState = {
   isLoading: boolean;
   searchLoading: boolean;
+  suggestedLoading: boolean;
+  followLoading: boolean;
   searchResult: SearchedUser[] | null;
+  suggestedUsers: SearchedUser[] | null;
 
   getUserData: (userId: string) => Promise<void>;
   updateProfilePic: (userId: string, data: FormData) => Promise<any>;
@@ -37,13 +42,17 @@ type UserState = {
     data: Record<string, string>,
   ) => Promise<any>;
   searchUsers: (query: string) => Promise<any>;
+  getSuggestedUsers: () => Promise<any>;
   resetSearchedUser: () => void;
 };
 
 const initialState = {
   isLoading: false,
   searchLoading: false,
+  suggestedLoading: false,
+  followLoading: false,
   searchResult: null,
+  suggestedUsers: null,
 };
 
 export const useUser = create<UserState>((set) => ({
@@ -171,11 +180,25 @@ export const useUser = create<UserState>((set) => ({
     });
   },
 
+  followUser: async (currentUserId: string, targetUserId: string) => {
+    set({ followLoading: true });
+    try {
+      const res = await followUserService(currentUserId, targetUserId);
+
+      return res;
+    } catch (error) {
+      return { success: false, error };
+    } finally {
+      set({ followLoading: false });
+    }
+  },
+
   searchUsers(query) {
     return new Promise(async (resolve) => {
+      set({ searchLoading: true });
       try {
-        set({ searchLoading: true });
         const res = await searchUsersService(query);
+
         set({ searchResult: res.data || [] });
         resolve(res);
       } catch (error) {
@@ -184,6 +207,20 @@ export const useUser = create<UserState>((set) => ({
         set({ searchLoading: false });
       }
     });
+  },
+
+  getSuggestedUsers: async () => {
+    set({ suggestedLoading: true });
+    try {
+      const res = await getSuggestedUsersService();
+
+      set({ suggestedUsers: res.data || [] });
+      return res;
+    } catch (error) {
+      return { success: false, error };
+    } finally {
+      set({ suggestedLoading: false });
+    }
   },
 
   resetSearchedUser: () => {
