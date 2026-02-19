@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/Button";
 import DateTimePicker from "@/components/ui/DateTimePicker";
+import VisibilitySelectionModal, {
+  VisibilitySelectionModalHandle,
+} from "@/components/workout/VisibilitySelectionModal";
 
 import { useAuth } from "@/stores/authStore";
 import { ExerciseType, useExercise } from "@/stores/exerciseStore";
-import { useWorkout, WorkoutLog } from "@/stores/workoutStore";
+import { useWorkout, VisibilityType, WorkoutLog } from "@/stores/workoutStore";
 
 import { convertWeight } from "@/utils/converter";
 import { buildPruneMessage, calculateWorkoutMetrics } from "@/utils/workout";
@@ -28,8 +31,10 @@ export default function SaveWorkout() {
 
   const [pendingSave, setPendingSave] = useState<WorkoutLog | null>(null);
   const [pruneMessage, setPruneMessage] = useState<string | null>(null);
+  const [visibility, setVisibility] = useState<VisibilityType>("public");
 
   const confirmModalRef = useRef<BottomSheetModal>(null);
+  const visibilityModalRef = useRef<VisibilitySelectionModalHandle>(null);
 
   // Workout Store
   const workoutSaving = useWorkout((s) => s.workoutSaving);
@@ -173,8 +178,8 @@ export default function SaveWorkout() {
       />
 
       {/* ───── Summary ───── */}
-      <View className="mt-6">
-        <Text className="mb-2 text-lg font-semibold text-black dark:text-white">
+      <View className="mt-6 flex-col gap-4">
+        <Text className="text-lg font-semibold text-black dark:text-white">
           Summary
         </Text>
 
@@ -219,6 +224,29 @@ export default function SaveWorkout() {
             </View>
           </View>
         </View>
+
+        <View className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+          <View className="flex-row justify-between">
+            {/* LEFT */}
+            <View className="flex-1 gap-4">
+              <View className="gap-1">
+                <Text className="text-base font-medium text-black dark:text-white">
+                  Visibility
+                </Text>
+              </View>
+            </View>
+
+            {/* RIGHT */}
+            <View className="flex-1 items-end gap-4">
+              <Text
+                onPress={() => visibilityModalRef.current?.present()}
+                className="text-base font-semibold text-blue-500"
+              >
+                {visibility.slice(0, 1).toUpperCase() + visibility.slice(1)}
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       {/* ───── Actions ───── */}
@@ -236,6 +264,16 @@ export default function SaveWorkout() {
           onPress={() => router.back()}
         />
       </View>
+
+      <VisibilitySelectionModal
+        ref={visibilityModalRef}
+        currentType={visibility}
+        onSelect={(type) => {
+          setVisibility(type);
+          updateWorkout({ visibility: type });
+        }}
+        onClose={() => visibilityModalRef.current?.dismiss()}
+      />
 
       {/* Confirm save modal */}
       <BottomSheetModal

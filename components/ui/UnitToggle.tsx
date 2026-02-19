@@ -24,7 +24,7 @@ export function UnitToggle({
       onChange={(event) => {
         onOnChange(event.nativeEvent.selectedSegmentIndex);
       }}
-      backgroundColor={isDark ? "#262626" : "#f5f5f5"}
+      // backgroundColor={isDark ? "#262626" : "#f5f5f5"}
       tintColor={isDark ? "#404040" : "white"}
       activeFontStyle={{
         color: colors.text,

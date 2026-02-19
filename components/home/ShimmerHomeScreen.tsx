@@ -99,9 +99,16 @@ function SkeletonWorkoutCard() {
   return (
     <View className="mb-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
       {/* Header */}
+      <View className="mb-4 flex-row items-center gap-3">
+        <SkeletonBlock width={44} height={44} rounded={999} />
+        <View className="flex-1 flex-col gap-2">
+          <SkeletonBlock width="70%" height={16} />
+          <SkeletonBlock width="50%" height={16} />
+        </View>
+      </View>
+
       <View className="mb-4 gap-2">
         <SkeletonBlock width="60%" height={18} />
-        <SkeletonBlock width="40%" height={14} />
       </View>
 
       {/* Meta row */}

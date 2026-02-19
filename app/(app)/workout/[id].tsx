@@ -15,7 +15,7 @@ import {
   WorkoutHistorySet,
   WorkoutLogGroup,
 } from "@/stores/workoutStore";
-import { formatDurationFromDates, formatTimeAgo } from "@/utils/time";
+import { formatDate, formatDurationFromDates } from "@/utils/time";
 import { calculateWorkoutMetrics } from "@/utils/workout";
 import * as Crypto from "expo-crypto";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
@@ -28,6 +28,9 @@ import {
 import Toast from "react-native-toast-message";
 
 import { ReadOnlyExerciseRow } from "@/components/workout/ReadOnlyExerciseRow";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { useAuth } from "@/stores/authStore";
+import { Image } from "expo-image";
 
 /* ───────────────── Component ───────────────── */
 
@@ -36,13 +39,15 @@ export default function WorkoutDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const safeAreaInsets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const isDark = useThemeColor().isDark;
 
   const deleteModalRef = useRef<DeleteConfirmModalHandle>(null);
   const discardModalRef = useRef<DeleteConfirmModalHandle>(null);
 
   /* Store Related State */
-  const { workoutHistory, deleteWorkout } = useWorkout();
+  const { getWorkoutById, deleteWorkout } = useWorkout();
   const { exerciseList } = useExercise();
+  const currentUserId = useAuth((state) => state.user?.userId);
 
   /* Derived State */
   const exerciseTypeMap = useMemo(() => {
@@ -53,10 +58,9 @@ export default function WorkoutDetails() {
     return map;
   }, [exerciseList]);
 
-  const workout = useMemo(
-    () => workoutHistory.find((w) => w.id === id || w.clientId === id),
-    [workoutHistory, id],
-  );
+  const workout = getWorkoutById(id!);
+
+  const isAuthrized = currentUserId === workout?.user?.id;
 
   const groupMap = useMemo(() => {
     const map = new Map<string, WorkoutLogGroup>();
@@ -169,9 +173,11 @@ export default function WorkoutDetails() {
   useEffect(() => {
     const rightIcons = [{ name: "create-outline", onPress: handleEdit }];
 
-    navigation.setOptions({
-      rightIcons,
-    });
+    if (isAuthrized) {
+      navigation.setOptions({
+        rightIcons,
+      });
+    }
   }, [navigation]);
   if (!workout) {
     return (
@@ -183,7 +189,7 @@ export default function WorkoutDetails() {
 
   const duration = formatDurationFromDates(workout.startTime, workout.endTime);
 
-  const timeAgo = formatTimeAgo(new Date(workout.endTime));
+  const timeAgo = formatDate(new Date(workout.endTime));
 
   const { tonnage, completedSets } = calculateWorkoutMetrics(
     workout,
@@ -204,6 +210,26 @@ export default function WorkoutDetails() {
       >
         {/* Header */}
         <View className="mb-6 flex-col gap-2">
+          <View className="w-2/3 flex-row items-center gap-4">
+            <Image
+              source={
+                workout?.user?.profilePicUrl
+                  ? { uri: workout.user.profilePicUrl }
+                  : require("../../../assets/images/icon.png")
+              }
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 100,
+                borderColor: isDark ? "white" : "#black",
+                borderWidth: 0.25,
+              }}
+              contentFit="cover"
+            />
+            <Text className="text-base text-black dark:text-white">
+              {workout?.user?.firstName} {workout?.user?.lastName}
+            </Text>
+          </View>
           <View className="flex-row items-center justify-between">
             <Text className="flex-1 text-xl font-bold text-black dark:text-white">
               {workout.title || "Workout"}
@@ -251,12 +277,15 @@ export default function WorkoutDetails() {
             className="w-2/3"
             onPress={handleSaveAsTemplate}
           />
-          <Button
-            title="Delete"
-            className="w-1/3"
-            variant="danger"
-            onPress={() => deleteModalRef.current?.present()}
-          />
+
+          {isAuthrized && (
+            <Button
+              title="Delete"
+              className="w-1/3"
+              variant="danger"
+              onPress={() => deleteModalRef.current?.present()}
+            />
+          )}
         </View>
       </View>
 

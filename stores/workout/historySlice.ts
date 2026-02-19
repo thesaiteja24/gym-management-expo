@@ -1,5 +1,8 @@
 import { enqueueWorkoutDelete } from "@/lib/sync/queue";
-import { getAllWorkoutsService } from "@/services/workoutServices";
+import {
+  getAllWorkoutsService,
+  getDiscoverWorkoutsService,
+} from "@/services/workoutServices";
 import { StateCreator } from "zustand";
 import { useAuth } from "../authStore";
 import { SyncStatus, WorkoutHistoryItem, WorkoutState } from "./types";
@@ -7,7 +10,10 @@ import { SyncStatus, WorkoutHistoryItem, WorkoutState } from "./types";
 export interface HistorySlice {
   workoutLoading: boolean;
   workoutHistory: WorkoutHistoryItem[];
+  discoverWorkouts: WorkoutHistoryItem[];
   getAllWorkouts: () => Promise<void>;
+  getDiscoverWorkouts: () => Promise<void>;
+  getWorkoutById: (id: string) => WorkoutHistoryItem | undefined;
   upsertWorkoutHistoryItem: (item: WorkoutHistoryItem) => void;
   updateWorkoutSyncStatus: (clientId: string, syncStatus: SyncStatus) => void;
   deleteWorkout: (clientId: string, dbId: string | null) => Promise<boolean>;
@@ -29,6 +35,7 @@ export const createHistorySlice: StateCreator<
 > = (set, get) => ({
   workoutLoading: false,
   workoutHistory: [],
+  discoverWorkouts: [],
 
   getAllWorkouts: async () => {
     set({ workoutLoading: true });
@@ -72,6 +79,59 @@ export const createHistorySlice: StateCreator<
     } finally {
       set({ workoutLoading: false });
     }
+  },
+
+  getDiscoverWorkouts: async () => {
+    set({ workoutLoading: true });
+
+    try {
+      const res = await getDiscoverWorkoutsService();
+      if (!res.success || !res.data) return;
+
+      set((state) => {
+        const pending = new Map(
+          state.discoverWorkouts
+            .filter((w) => w.syncStatus === "pending")
+            .map((w) => [w.clientId, w]),
+        );
+
+        const merged = [];
+        const seen = new Set<string>();
+
+        for (const item of res.data) {
+          const clientId = item.clientId ?? item.id;
+          if (seen.has(clientId)) continue;
+          seen.add(clientId);
+
+          merged.push(
+            pending.get(clientId) ?? {
+              ...item,
+              clientId,
+              syncStatus: "synced" as SyncStatus,
+            },
+          );
+
+          pending.delete(clientId);
+        }
+
+        return {
+          discoverWorkouts: sortWorkouts([...pending.values(), ...merged]),
+        };
+      });
+    } catch (e) {
+      console.error("getUserWorkouts failed", e);
+    } finally {
+      set({ workoutLoading: false });
+    }
+  },
+
+  getWorkoutById: (id: string) => {
+    const state = get();
+
+    return (
+      state.workoutHistory.find((w) => w.id === id || w.clientId === id) ||
+      state.discoverWorkouts.find((w) => w.id === id)
+    );
   },
 
   /**

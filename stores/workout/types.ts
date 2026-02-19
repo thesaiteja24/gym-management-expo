@@ -13,6 +13,8 @@ export type ExerciseGroupType = "superSet" | "giantSet";
  */
 export type { SyncStatus } from "@/lib/sync/types";
 
+export type VisibilityType = "public" | "private";
+
 /**
  * Active workout state during a workout session.
  * - clientId: Always present, generated at creation (stable local identifier)
@@ -30,6 +32,7 @@ export type WorkoutLog = {
   exerciseGroups: WorkoutLogGroup[];
   isEdited?: boolean;
   editedAt?: Date | null;
+  visibility?: VisibilityType;
 };
 
 export type WorkoutLogExercise = {
@@ -117,11 +120,17 @@ export type WorkoutHistoryItem = {
   title: string | null;
   startTime: string;
   endTime: string;
+  visibility: VisibilityType;
   createdAt: string;
   updatedAt: string;
   isEdited: boolean;
   editedAt: string | null;
-  user?: { firstName: string; lastName: string } | null;
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profilePicUrl: string;
+  } | null;
 
   exerciseGroups: WorkoutHistoryGroup[];
   exercises: WorkoutHistoryExercise[];
@@ -139,11 +148,14 @@ export interface WorkoutState {
   workoutLoading: boolean;
   workoutSaving: boolean;
   workoutHistory: WorkoutHistoryItem[];
+  discoverWorkouts: WorkoutHistoryItem[];
   workout: WorkoutLog | null;
   rest: RestState;
 
   /* Workout */
   getAllWorkouts: () => Promise<void>;
+  getDiscoverWorkouts: () => Promise<void>;
+  getWorkoutById: (id: string) => WorkoutHistoryItem | undefined;
   upsertWorkoutHistoryItem: (item: WorkoutHistoryItem) => void;
   updateWorkoutSyncStatus: (clientId: string, syncStatus: SyncStatus) => void;
   deleteWorkout: (clientId: string, dbId: string | null) => Promise<boolean>;

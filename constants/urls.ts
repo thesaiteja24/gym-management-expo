@@ -38,6 +38,7 @@ export const EXERCISES_ENDPOINT = `/exercises`;
 export const EXERCISE_ITEM_ENDPOINT = (id: string) => `/exercises/${id}`;
 
 export const WORKOUTS_ENDPOINT = `/workouts`;
+export const DISCOVER_WORKOUTS_ENDPOINT = `/workouts/discover`;
 export const WORKOUT_ITEM_ENDPOINT = (id: string) => `/workouts/${id}`;
 
 export const TEMPLATES_ENDPOINT = `/templates`;

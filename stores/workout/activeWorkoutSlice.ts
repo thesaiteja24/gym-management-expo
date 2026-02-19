@@ -334,6 +334,7 @@ export const createActiveWorkoutSlice: StateCreator<
       title: log.title || "Untitled Workout",
       startTime: log.startTime.toISOString(),
       endTime: log.endTime.toISOString(),
+      visibility: log.visibility || "public",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isEdited: log.isEdited || false,

@@ -76,6 +76,7 @@ export function serializeWorkoutForApi(workout: WorkoutLog) {
     title: workout.title ?? null,
     startTime: workout.startTime?.toISOString() ?? null,
     endTime: workout.endTime?.toISOString() ?? null,
+    visibility: workout.visibility,
 
     exerciseGroups: workout.exerciseGroups.map((group) => {
       const baseGroup = {
