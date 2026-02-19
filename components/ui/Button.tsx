@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TouchableOpacityProps,
 } from "react-native";
+import { twMerge } from "tailwind-merge";
 
 /* --------------------------------------------------
    Types
@@ -180,13 +181,13 @@ export function Button({
 
         onPress?.(e);
       }}
-      className={[
+      className={twMerge(
         baseClass,
         widthClass,
         variantClass[variant],
-        isDisabled ? "opacity-50" : "",
+        isDisabled && "opacity-50",
         className,
-      ].join(" ")}
+      )}
       {...props}
     >
       {loading ? (
@@ -201,11 +202,11 @@ export function Button({
             <Text
               numberOfLines={1}
               ellipsizeMode="tail"
-              className={[
+              className={twMerge(
                 "text-lg font-semibold",
                 textVariantClass[variant],
                 textClassName,
-              ].join(" ")}
+              )}
             >
               {title}
             </Text>

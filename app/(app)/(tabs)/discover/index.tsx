@@ -1,3 +1,4 @@
+import ShimmerDiscoverScreen from "@/components/discover/ShimmerDiscoverScreen";
 import WorkoutCard from "@/components/home/WorkoutCard";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useExercise } from "@/stores/exerciseStore";
@@ -20,6 +21,7 @@ export default function DiscoverScreen() {
 
   // ───────────────── Stores ─────────────────
   const discoverWorkouts = useWorkout((s) => s.discoverWorkouts);
+  const discoverLoading = useWorkout((s) => s.discoverLoading);
   const getDiscoverWorkouts = useWorkout((s) => s.getDiscoverWorkouts);
 
   const exerciseList = useExercise((s) => s.exerciseList);
@@ -98,30 +100,34 @@ export default function DiscoverScreen() {
       </Animated.View>
 
       {/* Workout List */}
-      <FlatList
-        data={discoverWorkouts}
-        keyExtractor={(item) => item.clientId}
-        renderItem={({ item, index }) => (
-          <WorkoutCard
-            workout={item}
-            exerciseTypeMap={exerciseTypeMap}
-            index={index}
-            showSyncStatus={false}
-          />
-        )}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View className="mt-10 items-center">
-            <Text className="text-neutral-500 dark:text-neutral-400">
-              No workouts yet.
-            </Text>
-          </View>
-        }
-        // ListFooterComponent={<View className="mb-[20%]" />}
-      />
+      {discoverLoading || refreshing ? (
+        <ShimmerDiscoverScreen />
+      ) : (
+        <FlatList
+          data={discoverWorkouts}
+          keyExtractor={(item) => item.clientId}
+          renderItem={({ item, index }) => (
+            <WorkoutCard
+              workout={item}
+              exerciseTypeMap={exerciseTypeMap}
+              index={index}
+              showSyncStatus={false}
+            />
+          )}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <View className="mt-10 items-center">
+              <Text className="text-neutral-500 dark:text-neutral-400">
+                No workouts yet.
+              </Text>
+            </View>
+          }
+          // ListFooterComponent={<View className="mb-[20%]" />}
+        />
+      )}
     </SafeAreaView>
   );
 }

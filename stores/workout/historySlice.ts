@@ -9,6 +9,7 @@ import { SyncStatus, WorkoutHistoryItem, WorkoutState } from "./types";
 
 export interface HistorySlice {
   workoutLoading: boolean;
+  discoverLoading: boolean;
   workoutHistory: WorkoutHistoryItem[];
   discoverWorkouts: WorkoutHistoryItem[];
   getAllWorkouts: () => Promise<void>;
@@ -34,6 +35,7 @@ export const createHistorySlice: StateCreator<
   HistorySlice
 > = (set, get) => ({
   workoutLoading: false,
+  discoverLoading: false,
   workoutHistory: [],
   discoverWorkouts: [],
 
@@ -82,7 +84,7 @@ export const createHistorySlice: StateCreator<
   },
 
   getDiscoverWorkouts: async () => {
-    set({ workoutLoading: true });
+    set({ discoverLoading: true });
 
     try {
       const res = await getDiscoverWorkoutsService();
@@ -121,7 +123,7 @@ export const createHistorySlice: StateCreator<
     } catch (e) {
       console.error("getUserWorkouts failed", e);
     } finally {
-      set({ workoutLoading: false });
+      set({ discoverLoading: false });
     }
   },
 

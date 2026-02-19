@@ -52,7 +52,7 @@ const UserItem = ({
         </Text>
       </View>
       <Button
-        className="w-1/3"
+        className="min-h-6 w-1/3 py-2"
         variant={isFollowing ? "secondary" : "primary"}
         title={isFollowing ? "Following" : "Follow"}
         onPress={onPressFollow}

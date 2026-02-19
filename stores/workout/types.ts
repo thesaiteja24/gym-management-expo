@@ -146,6 +146,7 @@ export interface RestState {
 
 export interface WorkoutState {
   workoutLoading: boolean;
+  discoverLoading: boolean;
   workoutSaving: boolean;
   workoutHistory: WorkoutHistoryItem[];
   discoverWorkouts: WorkoutHistoryItem[];
