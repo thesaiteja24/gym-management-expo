@@ -36,7 +36,7 @@ function SkeletonBlock({
 			-1,
 			true
 		)
-	}, [])
+	}, [fade, shimmer])
 
 	const animatedStyle = useAnimatedStyle(() => ({
 		opacity: fade.value * shimmer.value,

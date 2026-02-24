@@ -7,6 +7,7 @@ import { useAuth, User } from '@/stores/authStore'
 import { useEquipment } from '@/stores/equipmentStore'
 import { useExercise } from '@/stores/exerciseStore'
 import { useMuscleGroup } from '@/stores/muscleGroupStore'
+import { useOnboarding } from '@/stores/onboardingStore'
 import { useUser } from '@/stores/userStore'
 import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google-signin/google-signin'
 import { router } from 'expo-router'
@@ -20,7 +21,14 @@ import {
 	TouchableOpacity,
 	View,
 } from 'react-native'
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
+import Animated, {
+	Easing,
+	useAnimatedStyle,
+	useSharedValue,
+	withRepeat,
+	withSequence,
+	withTiming,
+} from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
@@ -122,7 +130,7 @@ export default function Login() {
 	const PHONE_ENABLED = false
 
 	// Onboarding Store
-	const { hasData, getPayload, reset: resetOnboarding } = require('@/stores/onboardingStore').useOnboarding.getState()
+	const { hasData, getPayload, reset: resetOnboarding } = useOnboarding.getState()
 	const completeOnboarding = useAuth(s => s.completeOnboarding)
 
 	const onContinue = async () => {
@@ -172,11 +180,11 @@ export default function Login() {
 				height: onBoardingPayload.height,
 				weight: onBoardingPayload.weight,
 				dateOfBirth: onBoardingPayload.dateOfBirth,
-				gender: onBoardingPayload.gender,
+				gender: onBoardingPayload.gender as any,
 			}
 			const preferences = {
-				preferredWeightUnit: onBoardingPayload.weightUnit,
-				preferredLengthUnit: onBoardingPayload.heightUnit,
+				preferredWeightUnit: onBoardingPayload.weightUnit as any,
+				preferredLengthUnit: onBoardingPayload.heightUnit as any,
 			}
 			const { setUser } = useAuth.getState()
 			setUser({ ...userData, ...preferences })
@@ -199,22 +207,25 @@ export default function Login() {
 	const getAllExercises = useExercise(s => s.getAllExercises)
 	const getAllEquipment = useEquipment(s => s.getAllEquipment)
 	const getAllMuscleGroups = useMuscleGroup(s => s.getAllMuscleGroups)
-
+	// Preload lookups for better UX
 	useEffect(() => {
 		getAllExercises()
-		getAllEquipment()
 		getAllMuscleGroups()
-	}, [])
+		getAllEquipment()
+	}, [getAllExercises, getAllMuscleGroups, getAllEquipment])
 
 	useEffect(() => {
-		opacity.value = withTiming(1, { duration: 2000 })
-		translateY.value = withTiming(0, {
-			duration: 2000,
-			easing: Easing.out(Easing.cubic),
-		})
-
-		pumpScale.value = withDelay(500, withTiming(1, { duration: 600, easing: Easing.out(Easing.exp) }))
-	}, [])
+		opacity.value = withTiming(1, { duration: 800 })
+		translateY.value = withTiming(0, { duration: 800, easing: Easing.out(Easing.exp) })
+		pumpScale.value = withRepeat(
+			withSequence(
+				withTiming(1.1, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+				withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+			),
+			-1,
+			true
+		)
+	}, [opacity, translateY, pumpScale])
 
 	const animatedContainerStyle = useAnimatedStyle(() => ({
 		opacity: opacity.value,

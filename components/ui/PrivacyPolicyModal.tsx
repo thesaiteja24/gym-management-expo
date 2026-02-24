@@ -20,7 +20,6 @@ const PrivacyPolicyModal = forwardRef<PrivacyPolicyModalHandle, Props>(({ onAgre
 	const insets = useSafeAreaInsets()
 	const isDark = useColorScheme() === 'dark'
 
-	const [isOpen, setIsOpen] = useState(false)
 	const [policyVersion, setPolicyVersion] = useState<string | null>(null)
 
 	const injectedJS = `
@@ -43,7 +42,6 @@ const PrivacyPolicyModal = forwardRef<PrivacyPolicyModalHandle, Props>(({ onAgre
 	useImperativeHandle(ref, () => ({
 		present: () => {
 			setPolicyVersion(null)
-			setIsOpen(true)
 			bottomSheetModalRef.current?.present()
 		},
 		dismiss: () => {
@@ -66,7 +64,6 @@ const PrivacyPolicyModal = forwardRef<PrivacyPolicyModalHandle, Props>(({ onAgre
 			backdropComponent={renderBackdrop}
 			enablePanDownToClose
 			onDismiss={() => {
-				setIsOpen(false)
 				onClose?.()
 			}}
 			backgroundStyle={{

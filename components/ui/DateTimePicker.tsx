@@ -83,7 +83,7 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 
 	const isModal = props.isModal !== false
 
-	const initialDate = value ?? new Date()
+	const initialDate = useMemo(() => value ?? new Date(), [value])
 
 	// Ref for the Bottom Sheet
 	const bottomSheetModalRef = useRef<BottomSheetModal>(null)
@@ -134,7 +134,7 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 			minute: '2-digit',
 			hour12: is24Hour !== undefined ? !is24Hour : undefined,
 		})
-	}, [value, dateOnly, is24Hour])
+	}, [value, dateOnly, is24Hour, initialDate])
 
 	/* ---------------------------------------------
      Inline mode

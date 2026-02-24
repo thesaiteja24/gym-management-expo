@@ -1,4 +1,3 @@
-import { useThemeColor } from '@/hooks/useThemeColor'
 import * as Haptics from 'expo-haptics'
 import React from 'react'
 import { Pressable, Text, View } from 'react-native'
@@ -11,9 +10,7 @@ interface SelectableCardProps {
 	className?: string
 }
 
-export function SelectableCard({ selected, onSelect, title, icon, className }: SelectableCardProps) {
-	const colors = useThemeColor()
-
+export function SelectableCard({ selected, onSelect, title, className }: SelectableCardProps) {
 	return (
 		<Pressable
 			onPress={() => {

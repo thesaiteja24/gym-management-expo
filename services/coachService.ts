@@ -6,7 +6,8 @@ import {
 	COACH_TRANSCRIPTION_ENDPOINT,
 } from '@/constants/urls'
 import { handleApiResponse } from '@/utils/handleApiResponse'
-import client from './api'
+import * as FileSystem from 'expo-file-system/legacy'
+import client, { getAccessToken } from './api'
 
 export async function startConversationService() {
 	try {
@@ -18,13 +19,35 @@ export async function startConversationService() {
 	}
 }
 
-export async function streamSpeechService(id: string) {
+export async function downloadSpeechService(ttsId: string) {
 	try {
-		const res = await client.get(COACH_SPEECH_ENDPOINT(id))
-		return handleApiResponse(res)
+		const uri = `${FileSystem.cacheDirectory}speech-${ttsId}.mp3`
+		const url = COACH_SPEECH_ENDPOINT(ttsId)
+
+		let token = getAccessToken()
+		let response = await FileSystem.downloadAsync(url, uri, {
+			headers: token ? { Authorization: `Bearer ${token}` } : {},
+		})
+
+		if (response.status === 401) {
+			try {
+				await getActiveConversationService()
+			} catch (e) {
+				console.log('Refresh trigger failed', e)
+			}
+			token = getAccessToken()
+			response = await FileSystem.downloadAsync(url, uri, {
+				headers: token ? { Authorization: `Bearer ${token}` } : {},
+			})
+		}
+
+		if (response.status !== 200) {
+			throw new Error(`Download failed: ${response.status}`)
+		}
+
+		return response.uri
 	} catch (error: any) {
-		const errData = error.response?.data
-		throw new Error(errData?.message || error.message || 'Network error')
+		throw new Error(error.message || 'Download error')
 	}
 }
 

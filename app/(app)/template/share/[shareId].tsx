@@ -29,7 +29,7 @@ export default function TemplateDetails() {
 
 	useEffect(() => {
 		getTemplateByShareId(shareId)
-	}, [shareId])
+	}, [shareId, getTemplateByShareId])
 
 	useEffect(() => {
 		navigation.setOptions({
@@ -46,7 +46,7 @@ export default function TemplateDetails() {
 				</TouchableOpacity>
 			),
 		})
-	}, [navigation, sharedTemplate, isDark])
+	}, [navigation, sharedTemplate, isDark, setSharedTemplate])
 
 	const groupMap = useMemo(() => {
 		const map = new Map<string, any>()

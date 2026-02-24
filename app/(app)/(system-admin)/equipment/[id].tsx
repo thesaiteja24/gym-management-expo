@@ -65,7 +65,7 @@ export default function EditEquipment() {
 
 			setLoadingData(false)
 		})
-	}, [id])
+	}, [id, getEquipmentById])
 
 	const isDirty = useMemo(() => {
 		return title !== original.title || normalize(thumbnailUri) !== original.thumbnailUrl

@@ -18,7 +18,7 @@ import { router, useNavigation } from 'expo-router'
 import { DeleteConfirmModal, DeleteConfirmModalHandle } from '@/components/ui/DeleteConfirmModal'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { usePreventRemove } from '@react-navigation/native'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Keyboard, KeyboardAvoidingView, Text, useColorScheme, Vibration, View } from 'react-native'
 import DraggableFlatList from 'react-native-draggable-flatlist'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -114,95 +114,60 @@ export default function StartWorkout() {
 			.filter((item): item is NonNullable<typeof item> => item !== null)
 	}, [workout, groupingMode, selectedGroupExerciseIds, exerciseMap])
 
-	/* Helpers */
-	function getSetValidationStats() {
-		if (!workout) return { valid: 0, invalid: 0 }
+	/* Handlers */
+	const handleOpenSave = useCallback(() => {
+		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+
+		if (!workout) return
+
+		if (workout.exercises.length === 0) {
+			Toast.show({
+				type: 'error',
+				text1: 'No exercises added',
+				text2: 'Add at least one exercise to continue.',
+			})
+			return
+		}
 
 		let valid = 0
-		let invalid = 0
-
 		workout.exercises.forEach(ex => {
 			const exerciseType = exerciseTypeMap.get(ex.exerciseId)
 			if (!exerciseType) return
 
 			ex.sets.forEach(set => {
-				if (!set.completed) {
-					invalid += 1
-					return
-				}
+				if (!set.completed) return
 
 				const reps = set.reps ?? 0
 				const weight = set.weight ?? 0
 				const duration = set.durationSeconds ?? 0
 
-				let isValid = false
-
 				switch (exerciseType) {
 					case 'repsOnly':
-						isValid = reps > 0
+						if (reps > 0) valid += 1
 						break
 					case 'durationOnly':
-						isValid = duration > 0
+						if (duration > 0) valid += 1
 						break
 					case 'weighted':
 					case 'assisted':
-						isValid = reps > 0 && weight > 0
+						if (reps > 0 && weight > 0) valid += 1
 						break
 				}
-
-				if (isValid) valid += 1
-				else invalid += 1
 			})
 		})
 
-		return { valid, invalid }
-	}
-
-	function canNavigateToSave() {
-		if (!workout) return { ok: false }
-
-		if (workout.exercises.length === 0) {
-			return { ok: false, reason: 'NO_EXERCISES' }
-		}
-
-		const { valid, invalid } = getSetValidationStats()
-
 		if (valid === 0) {
-			return { ok: false, reason: 'NO_VALID_SETS' }
-		}
-
-		return { ok: true, invalidCount: invalid }
-	}
-
-	/* Handlers */
-	const handleOpenSave = () => {
-		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-
-		const result = canNavigateToSave()
-
-		if (!result.ok) {
-			if (result.reason === 'NO_EXERCISES') {
-				Toast.show({
-					type: 'error',
-					text1: 'No exercises added',
-					text2: 'Add at least one exercise to continue.',
-				})
-			}
-
-			if (result.reason === 'NO_VALID_SETS') {
-				Toast.show({
-					type: 'error',
-					text1: 'No valid sets added',
-					text2: 'Add at least one valid set to continue.',
-					onPress: () => Toast.hide(),
-				})
-			}
-
+			Toast.show({
+				type: 'error',
+				text1: 'No valid sets added',
+				text2: 'Add at least one valid set to continue.',
+				onPress: () => Toast.hide(),
+			})
 			return
 		}
 
 		router.push('/(app)/workout/save')
-	}
+	}, [workout, exerciseTypeMap])
 
 	const handleConfirmExerciseGroup = () => {
 		// if no grouping mode or less than 2 exercises selected, do nothing
@@ -227,7 +192,7 @@ export default function StartWorkout() {
 	// Start a new workout if none exists
 	useEffect(() => {
 		if (!workout) startWorkout()
-	}, [])
+	}, [startWorkout, workout])
 
 	// Set Completion Effect - Start/Stop rest timer based on set completion
 	useEffect(() => {
@@ -249,7 +214,7 @@ export default function StartWorkout() {
 				prevCompletedRef.current.set(key, set.completed)
 			})
 		})
-	}, [workout?.exercises, startRestTimer, stopRestTimer])
+	}, [workout, startRestTimer, stopRestTimer])
 
 	// Navigation Options Effect
 	useEffect(() => {
@@ -271,7 +236,7 @@ export default function StartWorkout() {
 				},
 			],
 		})
-	}, [handleOpenSave, workoutSaving, discardWorkout, navigation, workout])
+	}, [handleOpenSave, discardWorkout, navigation, workout, workoutSaving])
 
 	useEffect(() => {
 		const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true))

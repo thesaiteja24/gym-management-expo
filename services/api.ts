@@ -21,6 +21,10 @@ export const setAccessToken = (token: string | null) => {
 	inMemoryAccessToken = token
 }
 
+export const getAccessToken = () => {
+	return inMemoryAccessToken
+}
+
 /* ─────────────────────────────────────────────
    Axios client
 ───────────────────────────────────────────── */

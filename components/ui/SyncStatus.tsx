@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from 'react'
 import { Animated, Easing, Text, View } from 'react-native'
 
 export default function SyncStatus() {
-	const { isOnline, isSyncing, pendingCount, failedCount } = useSyncStore()
+	const { isOnline, isSyncing, pendingCount } = useSyncStore()
 	const spinValue = useRef(new Animated.Value(0)).current
 	const colors = useThemeColor()
 

@@ -10,6 +10,13 @@ export default function Index() {
 	const hasSeenOnboarding = useAuth(s => s.hasSeenOnboarding)
 	const logout = useAuth(s => s.logout)
 
+	// Strict Privacy Policy Enforcement
+	React.useEffect(() => {
+		if (isAuthenticated && !user?.privacyPolicyAcceptedAt) {
+			logout()
+		}
+	}, [isAuthenticated, user?.privacyPolicyAcceptedAt, logout])
+
 	if (!hasRestored) {
 		return (
 			<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -17,13 +24,6 @@ export default function Index() {
 			</View>
 		)
 	}
-
-	// Strict Privacy Policy Enforcement
-	React.useEffect(() => {
-		if (isAuthenticated && !user?.privacyPolicyAcceptedAt) {
-			logout()
-		}
-	}, [isAuthenticated, user?.privacyPolicyAcceptedAt])
 
 	if (isAuthenticated && !user?.privacyPolicyAcceptedAt) {
 		return <Redirect href="/(auth)/login" />

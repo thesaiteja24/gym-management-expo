@@ -90,12 +90,12 @@ export default function Search() {
 		}, 500)
 
 		return () => clearTimeout(timer)
-	}, [query])
+	}, [query, searchUsers, isSearching, resetSearchedUser])
 
 	// 🔄 Initial suggestions
 	useEffect(() => {
 		getSuggestedUsers()
-	}, [])
+	}, [getSuggestedUsers])
 
 	// 🔄 Pull to refresh
 	const onRefresh = useCallback(async () => {

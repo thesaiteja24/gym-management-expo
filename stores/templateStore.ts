@@ -10,6 +10,8 @@ import { useAuth } from './authStore'
 import { useExercise } from './exerciseStore'
 import { DraftTemplate, TemplateExercise, TemplateSet, TemplateState, WorkoutTemplate } from './template/types'
 
+export { DraftTemplate, WorkoutTemplate }
+
 // Initial State
 const initialState = {
 	templates: [],

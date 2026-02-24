@@ -42,9 +42,11 @@ export default function DiscoverScreen() {
 	}, [getDiscoverWorkouts, getAllExercises])
 
 	// ───────────────── Initial Load ─────────────────
+	// 1) Load Discovery Config & Feed data on mount
 	useEffect(() => {
-		Promise.all([getDiscoverWorkouts(), getAllExercises()])
-	}, [])
+		getAllExercises()
+		getDiscoverWorkouts()
+	}, [getAllExercises, getDiscoverWorkouts])
 
 	// ───────────────── Header animation ─────────────────
 	const headerOpacity = useSharedValue(0)
@@ -54,9 +56,9 @@ export default function DiscoverScreen() {
 		headerOpacity.value = withTiming(1, { duration: 600 })
 		headerTranslateY.value = withTiming(0, {
 			duration: 600,
-			easing: Easing.out(Easing.quad),
+			easing: Easing.out(Easing.exp),
 		})
-	}, [])
+	}, [headerOpacity, headerTranslateY])
 
 	const headerAnimatedStyle = useAnimatedStyle(() => ({
 		opacity: headerOpacity.value,

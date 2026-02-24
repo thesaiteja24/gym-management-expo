@@ -60,7 +60,7 @@ export default function EditProfileScreen() {
 	}, [user])
 
 	// Dirty checking
-	const isDirty = useMemo(() => {
+	const hasChanges = useMemo(() => {
 		const original = originalRef.current
 
 		const sameDOB =
@@ -76,11 +76,11 @@ export default function EditProfileScreen() {
 			weight === original.weight &&
 			sameDOB
 		)
-	}, [firstName, lastName, height, weight, dateOfBirth, user])
+	}, [firstName, lastName, height, weight, dateOfBirth])
 
 	// save handler
-	const onSave = useCallback(async () => {
-		if (!user?.userId || !isDirty) return
+	const handleSave = useCallback(async () => {
+		if (!user?.userId || !hasChanges) return
 		Keyboard.dismiss()
 
 		const payload = {
@@ -110,14 +110,14 @@ export default function EditProfileScreen() {
 				text1: 'Profile update failed, try again',
 			})
 		}
-	}, [firstName, lastName, height, weight, dateOfBirth, isDirty, user?.userId])
+	}, [firstName, lastName, height, weight, dateOfBirth, hasChanges, user?.userId, updateUserData])
 
 	// load user data on mount
 	useEffect(() => {
 		if (user?.userId) {
 			getUserData(user.userId)
 		}
-	}, [])
+	}, [user?.userId, getUserData])
 
 	// nav bar checkmark
 	useEffect(() => {
@@ -125,13 +125,13 @@ export default function EditProfileScreen() {
 			rightIcons: [
 				{
 					name: 'checkmark-done',
-					onPress: onSave,
-					disabled: !isDirty || isLoading,
+					onPress: handleSave,
+					disabled: !hasChanges || isLoading,
 					color: colors.primary,
 				},
 			],
 		})
-	}, [navigation, isDirty, onSave, user, isLoading, colors.primary])
+	}, [navigation, hasChanges, handleSave, user, isLoading, colors.primary])
 
 	// profile pic picker
 	const onPick = async (uri: string | null) => {

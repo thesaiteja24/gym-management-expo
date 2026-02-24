@@ -49,11 +49,18 @@ export default function WorkoutScreen() {
 
 		templatesOpacity.value = withDelay(200, withTiming(1, { duration: 500 }))
 		templatesTranslateY.value = withDelay(200, withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }))
-	}, [])
+	}, [
+		activeWorkoutOpacity,
+		activeWorkoutTranslateY,
+		libraryOpacity,
+		libraryTranslateY,
+		templatesOpacity,
+		templatesTranslateY,
+	])
 
 	useEffect(() => {
 		getAllTemplates()
-	}, [])
+	}, [getAllTemplates])
 
 	const activeWorkoutStyle = useAnimatedStyle(() => ({
 		opacity: activeWorkoutOpacity.value,

@@ -44,11 +44,11 @@ export default function ProfileScreen() {
 		// 3. Info Card: Fade In + Slide Up (delayed 200ms)
 		infoOpacity.value = withDelay(200, withTiming(1, { duration: 500 }))
 		infoTranslateY.value = withDelay(200, withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }))
-	}, [])
+	}, [avatarOpacity, infoOpacity, infoTranslateY, nameOpacity, nameTranslateY])
 
 	useEffect(() => {
 		getUserData(user?.userId ?? '')
-	}, [])
+	}, [getUserData, user?.userId])
 
 	const avatarStyle = useAnimatedStyle(() => ({
 		opacity: avatarOpacity.value,

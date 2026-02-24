@@ -144,4 +144,6 @@ const CommentInputFooter = forwardRef(
 	}
 )
 
+CommentInputFooter.displayName = 'CommentInputFooter'
+
 export default CommentInputFooter

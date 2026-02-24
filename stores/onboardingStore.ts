@@ -32,10 +32,12 @@ interface OnboardingState {
 
 	// Helper to get payload for backend
 	getPayload: () => {
-		gender?: string
+		gender?: Gender
 		dateOfBirth?: string
 		weight?: number
 		height?: number
+		weightUnit?: WeightUnit
+		heightUnit?: HeightUnit
 	}
 }
 

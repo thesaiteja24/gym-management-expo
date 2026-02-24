@@ -109,7 +109,7 @@ export default function OnboardingMetrics() {
 					/>
 					{heightUnit === 'inches' && (
 						<Text className="mt-2 text-xs text-neutral-400">
-							Enter as decimal (e.g. 5.9 for 5'9" roughly - refined input coming soon)
+							Enter as decimal (e.g. 5.9 for 5&apos;9&quot; roughly - refined input coming soon)
 						</Text>
 					)}
 				</View>

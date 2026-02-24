@@ -55,7 +55,7 @@ export default function EditMuscleGroup() {
 				thumbnailUrl: data.thumbnailUrl,
 			})
 		})
-	}, [id])
+	}, [id, getMuscleGroupById])
 
 	// dirty checking (same pattern as EditProfile)
 	const isDirty = useMemo(() => {

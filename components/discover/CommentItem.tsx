@@ -35,7 +35,7 @@ const CommentItem = ({
 
 	useEffect(() => {
 		fetchCommentLikes(comment.id)
-	}, [comment.id])
+	}, [comment.id, fetchCommentLikes])
 
 	const currentLikes = commentLikes[comment.id] || []
 	const isLikedByMe = user && currentLikes.some(like => like.userId === userId)

@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/Button'
 import { DeleteConfirmModal, DeleteConfirmModalHandle } from '@/components/ui/DeleteConfirmModal'
 import { useTemplate } from '@/stores/templateStore'
+import * as Clipboard from 'expo-clipboard'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import React, { useEffect, useMemo, useRef } from 'react'
-import { Alert, ScrollView, Share, Text, View, useColorScheme } from 'react-native'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import { ScrollView, Text, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 
 import { ReadOnlyExerciseRow } from '@/components/workout/ReadOnlyExerciseRow'
 
@@ -17,54 +19,54 @@ export default function TemplateDetails() {
 	const template = useTemplate(s => s.templates.find(t => t.id === id || t.clientId === id))
 	const deleteTemplate = useTemplate(s => s.deleteTemplate)
 	const startWorkoutFromTemplate = useTemplate(s => s.startWorkoutFromTemplate)
+	const handleEdit = useCallback(() => {
+		router.push(`/(app)/template/editor?id=${id}`)
+	}, [id])
+
+	const handleShare = useCallback(() => {
+		if (!template?.shareId) {
+			Toast.show({
+				type: 'error',
+				text1: 'Error',
+				text2: 'Template has no share link',
+			})
+			return
+		}
+		Clipboard.setStringAsync(template.shareId).then(() => {
+			Toast.show({
+				type: 'success',
+				text1: 'Link copied',
+				text2: 'Share link copied to clipboard',
+			})
+		})
+	}, [template?.shareId])
 
 	const deleteModalRef = useRef<DeleteConfirmModalHandle>(null)
 
+	// Configure Navigation Header
 	useEffect(() => {
-		const rightIcons = [{ name: 'create-outline', onPress: handleEdit }]
-
-		if (template?.shareId) {
-			rightIcons.push({
+		const rightIcons = [
+			{
 				name: 'share-outline',
 				onPress: handleShare,
-			})
-		}
+			},
+			{
+				name: 'create-outline',
+				onPress: handleEdit,
+			},
+		]
 
 		navigation.setOptions({
 			title: 'Template Details',
 			rightIcons,
 		})
-	}, [navigation, template, isDark])
+	}, [id, navigation, handleEdit, handleShare, template, isDark])
 
 	const groupMap = useMemo(() => {
 		const map = new Map<string, any>()
 		template?.exerciseGroups.forEach(g => map.set(g.id, g))
 		return map
 	}, [template?.exerciseGroups])
-
-	const handleEdit = () => {
-		router.push({
-			pathname: '/(app)/template/editor',
-			params: { mode: 'edit', id: id },
-		})
-	}
-
-	const handleShare = async () => {
-		if (!template?.shareId) return
-
-		const webLink = `https://pump.thesaiteja.dev/share/${template.shareId}`
-
-		try {
-			await Share.share({
-				message: `Check out this workout template: ${webLink}`,
-				url: webLink,
-				title: template.title,
-			})
-		} catch (error) {
-			console.error('Error sharing template:', error)
-			Alert.alert('Error', 'Failed to share the template.')
-		}
-	}
 
 	if (!template) {
 		return (

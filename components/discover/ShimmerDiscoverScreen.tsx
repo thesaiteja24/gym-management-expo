@@ -37,7 +37,7 @@ function SkeletonBlock({
 			-1,
 			true
 		)
-	}, [])
+	}, [fade, shimmer])
 
 	const animatedStyle = useAnimatedStyle(() => ({
 		opacity: fade.value * shimmer.value,
@@ -51,36 +51,6 @@ function SkeletonBlock({
 	}
 
 	return <Animated.View style={[animatedStyle, blockStyle]} />
-}
-
-/* ──────────────────────────────────────────────
-   Streak Card Skeleton
-────────────────────────────────────────────── */
-
-function SkeletonStreakCard() {
-	return (
-		<View className="mb-4 rounded-2xl border border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900">
-			{/* Month */}
-			<SkeletonBlock width={160} height={24} rounded={6} />
-
-			{/* Motivation line */}
-			<View className="mt-3">
-				<SkeletonBlock width="100%" height={16} />
-			</View>
-
-			{/* Days */}
-			<View className="mt-4 flex-row justify-between">
-				{Array.from({ length: 7 }).map((_, i) => (
-					<View key={i} className="items-center">
-						<SkeletonBlock width={24} height={12} rounded={4} />
-						<View className="mt-2">
-							<SkeletonBlock width={40} height={48} rounded={999} />
-						</View>
-					</View>
-				))}
-			</View>
-		</View>
-	)
 }
 
 /* ──────────────────────────────────────────────

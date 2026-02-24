@@ -41,7 +41,7 @@ export default function AnimatedButton({
 	useEffect(() => {
 		// Longer distance for smoother loop
 		translateX.value = withRepeat(withTiming(-300, { duration: 4000, easing: Easing.linear }), -1, true)
-	}, [])
+	}, [translateX])
 
 	const gradientAnimatedStyle = useAnimatedStyle(() => ({
 		transform: [{ translateX: translateX.value }],

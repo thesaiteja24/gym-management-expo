@@ -11,14 +11,7 @@ import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import { Alert, Pressable, Share, Text, TouchableOpacity, View } from 'react-native'
-import Animated, {
-	Easing,
-	useAnimatedStyle,
-	useSharedValue,
-	withDelay,
-	withSpring,
-	withTiming,
-} from 'react-native-reanimated'
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import Toast from 'react-native-toast-message'
 import CommentsModal, { CommentsModalHandle } from '../discover/CommentsModal'
 
@@ -91,7 +84,7 @@ export default function WorkoutCard({
 	useEffect(() => {
 		fetchWorkoutLikes(workout.id)
 		fetchComments(workout.id, true)
-	}, [workout.id])
+	}, [workout.id, fetchWorkoutLikes, fetchComments])
 
 	// Animation values
 	const opacity = useSharedValue(0)
@@ -102,20 +95,12 @@ export default function WorkoutCard({
 		const delay = index * 100 + 500
 		opacity.value = withDelay(delay, withTiming(1, { duration: 500 }))
 		translateY.value = withDelay(delay, withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }))
-	}, [index])
+	}, [index, opacity, translateY])
 
 	const animatedStyle = useAnimatedStyle(() => ({
 		opacity: opacity.value,
 		transform: [{ scale: scale.value }, { translateY: translateY.value }],
 	}))
-
-	const onPressIn = () => {
-		scale.value = withSpring(0.97, { damping: 10, stiffness: 300 })
-	}
-
-	const onPressOut = () => {
-		scale.value = withSpring(1, { damping: 10, stiffness: 300 })
-	}
 
 	return (
 		<AnimatedPressable

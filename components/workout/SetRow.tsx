@@ -203,7 +203,7 @@ function SetRow({
 				withTiming(0, { duration: 400 })
 			)
 		)
-	}, [set.setIndex, isTemplate])
+	}, [set.setIndex, isTemplate, hintTranslateX])
 
 	/* ───── Actions ───── */
 
@@ -244,8 +244,6 @@ function SetRow({
 	}
 
 	/* ───── Rest icon color ───── */
-
-	const restColor = isCompleted ? '#facc15' : set.restSeconds != null ? colors.success : '#9ca3af'
 
 	/* ───────────────── Render helpers ───────────────── */
 

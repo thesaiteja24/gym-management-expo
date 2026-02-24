@@ -121,7 +121,14 @@ export default function ExercisesScreen() {
 		if (!equipmentList.length) getAllEquipment()
 		if (!muscleGroupList.length) getAllMuscleGroups()
 		if (!exerciseList.length) getAllExercises()
-	}, [exerciseList.length, muscleGroupList.length, equipmentList.length])
+	}, [
+		exerciseList.length,
+		muscleGroupList.length,
+		equipmentList.length,
+		getAllEquipment,
+		getAllExercises,
+		getAllMuscleGroups,
+	])
 
 	/* ───────────────── Fuzzy search ───────────────── */
 
@@ -236,7 +243,7 @@ export default function ExercisesScreen() {
 							title="Equipment"
 							onPress={() => {
 								equipmentModalRef.current?.present()
-								Keyboard.dismiss
+								Keyboard.dismiss()
 							}}
 						/>
 					)}

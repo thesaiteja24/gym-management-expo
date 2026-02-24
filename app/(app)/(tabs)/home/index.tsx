@@ -29,7 +29,7 @@ export default function HomeScreen() {
 	const exerciseLoading = useExercise(s => s.exerciseLoading)
 	const getAllExercises = useExercise(s => s.getAllExercises)
 
-	const [refreshing, setRefreshing] = useState(false)
+	const [refreshing] = useState(false)
 
 	// ───────────────── Derived UI state ─────────────────
 	const hasExercises = exerciseList.length > 0
@@ -117,20 +117,22 @@ export default function HomeScreen() {
 
 	// ───────────────── Refresh ─────────────────
 	const onRefresh = useCallback(async () => {
-		await Promise.all([getAllWorkouts(), getAllExercises()])
-	}, [getAllWorkouts, getAllExercises])
+		await Promise.all([getAllWorkouts()])
+		if (!exerciseList.length) getAllExercises()
+	}, [getAllWorkouts, getAllExercises, exerciseList.length])
 
 	// ───────────────── Header animation ─────────────────
 	const headerOpacity = useSharedValue(0)
 	const headerTranslateY = useSharedValue(-20)
 
+	// Header Animation
 	useEffect(() => {
-		headerOpacity.value = withTiming(1, { duration: 600 })
+		headerOpacity.value = withTiming(1, { duration: 800 })
 		headerTranslateY.value = withTiming(0, {
-			duration: 600,
-			easing: Easing.out(Easing.quad),
+			duration: 800,
+			easing: Easing.out(Easing.exp),
 		})
-	}, [])
+	}, [headerOpacity, headerTranslateY])
 
 	const headerAnimatedStyle = useAnimatedStyle(() => ({
 		opacity: headerOpacity.value,
@@ -139,7 +141,7 @@ export default function HomeScreen() {
 
 	useEffect(() => {
 		Promise.all([getAllWorkouts(), getAllExercises()])
-	}, [])
+	}, [getAllWorkouts, getAllExercises])
 
 	// ───────────────── Render ─────────────────
 	return (
@@ -186,7 +188,7 @@ function SectionHeader() {
 	useEffect(() => {
 		opacity.value = withDelay(500, withTiming(1, { duration: 500 }))
 		translateY.value = withDelay(500, withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }))
-	}, [])
+	}, [opacity, translateY])
 
 	const style = useAnimatedStyle(() => ({
 		opacity: opacity.value,

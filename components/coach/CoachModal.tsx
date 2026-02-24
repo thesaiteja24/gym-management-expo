@@ -101,7 +101,7 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
 		if (messages.length === 0 && isOpen) {
 			initializeConversation()
 		}
-	}, [isOpen])
+	}, [isOpen, messages.length, initializeConversation])
 
 	useEffect(() => {
 		scrollViewRef.current?.scrollToEnd({ animated: true })

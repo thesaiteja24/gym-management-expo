@@ -5,7 +5,6 @@ import { BottomSheetBackdrop, BottomSheetFlatList, BottomSheetModal, BottomSheet
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
 	ActivityIndicator,
-	Alert,
 	BackHandler,
 	Dimensions,
 	ScrollView,
@@ -15,6 +14,7 @@ import {
 	View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 import CommentInputFooter from './CommentInputFooter'
 import CommentItem from './CommentItem'
 
@@ -326,7 +326,11 @@ const CommentsModal = forwardRef<CommentsModalHandle, Props>(({ workoutId, onClo
 						try {
 							await deleteComment(selectedCommentForOptions.id)
 						} catch (error) {
-							Alert.alert('Error', 'Failed to delete comment.')
+							Toast.show({
+								type: 'error',
+								text1: 'Error',
+								text2: error as string,
+							})
 						}
 					}
 				}}

@@ -6,7 +6,7 @@ import { useThemeColor } from '@/hooks/useThemeColor'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import { Tabs } from 'expo-router'
-import React, { useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import { Pressable, useColorScheme, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -15,11 +15,6 @@ export default function TabsLayout() {
 	const isDark = useColorScheme() === 'dark'
 	const insets = useSafeAreaInsets()
 
-	const [home, setHome] = useState(true)
-	const [workout, setworkout] = useState(false)
-	const [profile, setProfile] = useState(false)
-
-	const pillBg = isDark ? '#111111' : '#F2F2F2'
 	const barBg = colors.background
 	const barBorder = isDark ? '#222222' : '#DDDDDD'
 	const activeColor = colors.text
@@ -97,9 +92,6 @@ export default function TabsLayout() {
 									{...rest}
 									onPress={e => {
 										props.onPress?.(e)
-										setHome(true)
-										setworkout(false)
-										setProfile(false)
 									}}
 								/>
 							)
@@ -131,9 +123,6 @@ export default function TabsLayout() {
 									{...rest}
 									onPress={e => {
 										props.onPress?.(e)
-										setHome(true)
-										setworkout(false)
-										setProfile(false)
 									}}
 								/>
 							)
@@ -166,9 +155,6 @@ export default function TabsLayout() {
 									{...rest}
 									onPress={e => {
 										props.onPress?.(e)
-										setHome(false)
-										setworkout(true)
-										setProfile(false)
 									}}
 								/>
 							)
@@ -205,9 +191,6 @@ export default function TabsLayout() {
 									{...rest}
 									onPress={e => {
 										props.onPress?.(e)
-										setHome(false)
-										setworkout(false)
-										setProfile(true)
 									}}
 								/>
 							)

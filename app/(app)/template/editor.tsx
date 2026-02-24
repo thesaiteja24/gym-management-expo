@@ -4,12 +4,12 @@ import ExerciseGroupModal, { ExerciseGroupModalHandle } from '@/components/worko
 import ExerciseRow from '@/components/workout/ExerciseRow'
 import { useAuth } from '@/stores/authStore'
 import { useExercise } from '@/stores/exerciseStore'
-import { useTemplate } from '@/stores/templateStore'
+import { DraftTemplate, WorkoutTemplate, useTemplate } from '@/stores/templateStore'
 import { ExerciseGroupType } from '@/stores/workoutStore'
 import { Ionicons } from '@expo/vector-icons'
 import { usePreventRemove } from '@react-navigation/native'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { KeyboardAvoidingView, Platform, Text, TextInput, View, useColorScheme } from 'react-native'
 import DraggableFlatList from 'react-native-draggable-flatlist'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -129,43 +129,50 @@ export default function TemplateEditor() {
 		return `The following will be removed:\n• ${parts.join('\n• ')}`
 	}
 
-	const commitSave = async (template: any) => {
-		setSaving(true)
-		try {
-			let res
-			if (isEditing && template.id) {
-				res = await updateTemplate(template.id, template)
-			} else {
-				res = await createTemplate(template)
-			}
+	const commitSave = useCallback(
+		async (templateToSave: DraftTemplate) => {
+			setSaving(true)
+			try {
+				let res
+				if (isEditing && templateToSave.id) {
+					// Use the existing template's id. The DraftTemplate id is nullable.
+					res = await updateTemplate(templateToSave.id, {
+						...templateToSave,
+						id: templateToSave.id,
+					} as unknown as Partial<WorkoutTemplate>)
+				} else {
+					res = await createTemplate(templateToSave)
+				}
 
-			if (res.success) {
-				Toast.show({
-					type: 'success',
-					text1: isEditing ? 'Template updated' : 'Template created',
-				})
-				discardDraftTemplate()
-				router.back()
-			} else {
+				if (res.success) {
+					Toast.show({
+						type: 'success',
+						text1: isEditing ? 'Template updated' : 'Template created',
+					})
+					discardDraftTemplate()
+					router.back()
+				} else {
+					Toast.show({
+						type: 'error',
+						text1: 'Error',
+						text2: 'Failed to save template: ' + (res.error?.message || 'Unknown error'),
+					})
+				}
+			} catch (error: any) {
+				console.error(error)
 				Toast.show({
 					type: 'error',
 					text1: 'Error',
-					text2: 'Failed to save template: ' + (res.error?.message || 'Unknown error'),
+					text2: 'Unexpected error occurred',
 				})
+			} finally {
+				setSaving(false)
+				setPruneMessage(null)
+				setPendingSave(null)
 			}
-		} catch (e) {
-			console.error(e)
-			Toast.show({
-				type: 'error',
-				text1: 'Error',
-				text2: 'Unexpected error occurred',
-			})
-		} finally {
-			setSaving(false)
-			setPruneMessage(null)
-			setPendingSave(null)
-		}
-	}
+		},
+		[isEditing, updateTemplate, createTemplate, discardDraftTemplate]
+	)
 
 	const hasUnsavedChanges = (!!draftTemplate &&
 		(draftTemplate.title.trim().length > 0 ||
@@ -206,44 +213,18 @@ export default function TemplateEditor() {
 				startDraftTemplate()
 			}
 		}
-	}, [])
+	}, [isEditing, params.id, templates, startDraftTemplate, draftTemplate])
 
-	// Configure navigation header
-	useEffect(() => {
-		navigation.setOptions({
-			title: isEditing ? 'Edit Template' : 'New Template',
-			onLeftPress: () => {
-				handleCancel()
-			},
-			headerBackButtonMenuEnabled: false,
-
-			rightIcons: [
-				{
-					name: 'checkmark-done',
-					onPress: saving ? undefined : handleSave,
-					disabled: saving,
-					color: 'green',
-				},
-			],
-		})
-	}, [navigation, draftTemplate, saving, isEditing])
-
-	useEffect(() => {
-		if (pruneMessage) {
-			pruneConfirmModalRef.current?.present()
-		}
-	}, [pruneMessage])
-
-	const handleCancel = () => {
+	const handleCancel = useCallback(() => {
 		if (draftTemplate && (draftTemplate.title || draftTemplate.exercises.length > 0)) {
 			deleteModalRef.current?.present()
 		} else {
 			discardDraftTemplate()
 			router.back()
 		}
-	}
+	}, [draftTemplate, discardDraftTemplate])
 
-	const handleSave = async () => {
+	const handleSave = useCallback(async () => {
 		if (!draftTemplate) return
 
 		if (!draftTemplate.title.trim()) {
@@ -279,7 +260,33 @@ export default function TemplateEditor() {
 
 		// No pruning → save immediately
 		await commitSave(prepared.template)
-	}
+	}, [draftTemplate, prepareTemplateForSave, commitSave])
+
+	// Configure navigation header
+	useEffect(() => {
+		navigation.setOptions({
+			title: isEditing ? 'Edit Template' : 'New Template',
+			onLeftPress: () => {
+				handleCancel()
+			},
+			headerBackButtonMenuEnabled: false,
+
+			rightIcons: [
+				{
+					name: 'checkmark-done',
+					onPress: saving ? undefined : handleSave,
+					disabled: saving,
+					color: 'green',
+				},
+			],
+		})
+	}, [navigation, draftTemplate, saving, isEditing, handleSave, handleCancel])
+
+	useEffect(() => {
+		if (pruneMessage) {
+			pruneConfirmModalRef.current?.present()
+		}
+	}, [pruneMessage])
 
 	if (!draftTemplate)
 		return (

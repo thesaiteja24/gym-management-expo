@@ -1,6 +1,5 @@
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { StyleSheet, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export function CustomToast({
 	text1,
@@ -12,7 +11,6 @@ export function CustomToast({
 	type: 'success' | 'error' | 'info'
 }) {
 	const colors = useThemeColor()
-	const insets = useSafeAreaInsets()
 
 	// Map types to theme colors if available, or fallback to standard semantic colors
 	const borderColors = {

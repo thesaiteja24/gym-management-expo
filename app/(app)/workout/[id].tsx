@@ -8,7 +8,7 @@ import { formatDate, formatDurationFromDates } from '@/utils/time'
 import { calculateWorkoutMetrics } from '@/utils/workout'
 import * as Crypto from 'expo-crypto'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { BackHandler, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
@@ -54,8 +54,7 @@ export default function WorkoutDetails() {
 		return map
 	}, [workout?.exerciseGroups])
 
-	/* Handlers */
-	const handleEdit = () => {
+	const handleEdit = useCallback(() => {
 		if (!workout) return
 
 		const activeWorkout = useWorkout.getState().workout
@@ -66,14 +65,13 @@ export default function WorkoutDetails() {
 				router.push('/(app)/workout/start')
 				return
 			}
-
 			// Warn about overwriting
 			discardModalRef.current?.present()
 		} else {
 			useWorkout.getState().loadWorkoutHistory(workout)
 			router.push('/(app)/workout/start')
 		}
-	}
+	}, [workout, discardModalRef])
 
 	const handleDiscardConfirm = () => {
 		if (!workout) return
@@ -160,14 +158,7 @@ export default function WorkoutDetails() {
 				rightIcons,
 			})
 		}
-	}, [navigation])
-	if (!workout) {
-		return (
-			<View className="flex-1 items-center justify-center bg-white dark:bg-black">
-				<Text className="text-lg text-neutral-500">Workout not found</Text>
-			</View>
-		)
-	}
+	}, [id, isAuthrized, getWorkoutById, navigation, handleEdit, workout, discardModalRef])
 
 	useEffect(() => {
 		const onBackPress = () => {
@@ -179,6 +170,13 @@ export default function WorkoutDetails() {
 
 		return () => subscription.remove()
 	}, [])
+	if (!workout) {
+		return (
+			<View className="flex-1 items-center justify-center bg-white dark:bg-black">
+				<Text className="text-lg text-neutral-500">Workout not found</Text>
+			</View>
+		)
+	}
 
 	const duration = formatDurationFromDates(workout.startTime, workout.endTime)
 

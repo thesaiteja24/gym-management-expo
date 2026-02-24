@@ -1,5 +1,5 @@
-import { COACH_SPEECH_ENDPOINT } from '@/constants/urls'
 import {
+	downloadSpeechService,
 	getActiveConversationService,
 	sendMessageService,
 	startConversationService,
@@ -180,8 +180,8 @@ export function useCoach(): CoachVoice {
 			setMessages(prev => prev.map(msg => (msg.id === thinkingId ? { ...msg, text, thinking: false } : msg)))
 
 			// 2. fetch audio
-			const audioUri = COACH_SPEECH_ENDPOINT(ttsId)
-			startPlaying(audioUri)
+			const audioUri = await downloadSpeechService(ttsId)
+			await startPlaying(audioUri)
 		} catch (e) {
 			console.log(e)
 			setIsThinking(false)
@@ -266,7 +266,7 @@ export function useCoach(): CoachVoice {
 			setMessages(prev => prev.map(msg => (msg.id === coachThinkingId ? { ...msg, text, thinking: false } : msg)))
 
 			// 8️⃣ Play TTS audio
-			const audioUri = COACH_SPEECH_ENDPOINT(ttsId)
+			const audioUri = await downloadSpeechService(ttsId)
 			await startPlaying(audioUri)
 
 			setIsThinking(false)

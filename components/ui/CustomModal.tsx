@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/Button'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import React, { forwardRef, useImperativeHandle, useState } from 'react'
 import { Pressable, Modal as RNModal, Text, View, useColorScheme } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export interface ModalHandle {
 	open: () => void
@@ -34,7 +33,6 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
 	) => {
 		const colors = useThemeColor()
 		const isDark = useColorScheme() === 'dark'
-		const insets = useSafeAreaInsets()
 
 		const [visible, setVisible] = useState(false)
 		const [isLoading, setIsLoading] = useState(false)
