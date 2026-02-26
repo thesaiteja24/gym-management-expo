@@ -1,3 +1,5 @@
+import { formatDistanceToNow } from 'date-fns'
+
 /**
  * Calculates the duration between two ISO date strings and returns a formatted string.
  *
@@ -26,40 +28,35 @@ export function formatDurationFromDates(start: string, end: string) {
 }
 
 /**
- * Returns a human-readable string representing how much time has passed since the given date.
+ * Returns a human-readable relative time string for the given date.
  *
- * @param dateString - The past date ISO string.
- * @returns A string like "just now", "5m ago", "2h ago", "3d ago", "1mo ago".
+ * Uses `date-fns/formatDistanceToNow` internally to generate
+ * properly formatted relative timestamps.
+ *
+ * @param date - A JavaScript Date object representing a past or future time.
+ *
+ * @returns A localized string such as:
+ * - "less than a minute ago"
+ * - "5 minutes ago"
+ * - "about 1 hour ago"
+ * - "in 2 days"
  *
  * @example
- * formatTimeAgo("2023-10-27T09:00:00Z"); // Assuming now is 10:00:00Z
- * // Output: "1h ago"
+ * const date = new Date("2023-10-27T09:00:00Z")
+ * formatTimeAgo(date)
+ * // Output (if current time is 10:00:00Z): "about 1 hour ago"
+ *
+ * @notes
+ * - Automatically handles pluralization and rounding.
+ * - Supports future dates (e.g., "in 3 days").
+ * - Relies on `date-fns` for accurate calendar-based calculations.
  *
  * @usage
  * Used in:
  * - `WorkoutDetailScreen` (app/(app)/workout/[id].tsx)
  */
-export const formatTimeAgo = (date: Date): string => {
-	const now = new Date()
-	const diffMs = now.getTime() - date.getTime()
-
-	const seconds = Math.floor(diffMs / 1000)
-	const minutes = Math.floor(seconds / 60)
-	const hours = Math.floor(minutes / 60)
-	const days = Math.floor(hours / 24)
-
-	if (days <= 0) return 'Today'
-	if (days === 1) return 'Yesterday'
-	if (days < 7) return `${days} days ago`
-
-	const weeks = Math.floor(days / 7)
-	if (weeks < 4) return `${weeks} week${weeks > 1 ? 's' : ''} ago`
-
-	const months = Math.floor(days / 30)
-	if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`
-
-	const years = Math.floor(days / 365)
-	return `${years} year${years > 1 ? 's' : ''} ago`
+export const formatTimeAgo = (date: Date) => {
+	return formatDistanceToNow(date, { addSuffix: true })
 }
 
 /**

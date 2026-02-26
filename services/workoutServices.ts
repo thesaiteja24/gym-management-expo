@@ -20,9 +20,9 @@ export async function getWorkoutByShareIdService(shareId: string): Promise<Worko
 	}
 }
 
-export async function getAllWorkoutsService() {
+export async function getAllWorkoutsService(page: number = 1, limit: number = 2) {
 	try {
-		const res = await client.get(workouts_endpoint)
+		const res = await client.get(workouts_endpoint, { params: { page, limit } })
 
 		return handleApiResponse(res)
 	} catch (error: any) {
@@ -31,9 +31,9 @@ export async function getAllWorkoutsService() {
 	}
 }
 
-export async function getDiscoverWorkoutsService() {
+export async function getDiscoverWorkoutsService(page: number = 1, limit: number = 2) {
 	try {
-		const res = await client.get(discover_workouts_endpoint)
+		const res = await client.get(discover_workouts_endpoint, { params: { page, limit } })
 
 		return handleApiResponse(res)
 	} catch (error: any) {

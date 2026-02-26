@@ -1,6 +1,6 @@
 import { router, useNavigation } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { FlatList, RefreshControl, Text, View } from 'react-native'
+import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -9,6 +9,7 @@ import WorkoutCard from '@/components/home/WorkoutCard'
 
 import ShimmerHomeScreen from '@/components/home/ShimmerHomeScreen'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/stores/authStore'
 import { ExerciseType, useExercise } from '@/stores/exerciseStore'
 import { useWorkout, WorkoutHistoryItem } from '@/stores/workoutStore'
@@ -17,6 +18,7 @@ import { getGreeting, toDateKey } from '@/utils/time'
 
 export default function HomeScreen() {
 	const navigation = useNavigation()
+	const colors = useThemeColor()
 
 	// ───────────────── Stores ─────────────────
 	const user = useAuth(s => s.user)
@@ -29,12 +31,14 @@ export default function HomeScreen() {
 	const exerciseLoading = useExercise(s => s.exerciseLoading)
 	const getAllExercises = useExercise(s => s.getAllExercises)
 
-	const [refreshing] = useState(false)
+	const workoutPage = useWorkout(s => s.workoutPage)
+	const workoutHasMore = useWorkout(s => s.workoutHasMore)
+
+	const [refreshing, setRefreshing] = useState(false)
 
 	// ───────────────── Derived UI state ─────────────────
 	const hasExercises = exerciseList.length > 0
-	const isLoading = workoutLoading || exerciseLoading
-	const showShimmer = !hasExercises || isLoading
+	const showShimmer = refreshing || !hasExercises || (workoutLoading && workoutHistory.length === 0)
 
 	// ───────────────── Derived data ─────────────────
 	const exerciseTypeMap = useMemo(() => {
@@ -117,9 +121,24 @@ export default function HomeScreen() {
 
 	// ───────────────── Refresh ─────────────────
 	const onRefresh = useCallback(async () => {
-		await Promise.all([getAllWorkouts()])
-		if (!exerciseList.length) getAllExercises()
+		try {
+			setRefreshing(true)
+
+			await Promise.all([getAllWorkouts(1)])
+
+			if (!exerciseList.length) {
+				await getAllExercises()
+			}
+		} finally {
+			setRefreshing(false)
+		}
 	}, [getAllWorkouts, getAllExercises, exerciseList.length])
+
+	const fetchNextPage = useCallback(() => {
+		if (!workoutLoading && workoutHasMore && workoutPage) {
+			getAllWorkouts(workoutPage + 1)
+		}
+	}, [workoutLoading, workoutHasMore, workoutPage, getAllWorkouts])
 
 	// ───────────────── Header animation ─────────────────
 	const headerOpacity = useSharedValue(0)
@@ -140,7 +159,7 @@ export default function HomeScreen() {
 	}))
 
 	useEffect(() => {
-		Promise.all([getAllWorkouts(), getAllExercises()])
+		Promise.all([getAllWorkouts(1), getAllExercises()])
 	}, [getAllWorkouts, getAllExercises])
 
 	// ───────────────── Render ─────────────────
@@ -174,7 +193,15 @@ export default function HomeScreen() {
 					stickyHeaderIndices={listData.length > 0 ? [1] : []}
 					showsVerticalScrollIndicator={false}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-					ListFooterComponent={<View className="mb-[20%] p-4" />}
+					onEndReached={fetchNextPage}
+					onEndReachedThreshold={0.5}
+					ListFooterComponent={
+						<View className="mb-[20%] items-center justify-center p-4 pb-12 pt-6">
+							{workoutLoading && workoutPage && workoutPage > 1 && (
+								<ActivityIndicator size="small" color={colors.primary} />
+							)}
+						</View>
+					}
 				/>
 			)}
 		</SafeAreaView>

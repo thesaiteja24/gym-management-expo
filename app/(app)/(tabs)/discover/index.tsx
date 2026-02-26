@@ -7,7 +7,7 @@ import { useWorkout } from '@/stores/workoutStore'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -18,11 +18,15 @@ export default function DiscoverScreen() {
 	const discoverWorkouts = useWorkout(s => s.discoverWorkouts)
 	const discoverLoading = useWorkout(s => s.discoverLoading)
 	const getDiscoverWorkouts = useWorkout(s => s.getDiscoverWorkouts)
+	const discoverPage = useWorkout(s => s.discoverPage)
+	const discoverHasMore = useWorkout(s => s.discoverHasMore)
 
 	const exerciseList = useExercise(s => s.exerciseList)
 	const getAllExercises = useExercise(s => s.getAllExercises)
 
 	const [refreshing, setRefreshing] = useState(false)
+
+	const showShimmer = refreshing || !exerciseList.length || (discoverLoading && discoverWorkouts.length === 0)
 
 	// ───────────────── Derived data ─────────────────
 	const exerciseTypeMap = useMemo(() => {
@@ -35,17 +39,23 @@ export default function DiscoverScreen() {
 	const onRefresh = useCallback(async () => {
 		try {
 			setRefreshing(true)
-			await Promise.all([getDiscoverWorkouts(), getAllExercises()])
+			await Promise.all([getDiscoverWorkouts(1), getAllExercises()])
 		} finally {
 			setRefreshing(false)
 		}
 	}, [getDiscoverWorkouts, getAllExercises])
 
+	const fetchNextPage = useCallback(() => {
+		if (!discoverLoading && discoverHasMore && discoverPage) {
+			getDiscoverWorkouts(discoverPage + 1)
+		}
+	}, [discoverLoading, discoverHasMore, discoverPage, getDiscoverWorkouts])
+
 	// ───────────────── Initial Load ─────────────────
 	// 1) Load Discovery Config & Feed data on mount
 	useEffect(() => {
 		getAllExercises()
-		getDiscoverWorkouts()
+		getDiscoverWorkouts(1)
 	}, [getAllExercises, getDiscoverWorkouts])
 
 	// ───────────────── Header animation ─────────────────
@@ -84,7 +94,7 @@ export default function DiscoverScreen() {
 			</Animated.View>
 
 			{/* Workout List */}
-			{discoverLoading || refreshing ? (
+			{showShimmer ? (
 				<ShimmerDiscoverScreen />
 			) : (
 				<FlatList
@@ -100,12 +110,20 @@ export default function DiscoverScreen() {
 					)}
 					showsVerticalScrollIndicator={false}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+					onEndReached={fetchNextPage}
+					onEndReachedThreshold={0.5}
 					ListEmptyComponent={
 						<View className="mt-10 items-center">
 							<Text className="text-neutral-500 dark:text-neutral-400">No workouts yet.</Text>
 						</View>
 					}
-					ListFooterComponent={<View className="mb-[20%]" />}
+					ListFooterComponent={
+						<View className="mb-[20%] items-center justify-center p-4 pb-12 pt-6">
+							{discoverLoading && discoverPage && discoverPage > 1 && (
+								<ActivityIndicator size="small" color={colors.primary} />
+							)}
+						</View>
+					}
 				/>
 			)}
 		</SafeAreaView>

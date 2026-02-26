@@ -150,6 +150,10 @@ export interface RestState {
 export interface WorkoutState {
 	workoutLoading: boolean
 	discoverLoading: boolean
+	workoutPage?: number
+	workoutHasMore?: boolean
+	discoverPage?: number
+	discoverHasMore?: boolean
 	workoutSaving: boolean
 	workoutHistory: WorkoutHistoryItem[]
 	discoverWorkouts: WorkoutHistoryItem[]
@@ -157,8 +161,8 @@ export interface WorkoutState {
 	rest: RestState
 
 	/* Workout */
-	getAllWorkouts: () => Promise<void>
-	getDiscoverWorkouts: () => Promise<void>
+	getAllWorkouts: (page?: number) => Promise<void>
+	getDiscoverWorkouts: (page?: number) => Promise<void>
 	getWorkoutById: (id: string) => WorkoutHistoryItem | undefined
 	upsertWorkoutHistoryItem: (item: WorkoutHistoryItem) => void
 	updateWorkoutSyncStatus: (clientId: string, syncStatus: SyncStatus) => void
