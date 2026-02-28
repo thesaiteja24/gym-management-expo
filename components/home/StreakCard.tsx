@@ -1,3 +1,6 @@
+import { useThemeColor } from '@/hooks/useThemeColor'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { router } from 'expo-router'
 import React, { useEffect } from 'react'
 import { Text, View } from 'react-native'
 import Animated, {
@@ -23,13 +26,26 @@ const StreakCard = React.memo(function StreakCard({
 	days: StreakDay[]
 	message: string
 }) {
+	const colors = useThemeColor()
+
 	return (
 		<Animated.View
 			entering={FadeInDown.delay(500).duration(500)}
 			className="mb-4 rounded-2xl border border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900"
 		>
 			{/* Month */}
-			<Text className="text-xl font-semibold text-black dark:text-white">{monthLabel}</Text>
+			<View className="flex-row items-center justify-between">
+				<Text className="text-xl font-semibold text-black dark:text-white">{monthLabel}</Text>
+				<MaterialCommunityIcons
+					className="rounded-full bg-neutral-200 p-1 dark:bg-neutral-800"
+					name="chevron-double-right"
+					size={20}
+					color={colors.text}
+					onPress={() => {
+						router.push('/(app)/analytics')
+					}}
+				/>
+			</View>
 
 			{/* Motivational line */}
 			<Text className="mt-2 text-base font-normal text-neutral-600 dark:text-neutral-400">{message}</Text>

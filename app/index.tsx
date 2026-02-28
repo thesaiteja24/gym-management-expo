@@ -33,5 +33,5 @@ export default function Index() {
 		return <Redirect href="/(auth)/onboarding" />
 	}
 
-	return <Redirect href={isAuthenticated ? '/(app)/(tabs)/discover' : '/(auth)/login'} />
+	return <Redirect href={isAuthenticated ? '/(app)/(tabs)/home' : '/(auth)/login'} />
 }

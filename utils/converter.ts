@@ -64,3 +64,9 @@ export function convertLength(
 
 	return round(result, precision)
 }
+
+export function displayWeight(value: number, options?: { precision?: number }) {
+	const userUnit = useAuth.getState().user?.preferredWeightUnit ?? 'kg'
+
+	return convertWeight(value, { to: userUnit, precision: options?.precision ?? 2 })
+}
