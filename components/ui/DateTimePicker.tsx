@@ -184,6 +184,7 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 				animationConfigs={{
 					duration: 350,
 				}}
+				stackBehavior="push"
 			>
 				<BottomSheetView
 					style={{

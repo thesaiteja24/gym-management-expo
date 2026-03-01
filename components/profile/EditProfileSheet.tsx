@@ -8,7 +8,17 @@ import { useUser } from '@/stores/userStore'
 import { prepareImageForUpload } from '@/utils/prepareImageForUpload'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Keyboard, Platform, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
+import {
+	BackHandler,
+	Keyboard,
+	KeyboardAvoidingView,
+	Platform,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	useColorScheme,
+	View,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
@@ -16,6 +26,7 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	const colors = useThemeColor()
 	const isDarkMode = useColorScheme() === 'dark'
 	const insets = useSafeAreaInsets()
+	const [isOpen, setIsOpen] = useState(false)
 
 	// global state (stores)
 	const user = useAuth(s => s.user)
@@ -169,11 +180,25 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
 		}
 	}
 
+	useEffect(() => {
+		const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+			if (isOpen) {
+				// @ts-ignore
+				ref?.current?.dismiss()
+				return true // prevent navigation
+			}
+			return false // allow normal back navigation
+		})
+
+		return () => backHandler.remove()
+	}, [isOpen, ref])
+
 	return (
 		<BottomSheetModal
 			ref={ref}
 			index={0}
-			enableDynamicSizing={true}
+			snapPoints={['90%']}
+			enableDynamicSizing={false}
 			backdropComponent={props => (
 				<BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
 			)}
@@ -186,158 +211,171 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
 			animationConfigs={{
 				duration: 350,
 			}}
-			keyboardBehavior="interactive"
-			keyboardBlurBehavior="restore"
+			style={{
+				marginTop: insets.top,
+			}}
+			stackBehavior="push"
+			onChange={index => {
+				setIsOpen(index >= 0)
+			}}
 		>
-			<BottomSheetScrollView
-				contentContainerStyle={{
-					paddingBottom: insets.bottom + 16,
-					paddingHorizontal: 24,
-					paddingTop: 8,
-				}}
+			<KeyboardAvoidingView
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				style={{ flex: 1 }}
+				keyboardVerticalOffset={100}
 			>
-				<Text className="mb-6 text-center text-xl font-bold text-black dark:text-white">Edit Profile</Text>
+				<BottomSheetScrollView
+					style={{ flex: 1 }}
+					contentContainerStyle={{
+						paddingHorizontal: 24,
+						paddingTop: 8,
+						paddingBottom: insets.bottom + 100,
+					}}
+					showsVerticalScrollIndicator={false}
+				>
+					<Text className="mb-6 text-center text-xl font-bold text-black dark:text-white">Edit Profile</Text>
 
-				<View className="mb-6 items-center">
-					<EditableAvatar
-						uri={user?.profilePicUrl ? user.profilePicUrl : null}
-						size={110}
-						editable={!isLoading}
-						uploading={uploading}
-						onChange={newUri => newUri && onPick(newUri)}
-					/>
-					{user?.profilePicUrl && (
-						<TouchableOpacity
-							onPress={async () => {
-								if (!user?.userId) return
-								setUploading(true)
-								const res = await deleteProfilePic(user.userId)
-								if (!res?.success) {
-									Toast.show({
-										type: 'error',
-										text1: res?.error || 'Failed to remove avatar',
-									})
-								} else {
-									Toast.show({
-										type: 'success',
-										text1: 'Avatar removed successfully',
-									})
+					<View className="mb-6 items-center">
+						<EditableAvatar
+							uri={user?.profilePicUrl ? user.profilePicUrl : null}
+							size={110}
+							editable={!isLoading}
+							uploading={uploading}
+							onChange={newUri => newUri && onPick(newUri)}
+						/>
+						{user?.profilePicUrl && (
+							<TouchableOpacity
+								onPress={async () => {
+									if (!user?.userId) return
+									setUploading(true)
+									const res = await deleteProfilePic(user.userId)
+									if (!res?.success) {
+										Toast.show({
+											type: 'error',
+											text1: res?.error || 'Failed to remove avatar',
+										})
+									} else {
+										Toast.show({
+											type: 'success',
+											text1: 'Avatar removed successfully',
+										})
+									}
+									setUploading(false)
+								}}
+								className="mt-4"
+								disabled={uploading}
+							>
+								<Text className="text-sm font-medium text-red-500">Remove Avatar</Text>
+							</TouchableOpacity>
+						)}
+					</View>
+
+					<View className="flex flex-col gap-6">
+						{/* first name */}
+						<View className="flex flex-row items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
+							<Text className="text-lg font-semibold text-black dark:text-white">First Name</Text>
+							<TextInput
+								value={firstName}
+								onChangeText={setFirstName}
+								editable={!isLoading}
+								placeholder="Enter Name..."
+								className="text-right text-lg text-primary"
+								placeholderTextColor={colors.neutral[500]}
+								style={{ lineHeight }}
+							/>
+						</View>
+
+						{/* last name */}
+						<View className="flex flex-row items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
+							<Text className="text-lg font-semibold text-black dark:text-white">Last Name</Text>
+							<TextInput
+								value={lastName}
+								onChangeText={setLastName}
+								editable={!isLoading}
+								placeholder="Enter Surname..."
+								className="text-right text-lg text-primary"
+								placeholderTextColor={colors.neutral[500]}
+								style={{ lineHeight }}
+							/>
+						</View>
+
+						{/* gender section */}
+						<View className="border-b border-neutral-100 pb-4 dark:border-neutral-800">
+							<Text className="mb-3 text-lg font-semibold text-black dark:text-white">Gender</Text>
+							<View className="flex-row items-center gap-2">
+								<SelectableCard
+									selected={gender === 'male'}
+									onSelect={() => setGender('male')}
+									title="Male"
+									className="flex-1 px-3 py-3"
+								/>
+								<SelectableCard
+									selected={gender === 'female'}
+									onSelect={() => setGender('female')}
+									title="Female"
+									className="flex-1 px-3 py-3"
+								/>
+								<SelectableCard
+									selected={gender === 'other'}
+									onSelect={() => setGender('other')}
+									title="Other"
+									className="flex-1 px-3 py-3"
+								/>
+							</View>
+						</View>
+
+						{/* date of birth */}
+						<View className="flex-row items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
+							<Text className="text-lg font-semibold text-black dark:text-white">Date of Birth</Text>
+							<DateTimePicker value={dateOfBirth ?? undefined} dateOnly onUpdate={setDateOfBirth} />
+						</View>
+
+						{/* height */}
+						<View className="flex-row items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
+							<Text className="text-lg font-semibold text-black dark:text-white">Height (cm)</Text>
+							<TextInput
+								value={height?.toString() ?? ''}
+								placeholder="--"
+								placeholderTextColor={colors.neutral[500]}
+								keyboardType="numeric"
+								onChangeText={text =>
+									// @ts-ignore
+									setHeight(text)
 								}
-								setUploading(false)
-							}}
-							className="mt-4"
-							disabled={uploading}
-						>
-							<Text className="text-sm font-medium text-red-500">Remove Avatar</Text>
-						</TouchableOpacity>
-					)}
-				</View>
-
-				<View className="flex flex-col gap-6">
-					{/* first name */}
-					<View className="flex flex-row items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
-						<Text className="text-lg font-semibold text-black dark:text-white">First Name</Text>
-						<TextInput
-							value={firstName}
-							onChangeText={setFirstName}
-							editable={!isLoading}
-							placeholder="Enter Name..."
-							className="text-right text-lg text-primary"
-							placeholderTextColor={colors.neutral[500]}
-							style={{ lineHeight }}
-						/>
-					</View>
-
-					{/* last name */}
-					<View className="flex flex-row items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
-						<Text className="text-lg font-semibold text-black dark:text-white">Last Name</Text>
-						<TextInput
-							value={lastName}
-							onChangeText={setLastName}
-							editable={!isLoading}
-							placeholder="Enter Surname..."
-							className="text-right text-lg text-primary"
-							placeholderTextColor={colors.neutral[500]}
-							style={{ lineHeight }}
-						/>
-					</View>
-
-					{/* gender section */}
-					<View className="border-b border-neutral-100 pb-4 dark:border-neutral-800">
-						<Text className="mb-3 text-lg font-semibold text-black dark:text-white">Gender</Text>
-						<View className="flex-row items-center gap-2">
-							<SelectableCard
-								selected={gender === 'male'}
-								onSelect={() => setGender('male')}
-								title="Male"
-								className="flex-1 px-3 py-3"
+								editable={!isLoading}
+								className="text-right text-lg text-primary"
+								style={{ lineHeight }}
 							/>
-							<SelectableCard
-								selected={gender === 'female'}
-								onSelect={() => setGender('female')}
-								title="Female"
-								className="flex-1 px-3 py-3"
-							/>
-							<SelectableCard
-								selected={gender === 'other'}
-								onSelect={() => setGender('other')}
-								title="Other"
-								className="flex-1 px-3 py-3"
+						</View>
+
+						{/* weight */}
+						<View className="h-14 flex-row items-center justify-between pb-2">
+							<Text className="text-lg font-semibold text-black dark:text-white">Weight (kg)</Text>
+							<TextInput
+								value={weight?.toString() ?? ''}
+								placeholder="--"
+								placeholderTextColor={colors.neutral[500]}
+								keyboardType="decimal-pad"
+								onChangeText={text =>
+									// @ts-ignore
+									setWeight(text)
+								}
+								editable={!isLoading}
+								className="text-right text-lg text-primary"
+								style={{ lineHeight }}
 							/>
 						</View>
 					</View>
 
-					{/* date of birth */}
-					<View className="flex-row items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
-						<Text className="text-lg font-semibold text-black dark:text-white">Date of Birth</Text>
-						<DateTimePicker value={dateOfBirth ?? undefined} dateOnly onUpdate={setDateOfBirth} />
-					</View>
-
-					{/* height */}
-					<View className="flex-row items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
-						<Text className="text-lg font-semibold text-black dark:text-white">Height (cm)</Text>
-						<TextInput
-							value={height?.toString() ?? ''}
-							placeholder="--"
-							placeholderTextColor={colors.neutral[500]}
-							keyboardType="numeric"
-							onChangeText={text =>
-								// @ts-ignore
-								setHeight(text)
-							}
-							editable={!isLoading}
-							className="text-right text-lg text-primary"
-							style={{ lineHeight }}
-						/>
-					</View>
-
-					{/* weight */}
-					<View className="h-14 flex-row items-center justify-between pb-2">
-						<Text className="text-lg font-semibold text-black dark:text-white">Weight (kg)</Text>
-						<TextInput
-							value={weight?.toString() ?? ''}
-							placeholder="--"
-							placeholderTextColor={colors.neutral[500]}
-							keyboardType="decimal-pad"
-							onChangeText={text =>
-								// @ts-ignore
-								setWeight(text)
-							}
-							editable={!isLoading}
-							className="text-right text-lg text-primary"
-							style={{ lineHeight }}
-						/>
-					</View>
-				</View>
-
-				<Button
-					title={hasChanges ? 'Save Changes' : 'Close'}
-					variant={hasChanges ? 'primary' : 'secondary'}
-					loading={isLoading}
-					className="mt-6"
-					onPress={handleSave}
-				/>
-			</BottomSheetScrollView>
+					<Button
+						title={hasChanges ? 'Save Changes' : 'Close'}
+						variant={hasChanges ? 'primary' : 'secondary'}
+						loading={isLoading}
+						className="mt-6"
+						onPress={handleSave}
+					/>
+				</BottomSheetScrollView>
+			</KeyboardAvoidingView>
 		</BottomSheetModal>
 	)
 })

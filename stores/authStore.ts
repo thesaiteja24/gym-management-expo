@@ -29,6 +29,35 @@ export interface User {
 	followingCount?: number
 	createdAt?: string
 	updatedAt?: string
+	fitnessProfile?: {
+		fitnessGoal: string | null
+		fitnessLevel: string | null
+		targetWeight: number | null
+		targetDate: string | null
+		injuries: string | null
+		availableEquipment: string[]
+	} | null
+	measurements?: {
+		weight: number
+		bodyFat: number
+		leanBodyMass: number
+		neck: number
+		shoulders: number
+		chest: number
+		waist: number
+		abdomen: number
+		hips: number
+		leftBicep: number
+		rightBicep: number
+		leftForearm: number
+		rightForearm: number
+		leftThigh: number
+		rightThigh: number
+		leftCalf: number
+		rightCalf: number
+		notes: string
+		progressPics: string[]
+	}
 }
 
 type AuthState = {

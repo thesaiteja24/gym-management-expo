@@ -1,6 +1,8 @@
 // app/(app)/(tabs)/profile.tsx
 import EditableAvatar from '@/components/EditableAvatar'
+import DailyCheckInSheet from '@/components/profile/DailyCheckInSheet'
 import EditProfileSheet from '@/components/profile/EditProfileSheet'
+import FitnessGoalsSheet from '@/components/profile/FitnessGoalsSheet'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/stores/authStore'
 import { useUser } from '@/stores/userStore'
@@ -24,6 +26,8 @@ export default function ProfileScreen() {
 
 	const unitSheetRef = useRef<BottomSheetModal>(null)
 	const editProfileSheetRef = useRef<BottomSheetModal>(null)
+	const dailyCheckInSheetRef = useRef<BottomSheetModal>(null)
+	const fitnessGoalsSheetRef = useRef<BottomSheetModal>(null)
 
 	const storedWeightUnit: WeightUnit = user?.preferredWeightUnit ?? 'kg'
 	const storedLengthUnit: LengthUnit = user?.preferredLengthUnit ?? 'cm'
@@ -174,6 +178,58 @@ export default function ProfileScreen() {
 						/>
 					}
 					onPress={() => editProfileSheetRef.current?.present()}
+				/>
+
+				<View className="ml-14 h-[1px] bg-neutral-100 dark:bg-neutral-800" />
+
+				<Button
+					title="Daily Check-In"
+					variant="ghost"
+					className="justify-start py-4"
+					textClassName="text-base font-medium text-neutral-700 dark:text-neutral-300"
+					leftIcon={
+						<MaterialCommunityIcons
+							name="clipboard-check-outline"
+							size={24}
+							color={isDarkMode ? '#D4D4D4' : '#525252'}
+							className="mr-2"
+						/>
+					}
+					rightIcon={
+						<MaterialCommunityIcons
+							name="chevron-right"
+							size={24}
+							color={isDarkMode ? '#525252' : '#A3A3A3'}
+							className="ml-auto"
+						/>
+					}
+					onPress={() => dailyCheckInSheetRef.current?.present()}
+				/>
+
+				<View className="ml-14 h-[1px] bg-neutral-100 dark:bg-neutral-800" />
+
+				<Button
+					title="Fitness Goals"
+					variant="ghost"
+					className="justify-start py-4"
+					textClassName="text-base font-medium text-neutral-700 dark:text-neutral-300"
+					leftIcon={
+						<MaterialCommunityIcons
+							name="bullseye-arrow"
+							size={24}
+							color={isDarkMode ? '#D4D4D4' : '#525252'}
+							className="mr-2"
+						/>
+					}
+					rightIcon={
+						<MaterialCommunityIcons
+							name="chevron-right"
+							size={24}
+							color={isDarkMode ? '#525252' : '#A3A3A3'}
+							className="ml-auto"
+						/>
+					}
+					onPress={() => fitnessGoalsSheetRef.current?.present()}
 				/>
 
 				<View className="ml-14 h-[1px] bg-neutral-100 dark:bg-neutral-800" />
@@ -337,6 +393,8 @@ export default function ProfileScreen() {
 			</BottomSheetModal>
 
 			<EditProfileSheet ref={editProfileSheetRef} />
+			<DailyCheckInSheet ref={dailyCheckInSheetRef} />
+			<FitnessGoalsSheet ref={fitnessGoalsSheetRef} />
 		</View>
 	)
 }

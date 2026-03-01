@@ -1,15 +1,19 @@
 import { enqueueUserUpdate } from '@/lib/sync/queue/userQueue'
 import { UserPayload } from '@/lib/sync/types'
 import {
+	addDailyMeasurementService,
 	deleteProfilePicService,
 	followUserService,
+	getMeasurementHistoryService,
 	getSuggestedUsersService,
 	getUserDataService,
+	getUserFitnessProfileService,
 	getUserFollowersService,
 	getUserFollowingService,
 	searchUsersService,
 	unFollowUserService,
 	updateProfilePicService,
+	updateUserFitnessProfileService,
 } from '@/services/userService'
 import { serializeUserUpdateForApi } from '@/utils/serializeForApi'
 import { create } from 'zustand'
@@ -51,6 +55,10 @@ type UserState = {
 	unFollowUser: (targetUserId: string) => Promise<any>
 	getUserFollowers: (userId: string) => Promise<any>
 	getUserFollowing: (userId: string) => Promise<any>
+
+	updateUserFitnessProfile: (userId: string, data: Record<string, any>) => Promise<any>
+	addDailyMeasurement: (userId: string, data: Record<string, any> | FormData) => Promise<any>
+	getMeasurementHistory: (userId: string, limit?: number) => Promise<any>
 }
 
 const initialState = {
@@ -94,6 +102,7 @@ export const useUser = create<UserState>(set => ({
 					followingCount: res.data?.followingCount || 0,
 					createdAt: res.data?.createdAt,
 					updatedAt: res.data?.updatedAt,
+					fitnessProfile: res.data?.fitnessProfile || null,
 				})
 			}
 			set({ isLoading: false })
@@ -331,6 +340,65 @@ export const useUser = create<UserState>(set => ({
 			return res
 		} catch (error) {
 			set({ isLoading: false })
+			return { success: false, error }
+		}
+	},
+
+	updateUserFitnessProfile: async (userId: string, data: Record<string, any>) => {
+		set({ isLoading: true })
+		try {
+			const res = await updateUserFitnessProfileService(userId, data)
+
+			const currentUser = useAuth.getState().user
+
+			if (res.success && currentUser) {
+				useAuth.getState().setUser({
+					...currentUser,
+					fitnessProfile: {
+						// @ts-ignore
+						...currentUser.fitnessProfile,
+						...res.data,
+					},
+				})
+			}
+
+			set({ isLoading: false })
+			return res
+		} catch (error) {
+			set({ isLoading: false })
+			return { success: false, error }
+		}
+	},
+
+	getUserFitnessProfile: async (userId: string) => {
+		set({ isLoading: true })
+		try {
+			const res = await getUserFitnessProfileService(userId)
+			set({ isLoading: false })
+			return res
+		} catch (error) {
+			set({ isLoading: false })
+			return { success: false, error }
+		}
+	},
+
+	addDailyMeasurement: async (userId: string, data: Record<string, any> | FormData) => {
+		set({ isLoading: true })
+		try {
+			const res = await addDailyMeasurementService(userId, data)
+			set({ isLoading: false })
+			return res
+		} catch (error) {
+			set({ isLoading: false })
+			return { success: false, error }
+		}
+	},
+
+	getMeasurementHistory: async (userId: string, limit?: number) => {
+		try {
+			const res = await getMeasurementHistoryService(userId, limit)
+			return res
+		} catch (error) {
 			return { success: false, error }
 		}
 	},
