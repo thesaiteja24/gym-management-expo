@@ -452,7 +452,8 @@ export const DailyCheckInSheet = forwardRef<BottomSheetModal>((props, ref) => {
 									<View className="items-center px-6">
 										<MaterialCommunityIcons name="lock-outline" size={24} color={colors.text} />
 										<Text className="mt-2 text-center text-sm font-medium text-black dark:text-white">
-											Height, gender, neck & waist required
+											Height, Gender, Neck & Waist measurements are required to perform
+											calculations
 										</Text>
 									</View>
 								</View>

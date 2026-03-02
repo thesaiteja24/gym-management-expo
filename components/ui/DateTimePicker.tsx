@@ -38,6 +38,11 @@ interface BaseDateTimePickerProps {
 	 * Uses device preference if omitted.
 	 */
 	is24Hour?: boolean
+
+	/**
+	 * Return null if the date is not set.
+	 */
+	returnUndefined?: boolean
 }
 
 export interface DateTimePickerModalProps extends BaseDateTimePickerProps {
@@ -120,6 +125,8 @@ export default function DateTimePicker(props: DateTimePickerProps) {
      Display string
   --------------------------------------------- */
 	const displayValue = useMemo(() => {
+		if (!value && props.returnUndefined) return 'Not Set'
+
 		const d = value ?? initialDate
 
 		if (dateOnly) {

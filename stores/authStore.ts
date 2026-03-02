@@ -28,6 +28,15 @@ type UserMeasurements = {
 	notes: string
 	progressPics: string[]
 }
+
+export type FitnessGoal =
+	| 'loseWeight'
+	| 'gainMuscle'
+	| 'improveEndurance'
+	| 'improveFlexibility'
+	| 'improveStrength'
+	| 'improveOverallFitness'
+
 export interface User {
 	userId?: string
 	countryCode?: string
@@ -51,7 +60,7 @@ export interface User {
 	createdAt?: string
 	updatedAt?: string
 	fitnessProfile?: {
-		fitnessGoal: string | null
+		fitnessGoal: FitnessGoal | null
 		fitnessLevel: string | null
 		targetWeight: number | null
 		targetDate: string | null

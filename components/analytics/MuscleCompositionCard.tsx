@@ -248,7 +248,7 @@ export function MuscleCompositionCard({ composition, gender, goal, preferredWeig
 					<View style={styles.overlayContent}>
 						<Ionicons name="lock-closed-outline" size={28} color={colors.text} />
 						<Text style={[styles.overlayText, { color: colors.text }]}>
-							Update your measurements to unlock muscle composition insights
+							Complete your profile and measurement details to unlock muscle composition insights
 						</Text>
 
 						<View style={[styles.overlayButton, { backgroundColor: colors.text }]}>
@@ -256,7 +256,7 @@ export function MuscleCompositionCard({ composition, gender, goal, preferredWeig
 								style={[styles.overlayButtonText, { color: colors.background }]}
 								onPress={() => router.push('/(app)/(tabs)/profile')}
 							>
-								Update Measurements
+								Update Profile & Measurements
 							</Text>
 						</View>
 					</View>

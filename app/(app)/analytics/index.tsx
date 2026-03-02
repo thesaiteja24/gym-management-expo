@@ -36,6 +36,7 @@ const AnalyticsScreen = () => {
 	const weightDiffKg = canComputeDiff ? Math.abs(latestWeightKg - previousWeightKg) : null
 
 	const isLoss = canComputeDiff ? latestWeightKg < previousWeightKg : null
+	const showPositive = (fitnessGoal === 'gainMuscle' && !isLoss) || (fitnessGoal === 'loseWeight' && isLoss)
 
 	const weightDiffDisplay =
 		weightDiffKg != null ? convertWeight(weightDiffKg, { from: 'kg', to: preferredWeightUnit }) : null
@@ -113,7 +114,7 @@ const AnalyticsScreen = () => {
 						className={`flex-row items-center gap-2 rounded-full border px-2 py-1 ${
 							isLoss === null
 								? 'border-neutral-300 bg-neutral-200/40'
-								: isLoss
+								: showPositive
 									? 'border-green-500 bg-green-500/15'
 									: 'border-red-500 bg-red-500/15'
 						}`}
@@ -127,14 +128,14 @@ const AnalyticsScreen = () => {
 										: 'trending-up-sharp'
 							}
 							size={12}
-							color={isLoss === null ? colors.text : isLoss ? colors.success : colors.danger}
+							color={isLoss === null ? colors.text : showPositive ? colors.success : colors.danger}
 						/>
 
 						<Text
 							className={`font-base text-xs ${
 								isLoss === null
 									? 'text-neutral-600 dark:text-neutral-300'
-									: isLoss
+									: showPositive
 										? 'text-green-600'
 										: 'text-red-600'
 							}`}

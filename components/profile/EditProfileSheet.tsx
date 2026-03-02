@@ -335,11 +335,8 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
 						{/* date of birth */}
 						<View className="flex-row items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
 							<Text className="text-lg font-semibold text-black dark:text-white">Date of Birth</Text>
-							{dateOfBirth ? (
-								<DateTimePicker value={dateOfBirth} dateOnly onUpdate={setDateOfBirth} />
-							) : (
-								<Text className="text-lg text-neutral-500">--</Text>
-							)}
+
+							<DateTimePicker value={dateOfBirth} dateOnly onUpdate={setDateOfBirth} returnUndefined />
 						</View>
 
 						{/* height — dynamic unit label, input in display unit */}

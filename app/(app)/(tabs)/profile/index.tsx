@@ -195,7 +195,7 @@ export default function ProfileScreen() {
 				<View className="ml-14 h-[1px] bg-neutral-100 dark:bg-neutral-800" />
 
 				<Button
-					title="Daily Check-In"
+					title="Measurements"
 					variant="ghost"
 					className="justify-start py-4"
 					textClassName="text-base font-medium text-neutral-700 dark:text-neutral-300"

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/Button'
 import DateTimePicker from '@/components/ui/DateTimePicker'
 import { SelectableCard } from '@/components/ui/SelectableCard'
-import { useAuth } from '@/stores/authStore'
+import { FitnessGoal, useAuth } from '@/stores/authStore'
 import { calculateBodyFat } from '@/utils/analytics'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import React, { forwardRef, useEffect, useMemo, useState } from 'react'
@@ -24,6 +24,7 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	const neck = user?.measurements?.[0]?.neck
 	const waist = user?.measurements?.[0]?.waist
 	const hips = user?.measurements?.[0]?.hips
+	const currentGoalType = user?.fitnessProfile?.fitnessGoal || null
 
 	const currentBodyFat = calculateBodyFat({
 		gender: gender!,
@@ -33,7 +34,7 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 		hips: hips ? Number(hips) : undefined,
 	})
 
-	const [goalType, setGoalType] = useState<string | null>(null)
+	const [goalType, setGoalType] = useState<FitnessGoal | null>(currentGoalType)
 
 	const [targetType, setTargetType] = useState<TargetType>('weight')
 	const [targetValue, setTargetValue] = useState('')
@@ -155,11 +156,11 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 						selected={goalType === 'gainMuscle'}
 						onSelect={() => setGoalType('gainMuscle')}
 					/>
-					<GoalCard
+					{/* <GoalCard
 						title="Recomposition"
 						selected={goalType === 'recomp'}
 						onSelect={() => setGoalType('recomp')}
-					/>
+					/> */}
 				</View>
 
 				{/* Target Metric */}
