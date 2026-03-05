@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/Button'
 import { useThemeColor } from '@/hooks/useThemeColor'
+import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth, User } from '@/stores/authStore'
-import { useUser } from '@/stores/userStore'
 import { calculateBodyFat, calculateComposition } from '@/utils/analytics'
 import { convertLength, convertWeight } from '@/utils/converter'
 import { prepareImageForUpload } from '@/utils/prepareImageForUpload'
@@ -29,7 +29,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
-export const DailyCheckInSheet = forwardRef<BottomSheetModal>((props, ref) => {
+export const MeasurementsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	const colors = useThemeColor()
 	const isDarkMode = useColorScheme() === 'dark'
 	const insets = useSafeAreaInsets()
@@ -39,8 +39,8 @@ export const DailyCheckInSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	const heightCm = useAuth(s => s.user?.height)
 
 	const user = useAuth(s => s.user) as User | null
-	const addDailyMeasurement = useUser(s => s.addDailyMeasurement)
-	const isLoading = useUser(s => s.isLoading)
+	const addMeasurement = useAnalytics(s => s.addMeasurement)
+	const isLoading = useAnalytics(s => s.isLoading)
 
 	// Preferred units — read from store
 	const weightUnit = user?.preferredWeightUnit ?? 'kg'
@@ -184,8 +184,9 @@ export const DailyCheckInSheet = forwardRef<BottomSheetModal>((props, ref) => {
 
 		Keyboard.dismiss()
 
-		const formData = new FormData()
-		formData.append('date', new Date().toISOString())
+		const payload: Record<string, any> = {
+			date: new Date().toISOString(),
+		}
 
 		/**
 		 * Append a measurement to formData after converting to the canonical backend unit.
@@ -196,20 +197,20 @@ export const DailyCheckInSheet = forwardRef<BottomSheetModal>((props, ref) => {
 			const parsed = parseFloat(val)
 			if (!val || isNaN(parsed) || parsed <= 0) return
 			const inCm = convertLength(parsed, { from: lengthUnit, to: 'cm' })
-			formData.append(key, inCm.toString())
+			payload[key] = Number(inCm.toFixed(2))
 		}
 
 		const appendKg = (key: string, val: string) => {
 			const parsed = parseFloat(val)
 			if (!val || isNaN(parsed) || parsed <= 0) return
 			const inKg = convertWeight(parsed, { from: weightUnit, to: 'kg' })
-			formData.append(key, inKg.toString())
+			payload[key] = Number(inKg.toFixed(2))
 		}
 
 		const appendRaw = (key: string, val: string | number) => {
 			const parsed = typeof val === 'string' ? parseFloat(val) : val
 			if (!val || isNaN(parsed)) return
-			formData.append(key, parsed.toString())
+			payload[key] = typeof val === 'string' ? Number(parsed.toFixed(2)) : parsed
 		}
 
 		// Weight → kg
@@ -235,16 +236,15 @@ export const DailyCheckInSheet = forwardRef<BottomSheetModal>((props, ref) => {
 		appendLength('leftCalf', leftCalf)
 		appendLength('rightCalf', rightCalf)
 
-		if (notes) formData.append('notes', notes)
+		if (notes) payload.notes = notes
+		if (progressPics.length > 0) payload.progressPics = progressPics
 
-		progressPics.forEach(pic => {
-			formData.append('progressPics', pic as any)
-		})
+		console.log('payload', payload)
 
-		const res = await addDailyMeasurement(user.userId, formData)
+		const res = await addMeasurement(payload as any)
 
 		if (res?.success) {
-			Toast.show({ type: 'success', text1: 'Check-in saved successfully!' })
+			Toast.show({ type: 'success', text1: 'Measurements saved successfully!' })
 			// @ts-ignore
 			ref?.current?.dismiss()
 
@@ -290,7 +290,7 @@ export const DailyCheckInSheet = forwardRef<BottomSheetModal>((props, ref) => {
 		notes,
 		progressPics,
 		user?.userId,
-		addDailyMeasurement,
+		addMeasurement,
 		ref,
 		weightUnit,
 		lengthUnit,
@@ -336,7 +336,7 @@ export const DailyCheckInSheet = forwardRef<BottomSheetModal>((props, ref) => {
 					showsVerticalScrollIndicator={false}
 				>
 					<Text className="mb-2 text-center text-xl font-bold text-black dark:text-white">
-						Daily Check-In
+						Add Measurements
 					</Text>
 					<Text className="mb-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
 						Log body measurements and progress photos.
@@ -559,7 +559,7 @@ export const DailyCheckInSheet = forwardRef<BottomSheetModal>((props, ref) => {
 					</View>
 
 					<Button
-						title="Save Check-In"
+						title="Save Measurements"
 						variant="primary"
 						loading={isLoading}
 						className="mt-8"
@@ -606,6 +606,6 @@ function MeasurementInput({ label, badge, value, onChangeText, editable, colors,
 	)
 }
 
-DailyCheckInSheet.displayName = 'DailyCheckInSheet'
+MeasurementsSheet.displayName = 'MeasurementsSheet'
 
-export default DailyCheckInSheet
+export default MeasurementsSheet

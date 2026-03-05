@@ -1,15 +1,21 @@
 import {
+	dequeueAnalytics,
 	dequeueTemplate,
 	dequeueUser,
 	dequeueWorkout,
+	getAnalyticsFailedQueue,
+	getAnalyticsQueue,
+	getAnalyticsQueueForUser,
 	getTemplateQueueCounts,
 	getTemplateQueueForUser,
 	getUserQueue,
 	getWorkoutQueueCounts,
 	getWorkoutQueueForUser,
+	incrementAnalyticsRetry,
 	incrementTemplateRetry,
 	incrementUserRetry,
 	incrementWorkoutRetry,
+	moveAnalyticsToFailedQueue,
 	moveTemplateToFailedQueue,
 	moveWorkoutToFailedQueue,
 	TemplateMutation,
@@ -22,6 +28,7 @@ import {
 	markTemplateSynced,
 	markWorkoutFailed,
 	markWorkoutSynced,
+	processAnalyticsMutation,
 	reconcileTemplate,
 	reconcileTemplateId,
 	reconcileWorkout,
@@ -30,6 +37,7 @@ import {
 import { createTemplateService, deleteTemplateService, updateTemplateService } from '@/services/templateService'
 import { updateUserDataService } from '@/services/userService'
 import { createWorkoutService, deleteWorkoutService, updateWorkoutService } from '@/services/workoutServices'
+import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth } from '@/stores/authStore'
 import { useSyncStore } from '@/stores/syncStore'
 import { useCallback, useEffect, useRef } from 'react'
@@ -76,13 +84,19 @@ export function useSyncQueue() {
 
 		const workoutCounts = getWorkoutQueueCounts(user.userId)
 		const templateCounts = getTemplateQueueCounts(user.userId)
+		const analyticsCounts = {
+			pending: getAnalyticsQueue ? getAnalyticsQueue().filter(m => m.userId === user.userId).length : 0,
+			failed: getAnalyticsFailedQueue
+				? getAnalyticsFailedQueue().filter(m => m.userId === user.userId).length
+				: 0,
+		}
 		const userQueue = getUserQueue()
 
 		useSyncStore
 			.getState()
 			.setQueueCounts(
-				workoutCounts.pending + templateCounts.pending + userQueue.length,
-				workoutCounts.failed + templateCounts.failed
+				workoutCounts.pending + templateCounts.pending + analyticsCounts.pending + userQueue.length,
+				workoutCounts.failed + templateCounts.failed + analyticsCounts.failed
 			)
 	}, [user?.userId])
 
@@ -100,10 +114,10 @@ export function useSyncQueue() {
 					const res = await createWorkoutService(mutation.payload)
 
 					if (res.success && res.data?.workout) {
-						console.log('Reconciling workout resource')
+						console.info('Reconciling workout resource')
 						reconcileWorkout(mutation.clientId, res.data.workout)
 					} else if (res.success && res.data?.workout?.id) {
-						console.log('Reconciling workout id')
+						console.info('Reconciling workout id')
 						reconcileWorkoutId(mutation.clientId, res.data.workout.id)
 						markWorkoutSynced(mutation.clientId)
 					}
@@ -164,10 +178,10 @@ export function useSyncQueue() {
 
 					if (res.success && res.data?.template) {
 						reconcileTemplate(mutation.clientId, res.data.template)
-						console.log('reconciled template resource')
+						console.info('reconciled template resource')
 					} else if (res.success && res.data?.template?.id) {
 						reconcileTemplateId(mutation.clientId, res.data.template.id)
-						console.log('reconciled template id')
+						console.info('reconciled template id')
 						markTemplateSynced(mutation.clientId)
 					}
 					return true
@@ -259,7 +273,7 @@ export function useSyncQueue() {
 					dequeueWorkout(m.queueId)
 				} else {
 					incrementWorkoutRetry(m.queueId)
-					console.log('Retrying workout mutation', m.queueId)
+					console.info('Retrying workout mutation', m.queueId)
 					await new Promise(r => setTimeout(r, RETRY_DELAY_MS))
 				}
 			}
@@ -299,6 +313,28 @@ export function useSyncQueue() {
 					dequeueUser(m.queueId)
 				} else {
 					incrementUserRetry(m.queueId)
+					await new Promise(r => setTimeout(r, RETRY_DELAY_MS))
+				}
+			}
+
+			// Analytics
+			for (const m of getAnalyticsQueueForUser(user.userId)) {
+				if (m.retryCount >= MAX_RETRIES) {
+					if (moveAnalyticsToFailedQueue) moveAnalyticsToFailedQueue(m.queueId)
+					continue
+				}
+
+				const ok = await processAnalyticsMutation(m)
+				if (ok?.success) {
+					dequeueAnalytics(m.queueId)
+
+					// Reconcile if it was a measurement containing a newly generated UUID from the backend
+					if (m.type === 'ADD_MEASUREMENT' && 'data' in ok && ok.data && m.payload.date) {
+						console.info('Reconciling analytics measurement', m.queueId)
+						useAnalytics.getState().reconcileMeasurement(m.payload.date, ok.data as any)
+					}
+				} else {
+					if (incrementAnalyticsRetry) incrementAnalyticsRetry(m.queueId)
 					await new Promise(r => setTimeout(r, RETRY_DELAY_MS))
 				}
 			}

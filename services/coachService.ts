@@ -44,7 +44,7 @@ export async function downloadSpeechService(ttsId: string) {
 			try {
 				await getActiveConversationService()
 			} catch (e) {
-				console.log('Refresh trigger failed', e)
+				console.error('Refresh trigger failed', e)
 			}
 			token = getAccessToken()
 			response = await FileSystem.downloadAsync(url, uri, {

@@ -515,3 +515,106 @@ export function calculateHealthScore({
 
 	return Math.max(0, Math.min(100, score))
 }
+
+/**
+ * Calculates BMR using the Mifflin-St Jeor equation
+ *
+ * @param weight - Weight in kg
+ * @param height - Height in cm
+ * @param age - Age in years
+ * @param gender - 'male' or 'female'
+ */
+export function calculateBMR(weight: number, height: number, age: number, gender: 'male' | 'female' | 'other'): number {
+	// Base formula
+	let bmr = 10 * weight + 6.25 * height - 5 * age
+
+	if (gender === 'female') {
+		bmr -= 161
+	} else {
+		// default male or other to male formula
+		bmr += 5
+	}
+
+	return Math.round(bmr)
+}
+
+/**
+ * Calculates Total Daily Energy Expenditure (TDEE) based on BMR and activity level
+ *
+ * @param bmr - Basal Metabolic Rate
+ * @param activityLevel - The user's activity intensity
+ */
+export function calculateTDEE(
+	bmr: number,
+	activityLevel: 'sedentary' | 'lightlyActive' | 'moderatelyActive' | 'veryActive' | 'athlete'
+): number {
+	const multipliers: Record<string, number> = {
+		sedentary: 1.2,
+		lightlyActive: 1.375,
+		moderatelyActive: 1.55,
+		veryActive: 1.725,
+		athlete: 1.9,
+	}
+
+	const multiplier = multipliers[activityLevel] || 1.2
+	return Math.round(bmr * multiplier)
+}
+
+/**
+ * Calculates daily calorie and protein targets based on TDEE, goal, weight, and weekly rate
+ */
+export function calculateDailyTargets({
+	tdee,
+	weightKg,
+	goal,
+	fitnessLevel,
+	weeklyRateKg,
+}: {
+	tdee: number
+	weightKg: number
+	goal:
+		| 'loseWeight'
+		| 'gainMuscle'
+		| 'improveEndurance'
+		| 'improveFlexibility'
+		| 'improveStrength'
+		| 'improveOverallFitness'
+	fitnessLevel?: 'beginner' | 'intermediate' | 'advanced' | null
+	weeklyRateKg?: number | null
+}) {
+	let caloriesTarget = tdee
+	let deficitOrSurplus = 0
+	let proteinTarget = Math.round(weightKg * 1.8) // Default moderate protein
+
+	if (goal === 'loseWeight' && weeklyRateKg) {
+		// 1 kg fat ≈ 7700 kcal
+		// daily deficit = (weeklyRate * 7700) / 7
+		const dailyDeficit = Math.round((weeklyRateKg * 7700) / 7)
+		caloriesTarget = tdee - dailyDeficit
+		deficitOrSurplus = -dailyDeficit
+		// protein target for fat loss: 2.0-2.2 g/kg
+		proteinTarget = Math.round(weightKg * 2.1)
+	} else if (goal === 'gainMuscle') {
+		let surplus = 200 // Default to intermediate surplus
+		if (fitnessLevel === 'beginner') surplus = 300
+		else if (fitnessLevel === 'advanced') surplus = 100
+
+		caloriesTarget = tdee + surplus
+		deficitOrSurplus = surplus
+		// protein target for muscle gain: 1.6-2.0 g/kg
+		proteinTarget = Math.round(weightKg * 1.8)
+	}
+
+	// Floor calories to BMR or extreme lows (e.g. 1200 for females, 1500 for males usually)
+	// We'll just enforce a basic minimum standard here to prevent dangerous targets
+	const SAFE_MIN_CALORIES = 1200
+	if (caloriesTarget < SAFE_MIN_CALORIES) {
+		caloriesTarget = SAFE_MIN_CALORIES
+	}
+
+	return {
+		caloriesTarget,
+		proteinTarget,
+		deficitOrSurplus,
+	}
+}

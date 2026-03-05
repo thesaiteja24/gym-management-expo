@@ -59,15 +59,6 @@ export interface User {
 	followingCount?: number
 	createdAt?: string
 	updatedAt?: string
-	fitnessProfile?: {
-		fitnessGoal: FitnessGoal | null
-		fitnessLevel: string | null
-		targetWeight: number | null
-		targetDate: string | null
-		injuries: string | null
-		availableEquipment: string[]
-	} | null
-	measurements?: UserMeasurements[]
 }
 
 type AuthState = {

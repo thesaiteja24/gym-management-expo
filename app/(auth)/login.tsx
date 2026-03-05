@@ -3,12 +3,14 @@ import PhoneInputField from '@/components/auth/PhoneInputField'
 import { Button } from '@/components/ui/Button'
 import PrivacyPolicyModal, { PrivacyPolicyModalHandle } from '@/components/ui/PrivacyPolicyModal'
 import { useThemeColor } from '@/hooks/useThemeColor'
+import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth, User } from '@/stores/authStore'
 import { useEquipment } from '@/stores/equipmentStore'
 import { useExercise } from '@/stores/exerciseStore'
 import { useMuscleGroup } from '@/stores/muscleGroupStore'
 import { useOnboarding } from '@/stores/onboardingStore'
 import { useUser } from '@/stores/userStore'
+import { calculateBMR, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
 import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google-signin/google-signin'
 import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
@@ -191,6 +193,41 @@ export default function Login() {
 
 			await updateUserData(user.userId!, userData)
 			await updatePreferences(user.userId!, preferences)
+
+			if (onBoardingPayload.fitnessProfile) {
+				const fp = onBoardingPayload.fitnessProfile
+
+				// Compute targets
+				const age = new Date().getFullYear() - new Date(onBoardingPayload.dateOfBirth!).getFullYear()
+				const bmr = calculateBMR(
+					Number(onBoardingPayload.weight),
+					Number(onBoardingPayload.height),
+					age,
+					onBoardingPayload.gender as any
+				)
+				const tdee = calculateTDEE(bmr, fp.activityLevel as any)
+
+				const computedTargets = calculateDailyTargets({
+					tdee,
+					weightKg: Number(onBoardingPayload.weight),
+					goal: fp.fitnessGoal as any,
+					weeklyRateKg: Number(fp.weeklyWeightChange),
+				})
+
+				const fitnessPayload = {
+					...fp,
+					nutritionPlan: {
+						caloriesTarget: computedTargets.caloriesTarget,
+						proteinTarget: computedTargets.proteinTarget,
+						calculatedTDEE: computedTargets.caloriesTarget - computedTargets.deficitOrSurplus,
+						deficitOrSurplus: computedTargets.deficitOrSurplus,
+						startDate: new Date().toISOString(),
+					},
+				}
+
+				const updateFitnessProfile = useAnalytics.getState().updateFitnessProfile
+				await updateFitnessProfile(fitnessPayload)
+			}
 
 			// Reset onboarding store
 			resetOnboarding()

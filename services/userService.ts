@@ -5,10 +5,8 @@ import {
 	UPDATE_PROFILE_PIC_ENDPOINT as update_profile_pic_endpoint,
 	UPDATE_USER_DATA_ENDPOINT as update_user_data_endpoint,
 	USER_ENDPOINT as user_endpoint,
-	USER_FITNESS_PROFILE_ENDPOINT as user_fitness_profile_endpoint,
 	USER_FOLLOWERS_ENDPOINT as user_followers_endpoint,
 	USER_FOLLOWING_ENDPOINT as user_following_endpoint,
-	USER_MEASUREMENTS_ENDPOINT as user_measurements_endpoint,
 } from '@/constants/urls'
 import { handleApiResponse } from '@/utils/handleApiResponse'
 import client from './api'
@@ -118,50 +116,6 @@ export async function getUserFollowingService(userId: string) {
 	try {
 		const res = await client.get(user_following_endpoint(userId))
 
-		return handleApiResponse(res)
-	} catch (error: any) {
-		const errData = error.response?.data
-		throw new Error(errData?.message || error.message || 'Network error')
-	}
-}
-
-export async function updateUserFitnessProfileService(userId: string, data: Record<string, any>) {
-	try {
-		const res = await client.patch(user_fitness_profile_endpoint(userId), data)
-		return handleApiResponse(res)
-	} catch (error: any) {
-		const errData = error.response?.data
-		throw new Error(errData?.message || error.message || 'Network error')
-	}
-}
-
-export async function getUserFitnessProfileService(userId: string) {
-	try {
-		const res = await client.get(user_fitness_profile_endpoint(userId))
-		return handleApiResponse(res)
-	} catch (error: any) {
-		const errData = error.response?.data
-		throw new Error(errData?.message || error.message || 'Network error')
-	}
-}
-
-export async function addDailyMeasurementService(userId: string, data: Record<string, any> | FormData) {
-	try {
-		const isFormData = data instanceof FormData
-		const res = await client.post(user_measurements_endpoint(userId), data, {
-			headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-		})
-		return handleApiResponse(res)
-	} catch (error: any) {
-		const errData = error.response?.data
-		throw new Error(errData?.message || error.message || 'Network error')
-	}
-}
-
-export async function getMeasurementHistoryService(userId: string, limit?: number) {
-	try {
-		const url = limit ? `${user_measurements_endpoint(userId)}?limit=${limit}` : user_measurements_endpoint(userId)
-		const res = await client.get(url)
 		return handleApiResponse(res)
 	} catch (error: any) {
 		const errData = error.response?.data

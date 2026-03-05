@@ -16,8 +16,6 @@ export const GOOGLE_LOGIN_ENDPOINT = `/auth/google`
 export const USER_ENDPOINT = (id: string) => `/users/${id}`
 export const UPDATE_PROFILE_PIC_ENDPOINT = (id: string) => `/users/${id}/profile-picture`
 export const UPDATE_USER_DATA_ENDPOINT = (id: string) => `/users/${id}`
-export const USER_FITNESS_PROFILE_ENDPOINT = (id: string) => `/users/${id}/fitness-profile`
-export const USER_MEASUREMENTS_ENDPOINT = (id: string) => `/users/${id}/measurements`
 
 // Discover Endpoints
 export const SEARCH_USERS_ENDPOINT = (query: string) => `/discover/search?query=${query}`
@@ -58,3 +56,8 @@ export const COACH_CONVERSATION_ENDPOINT = (id: string) => `/coach/conversations
 export const COACH_CONVERSATION_MESSAGES_ENDPOINT = (id: string) => `/coach/conversations/${id}/messages`
 export const COACH_TRANSCRIPTION_ENDPOINT = `/coach/transcriptions`
 export const COACH_SPEECH_ENDPOINT = (id: string) => `${API_BASE_URL}/coach/speech/${id}`
+
+// Analytics Endpoints
+export const FITNESS_PROFILE_ENDPOINT = (id: string) => `/analytics/fitness-profile/${id}`
+export const MEASUREMENTS_ENDPOINT = (id: string) => `/analytics/measurements/${id}`
+export const NUTRITION_PLAN_ENDPOINT = (id: string) => `/analytics/nutrition-plan/${id}`

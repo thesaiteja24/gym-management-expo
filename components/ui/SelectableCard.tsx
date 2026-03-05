@@ -8,9 +8,10 @@ interface SelectableCardProps {
 	title: string
 	icon?: React.ReactNode
 	className?: string
+	children?: React.ReactNode
 }
 
-export function SelectableCard({ selected, onSelect, title, className }: SelectableCardProps) {
+export function SelectableCard({ selected, onSelect, title, className, children }: SelectableCardProps) {
 	return (
 		<Pressable
 			onPress={() => {
@@ -31,6 +32,7 @@ export function SelectableCard({ selected, onSelect, title, className }: Selecta
 			>
 				{title}
 			</Text>
+			{children}
 			{selected && <View className="absolute right-3 top-3 h-2 w-2 rounded-full bg-primary" />}
 		</Pressable>
 	)

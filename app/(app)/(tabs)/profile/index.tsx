@@ -1,8 +1,8 @@
 // app/(app)/(tabs)/profile.tsx
 import EditableAvatar from '@/components/EditableAvatar'
-import { DailyCheckInSheet } from '@/components/profile/DailyCheckInSheet'
 import { EditProfileSheet } from '@/components/profile/EditProfileSheet'
 import { FitnessGoalsSheet } from '@/components/profile/FitnessGoalsSheet'
+import { MeasurementsSheet } from '@/components/profile/MeasurementsSheet'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/stores/authStore'
 import { useUser } from '@/stores/userStore'
@@ -25,7 +25,7 @@ export default function ProfileScreen() {
 
 	const unitSheetRef = useRef<BottomSheetModal>(null)
 	const editProfileSheetRef = useRef<BottomSheetModal>(null)
-	const dailyCheckInSheetRef = useRef<BottomSheetModal>(null)
+	const measurementsSheetRef = useRef<BottomSheetModal>(null)
 	const fitnessGoalsSheetRef = useRef<BottomSheetModal>(null)
 
 	const storedWeightUnit: WeightUnit = user?.preferredWeightUnit ?? 'kg'
@@ -215,7 +215,7 @@ export default function ProfileScreen() {
 							className="ml-auto"
 						/>
 					}
-					onPress={() => dailyCheckInSheetRef.current?.present()}
+					onPress={() => measurementsSheetRef.current?.present()}
 				/>
 
 				<View className="ml-14 h-[1px] bg-neutral-100 dark:bg-neutral-800" />
@@ -405,7 +405,7 @@ export default function ProfileScreen() {
 			</BottomSheetModal>
 
 			<EditProfileSheet ref={editProfileSheetRef} />
-			<DailyCheckInSheet ref={dailyCheckInSheetRef} />
+			<MeasurementsSheet ref={measurementsSheetRef} />
 			<FitnessGoalsSheet ref={fitnessGoalsSheetRef} />
 		</View>
 	)

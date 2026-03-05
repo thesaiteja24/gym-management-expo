@@ -139,6 +139,7 @@ export default function TemplateEditor() {
 					res = await updateTemplate(templateToSave.id, {
 						...templateToSave,
 						id: templateToSave.id,
+						clientId: templateToSave.clientId, // Ensure clientId is passed for update
 					} as unknown as Partial<WorkoutTemplate>)
 				} else {
 					res = await createTemplate(templateToSave)
@@ -259,7 +260,7 @@ export default function TemplateEditor() {
 		}
 
 		// No pruning → save immediately
-		await commitSave(prepared.template)
+		await commitSave(prepared.template as any)
 	}, [draftTemplate, prepareTemplateForSave, commitSave])
 
 	// Configure navigation header

@@ -12,6 +12,22 @@ interface OnboardingState {
 	weight: number | null // stored in kg
 	height: number | null // stored in cm
 
+	// Fitness Goals Data
+	fitnessGoal:
+		| 'loseWeight'
+		| 'gainMuscle'
+		| 'improveEndurance'
+		| 'improveFlexibility'
+		| 'improveStrength'
+		| 'improveOverallFitness'
+		| null
+	targetType: 'weight' | 'bodyFat' | null
+	targetWeight: number | null
+	targetBodyFat: number | null
+	activityLevel: 'sedentary' | 'lightlyActive' | 'moderatelyActive' | 'veryActive' | 'athlete' | null
+	weeklyRate: number | null
+	targetDate: Date | null
+
 	// UI preferences (not necessarily persisted to backend, but good for UI)
 	weightUnit: WeightUnit
 	heightUnit: HeightUnit
@@ -21,6 +37,14 @@ interface OnboardingState {
 	setDateOfBirth: (date: Date) => void
 	setWeight: (weight: number, unit: WeightUnit) => void
 	setHeight: (height: number, unit: HeightUnit) => void
+
+	setFitnessGoal: (goal: OnboardingState['fitnessGoal']) => void
+	setTargetType: (type: OnboardingState['targetType']) => void
+	setTargetWeight: (weight: number, unit: WeightUnit) => void
+	setTargetBodyFat: (bodyFat: number) => void
+	setActivityLevel: (level: OnboardingState['activityLevel']) => void
+	setWeeklyRate: (rate: number, unit: WeightUnit) => void
+	setTargetDate: (date: Date | null) => void
 
 	setWeightUnit: (unit: WeightUnit) => void
 	setHeightUnit: (unit: HeightUnit) => void
@@ -38,6 +62,15 @@ interface OnboardingState {
 		height?: number
 		weightUnit?: WeightUnit
 		heightUnit?: HeightUnit
+		fitnessProfile?: {
+			fitnessGoal?: OnboardingState['fitnessGoal']
+			targetType?: OnboardingState['targetType']
+			targetWeight?: number
+			targetBodyFat?: number
+			activityLevel?: OnboardingState['activityLevel']
+			weeklyWeightChange?: number
+			targetDate?: string
+		}
 	}
 }
 
@@ -46,13 +79,18 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 	dateOfBirth: null,
 	weight: null,
 	height: null,
+	fitnessGoal: null,
+	targetType: null,
+	targetWeight: null,
+	targetBodyFat: null,
+	activityLevel: null,
+	weeklyRate: null,
+	targetDate: null,
 	weightUnit: 'kg',
 	heightUnit: 'cm',
 
 	setGender: gender => set({ gender }),
-	setDateOfBirth: date => {
-		set({ dateOfBirth: date })
-	},
+	setDateOfBirth: date => set({ dateOfBirth: date }),
 
 	setWeight: (val, unit) => {
 		let weightInKg = val
@@ -70,6 +108,29 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 		set({ height: heightInCm, heightUnit: unit })
 	},
 
+	setFitnessGoal: goal => set({ fitnessGoal: goal }),
+	setTargetType: type => set({ targetType: type }),
+
+	setTargetWeight: (val, unit) => {
+		let weightInKg = val
+		if (unit === 'lbs') {
+			weightInKg = val / 2.20462
+		}
+		set({ targetWeight: weightInKg })
+	},
+
+	setTargetBodyFat: bodyFat => set({ targetBodyFat: bodyFat }),
+	setActivityLevel: level => set({ activityLevel: level }),
+
+	setWeeklyRate: (val, unit) => {
+		let rateInKg = val
+		if (unit === 'lbs') {
+			rateInKg = val / 2.20462
+		}
+		set({ weeklyRate: rateInKg })
+	},
+	setTargetDate: date => set({ targetDate: date }),
+
 	setWeightUnit: unit => set({ weightUnit: unit }),
 	setHeightUnit: unit => set({ heightUnit: unit }),
 
@@ -79,13 +140,20 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 			dateOfBirth: null,
 			weight: null,
 			height: null,
+			fitnessGoal: null,
+			targetType: null,
+			targetWeight: null,
+			targetBodyFat: null,
+			activityLevel: null,
+			weeklyRate: null,
+			targetDate: null,
 			weightUnit: 'kg',
 			heightUnit: 'cm',
 		}),
 
 	hasData: () => {
 		const s = get()
-		return !!(s.gender || s.dateOfBirth || s.weight || s.height)
+		return !!(s.gender || s.dateOfBirth || s.weight || s.height || s.fitnessGoal)
 	},
 
 	getPayload: () => {
@@ -97,6 +165,23 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 			...(s.height && { height: s.height }),
 			...(s.weightUnit && { weightUnit: s.weightUnit }),
 			...(s.heightUnit && { heightUnit: s.heightUnit }),
+			...((s.fitnessGoal ||
+				s.targetType ||
+				s.targetWeight ||
+				s.targetBodyFat ||
+				s.activityLevel ||
+				s.weeklyRate ||
+				s.targetDate) && {
+				fitnessProfile: {
+					...(s.fitnessGoal && { fitnessGoal: s.fitnessGoal }),
+					...(s.targetType && { targetType: s.targetType }),
+					...(s.targetWeight && { targetWeight: s.targetWeight }),
+					...(s.targetBodyFat && { targetBodyFat: s.targetBodyFat }),
+					...(s.activityLevel && { activityLevel: s.activityLevel }),
+					...(s.weeklyRate && { weeklyWeightChange: s.weeklyRate }),
+					...(s.targetDate && { targetDate: toUTCISOString(s.targetDate) }),
+				},
+			}),
 		}
 	},
 }))

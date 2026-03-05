@@ -1,11 +1,13 @@
 import { Button } from '@/components/ui/Button'
 import DateTimePicker from '@/components/ui/DateTimePicker'
 import { SelectableCard } from '@/components/ui/SelectableCard'
+import { useAnalytics } from '@/stores/analyticsStore'
 import { FitnessGoal, useAuth } from '@/stores/authStore'
-import { calculateBodyFat } from '@/utils/analytics'
+
+import { calculateBMR, calculateBodyFat, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import React, { forwardRef, useEffect, useMemo, useState } from 'react'
-import { BackHandler, Keyboard, Text, TextInput, View, useColorScheme } from 'react-native'
+import { BackHandler, Keyboard, Pressable, ScrollView, Text, TextInput, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
@@ -18,13 +20,16 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	const insets = useSafeAreaInsets()
 
 	const user = useAuth(s => s.user)
-	const currentWeight = user?.weight
+	const latestMeasurements = useAnalytics(s => s.latestMeasurements)
+	const fitnessProfile = useAnalytics(s => s.fitnessProfile)
+	const fitnessGoal = fitnessProfile?.fitnessGoal
+	const currentWeight = latestMeasurements?.weight ?? user?.weight
 	const height = user?.height
 	const gender = user?.gender
-	const neck = user?.measurements?.[0]?.neck
-	const waist = user?.measurements?.[0]?.waist
-	const hips = user?.measurements?.[0]?.hips
-	const currentGoalType = user?.fitnessProfile?.fitnessGoal || null
+	const neck = latestMeasurements?.neck
+	const waist = latestMeasurements?.waist
+	const hips = latestMeasurements?.hips
+	const currentGoalType = fitnessGoal || null
 
 	const currentBodyFat = calculateBodyFat({
 		gender: gender!,
@@ -35,12 +40,17 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	})
 
 	const [goalType, setGoalType] = useState<FitnessGoal | null>(currentGoalType)
-
 	const [targetType, setTargetType] = useState<TargetType>('weight')
 	const [targetValue, setTargetValue] = useState('')
 	const [weeklyRate, setWeeklyRate] = useState('0.5') // kg or %
 	const [targetDate, setTargetDate] = useState<Date | null>(null)
 	const [mode, setMode] = useState<PlanningMode>('rateDriven')
+	const [isLoading, setIsLoading] = useState(false)
+
+	const currentActivityLevel = fitnessProfile?.activityLevel || 'sedentary'
+	const [activityLevel, setActivityLevel] = useState<
+		'sedentary' | 'lightlyActive' | 'moderatelyActive' | 'veryActive' | 'athlete'
+	>(currentActivityLevel)
 
 	// Preferred weight unit for display
 	const weightUnit = user?.preferredWeightUnit ?? 'kg'
@@ -84,26 +94,69 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	const finalTargetDate = mode === 'rateDriven' ? calculatedDate : targetDate
 	const finalRate = mode === 'dateDriven' && calculatedRate ? calculatedRate : weeklyRate
 
-	const handleSave = () => {
+	// Final Goals Logic
+	const computedTargets = useMemo(() => {
+		if (!currentWeight || !height || !gender || !user.dateOfBirth || !goalType || !finalRate) return null
+
+		const age = new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()
+		const bmr = calculateBMR(Number(currentWeight), Number(height), age, gender as any)
+		const tdee = calculateTDEE(bmr, activityLevel)
+
+		return calculateDailyTargets({
+			tdee,
+			weightKg: Number(currentWeight),
+			goal: goalType,
+			weeklyRateKg: Number(finalRate),
+		})
+	}, [currentWeight, height, gender, user?.dateOfBirth, goalType, finalRate, activityLevel])
+
+	const updateFitnessProfile = useAnalytics(s => s.updateFitnessProfile)
+
+	const handleSave = async () => {
 		Keyboard.dismiss()
 
+		if (!user?.userId) return
+
+		setIsLoading(true)
+
 		const payload = {
-			goalType,
+			fitnessGoal: goalType,
 			targetType,
-			targetValue: Number(targetValue),
-			weeklyRate: Number(finalRate),
-			targetDate: finalTargetDate,
+			[targetType === 'weight' ? 'targetWeight' : 'targetBodyFat']: Number(targetValue),
+			weeklyWeightChange: Number(finalRate),
+			targetDate: finalTargetDate ? finalTargetDate.toISOString() : undefined,
+			activityLevel,
+			...(computedTargets && {
+				nutritionPlan: {
+					caloriesTarget: computedTargets.caloriesTarget,
+					proteinTarget: computedTargets.proteinTarget,
+					calculatedTDEE: computedTargets.caloriesTarget - computedTargets.deficitOrSurplus,
+					deficitOrSurplus: computedTargets.deficitOrSurplus,
+					startDate: new Date().toISOString(),
+				},
+			}),
 		}
 
-		console.log('TEMP GOAL PAYLOAD:', payload)
+		console.log('SAVING GOAL PAYLOAD:', payload)
 
-		Toast.show({
-			type: 'success',
-			text1: 'Goal configured (temporary)',
-		})
+		const res = await updateFitnessProfile(payload)
 
-		// @ts-ignore
-		ref?.current?.dismiss()
+		setIsLoading(false)
+
+		if (res.success) {
+			Toast.show({
+				type: 'success',
+				text1: 'Goals updated successfully',
+			})
+			// @ts-ignore
+			ref?.current?.dismiss()
+		} else {
+			Toast.show({
+				type: 'error',
+				text1: 'Failed to update goals',
+				text2: res.error?.message || 'Please try again',
+			})
+		}
 	}
 
 	useEffect(() => {
@@ -161,6 +214,41 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 						selected={goalType === 'recomp'}
 						onSelect={() => setGoalType('recomp')}
 					/> */}
+				</View>
+
+				<View className="mb-6">
+					<Text className="mb-2 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+						Activity Level
+					</Text>
+					<ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+						{[
+							{ value: 'sedentary', label: 'Sedentary' },
+							{ value: 'lightlyActive', label: 'Lightly Active' },
+							{ value: 'moderatelyActive', label: 'Moderately Active' },
+							{ value: 'veryActive', label: 'Very Active' },
+							{ value: 'athlete', label: 'Athlete' },
+						].map(level => (
+							<Pressable
+								key={level.value}
+								onPress={() => setActivityLevel(level.value as any)}
+								className={`mr-3 rounded-full border px-4 py-2 ${
+									activityLevel === level.value
+										? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30'
+										: 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'
+								}`}
+							>
+								<Text
+									className={`font-medium ${
+										activityLevel === level.value
+											? 'text-blue-600 dark:text-blue-400'
+											: 'text-neutral-700 dark:text-neutral-300'
+									}`}
+								>
+									{level.label}
+								</Text>
+							</Pressable>
+						))}
+					</ScrollView>
 				</View>
 
 				{/* Target Metric */}
@@ -247,7 +335,34 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 					</View>
 				)}
 
-				<Button title="Save Goal Plan" variant="primary" onPress={handleSave} />
+				{/* Computed Prediction Panel */}
+				{computedTargets && (
+					<View className="mb-6 rounded-2xl bg-blue-50 p-4 dark:bg-blue-900/20">
+						<Text className="mb-2 text-sm font-semibold text-blue-800 dark:text-blue-200">
+							Science-Backed Plan
+						</Text>
+						<View className="flex-row items-center justify-between">
+							<Text className="text-neutral-700 dark:text-neutral-300">Calories/Day:</Text>
+							<Text className="font-bold text-black dark:text-white">
+								{computedTargets.caloriesTarget} kcal
+							</Text>
+						</View>
+						<View className="flex-row items-center justify-between">
+							<Text className="text-neutral-700 dark:text-neutral-300">Protein Target:</Text>
+							<Text className="font-bold text-black dark:text-white">
+								{computedTargets.proteinTarget}g
+							</Text>
+						</View>
+					</View>
+				)}
+
+				<Button
+					title="Save Goals"
+					onPress={handleSave}
+					variant="primary"
+					disabled={!targetValue || !weeklyRate || isLoading}
+					loading={isLoading}
+				/>
 			</BottomSheetScrollView>
 		</BottomSheetModal>
 	)

@@ -7,6 +7,8 @@
 
 import { LengthUnits, WeightUnits } from '@/stores/userStore'
 
+export type { MeasurementType } from '@/stores/analyticsStore'
+
 /**
  * Sync status for any syncable entity (workout, template, etc.)
  */
@@ -126,6 +128,72 @@ export interface TemplateMutation {
 	clientId: string
 	type: TemplateMutationType
 	payload: TemplatePayload
+	userId: string
+	createdAt: number
+	retryCount: number
+}
+
+/* ───────────────── Analytics Types ───────────────── */
+
+/**
+ * Mutation types for the analytics domain
+ */
+export type AnalyticsMutationType = 'UPDATE_FITNESS_PROFILE' | 'ADD_MEASUREMENT' | 'UPDATE_NUTRITION_PLAN'
+
+/**
+ * Serialized analytics payload for API/queue
+ */
+export interface AnalyticsPayload {
+	userId: string
+
+	// For UPDATE_FITNESS_PROFILE
+	fitnessGoal?: string | null
+	fitnessLevel?: string | null
+	activityLevel?: string | null
+	targetType?: string | null
+	targetWeight?: number | null
+	targetBodyFat?: number | null
+	weeklyWeightChange?: number | null
+	targetDate?: string | null
+	injuries?: string | null
+	availableEquipment?: string[]
+
+	// For ADD_MEASUREMENT
+	date?: string // used to identify which day's measurement this is
+	weight?: number | null
+	bodyFat?: number | null
+	waist?: number | null
+	neck?: number | null
+	shoulders?: number | null
+	chest?: number | null
+	leftBicep?: number | null
+	rightBicep?: number | null
+	leftForearm?: number | null
+	rightForearm?: number | null
+	abdomen?: number | null
+	hips?: number | null
+	leftThigh?: number | null
+	rightThigh?: number | null
+	leftCalf?: number | null
+	rightCalf?: number | null
+	notes?: string | null
+	progressPics?: { uri: string; name: string; type: string }[]
+
+	// For UPDATE_NUTRITION_PLAN
+	caloriesTarget?: number | null
+	proteinTarget?: number | null
+	calculatedTDEE?: number | null
+	deficitOrSurplus?: number | null
+	startDate?: string | null
+}
+
+/**
+ * Analytics mutation stored in the queue
+ */
+export interface AnalyticsMutation {
+	queueId: string
+	type: AnalyticsMutationType
+	payload: AnalyticsPayload
 	userId: string
 	createdAt: number
 	retryCount: number
