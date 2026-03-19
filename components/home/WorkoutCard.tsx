@@ -14,6 +14,7 @@ import { Alert, Pressable, Share, Text, TouchableOpacity, View } from 'react-nat
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import Toast from 'react-native-toast-message'
 import CommentsModal, { CommentsModalHandle } from '../discover/CommentsModal'
+import { VerifiedBadge } from '../ui/VerifiedBadge'
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
@@ -133,9 +134,14 @@ export default function WorkoutCard({
 					/>
 
 					<View className="flex-col items-start gap-1">
-						<Text className="text-base text-black dark:text-white">
-							{workout?.user?.firstName} {workout?.user?.lastName}
-						</Text>
+						<View className="flex-row items-center gap-2">
+							<Text className="text-base text-black dark:text-white">
+								{workout?.user?.firstName} {workout?.user?.lastName}
+							</Text>
+							{workout?.user?.isPro && (
+								<VerifiedBadge tier={workout.user.proSubscriptionType} size={20} />
+							)}
+						</View>
 						<Text className="flex-1 text-sm font-normal text-neutral-500 dark:text-neutral-400">
 							{formatTimeAgo(new Date(workout.startTime))}
 						</Text>

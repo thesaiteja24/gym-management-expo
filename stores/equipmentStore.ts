@@ -19,7 +19,7 @@ type Equipment = {
 
 type EquipmentState = {
 	equipmentLoading: boolean
-	equipmentList: Array<Equipment>
+	equipmentList: Equipment[]
 	lastSyncedAt: number | null
 
 	getAllEquipment: () => Promise<void>

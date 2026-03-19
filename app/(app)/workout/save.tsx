@@ -137,18 +137,13 @@ export default function SaveWorkout() {
 	}
 
 	/* Effects */
+	const hasSetEndTime = useRef(false)
+
 	// Set end time to now on mount ONLY if creating a new workout
 	useEffect(() => {
-		if (workout) {
-			// The instruction provided an invalid line: `setDraftLevel(workout.level ?? 'intermediate')Workout({ endTime: new Date() })`
-			// Assuming the intent was to update the workout's end time if it's a new workout,
-			// and potentially set a draft level if that state existed.
-			// Since `setDraftLevel` is not defined and the line is syntactically incorrect,
-			// I will keep the original logic for setting endTime for new workouts,
-			// and assume the `setDraftLevel` part was intended for a different context or was a typo.
-			if (!workout.id) {
-				updateWorkout({ endTime: new Date() })
-			}
+		if (workout && !workout.id && !hasSetEndTime.current) {
+			hasSetEndTime.current = true
+			updateWorkout({ endTime: new Date() })
 		}
 	}, [workout, updateWorkout])
 

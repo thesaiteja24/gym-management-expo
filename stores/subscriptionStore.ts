@@ -8,6 +8,7 @@ interface SubscriptionState {
 	isLoadingOfferings: boolean
 	isPurchasing: boolean
 	activeEntitlements: string[]
+	activePlanId: string | null
 
 	initialize: () => Promise<void>
 	fetchOfferings: () => Promise<void>
@@ -19,7 +20,7 @@ interface SubscriptionState {
 }
 
 // In RevenueCat, you usually have an entitlement identifier. Replace 'pro' with your actual entitlement ID from the RC dashboard.
-const ENTITLEMENT_ID = 'pro'
+const ENTITLEMENT_ID = 'PUMP Pro'
 
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 	isPro: false,
@@ -27,6 +28,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 	isLoadingOfferings: false,
 	isPurchasing: false,
 	activeEntitlements: [],
+	activePlanId: null,
 
 	initialize: async () => {
 		await revenueCatService.initialize()
@@ -50,13 +52,22 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
 	logout: async () => {
 		await revenueCatService.logout()
-		set({ isPro: false, activeEntitlements: [] }) // Reset on logout
+		set({ isPro: false, activeEntitlements: [], activePlanId: null }) // Reset on logout
 	},
 
 	fetchOfferings: async () => {
 		set({ isLoadingOfferings: true })
 		try {
-			const offerings = await revenueCatService.getOfferings()
+			const result = await revenueCatService.getOfferings()
+
+			const offerings = result.sort((a, b) => {
+				if (a.identifier.includes('monthly')) return -1
+				if (b.identifier.includes('monthly')) return 1
+				if (a.identifier.includes('annual')) return -1
+				if (b.identifier.includes('annual')) return 1
+				return 0
+			})
+
 			set({ offerings, isLoadingOfferings: false })
 		} catch (error) {
 			set({ isLoadingOfferings: false })
@@ -90,12 +101,15 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 	},
 
 	updateCustomerInfo: (customerInfo: CustomerInfo) => {
+		const activeEntitlement = customerInfo.entitlements.active[ENTITLEMENT_ID]
 		const activeEntitlements = Object.keys(customerInfo.entitlements.active)
-		const isPro = typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined'
+		const isPro = typeof activeEntitlement !== 'undefined'
+		const activePlanId = activeEntitlement?.productIdentifier || null
 
 		set({
 			activeEntitlements,
 			isPro,
+			activePlanId,
 		})
 	},
 }))

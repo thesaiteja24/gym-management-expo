@@ -1,64 +1,67 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native'
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
+import { Pressable, RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native'
+import Animated, { Easing, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import StreakCard, { StreakDay } from '@/components/home/StreakCard'
-import WorkoutCard from '@/components/home/WorkoutCard'
-
+import HeatMap from '@/components/HeatMap'
 import ShimmerHomeScreen from '@/components/home/ShimmerHomeScreen'
-import { useAnalytics } from '@/hooks/useAnalytics'
-import { useThemeColor } from '@/hooks/useThemeColor'
+import StreakCard, { StreakDay } from '@/components/home/StreakCard'
+
 import { useAuth } from '@/stores/authStore'
-import { ExerciseType, useExercise } from '@/stores/exerciseStore'
 import { useUser } from '@/stores/userStore'
-import { useWorkout, WorkoutHistoryItem } from '@/stores/workoutStore'
+
+import { WeightMetricCard } from '@/components/home/WeightMetricCard'
+import { Button } from '@/components/ui/Button'
+import { useAnalytics } from '@/stores/analyticsStore'
+import { calculateBMI, calculateBodyFat, calculateComposition, estimateBodyFatFromBMI } from '@/utils/analytics'
+import { convertWeight } from '@/utils/converter'
 import { getMotivationLine } from '@/utils/motivation'
 import { getGreeting, toDateKey } from '@/utils/time'
+import Toast from 'react-native-toast-message'
 
 export default function HomeScreen() {
-	const colors = useThemeColor()
-
 	// ───────────────── Stores ─────────────────
 	const user = useAuth(s => s.user)
 	const getUserData = useUser(s => s.getUserData)
 
-	const workoutHistory = useWorkout(s => s.workoutHistory)
-	const workoutLoading = useWorkout(s => s.workoutLoading)
-	const getAllWorkouts = useWorkout(s => s.getAllWorkouts)
-
-	const exerciseList = useExercise(s => s.exerciseList)
-	const getAllExercises = useExercise(s => s.getAllExercises)
-
-	const workoutPage = useWorkout(s => s.workoutPage)
-	const workoutHasMore = useWorkout(s => s.workoutHasMore)
+	const getMeasurements = useAnalytics(s => s.getMeasurements)
+	const getUserAnalytics = useAnalytics(s => s.getUserAnalytics)
+	const userAnalytics = useAnalytics(s => s.userAnalytics)
+	const measurements = useAnalytics(s => s.measurements)
+	const latestMeasurements = useAnalytics(state => state.latestMeasurements)
+	const preferredWeightUnit = user?.preferredWeightUnit ?? 'kg'
+	const age = useMemo(() => {
+		if (!user?.dateOfBirth) return 25 // fallback
+		return new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()
+	}, [user?.dateOfBirth])
 
 	const [refreshing, setRefreshing] = useState(false)
 
-	// ───────────────── Derived UI state ─────────────────
-	const hasExercises = exerciseList.length > 0
-	const showShimmer = refreshing || !hasExercises || (workoutLoading && workoutHistory.length === 0)
+	// All values from store are in backend canonical units (kg / cm)
+	const weightKg = Number(latestMeasurements?.weight ?? user?.weight) // kg
+	const heightCm = Number(user?.height) // cm
+	const gender = user?.gender
+	const neckCm = Number(latestMeasurements?.neck) // cm
+	const waistCm = Number(latestMeasurements?.waist) // cm
+	const hipsCm = Number(latestMeasurements?.hips) // cm
 
-	// ───────────────── Derived data ─────────────────
-	const exerciseTypeMap = useMemo(() => {
-		const map = new Map<string, ExerciseType>()
-		exerciseList.forEach(ex => map.set(ex.id, ex.exerciseType))
-		return map
-	}, [exerciseList])
+	// ───────────────── UI State ─────────────────
+	const weighIn = measurements.map(m => ({
+		date: m.date,
+		count: Number(m.weight) > 0 ? 1 : 0,
+	}))
 
-	type ListItem = { type: 'section-header' } | { type: 'workout'; workout: WorkoutHistoryItem }
+	const { width } = useWindowDimensions()
 
-	const listData: ListItem[] = useMemo(() => {
-		if (showShimmer) return []
-		if (workoutHistory.length === 0) return []
-
-		return [{ type: 'section-header' }, ...workoutHistory.map(w => ({ type: 'workout' as const, workout: w }))]
-	}, [workoutHistory, showShimmer])
-
-	// ───────────────── Analytics & Motivation ─────────────────
-	const { userAnalytics } = useAnalytics()
-	const { streakDays, workoutsThisWeek, daysSinceLastWorkout, weeklyVolume, lastWeekVolume, workoutDates } =
-		userAnalytics
+	// ───────────────── Analytics ─────────────────
+	const {
+		streakDays = 0,
+		workoutsThisWeek = 0,
+		daysSinceLastWorkout = 0,
+		weeklyVolume = 0,
+		lastWeekVolume = 0,
+		workoutDates = new Set<string>(),
+	} = userAnalytics || {}
 
 	const { streakData } = useMemo(() => {
 		const today = new Date()
@@ -106,32 +109,110 @@ export default function HomeScreen() {
 		}
 	}, [streakDays, workoutsThisWeek, daysSinceLastWorkout, weeklyVolume, lastWeekVolume, workoutDates])
 
+	const weighInSet = useMemo(() => {
+		const set = new Set<string>()
+
+		for (const m of measurements) {
+			const d = new Date(m.date)
+			const key =
+				d.getFullYear() +
+				'-' +
+				String(d.getMonth() + 1).padStart(2, '0') +
+				'-' +
+				String(d.getDate()).padStart(2, '0')
+
+			if (Number(m.weight) > 0) {
+				set.add(key)
+			}
+		}
+
+		return set
+	}, [measurements])
+
+	const weighInThisWeek = useMemo(() => {
+		const today = new Date()
+
+		// Start of week (Sunday)
+		const startOfWeek = new Date(today)
+		startOfWeek.setDate(today.getDate() - today.getDay())
+		startOfWeek.setHours(0, 0, 0, 0)
+
+		let count = 0
+
+		for (let i = 0; i <= today.getDay(); i++) {
+			const d = new Date(startOfWeek)
+			d.setDate(startOfWeek.getDate() + i)
+
+			const key =
+				d.getFullYear() +
+				'-' +
+				String(d.getMonth() + 1).padStart(2, '0') +
+				'-' +
+				String(d.getDate()).padStart(2, '0')
+
+			if (weighInSet.has(key)) {
+				count++
+			}
+		}
+
+		return count
+	}, [weighInSet])
+
+	const composition = useMemo(() => {
+		if (!weightKg || !heightCm || !gender) return null
+
+		let bodyFat: number | null = null
+
+		if (neckCm && waistCm) {
+			bodyFat = calculateBodyFat({
+				gender,
+				height: heightCm,
+				neck: neckCm,
+				waist: waistCm,
+				hips: hipsCm ? hipsCm : undefined,
+			})
+		} else {
+			bodyFat = estimateBodyFatFromBMI({
+				gender,
+				height: heightCm,
+				weight: weightKg,
+				age,
+			})
+		}
+
+		if (!bodyFat) return null
+
+		// calculateComposition expects weight in kg (backend unit)
+		const { fatMass: fatMassKg, leanMass: leanMassKg } = calculateComposition({
+			weight: weightKg,
+			bodyFat,
+		}) ?? { fatMass: null, leanMass: null }
+
+		if (fatMassKg == null || leanMassKg == null) return null
+
+		const bmi = calculateBMI(weightKg, heightCm)
+
+		// Convert fat/lean mass to user's preferred unit for display
+		const fatMass = convertWeight(fatMassKg, { from: 'kg', to: preferredWeightUnit })
+		const leanMass = convertWeight(leanMassKg, { from: 'kg', to: preferredWeightUnit })
+
+		return { bodyFat, fatMass, leanMass, bmi }
+	}, [weightKg, heightCm, gender, neckCm, waistCm, hipsCm, preferredWeightUnit, age])
+
 	// ───────────────── Refresh ─────────────────
 	const onRefresh = useCallback(async () => {
 		try {
 			setRefreshing(true)
-
-			await Promise.all([getAllWorkouts(1)])
-
-			if (!exerciseList.length) {
-				await getAllExercises()
-			}
+			await Promise.all([getUserData(user?.userId ?? ''), getMeasurements(), getUserAnalytics()])
 		} finally {
 			setRefreshing(false)
 		}
-	}, [getAllWorkouts, getAllExercises, exerciseList.length])
-
-	const fetchNextPage = useCallback(() => {
-		if (!workoutLoading && workoutHasMore && workoutPage) {
-			getAllWorkouts(workoutPage + 1)
-		}
-	}, [workoutLoading, workoutHasMore, workoutPage, getAllWorkouts])
+	}, [getUserData, getMeasurements, getUserAnalytics, user?.userId])
 
 	// ───────────────── Header animation ─────────────────
 	const headerOpacity = useSharedValue(0)
 	const headerTranslateY = useSharedValue(-20)
 
-	// Header Animation
 	useEffect(() => {
 		headerOpacity.value = withTiming(1, { duration: 800 })
 		headerTranslateY.value = withTiming(0, {
@@ -145,9 +226,10 @@ export default function HomeScreen() {
 		transform: [{ translateY: headerTranslateY.value }],
 	}))
 
+	// ───────────────── Initial Fetch ─────────────────
 	useEffect(() => {
-		Promise.all([getAllWorkouts(1), getAllExercises(), getUserData(user?.userId ?? '')])
-	}, [getAllWorkouts, getAllExercises, getUserData, user?.userId])
+		Promise.all([getUserData(user?.userId ?? ''), getMeasurements(), getUserAnalytics()])
+	}, [getUserData, getMeasurements, getUserAnalytics, user?.userId])
 
 	// ───────────────── Render ─────────────────
 	return (
@@ -163,58 +245,114 @@ export default function HomeScreen() {
 				</Text>
 			</Animated.View>
 
-			{showShimmer ? (
+			{refreshing ? (
 				<ShimmerHomeScreen />
 			) : (
-				<FlatList
-					data={listData}
-					keyExtractor={(item, index) =>
-						item.type === 'section-header' ? `section-header-${index}` : item.workout.clientId
-					}
-					renderItem={({ item, index }) => {
-						if (item.type === 'section-header') return <SectionHeader />
-
-						return <WorkoutCard workout={item.workout} exerciseTypeMap={exerciseTypeMap} index={index} />
-					}}
-					ListHeaderComponent={<StreakCard {...streakData} />}
-					stickyHeaderIndices={listData.length > 0 ? [1] : []}
+				<ScrollView
 					showsVerticalScrollIndicator={false}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-					onEndReached={fetchNextPage}
-					onEndReachedThreshold={0.5}
-					ListFooterComponent={
-						<View className="mb-[20%] items-center justify-center p-4 pb-12 pt-6">
-							{workoutLoading && workoutPage && workoutPage > 1 && (
-								<ActivityIndicator size="small" color={colors.primary} />
-							)}
-						</View>
-					}
-				/>
+					contentContainerStyle={{ paddingBottom: 40 }}
+				>
+					<StreakCard {...streakData} />
+
+					<Animated.View entering={FadeInDown.delay(600).duration(500)}>
+						<Text className="mb-4 text-xl font-semibold text-black dark:text-white">Habits</Text>
+					</Animated.View>
+
+					<Animated.View entering={FadeInDown.delay(700).duration(500)}>
+						<ScrollView
+							horizontal
+							showsHorizontalScrollIndicator={false}
+							contentContainerStyle={{ gap: 10 }}
+						>
+							<View
+								style={{ width: width * 0.5, height: width * 0.4 }}
+								className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-2 px-4 dark:border-neutral-800 dark:bg-neutral-900"
+							>
+								<Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">
+									Weigh-In
+								</Text>
+								<Text className="text-sm font-normal text-neutral-400 dark:text-neutral-500">
+									Last 30 Days
+								</Text>
+								<HeatMap
+									values={weighIn}
+									numDays={30}
+									squareSize={10}
+									gutter={5}
+									layout="fill"
+									numRows={3}
+								/>
+								<Pressable className="mt-2 flex flex-row items-center justify-between">
+									<Text className="text-base font-semibold text-black dark:text-white">
+										{weighInThisWeek}/7 {' this week'}
+									</Text>
+									{/* <MaterialCommunityIcons name="chevron-right" size={24} color={colors.text} /> */}
+								</Pressable>
+							</View>
+
+							<View
+								style={{ width: width * 0.5 }}
+								className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
+							>
+								<Button
+									title="Track New Habit"
+									onPress={() => {
+										Toast.show({
+											type: 'info',
+											text1: 'Coming Soon',
+										})
+									}}
+									variant="outline"
+									textClassName="text-sm"
+								/>
+							</View>
+						</ScrollView>
+					</Animated.View>
+
+					<Animated.View entering={FadeInDown.delay(800).duration(500)}>
+						<Text className="my-4 text-xl font-semibold text-black dark:text-white">Metrics</Text>
+					</Animated.View>
+
+					<Animated.View entering={FadeInDown.delay(900).duration(500)}>
+						<ScrollView
+							horizontal
+							showsHorizontalScrollIndicator={false}
+							contentContainerStyle={{ gap: 10 }}
+						>
+							<WeightMetricCard width={width * 0.5} />
+							<View
+								style={{ width: width * 0.5, height: width * 0.4 }}
+								className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-2 px-4 dark:border-neutral-800 dark:bg-neutral-900"
+							>
+								<Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">
+									Body Fat
+								</Text>
+								<Text className="text-base font-semibold text-black dark:text-white">
+									{composition?.bodyFat.toFixed(1)}%
+								</Text>
+							</View>
+
+							<View
+								style={{ width: width * 0.5 }}
+								className="flex items-center justify-center rounded-2xl bg-transparent px-4 py-4"
+							>
+								<Button
+									title="View All"
+									onPress={() => {
+										Toast.show({
+											type: 'info',
+											text1: 'Coming Soon',
+										})
+									}}
+									variant="outline"
+									textClassName="text-sm"
+								/>
+							</View>
+						</ScrollView>
+					</Animated.View>
+				</ScrollView>
 			)}
 		</SafeAreaView>
-	)
-}
-
-function SectionHeader() {
-	const opacity = useSharedValue(0)
-	const translateY = useSharedValue(20)
-
-	useEffect(() => {
-		opacity.value = withDelay(500, withTiming(1, { duration: 500 }))
-		translateY.value = withDelay(500, withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }))
-	}, [opacity, translateY])
-
-	const style = useAnimatedStyle(() => ({
-		opacity: opacity.value,
-		transform: [{ translateY: translateY.value }],
-	}))
-
-	return (
-		<Animated.View
-			style={style}
-			className="mb-4 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-black"
-		>
-			<Text className="mb-2 text-xl font-semibold text-black dark:text-white">Your Workouts</Text>
-		</Animated.View>
 	)
 }

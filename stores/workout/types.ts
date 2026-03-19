@@ -133,6 +133,8 @@ export type WorkoutHistoryItem = {
 		firstName: string
 		lastName: string
 		profilePicUrl: string
+		isPro: boolean
+		proSubscriptionType: string | null
 	} | null
 
 	exerciseGroups: WorkoutHistoryGroup[]

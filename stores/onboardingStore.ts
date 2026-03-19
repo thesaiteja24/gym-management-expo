@@ -25,6 +25,7 @@ interface OnboardingState {
 	targetWeight: number | null
 	targetBodyFat: number | null
 	activityLevel: 'sedentary' | 'lightlyActive' | 'moderatelyActive' | 'veryActive' | 'athlete' | null
+	fitnessLevel: 'beginner' | 'intermediate' | 'advanced' | null
 	weeklyRate: number | null
 	targetDate: Date | null
 
@@ -43,6 +44,7 @@ interface OnboardingState {
 	setTargetWeight: (weight: number, unit: WeightUnit) => void
 	setTargetBodyFat: (bodyFat: number) => void
 	setActivityLevel: (level: OnboardingState['activityLevel']) => void
+	setFitnessLevel: (level: OnboardingState['fitnessLevel']) => void
 	setWeeklyRate: (rate: number, unit: WeightUnit) => void
 	setTargetDate: (date: Date | null) => void
 
@@ -68,6 +70,7 @@ interface OnboardingState {
 			targetWeight?: number
 			targetBodyFat?: number
 			activityLevel?: OnboardingState['activityLevel']
+			fitnessLevel?: OnboardingState['fitnessLevel']
 			weeklyWeightChange?: number
 			targetDate?: string
 		}
@@ -84,6 +87,7 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 	targetWeight: null,
 	targetBodyFat: null,
 	activityLevel: null,
+	fitnessLevel: null,
 	weeklyRate: null,
 	targetDate: null,
 	weightUnit: 'kg',
@@ -116,18 +120,19 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 		if (unit === 'lbs') {
 			weightInKg = val / 2.20462
 		}
-		set({ targetWeight: weightInKg })
+		set({ targetWeight: parseFloat(weightInKg.toFixed(2)) })
 	},
 
 	setTargetBodyFat: bodyFat => set({ targetBodyFat: bodyFat }),
 	setActivityLevel: level => set({ activityLevel: level }),
+	setFitnessLevel: level => set({ fitnessLevel: level }),
 
 	setWeeklyRate: (val, unit) => {
 		let rateInKg = val
 		if (unit === 'lbs') {
 			rateInKg = val / 2.20462
 		}
-		set({ weeklyRate: rateInKg })
+		set({ weeklyRate: parseFloat(rateInKg.toFixed(2)) })
 	},
 	setTargetDate: date => set({ targetDate: date }),
 
@@ -145,6 +150,7 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 			targetWeight: null,
 			targetBodyFat: null,
 			activityLevel: null,
+			fitnessLevel: null,
 			weeklyRate: null,
 			targetDate: null,
 			weightUnit: 'kg',
@@ -153,7 +159,15 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 
 	hasData: () => {
 		const s = get()
-		return !!(s.gender || s.dateOfBirth || s.weight || s.height || s.fitnessGoal)
+		return !!(
+			s.gender ||
+			s.dateOfBirth ||
+			s.weight ||
+			s.height ||
+			s.fitnessGoal ||
+			s.activityLevel ||
+			s.fitnessLevel
+		)
 	},
 
 	getPayload: () => {
@@ -170,6 +184,7 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 				s.targetWeight ||
 				s.targetBodyFat ||
 				s.activityLevel ||
+				s.fitnessLevel ||
 				s.weeklyRate ||
 				s.targetDate) && {
 				fitnessProfile: {
@@ -178,6 +193,7 @@ export const useOnboarding = create<OnboardingState>((set, get) => ({
 					...(s.targetWeight && { targetWeight: s.targetWeight }),
 					...(s.targetBodyFat && { targetBodyFat: s.targetBodyFat }),
 					...(s.activityLevel && { activityLevel: s.activityLevel }),
+					...(s.fitnessLevel && { fitnessLevel: s.fitnessLevel }),
 					...(s.weeklyRate && { weeklyWeightChange: s.weeklyRate }),
 					...(s.targetDate && { targetDate: toUTCISOString(s.targetDate) }),
 				},

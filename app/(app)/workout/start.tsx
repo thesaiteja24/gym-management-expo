@@ -18,7 +18,7 @@ import { router, useNavigation } from 'expo-router'
 import { DeleteConfirmModal, DeleteConfirmModalHandle } from '@/components/ui/DeleteConfirmModal'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { usePreventRemove } from '@react-navigation/native'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Keyboard, KeyboardAvoidingView, Text, useColorScheme, Vibration, View } from 'react-native'
 import DraggableFlatList from 'react-native-draggable-flatlist'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -51,6 +51,18 @@ export default function StartWorkout() {
 	// Workout Store
 	const workoutSaving = useWorkout(s => s.workoutSaving)
 	const workout = useWorkout(s => s.workout)
+
+	// Refs for stable callbacks
+	const workoutRef = useRef(workout)
+	const workoutSavingRef = useRef(workoutSaving)
+
+	useEffect(() => {
+		workoutRef.current = workout
+	}, [workout])
+
+	useEffect(() => {
+		workoutSavingRef.current = workoutSaving
+	}, [workoutSaving])
 	const rest = useWorkout(s => s.rest)
 	const startWorkout = useWorkout(s => s.startWorkout)
 	const discardWorkout = useWorkout(s => s.discardWorkout)
@@ -118,9 +130,10 @@ export default function StartWorkout() {
 	const handleOpenSave = useCallback(() => {
 		Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
-		if (!workout) return
+		const currentWorkout = workoutRef.current
+		if (!currentWorkout) return
 
-		if (workout.exercises.length === 0) {
+		if (currentWorkout.exercises.length === 0) {
 			Toast.show({
 				type: 'error',
 				text1: 'No exercises added',
@@ -130,7 +143,7 @@ export default function StartWorkout() {
 		}
 
 		let valid = 0
-		workout.exercises.forEach(ex => {
+		currentWorkout.exercises.forEach(ex => {
 			const exerciseType = exerciseTypeMap.get(ex.exerciseId)
 			if (!exerciseType) return
 
@@ -167,7 +180,7 @@ export default function StartWorkout() {
 		}
 
 		router.push('/(app)/workout/save')
-	}, [workout, exerciseTypeMap])
+	}, [exerciseTypeMap])
 
 	const handleConfirmExerciseGroup = () => {
 		// if no grouping mode or less than 2 exercises selected, do nothing
@@ -217,15 +230,17 @@ export default function StartWorkout() {
 	}, [workout, startRestTimer, stopRestTimer])
 
 	// Navigation Options Effect
-	useEffect(() => {
+	const handleLeftPress = useCallback(() => {
+		if (workoutRef.current?.id) {
+			discardConfirmModalRef.current?.present()
+			return
+		}
+		router.back()
+	}, [])
+
+	useLayoutEffect(() => {
 		navigation.setOptions({
-			onLeftPress: () => {
-				if (workout?.id) {
-					discardConfirmModalRef.current?.present()
-					return
-				}
-				router.back()
-			},
+			onLeftPress: handleLeftPress,
 			headerBackButtonMenuEnabled: false,
 			rightIcons: [
 				{
@@ -236,7 +251,7 @@ export default function StartWorkout() {
 				},
 			],
 		})
-	}, [handleOpenSave, discardWorkout, navigation, workout, workoutSaving])
+	}, [navigation, handleLeftPress, handleOpenSave, workoutSaving])
 
 	useEffect(() => {
 		const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true))

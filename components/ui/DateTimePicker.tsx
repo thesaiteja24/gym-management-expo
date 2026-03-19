@@ -43,6 +43,11 @@ interface BaseDateTimePickerProps {
 	 * Return null if the date is not set.
 	 */
 	returnUndefined?: boolean
+
+	/**
+	 * Minimum date for the picker.
+	 */
+	minimumDate?: Date
 }
 
 export interface DateTimePickerModalProps extends BaseDateTimePickerProps {
@@ -84,7 +89,7 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 	const colors = useThemeColor()
 	const insets = useSafeAreaInsets()
 
-	const { value, onUpdate, dateOnly = false, is24Hour } = props
+	const { value, onUpdate, dateOnly = false, is24Hour, minimumDate } = props
 
 	const isModal = props.isModal !== false
 
@@ -211,6 +216,7 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 						theme={isDark ? 'dark' : 'light'}
 						is24hourSource={is24Hour !== undefined ? (is24Hour ? 'locale' : 'device') : 'device'}
 						style={{ alignSelf: 'center' }}
+						minimumDate={minimumDate}
 					/>
 
 					<View className="mt-6 flex-row gap-4">

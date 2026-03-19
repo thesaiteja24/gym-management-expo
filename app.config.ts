@@ -6,22 +6,22 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
 
 	return {
 		name: isProd ? 'PUMP' : 'PUMP (Dev)',
-		slug: isProd ? 'pump' : 'pump-dev',
+		slug: 'pump',
 		version: '0.1.0',
 		orientation: 'portrait',
 		icon: isProd ? './assets/images/icon.png' : './assets/images/icon.png',
-		scheme: isProd ? 'pump' : 'pump-dev',
+		scheme: 'pump',
 		userInterfaceStyle: 'automatic',
 		newArchEnabled: true,
 
 		ios: {
 			supportsTablet: true,
-			bundleIdentifier: isProd ? 'com.thesaiteja.pump' : 'com.thesaiteja.pump.dev',
+			bundleIdentifier: 'com.thesaiteja.pump',
 			associatedDomains: ['applinks:pump.thesaiteja.dev'],
 		},
 
 		android: {
-			package: isProd ? 'com.thesaiteja.pump' : 'com.thesaiteja.pump.dev',
+			package: 'com.thesaiteja.pump',
 			versionCode: 1,
 			adaptiveIcon: {
 				foregroundImage: './assets/images/adaptive-icon.png',

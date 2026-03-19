@@ -61,7 +61,7 @@ export default function ShimmerAnalyticsScreen() {
 					{/* title */}
 					<SkeletonBlock width="45%" height={22} />
 
-					<View className="mt-4 flex-row items-center">
+					<View className="mt-4 flex-row items-center justify-between">
 						{/* chart circle */}
 						<View className="flex-1 items-center justify-center">
 							<SkeletonBlock width={110} height={110} rounded={55} />
@@ -69,22 +69,22 @@ export default function ShimmerAnalyticsScreen() {
 
 						{/* stats */}
 						<View className="flex-1 gap-4">
-							<View>
-								<SkeletonBlock width="55%" height={14} />
-								<View className="mt-1" />
+							<View className="flex items-center">
 								<SkeletonBlock width="40%" height={22} />
-							</View>
-
-							<View>
-								<SkeletonBlock width="50%" height={14} />
 								<View className="mt-1" />
-								<SkeletonBlock width="35%" height={22} />
-							</View>
-
-							<View>
 								<SkeletonBlock width="55%" height={14} />
+							</View>
+
+							<View className="flex items-center">
+								<SkeletonBlock width="35%" height={22} />
 								<View className="mt-1" />
+								<SkeletonBlock width="50%" height={14} />
+							</View>
+
+							<View className="flex items-center">
 								<SkeletonBlock width="38%" height={22} />
+								<View className="mt-1" />
+								<SkeletonBlock width="55%" height={14} />
 							</View>
 						</View>
 					</View>
@@ -99,7 +99,7 @@ export default function ShimmerAnalyticsScreen() {
 					<SkeletonBlock width="80%" height={14} />
 				</View>
 
-				<View className="flex-1 items-center gap-2 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+				<View className="flex-1 items-start gap-2 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
 					<SkeletonBlock width="75%" height={22} />
 					<SkeletonBlock width="55%" height={24} />
 					<SkeletonBlock width={70} height={20} rounded={10} />
@@ -111,7 +111,10 @@ export default function ShimmerAnalyticsScreen() {
 				<View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
 					<View className="flex-row items-center justify-between">
 						<SkeletonBlock width="45%" height={22} />
-						<SkeletonBlock width={90} height={26} rounded={13} />
+						<View className="flex-row gap-2">
+							<SkeletonBlock width={70} height={26} rounded={13} />
+							<SkeletonBlock width={70} height={26} rounded={13} />
+						</View>
 					</View>
 
 					<View className="mt-6 flex-row justify-between">

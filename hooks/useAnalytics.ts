@@ -1,6 +1,5 @@
-import { ExerciseType, useExercise } from '@/stores/exerciseStore'
+import { AnalyticsMetrics, useAnalytics as useAnalyticsStore } from '@/stores/analyticsStore'
 import { useWorkout } from '@/stores/workoutStore'
-import { AnalyticsMetrics, calculateAnalytics } from '@/utils/analytics'
 import { useCallback, useMemo } from 'react'
 
 /* ────────────────────────────────────────────── */
@@ -35,22 +34,22 @@ export interface UseAnalyticsResult {
 
 export function useAnalytics(): UseAnalyticsResult {
 	const workoutHistory = useWorkout(s => s.workoutHistory)
-	const exerciseList = useExercise(s => s.exerciseList)
-
-	/* Build exercise type lookup (for user analytics) */
-	const exerciseTypeMap = useMemo(() => {
-		const map = new Map<string, ExerciseType>()
-		for (const ex of exerciseList) {
-			map.set(ex.id, ex.exerciseType)
-		}
-		return map
-	}, [exerciseList])
 
 	/* ───────────── User-level analytics ───────────── */
+	const storeUserAnalytics = useAnalyticsStore(s => s.userAnalytics)
 
 	const userAnalytics = useMemo(() => {
-		return calculateAnalytics(workoutHistory, exerciseTypeMap)
-	}, [workoutHistory, exerciseTypeMap])
+		return (
+			storeUserAnalytics ?? {
+				streakDays: 0,
+				workoutsThisWeek: 0,
+				daysSinceLastWorkout: 0,
+				weeklyVolume: 0,
+				lastWeekVolume: 0,
+				workoutDates: new Set<string>(),
+			}
+		)
+	}, [storeUserAnalytics])
 
 	/* ───────────── Exercise-level analytics ───────────── */
 

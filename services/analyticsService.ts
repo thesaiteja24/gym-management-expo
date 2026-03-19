@@ -1,4 +1,9 @@
-import { FITNESS_PROFILE_ENDPOINT, MEASUREMENTS_ENDPOINT, NUTRITION_PLAN_ENDPOINT } from '@/constants/urls'
+import {
+	FITNESS_PROFILE_ENDPOINT,
+	MEASUREMENTS_ENDPOINT,
+	NUTRITION_PLAN_ENDPOINT,
+	USER_ANALYTICS_ENDPOINT,
+} from '@/constants/urls'
 import { handleApiResponse } from '@/utils/handleApiResponse'
 import client from './api'
 
@@ -74,6 +79,17 @@ export async function updateMeasurementsService(id: string, data: any) {
 export async function updateNutritionPlanService(id: string, data: any) {
 	try {
 		const res = await client.put(NUTRITION_PLAN_ENDPOINT(id), data)
+
+		return handleApiResponse(res)
+	} catch (error: any) {
+		const errData = error.response?.data
+		throw new Error(errData?.message || error.message || 'Network error')
+	}
+}
+
+export async function getUserAnalyticsService(id: string) {
+	try {
+		const res = await client.get(USER_ANALYTICS_ENDPOINT(id))
 
 		return handleApiResponse(res)
 	} catch (error: any) {

@@ -18,7 +18,7 @@ import {
 	useAudioRecorderState,
 } from 'expo-audio'
 import * as Crypto from 'expo-crypto'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Alert } from 'react-native'
 
 enum CoachState {
@@ -86,6 +86,12 @@ export function useCoach(): CoachVoice {
 
 	// Function to start recording the audio
 	const startRecording = async () => {
+		const status = await AudioModule.requestRecordingPermissionsAsync()
+		if (!status.granted) {
+			Alert.alert('Permission to access microphone was denied')
+			return
+		}
+
 		await setAudioModeAsync({
 			playsInSilentMode: true,
 			allowsRecording: true,
@@ -310,20 +316,6 @@ export function useCoach(): CoachVoice {
 			console.log('Error deleting conversation', error)
 		}
 	}
-
-	useEffect(() => {
-		;(async () => {
-			const status = await AudioModule.requestRecordingPermissionsAsync()
-			if (!status.granted) {
-				Alert.alert('Permission to access microphone was denied')
-			}
-
-			setAudioModeAsync({
-				playsInSilentMode: true,
-				allowsRecording: false,
-			})
-		})()
-	}, [])
 
 	// useEffect(() => {
 	//   console.log(recorderState.metering);

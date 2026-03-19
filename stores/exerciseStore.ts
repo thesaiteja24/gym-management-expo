@@ -15,7 +15,7 @@ export type MuscleGroup = {
 	id: string
 	title: string
 	thumbnailUrl: string
-	tags: Array<string>
+	tags: string[]
 }
 
 export type Equipment = {
@@ -38,12 +38,12 @@ export type Exercise = {
 	createdAt: string
 	updatedAt: string
 
-	otherMuscleGroups: Array<MuscleGroup>
+	otherMuscleGroups: MuscleGroup[]
 }
 
 type ExerciseState = {
 	exerciseLoading: boolean
-	exerciseList: Array<Exercise>
+	exerciseList: Exercise[]
 	lastSyncedAt: number | null
 
 	getAllExercises: () => Promise<void>

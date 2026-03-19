@@ -3,6 +3,7 @@ import DateTimePicker from '@/components/ui/DateTimePicker'
 import { SelectableCard } from '@/components/ui/SelectableCard'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useOnboarding } from '@/stores/onboardingStore'
+import { estimateBodyFatFromBMI } from '@/utils/analytics'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
@@ -12,7 +13,21 @@ import Toast from 'react-native-toast-message'
 
 export default function OnboardingPace() {
 	const colors = useThemeColor()
-	const { fitnessGoal, weightUnit, setWeeklyRate, setTargetDate } = useOnboarding()
+	const {
+		fitnessGoal,
+		fitnessLevel,
+		weight,
+		height,
+		gender,
+		dateOfBirth,
+		targetType,
+		targetWeight,
+		targetBodyFat,
+		setTargetBodyFat: storeSetTargetBodyFat,
+		setTargetWeight: storeSetTargetWeight,
+		setWeeklyRate,
+		setTargetDate,
+	} = useOnboarding()
 
 	const [mode, setMode] = useState<'auto' | 'manual'>('auto')
 	const [manualDate, setManualDate] = useState<Date | null>(null)
@@ -21,20 +36,107 @@ export default function OnboardingPace() {
 	// We'll approximate for now or assume weight targets if they haven't set bodyFat
 
 	const handleNext = () => {
+		let kgDifference = 0
+		let wKg = weight || 0
+
+		let currentBodyFat: number | null = null
+
+		if (gender && dateOfBirth && height && weight) {
+			const age = new Date().getFullYear() - dateOfBirth.getFullYear()
+			currentBodyFat = estimateBodyFatFromBMI({
+				gender,
+				height,
+				weight,
+				age,
+			})
+		}
+
+		if (targetType === 'weight' && targetWeight) {
+			kgDifference = Math.abs(wKg - targetWeight)
+			
+			// Calculate projected Target Body Fat % based on current lean mass
+			if (currentBodyFat !== null) {
+				const currentFatMass = wKg * (currentBodyFat / 100)
+				const leanMass = wKg - currentFatMass
+				const projectedFatMass = Math.max(0, targetWeight - leanMass)
+				const computedTargetBodyFat = (projectedFatMass / targetWeight) * 100
+				
+				storeSetTargetBodyFat(computedTargetBodyFat)
+			}
+		} else if (targetType === 'bodyFat' && targetBodyFat && currentBodyFat !== null) {
+			const currentFatMass = wKg * (currentBodyFat / 100)
+			const leanMass = wKg - currentFatMass
+			const targetWeightToHitFat = leanMass / (1 - targetBodyFat / 100)
+			kgDifference = Math.abs(wKg - targetWeightToHitFat)
+			
+			// Fill in the missing targetWeight for backend payload
+			storeSetTargetWeight(targetWeightToHitFat, 'kg')
+		}
+
 		if (mode === 'manual') {
 			if (!manualDate) {
 				Toast.show({ type: 'error', text1: 'Please select a target date' })
 				return
 			}
+			if (manualDate < new Date()) {
+				Toast.show({ type: 'error', text1: 'Please select a future date' })
+				return
+			}
+
+			// Calculate required weekly rate to hit target
+			const diffTime = Math.abs(manualDate.getTime() - new Date().getTime())
+			const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+			const diffWeeks = Math.max(diffDays / 7, 1) // Minimum 1 week to avoid infinity
+
+			const requiredWeeklyRateKg = kgDifference / diffWeeks
+
 			setTargetDate(manualDate)
-			setWeeklyRate(0, weightUnit) // We'll compute it dynamically downstream
+			setWeeklyRate(requiredWeeklyRateKg, 'kg')
 		} else {
-			setTargetDate(null)
-			// Apply recommended pace (simplified auto rate logic for onboarding MVP)
+			// Auto mode pace
+			let weeklyRateKg = 0
+
 			if (fitnessGoal === 'loseWeight') {
-				setWeeklyRate(0.5, 'kg') // Default conservative fat loss
+				// Fat loss dependent on starting body fat (if computable)
+				let ratePercentage = 0.7 // Default fallback
+
+				if (currentBodyFat !== null) {
+					if (gender === 'male') {
+						if (currentBodyFat > 25) ratePercentage = 0.7
+						else if (currentBodyFat >= 15) ratePercentage = 0.5
+						else ratePercentage = 0.25
+					} else if (gender === 'female') {
+						if (currentBodyFat > 32) ratePercentage = 0.7
+						else if (currentBodyFat >= 24) ratePercentage = 0.5
+						else ratePercentage = 0.5
+					}
+				}
+
+				weeklyRateKg = (ratePercentage * wKg) / 100
 			} else {
-				setWeeklyRate(0.25, 'kg') // Default muscle gain
+				// Muscle gain dependent on experience level (fitnessLevel)
+				let ratePercentage = 0.25 // Default fallback
+
+				if (fitnessLevel === 'beginner') {
+					ratePercentage = 0.35 // Up to ~1.5% per month
+				} else if (fitnessLevel === 'intermediate') {
+					ratePercentage = 0.2 // ~0.8% per month
+				} else if (fitnessLevel === 'advanced') {
+					ratePercentage = 0.1 // ~0.4% per month
+				}
+
+				weeklyRateKg = (ratePercentage * wKg) / 100
+			}
+
+			setWeeklyRate(weeklyRateKg, 'kg')
+
+			if (kgDifference > 0 && weeklyRateKg > 0) {
+				const weeksNeeded = kgDifference / weeklyRateKg
+				const projectedDate = new Date()
+				projectedDate.setDate(projectedDate.getDate() + Math.ceil(weeksNeeded * 7))
+				setTargetDate(projectedDate)
+			} else {
+				setTargetDate(null)
 			}
 		}
 
@@ -72,15 +174,18 @@ export default function OnboardingPace() {
 
 				{mode === 'manual' && (
 					<View className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
-						<Text className="mb-3 text-lg font-semibold text-black dark:text-white">Target Date</Text>
-						<DateTimePicker
-							value={manualDate || new Date()}
-							onUpdate={setManualDate}
-							isModal={true}
-							dateOnly={true}
-							title="Select End Date"
-							textClassName="text-lg text-black dark:text-white text-center"
-						/>
+						<View className="flex-row items-center justify-between">
+							<Text className="text-lg font-semibold text-black dark:text-white">Target Date</Text>
+							<DateTimePicker
+								value={manualDate || new Date()}
+								onUpdate={setManualDate}
+								isModal={true}
+								dateOnly={true}
+								title="Select End Date"
+								textClassName="text-lg text-black dark:text-white text-center"
+								minimumDate={new Date()}
+							/>
+						</View>
 					</View>
 				)}
 

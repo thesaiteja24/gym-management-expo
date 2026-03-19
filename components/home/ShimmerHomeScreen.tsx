@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { View, useColorScheme, type DimensionValue, type ViewStyle } from 'react-native'
+import { ScrollView, useWindowDimensions, View, useColorScheme, type DimensionValue, type ViewStyle } from 'react-native'
 import Animated, {
 	FadeInDown,
 	useAnimatedStyle,
@@ -84,57 +84,79 @@ function SkeletonStreakCard() {
 }
 
 /* ──────────────────────────────────────────────
-   Workout Card Skeleton
-────────────────────────────────────────────── */
-
-function SkeletonWorkoutCard() {
-	return (
-		<View className="mb-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-			{/* Header */}
-			<View className="mb-4 flex-row items-center gap-3">
-				<SkeletonBlock width={44} height={44} rounded={999} />
-				<View className="flex-1 flex-col gap-2">
-					<SkeletonBlock width="70%" height={16} />
-					<SkeletonBlock width="50%" height={16} />
-				</View>
-			</View>
-
-			<View className="mb-4 gap-2">
-				<SkeletonBlock width="60%" height={18} />
-			</View>
-
-			{/* Meta row */}
-			<View className="mb-4 flex-row justify-between gap-4">
-				<SkeletonBlock width="45%" height={14} />
-				<SkeletonBlock width="45%" height={14} />
-			</View>
-
-			{/* Exercise previews */}
-			{[0, 1, 2].map(i => (
-				<View key={i} className="mb-2 flex-row items-center gap-3">
-					<SkeletonBlock width={44} height={44} rounded={999} />
-					<SkeletonBlock width="70%" height={16} />
-				</View>
-			))}
-		</View>
-	)
-}
-
-/* ──────────────────────────────────────────────
    Home Screen Skeleton (export)
 ────────────────────────────────────────────── */
 
 export default function ShimmerHomeScreen() {
+	const { width } = useWindowDimensions()
+
 	return (
 		<Animated.View entering={FadeInDown.duration(300).springify()} className="flex-1">
-			<SkeletonStreakCard />
+			<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+				<SkeletonStreakCard />
 
-			{Array.from({ length: 3 }).map((_, i) => (
-				<SkeletonWorkoutCard key={i} />
-			))}
+				{/* Habits */}
+				<View className="mb-4">
+					<SkeletonBlock width={100} height={28} rounded={6} />
+				</View>
 
-			{/* Bottom breathing room to match real list */}
-			<View className="mb-[20%]" />
+				<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+					<View
+						style={{ width: width * 0.5, height: width * 0.4 }}
+						className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+					>
+						<SkeletonBlock width="60%" height={18} />
+						<View className="mt-2">
+							<SkeletonBlock width="40%" height={14} />
+						</View>
+						<View className="mt-auto">
+							<SkeletonBlock width="100%" height={50} rounded={12} />
+						</View>
+					</View>
+
+					<View
+						style={{ width: width * 0.5, height: width * 0.4 }}
+						className="items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
+					>
+						<SkeletonBlock width="80%" height={40} rounded={12} />
+					</View>
+				</ScrollView>
+
+				{/* Metrics */}
+				<View className="my-4">
+					<SkeletonBlock width={100} height={28} rounded={6} />
+				</View>
+
+				<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+					<View
+						style={{ width: width * 0.5, height: width * 0.4 }}
+						className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+					>
+						<SkeletonBlock width="50%" height={18} />
+						<View className="mt-auto">
+							<SkeletonBlock width="100%" height={60} rounded={12} />
+						</View>
+					</View>
+
+					<View
+						style={{ width: width * 0.5, height: width * 0.4 }}
+						className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+					>
+						<SkeletonBlock width="60%" height={18} />
+						<View className="mt-4">
+							<SkeletonBlock width="80%" height={24} />
+						</View>
+					</View>
+
+					<View
+						style={{ width: width * 0.5, height: width * 0.4 }}
+						className="items-center justify-center rounded-2xl bg-transparent px-4 py-4"
+					>
+						<SkeletonBlock width="60%" height={40} rounded={12} />
+					</View>
+				</ScrollView>
+			</ScrollView>
 		</Animated.View>
 	)
 }
+

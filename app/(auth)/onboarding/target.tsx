@@ -43,7 +43,7 @@ export default function OnboardingTarget() {
 			setTargetBodyFat(val)
 		}
 
-		router.push('/(auth)/onboarding/pace')
+		router.push('/(auth)/onboarding/experience')
 	}
 
 	const handleBack = () => {
@@ -53,6 +53,12 @@ export default function OnboardingTarget() {
 	const handleTypeSwitch = (type: 'weight' | 'bodyFat') => {
 		setTargetType(type)
 		setInputValue('')
+
+		if (type === 'weight') {
+			setTargetBodyFat(0)
+		} else {
+			setTargetWeight(0, weightUnit)
+		}
 	}
 
 	return (

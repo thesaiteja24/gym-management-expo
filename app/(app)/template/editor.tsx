@@ -1,9 +1,12 @@
 import { Button } from '@/components/ui/Button'
 import { DeleteConfirmModal, DeleteConfirmModalHandle } from '@/components/ui/DeleteConfirmModal'
+import { PaywallModal, PaywallModalHandle } from '@/components/ui/PaywallModal'
 import ExerciseGroupModal, { ExerciseGroupModalHandle } from '@/components/workout/ExerciseGroupModal'
 import ExerciseRow from '@/components/workout/ExerciseRow'
+import { FREE_TIER_LIMITS } from '@/constants/limits'
 import { useAuth } from '@/stores/authStore'
 import { useExercise } from '@/stores/exerciseStore'
+import { useSubscriptionStore } from '@/stores/subscriptionStore'
 import { DraftTemplate, WorkoutTemplate, useTemplate } from '@/stores/templateStore'
 import { ExerciseGroupType } from '@/stores/workoutStore'
 import { Ionicons } from '@expo/vector-icons'
@@ -32,6 +35,7 @@ export default function TemplateEditor() {
 	const createTemplate = useTemplate(s => s.createTemplate)
 	const updateTemplate = useTemplate(s => s.updateTemplate)
 	const discardDraftTemplate = useTemplate(s => s.discardDraftTemplate)
+	const isPro = useSubscriptionStore(s => s.isPro)
 	const reorderDraftExercises = useTemplate(s => s.reorderDraftExercises)
 	const removeExerciseFromDraft = useTemplate(s => s.removeExerciseFromDraft)
 	const addSetToDraft = useTemplate(s => s.addSetToDraft)
@@ -45,6 +49,7 @@ export default function TemplateEditor() {
 	// const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false); // Removed
 	const deleteModalRef = useRef<DeleteConfirmModalHandle>(null)
 	const pruneConfirmModalRef = useRef<DeleteConfirmModalHandle>(null)
+	const paywallModalRef = useRef<PaywallModalHandle>(null)
 
 	const [groupingMode, setGroupingMode] = useState<{
 		type: ExerciseGroupType
@@ -183,6 +188,17 @@ export default function TemplateEditor() {
 	usePreventRemove(hasUnsavedChanges, () => {
 		deleteModalRef.current?.present()
 	})
+
+	const isLimitHit = !isEditing && !isPro && templates.length >= FREE_TIER_LIMITS.MAX_CUSTOM_TEMPLATES
+
+	// Present the paywall immediately if a user bypasses the UI gate
+	useEffect(() => {
+		if (isLimitHit) {
+			requestAnimationFrame(() => {
+				paywallModalRef.current?.present()
+			})
+		}
+	}, [isLimitHit])
 
 	// Initialize draft on mount
 	useEffect(() => {
@@ -454,6 +470,23 @@ export default function TemplateEditor() {
 				onCancel={() => {
 					setPruneMessage(null)
 					setPendingSave(null)
+				}}
+			/>
+
+			<PaywallModal
+				ref={paywallModalRef}
+				title="Upgrade to Pro"
+				description={`You can only add up to ${FREE_TIER_LIMITS.MAX_CUSTOM_TEMPLATES} custom templates on the Free plan.`}
+				continueText="View Plans"
+				cancelText="Go Back"
+				onContinue={() => {
+					discardDraftTemplate() // Cleanup in case they were drafting
+					router.replace('/paywall')
+				}}
+				onCancel={() => {
+					// Discard the draft and navigate back when limit is enforced
+					discardDraftTemplate()
+					router.back()
 				}}
 			/>
 		</SafeAreaView>

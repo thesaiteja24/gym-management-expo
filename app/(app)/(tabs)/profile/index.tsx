@@ -4,7 +4,9 @@ import { EditProfileSheet } from '@/components/profile/EditProfileSheet'
 import { FitnessGoalsSheet } from '@/components/profile/FitnessGoalsSheet'
 import { MeasurementsSheet } from '@/components/profile/MeasurementsSheet'
 import { Button } from '@/components/ui/Button'
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { useAuth } from '@/stores/authStore'
+import { useSubscriptionStore } from '@/stores/subscriptionStore'
 import { useUser } from '@/stores/userStore'
 import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
@@ -20,6 +22,7 @@ type LengthUnit = 'cm' | 'inches'
 export default function ProfileScreen() {
 	const { user, logout } = useAuth()
 	const { getUserData, updatePreferences } = useUser()
+	const { isPro, activePlanId } = useSubscriptionStore()
 	const isDarkMode = useColorScheme() === 'dark'
 	const insets = useSafeAreaInsets()
 
@@ -124,18 +127,21 @@ export default function ProfileScreen() {
 			{/* Avatar */}
 			<View className="flex-row items-center gap-4">
 				<Animated.View style={avatarStyle} className="mb-6 items-center">
-					<EditableAvatar uri={user?.profilePicUrl ? user.profilePicUrl : null} size={132} editable={false} />
+					<EditableAvatar uri={user?.profilePicUrl ? user.profilePicUrl : null} size={100} editable={false} />
 				</Animated.View>
 
 				{/* Name as prominent line */}
 				<Animated.View style={nameStyle} className="mb-3 min-w-0 flex-1 gap-2">
-					<Text
-						className="text-xl font-semibold text-neutral-900 dark:text-neutral-100"
-						numberOfLines={1}
-						ellipsizeMode="tail"
-					>
-						{(user?.firstName ?? '') + (user?.lastName ? ` ${user.lastName}` : '')}
-					</Text>
+					<View className="flex-row items-center gap-1">
+						<Text
+							className="shrink text-xl font-semibold text-neutral-900 dark:text-neutral-100"
+							numberOfLines={1}
+							ellipsizeMode="tail"
+						>
+							{(user?.firstName ?? '') + (user?.lastName ? ` ${user.lastName}` : '')}
+						</Text>
+						{isPro && <VerifiedBadge tier={activePlanId} size={28} />}
+					</View>
 
 					<View className="flex-row gap-4">
 						<Pressable

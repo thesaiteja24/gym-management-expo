@@ -1,17 +1,17 @@
+import { useCountUp } from '@/hooks/useCountUp'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { WeightUnits } from '@/stores/userStore'
-import { BodyFatFeedback, calculateHealthScore, classifyBMI, classifyBodyFat, generateInsight } from '@/utils/analytics'
+import { BodyFatFeedback, classifyBodyFat } from '@/utils/analytics'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Text, View } from 'react-native'
 import Animated, {
 	Easing,
 	FadeInDown,
 	interpolateColor,
 	runOnJS,
 	useAnimatedReaction,
-	useAnimatedStyle,
 	useSharedValue,
 	withDelay,
 	withTiming,
@@ -36,40 +36,6 @@ interface MuscleCompositionCardProps {
 	preferredWeightUnit: WeightUnits
 }
 
-/** Animates a number from 0 → target on mount, returns formatted string */
-function useCountUp(target: number | null, decimals = 1, delay = 400): string {
-	const [display, setDisplay] = useState('--')
-	const sv = useSharedValue(0)
-
-	useEffect(() => {
-		if (target == null) {
-			setDisplay('--')
-			return
-		}
-		sv.value = 0
-		setDisplay('0.' + '0'.repeat(decimals))
-		sv.value = withDelay(
-			delay,
-			withTiming(target, {
-				duration: 1400,
-				easing: Easing.out(Easing.cubic),
-			})
-		)
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [target])
-
-	useAnimatedReaction(
-		() => sv.value,
-		val => {
-			if (target != null) {
-				runOnJS(setDisplay)(val.toFixed(decimals))
-			}
-		}
-	)
-
-	return display
-}
-
 export function MuscleCompositionCard({ composition, gender, goal, preferredWeightUnit }: MuscleCompositionCardProps) {
 	const colors = useThemeColor()
 	const isDark = colors.isDark
@@ -87,9 +53,6 @@ export function MuscleCompositionCard({ composition, gender, goal, preferredWeig
 	const binaryGender = gender === 'male' || gender === 'female' ? gender : null
 
 	let feedback: BodyFatFeedback | null = null
-	let bmiCategory: string | null = null
-	let healthScore: number | null = null
-	let insight: string | null = null
 
 	if (!isIncomplete && binaryGender) {
 		feedback = classifyBodyFat({
@@ -97,26 +60,12 @@ export function MuscleCompositionCard({ composition, gender, goal, preferredWeig
 			bodyFat: composition.bodyFat,
 			goal,
 		})
-
-		bmiCategory = classifyBMI(composition.bmi!)
-
-		healthScore = calculateHealthScore({
-			bodyFatCategory: feedback.category,
-			bmi: composition.bmi!,
-			goal,
-		})
-
-		insight = generateInsight({
-			bodyFatCategory: feedback.category,
-			bmiCategory,
-		})
 	}
 
 	// Number counters — all count up 0 → target
 	const leanMassDisplay = useCountUp(composition?.leanMass ?? null, 1, 500)
 	const fatMassDisplay = useCountUp(composition?.fatMass ?? null, 1, 600)
 	const bmiDisplay = useCountUp(composition?.bmi ?? null, 1, 700)
-	const healthScoreDisplay = useCountUp(healthScore, 0, 400)
 
 	// Badge color: animate from safe Athletic blue → actual category color via JS state
 	const badgeProgress = useSharedValue(0)
@@ -144,38 +93,24 @@ export function MuscleCompositionCard({ composition, gender, goal, preferredWeig
 		}
 	)
 
-	// Health score box fade-in using proper shared values
-	const healthOpacity = useSharedValue(0)
-	const healthTranslateY = useSharedValue(12)
-
-	useEffect(() => {
-		healthOpacity.value = withDelay(400, withTiming(1, { duration: 500, easing: Easing.out(Easing.quad) }))
-		healthTranslateY.value = withDelay(400, withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) }))
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
-
-	const healthCardStyle = useAnimatedStyle(() => ({
-		opacity: healthOpacity.value,
-		transform: [{ translateY: healthTranslateY.value }],
-	}))
-
 	return (
 		<Animated.View
 			entering={FadeInDown.delay(0).duration(500)}
-			style={[
-				styles.card,
-				{
-					backgroundColor: isDark ? '#171717' : '#fff',
-					borderColor: isDark ? '#262626' : '#e5e7eb',
-				},
-			]}
+			className={`relative m-4 rounded-3xl border p-4 shadow-sm ${
+				isDark ? 'border-neutral-800 bg-neutral-900' : 'border-neutral-200 bg-white'
+			}`}
 		>
 			<View>
-				<Text style={[styles.cardTitle, { color: isDark ? '#9ca3af' : '#6b7280' }]}>Muscle Composition</Text>
+				<Text
+					className={`text-sm font-semibold tracking-wide ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`}
+				>
+					Muscle Composition
+				</Text>
 
-				<View style={styles.ringRow}>
-					<View>
-						<View style={styles.ringWrapper}>
+				<View className="w-full flex-row items-center justify-between">
+					{/* Left Column: Ring and Badge */}
+					<View className="flex-1 items-center">
+						<View className="items-center">
 							<BodyFatRing
 								percentage={composition?.bodyFat ?? 0}
 								colorStart={feedback?.colorStart ?? SAFE_BADGE_COLOR}
@@ -184,76 +119,67 @@ export function MuscleCompositionCard({ composition, gender, goal, preferredWeig
 						</View>
 
 						{/* Category badge with animated color driven by JS state */}
-						<View style={[styles.badge, { backgroundColor: badgeBgColor }]}>
-							<Text style={[styles.badgeText, { color: badgeTextColor }]}>
+						<View
+							className="self-center rounded-full px-4 py-1.5"
+							style={{ backgroundColor: badgeBgColor }}
+						>
+							<Text className="text-xs font-semibold" style={{ color: badgeTextColor }}>
 								{feedback?.category ?? '--'}
 							</Text>
 						</View>
 					</View>
 
-					{/* Health Score */}
-					<Animated.View style={[styles.healthScoreBox, healthCardStyle]}>
-						<Text style={[styles.healthScoreLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
-							Health Score
-						</Text>
-						<Text style={[styles.healthScoreValue, { color: colors.text }]}>
-							{healthScore != null ? `${healthScoreDisplay} / 100` : '--'}
-						</Text>
-					</Animated.View>
+					{/* Right Column: Vertical Stats (replacing Horizontal Bottom Row) */}
+					<View className="flex-1 items-center gap-4">
+						<AnimatedStatBlock
+							label="Lean Mass"
+							value={composition?.leanMass != null ? leanMassDisplay : '--'}
+							unit={composition?.leanMass != null ? preferredWeightUnit : ''}
+							delay={500}
+							textColor={colors.text}
+							labelColor={isDark ? 'text-neutral-400' : 'text-neutral-500'}
+						/>
+						<AnimatedStatBlock
+							label="Fat Mass"
+							value={composition?.fatMass != null ? fatMassDisplay : '--'}
+							unit={composition?.fatMass != null ? preferredWeightUnit : ''}
+							delay={600}
+							textColor={colors.text}
+							labelColor={isDark ? 'text-neutral-400' : 'text-neutral-500'}
+						/>
+						<AnimatedStatBlock
+							label="BMI"
+							value={composition?.bmi != null ? bmiDisplay : '--'}
+							unit=""
+							delay={700}
+							textColor={colors.text}
+							labelColor={isDark ? 'text-neutral-400' : 'text-neutral-500'}
+						/>
+					</View>
 				</View>
 
-				<Text style={[styles.insight, { color: isDark ? '#d1d5db' : '#4b5563' }]}>
+				{/* <Text className={`mt-6 text-center text-sm ${isDark ? 'text-neutral-300' : 'text-neutral-600'}`}>
 					{insight ?? 'Complete your measurements to unlock insights.'}
-				</Text>
-
-				<View style={[styles.divider, { backgroundColor: isDark ? '#262626' : '#e5e7eb' }]} />
-
-				{/* Stats row */}
-				<View style={styles.statsRow}>
-					<AnimatedStatBlock
-						label="Lean Mass"
-						value={composition?.leanMass != null ? leanMassDisplay : '--'}
-						unit={composition?.leanMass != null ? preferredWeightUnit : ''}
-						delay={500}
-						textColor={colors.text}
-						labelColor={isDark ? '#9ca3af' : '#6b7280'}
-					/>
-					<AnimatedStatBlock
-						label="Fat Mass"
-						value={composition?.fatMass != null ? fatMassDisplay : '--'}
-						unit={composition?.fatMass != null ? preferredWeightUnit : ''}
-						delay={600}
-						textColor={colors.text}
-						labelColor={isDark ? '#9ca3af' : '#6b7280'}
-					/>
-					<AnimatedStatBlock
-						label="BMI"
-						value={composition?.bmi != null ? bmiDisplay : '--'}
-						unit=""
-						delay={700}
-						textColor={colors.text}
-						labelColor={isDark ? '#9ca3af' : '#6b7280'}
-					/>
-				</View>
+				</Text> */}
 			</View>
 
 			{/* Overlay when data is incomplete */}
 			{isIncomplete && (
 				<View
-					style={[
-						styles.overlay,
-						{ backgroundColor: isDark ? 'rgba(23,23,23,0.88)' : 'rgba(255,255,255,0.88)' },
-					]}
+					className={`absolute inset-0 items-center justify-center rounded-3xl ${
+						isDark ? 'bg-neutral-900/90' : 'bg-white/90'
+					}`}
 				>
-					<View style={styles.overlayContent}>
+					<View className="items-center px-6">
 						<Ionicons name="lock-closed-outline" size={28} color={colors.text} />
-						<Text style={[styles.overlayText, { color: colors.text }]}>
+						<Text className="mt-3 text-center text-sm font-medium" style={{ color: colors.text }}>
 							Complete your profile and measurement details to unlock muscle composition insights
 						</Text>
 
-						<View style={[styles.overlayButton, { backgroundColor: colors.text }]}>
+						<View className="mt-4 rounded-full px-4 py-2" style={{ backgroundColor: colors.text }}>
 							<Text
-								style={[styles.overlayButtonText, { color: colors.background }]}
+								className="text-xs font-semibold"
+								style={{ color: colors.background }}
 								onPress={() => router.push('/(app)/(tabs)/profile')}
 							>
 								Update Profile & Measurements
@@ -282,119 +208,12 @@ function AnimatedStatBlock({
 	labelColor?: string
 }) {
 	return (
-		<Animated.View entering={FadeInDown.delay(delay).duration(400)} style={styles.statBlock}>
-			<Text style={[styles.statValue, textColor ? { color: textColor } : undefined]}>
+		<Animated.View entering={FadeInDown.delay(delay).duration(400)} className="items-center">
+			<Text className="text-lg font-bold" style={textColor ? { color: textColor } : undefined}>
 				{value}
 				{unit ? ` ${unit}` : ''}
 			</Text>
-			<Text style={[styles.statLabel, labelColor ? { color: labelColor } : undefined]}>{label}</Text>
+			<Text className={`mt-1 text-[10px] uppercase tracking-wider ${labelColor ? labelColor : ''}`}>{label}</Text>
 		</Animated.View>
 	)
 }
-
-const styles = StyleSheet.create({
-	card: {
-		position: 'relative',
-		borderRadius: 24,
-		borderWidth: 1,
-		padding: 24,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 1 },
-		shadowOpacity: 0.05,
-		shadowRadius: 4,
-		elevation: 2,
-	},
-	cardTitle: {
-		fontSize: 14,
-		fontWeight: '600',
-		letterSpacing: 0.5,
-	},
-	ringRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-evenly',
-		marginTop: 4,
-	},
-	ringWrapper: {
-		marginTop: 4,
-		alignItems: 'center',
-	},
-	badge: {
-		marginTop: 8,
-		alignSelf: 'center',
-		borderRadius: 999,
-		paddingHorizontal: 16,
-		paddingVertical: 4,
-	},
-	badgeText: {
-		fontSize: 12,
-		fontWeight: '600',
-	},
-	healthScoreBox: {
-		marginTop: 12,
-		alignItems: 'center',
-	},
-	healthScoreLabel: {
-		fontSize: 10,
-		textTransform: 'uppercase',
-		letterSpacing: 1,
-	},
-	healthScoreValue: {
-		marginTop: 4,
-		fontSize: 22,
-		fontWeight: '700',
-	},
-	insight: {
-		marginTop: 16,
-		textAlign: 'center',
-		fontSize: 13,
-	},
-	divider: {
-		marginVertical: 20,
-		height: 1,
-	},
-	statsRow: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-	},
-	statBlock: {
-		flex: 1,
-		alignItems: 'center',
-	},
-	statValue: {
-		fontSize: 16,
-		fontWeight: '600',
-	},
-	statLabel: {
-		marginTop: 4,
-		fontSize: 10,
-		textTransform: 'uppercase',
-		letterSpacing: 0.8,
-	},
-	overlay: {
-		...StyleSheet.absoluteFillObject,
-		alignItems: 'center',
-		justifyContent: 'center',
-		borderRadius: 24,
-	},
-	overlayContent: {
-		alignItems: 'center',
-		paddingHorizontal: 24,
-	},
-	overlayText: {
-		marginTop: 12,
-		textAlign: 'center',
-		fontSize: 13,
-		fontWeight: '500',
-	},
-	overlayButton: {
-		marginTop: 16,
-		borderRadius: 999,
-		paddingHorizontal: 16,
-		paddingVertical: 8,
-	},
-	overlayButtonText: {
-		fontSize: 12,
-		fontWeight: '600',
-	},
-})

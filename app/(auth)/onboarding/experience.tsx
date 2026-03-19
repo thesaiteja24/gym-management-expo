@@ -9,48 +9,38 @@ import { ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
-export default function OnboardingActivity() {
+export default function OnboardingExperience() {
 	const colors = useThemeColor()
-	const { activityLevel, setActivityLevel } = useOnboarding()
+	const { fitnessLevel, setFitnessLevel } = useOnboarding()
 
 	const levels = [
 		{
-			value: 'sedentary',
-			title: 'Sedentary',
-			desc: 'Desk job, minimal exercise, little day-to-day movement.',
+			value: 'beginner',
+			title: 'Beginner',
+			desc: 'New to resistance training or returning after a long break.',
 		},
 		{
-			value: 'lightlyActive',
-			title: 'Lightly Active',
-			desc: 'Light exercise or sports 1-3 days a week.',
+			value: 'intermediate',
+			title: 'Intermediate',
+			desc: 'Consistent training for 6+ months. Familiar with fundamental exercises.',
 		},
 		{
-			value: 'moderatelyActive',
-			title: 'Moderately Active',
-			desc: 'Moderate exercise or sports 3-5 days a week.',
-		},
-		{
-			value: 'veryActive',
-			title: 'Very Active',
-			desc: 'Hard exercise or sports 6-7 days a week.',
-		},
-		{
-			value: 'athlete',
-			title: 'Athlete',
-			desc: 'Very hard exercise, physical job, processing 2-a-days.',
+			value: 'advanced',
+			title: 'Advanced',
+			desc: 'Years of consistent training. Close to natural potential.',
 		},
 	]
 
 	const handleNext = () => {
-		if (!activityLevel) {
+		if (!fitnessLevel) {
 			Toast.show({
 				type: 'error',
-				text1: 'Please select your activity level',
+				text1: 'Please select your experience level',
 			})
 			return
 		}
 
-		router.push('/(auth)/onboarding/summary')
+		router.push('/(auth)/onboarding/pace')
 	}
 
 	const handleBack = () => {
@@ -60,23 +50,22 @@ export default function OnboardingActivity() {
 	return (
 		<SafeAreaView className="flex-1 bg-white dark:bg-black">
 			<ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 100 }}>
-				<Text className="mb-2 text-3xl font-bold text-black dark:text-white">How active are you?</Text>
+				<Text className="mb-2 text-3xl font-bold text-black dark:text-white">What is your experience?</Text>
 				<Text className="mb-8 text-neutral-500 dark:text-neutral-400">
-					This multiplier helps calculate your Total Daily Energy Expenditure (TDEE). Select the one that
-					matches your true day-to-day lifestyle.
+					This helps us calibrate and tailor your plan.
 				</Text>
 
 				<View className="flex gap-4">
 					{levels.map(lvl => (
 						<SelectableCard
 							key={lvl.value}
-							selected={activityLevel === lvl.value}
-							onSelect={() => setActivityLevel(lvl.value as any)}
+							selected={fitnessLevel === lvl.value}
+							onSelect={() => setFitnessLevel(lvl.value as any)}
 							title={lvl.title}
 							className="flex-col items-start gap-1 p-4"
 						>
 							<Text
-								className={`mt-1 w-full px-1 text-left text-sm ${activityLevel === lvl.value ? 'text-blue-800 dark:text-blue-200' : 'text-neutral-500 dark:text-neutral-400'}`}
+								className={`mt-1 w-full px-1 text-left text-sm ${fitnessLevel === lvl.value ? 'text-blue-800 dark:text-blue-200' : 'text-neutral-500 dark:text-neutral-400'}`}
 							>
 								{lvl.desc}
 							</Text>

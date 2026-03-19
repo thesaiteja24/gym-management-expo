@@ -182,6 +182,8 @@ export interface AnalyticsPayload {
 	// For UPDATE_NUTRITION_PLAN
 	caloriesTarget?: number | null
 	proteinTarget?: number | null
+	fatsTarget?: number | null
+	carbsTarget?: number | null
 	calculatedTDEE?: number | null
 	deficitOrSurplus?: number | null
 	startDate?: string | null

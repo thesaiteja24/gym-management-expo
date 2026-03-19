@@ -19,7 +19,7 @@ type MuscleGroup = {
 
 type MuscleGroupState = {
 	muscleGroupLoading: boolean
-	muscleGroupList: Array<MuscleGroup>
+	muscleGroupList: MuscleGroup[]
 	lastSyncedAt: number | null
 
 	getAllMuscleGroups: () => Promise<void>

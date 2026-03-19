@@ -1,12 +1,15 @@
 import { Button } from '@/components/ui/Button'
+import { PaywallModal, PaywallModalHandle } from '@/components/ui/PaywallModal'
 import SkeletonTemplateCard from '@/components/workout/SkeletonTemplateCard'
 import TemplateCard from '@/components/workout/TemplateCard'
+import { FREE_TIER_LIMITS } from '@/constants/limits'
 import { useThemeColor } from '@/hooks/useThemeColor'
+import { useSubscriptionStore } from '@/stores/subscriptionStore'
 import { useTemplate } from '@/stores/templateStore'
 import { useWorkout } from '@/stores/workoutStore'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import Carousel from 'react-native-reanimated-carousel'
@@ -25,6 +28,12 @@ export default function WorkoutScreen() {
 	const templates = useTemplate(s => s.templates)
 	const templateLoading = useTemplate(s => s.templateLoading)
 	const getAllTemplates = useTemplate(s => s.getAllTemplates)
+
+	// Subscription Store
+	const isPro = useSubscriptionStore(s => s.isPro)
+
+	// Refs
+	const paywallModalRef = useRef<PaywallModalHandle>(null)
 
 	// Animation values initialized at 0 opacity
 	const activeWorkoutOpacity = useSharedValue(0)
@@ -107,7 +116,15 @@ export default function WorkoutScreen() {
 					<View className="flex flex-row items-center justify-between">
 						<Text className="text-xl font-semibold text-black dark:text-white">My Templates</Text>
 
-						<TouchableOpacity onPress={() => router.push('/(app)/template/editor')}>
+						<TouchableOpacity
+							onPress={() => {
+								if (!isPro && templates.length >= FREE_TIER_LIMITS.MAX_CUSTOM_TEMPLATES) {
+									paywallModalRef.current?.present()
+								} else {
+									router.push('/(app)/template/editor')
+								}
+							}}
+						>
 							<MaterialCommunityIcons name="folder-plus" size={24} color={colors.icon} />
 						</TouchableOpacity>
 					</View>
@@ -178,6 +195,13 @@ export default function WorkoutScreen() {
 					)}
 				</Animated.View>
 			</View>
+
+			<PaywallModal
+				ref={paywallModalRef}
+				title="Upgrade to Pro"
+				description={`You can only add up to ${FREE_TIER_LIMITS.MAX_CUSTOM_TEMPLATES} custom templates on the Free plan. Upgrade to create UNLIMITED Templates`}
+				continueText="View Plans"
+			/>
 		</View>
 	)
 }

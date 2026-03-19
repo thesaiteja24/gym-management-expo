@@ -1,128 +1,3 @@
-import { ExerciseType } from '@/stores/exerciseStore'
-import { WorkoutHistoryItem } from '@/stores/workoutStore'
-import { parseUTCToLocalDate, toDateKey } from './time'
-import { calculateWorkoutMetrics } from './workout'
-
-export interface AnalyticsMetrics {
-	streakDays: number
-	workoutsThisWeek: number
-	daysSinceLastWorkout: number
-	weeklyVolume: number
-	lastWeekVolume: number
-	workoutDates: Set<string>
-}
-
-/**
- * Calculates core analytics metrics from workout history.
- * Designed to be fast and memoize-friendly.
- */
-export function calculateAnalytics(
-	history: WorkoutHistoryItem[],
-	exerciseTypeMap: Map<string, ExerciseType>
-): AnalyticsMetrics {
-	const today = new Date()
-	const todayKey = toDateKey(today)
-
-	// 1. Pre-process dates and Sort (Descending: Newest first)
-	// Ensure history is sorted by startTime desc
-	const sortedHistory = [...history].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-
-	const workoutDates = new Set<string>()
-	sortedHistory.forEach(w => {
-		workoutDates.add(toDateKey(parseUTCToLocalDate(w.startTime)))
-	})
-
-	// 2. Calculate Streak
-	let currentStreak = 0
-	const checkDate = new Date(today)
-
-	// If today has a workout, streak includes today.
-	// If not, we check yesterday to see if streak is alive.
-	// Actually, standard streak logic usually allows "today" to be part of streak if done,
-	// or checks yesterday to continue.
-
-	// Logic: Check backwards from today.
-	// If we worked out today, streak starts today.
-	// If not, but we worked out yesterday, streak starts yesterday.
-	// If neither, streak is 0.
-
-	let streakCursor = new Date(today)
-
-	if (!workoutDates.has(toDateKey(today))) {
-		// If no workout today, check yesterday
-		streakCursor.setDate(streakCursor.getDate() - 1)
-		if (!workoutDates.has(toDateKey(streakCursor))) {
-			// No workout yesterday either -> Streak broken/zero
-			currentStreak = 0
-		} else {
-			// Streak is alive from yesterday
-			while (workoutDates.has(toDateKey(streakCursor))) {
-				currentStreak++
-				streakCursor.setDate(streakCursor.getDate() - 1)
-			}
-		}
-	} else {
-		// Streak is alive from today
-		while (workoutDates.has(toDateKey(streakCursor))) {
-			currentStreak++
-			streakCursor.setDate(streakCursor.getDate() - 1)
-		}
-	}
-
-	// 3. Days Since Last Workout
-	const lastWorkoutDate = sortedHistory.length > 0 ? parseUTCToLocalDate(sortedHistory[0].startTime) : null
-
-	const daysSinceLastWorkout = lastWorkoutDate
-		? Math.floor((today.getTime() - lastWorkoutDate.getTime()) / (1000 * 60 * 60 * 24))
-		: 0 // Default to 0 for new users so we can show "Let's get started"
-
-	// 4. Volume & Weekly Frequency
-	const currentWeekStart = new Date(today)
-	currentWeekStart.setDate(today.getDate() - today.getDay()) // Sunday
-	currentWeekStart.setHours(0, 0, 0, 0)
-
-	const lastWeekStart = new Date(currentWeekStart)
-	lastWeekStart.setDate(lastWeekStart.getDate() - 7)
-
-	const lastWeekEnd = new Date(currentWeekStart) // Ends when current week starts
-
-	let workoutsThisWeek = 0
-	let weeklyVolume = 0
-	let lastWeekVolume = 0
-
-	// We iterate history to calc volume.
-	// Optimization: Stop once we go past last week if history is long?
-	// For now, allow full scan as typical user history isn't massive yet.
-
-	for (const workout of sortedHistory) {
-		const wDate = parseUTCToLocalDate(workout.startTime)
-
-		// Filter for relevant ranges
-		const isThisWeek = wDate >= currentWeekStart
-		const isLastWeek = wDate >= lastWeekStart && wDate < lastWeekEnd
-
-		if (!isThisWeek && !isLastWeek) continue // Skip older workouts
-
-		if (isThisWeek) workoutsThisWeek++
-
-		// Calculate Volume if needed
-		if (isThisWeek || isLastWeek) {
-			const metrics = calculateWorkoutMetrics(workout, exerciseTypeMap)
-			if (isThisWeek) weeklyVolume += metrics.tonnage
-			if (isLastWeek) lastWeekVolume += metrics.tonnage
-		}
-	}
-
-	return {
-		streakDays: currentStreak,
-		workoutsThisWeek,
-		daysSinceLastWorkout,
-		weeklyVolume,
-		lastWeekVolume,
-		workoutDates,
-	}
-}
-
 /**
  * Calculates the Body Mass Index (BMI) from weight and height.
  *
@@ -305,6 +180,112 @@ export function calculateBodyFat({
 
 	// Unsupported gender
 	return null
+}
+
+/**
+
+* Estimates body fat percentage using BMI, age, and gender.
+* Uses the Deurenberg formula which is commonly used when
+* waist/neck measurements are unavailable (e.g. onboarding).
+*
+* Formula:
+* bodyFat = (1.20 × BMI) + (0.23 × age) − (10.8 × gender) − 5.4
+*
+* genderFactor:
+* * male = 1
+* * female = 0
+*
+* @param gender - The gender of the person.
+* @param height - Height in centimeters.
+* @param weight - Weight in kilograms.
+* @param age - Age in years.
+*
+* @returns Estimated body fat percentage or null if inputs are invalid.
+*
+* @example
+* estimateBodyFatFromBMI({
+* gender: "male",
+* height: 173,
+* weight: 99,
+* age: 22
+* })
+* // ≈ 29
+*
+* @usage
+* Used when:
+* * onboarding does not collect waist/neck measurements
+* * quick body fat estimate is needed
+    */
+export function estimateBodyFatFromBMI({
+	gender,
+	height: heightInput,
+	weight: weightInput,
+	age: ageInput,
+}: {
+	gender: string
+	height: unknown
+	weight: unknown
+	age: unknown
+}): number | null {
+	// Convert inputs safely
+	const height = Number(heightInput)
+	const weight = Number(weightInput)
+	const age = Number(ageInput)
+
+	// Validate numeric inputs
+	if (!Number.isFinite(height) || !Number.isFinite(weight) || !Number.isFinite(age)) {
+		return null
+	}
+
+	// Reject zero or negative values
+	if (height <= 0 || weight <= 0 || age <= 0) {
+		return null
+	}
+
+	// Reject unrealistic biological inputs
+	// Height: 100–250 cm
+	// Weight: 25–400 kg
+	// Age: 10–120
+	if (height < 100 || height > 250) return null
+	if (weight < 25 || weight > 400) return null
+	if (age < 10 || age > 120) return null
+
+	// Normalize gender
+	const genderLower = gender?.toLowerCase()
+
+	let genderFactor: number
+
+	if (genderLower === 'male') {
+		genderFactor = 1
+	} else if (genderLower === 'female') {
+		genderFactor = 0
+	} else {
+		return null
+	}
+
+	// Convert height to meters
+	const heightMeters = height / 100
+
+	// Calculate BMI
+	const bmi = weight / (heightMeters * heightMeters)
+
+	if (!Number.isFinite(bmi) || bmi <= 0) {
+		return null
+	}
+
+	// Deurenberg formula
+	const bodyFat = 1.2 * bmi + 0.23 * age - 10.8 * genderFactor - 5.4
+
+	if (!Number.isFinite(bodyFat)) {
+		return null
+	}
+
+	// Clamp to realistic body fat ranges
+	if (genderLower === 'male') {
+		return Math.min(Math.max(bodyFat, 2), 60)
+	}
+
+	return Math.min(Math.max(bodyFat, 5), 65)
 }
 
 /**
@@ -612,9 +593,24 @@ export function calculateDailyTargets({
 		caloriesTarget = SAFE_MIN_CALORIES
 	}
 
+	// Calculate Fats and Carbs based on standard macros (25% Fats, remaining Carbs)
+	// 1g Fat = 9 kcal
+	// 1g Carb = 4 kcal
+	// 1g Protein = 4 kcal
+	const fatsTargetCalories = caloriesTarget * 0.25
+	const fatsTarget = Math.round(fatsTargetCalories / 9)
+	
+	const proteinTargetCalories = proteinTarget * 4
+	const remainingCaloriesForCarbs = caloriesTarget - fatsTargetCalories - proteinTargetCalories
+	
+	// Ensure carbs don't go negative on extreme cut logic, floor to 0
+	const carbsTarget = Math.max(0, Math.round(remainingCaloriesForCarbs / 4))
+
 	return {
 		caloriesTarget,
 		proteinTarget,
+		fatsTarget,
+		carbsTarget,
 		deficitOrSurplus,
 	}
 }

@@ -260,8 +260,6 @@ export const MeasurementsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 		if (notes) payload.notes = notes
 		if (progressPics.length > 0) payload.progressPics = progressPics
 
-		console.log('payload', payload)
-
 		const res = await addMeasurement(payload as any)
 
 		if (res?.success) {

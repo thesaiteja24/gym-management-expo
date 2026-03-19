@@ -349,6 +349,8 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 				firstName: useAuth.getState().user?.firstName || '',
 				lastName: useAuth.getState().user?.lastName || '',
 				profilePicUrl: useAuth.getState().user?.profilePicUrl || '',
+				isPro: false,
+				proSubscriptionType: null,
 			},
 		})
 

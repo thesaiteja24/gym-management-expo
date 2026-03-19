@@ -58,6 +58,9 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 		'sedentary' | 'lightlyActive' | 'moderatelyActive' | 'veryActive' | 'athlete'
 	>(currentActivityLevel)
 
+	const currentFitnessLevel = fitnessProfile?.fitnessLevel || 'beginner'
+	const [fitnessLevel, setFitnessLevel] = useState<'beginner' | 'intermediate' | 'advanced'>(currentFitnessLevel)
+
 	// Preferred weight unit for display
 	const weightUnit = user?.preferredWeightUnit ?? 'kg'
 
@@ -113,8 +116,9 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 			weightKg: Number(currentWeight),
 			goal: goalType,
 			weeklyRateKg: Number(finalRate),
+			fitnessLevel: fitnessProfile?.fitnessLevel,
 		})
-	}, [currentWeight, height, gender, user?.dateOfBirth, goalType, finalRate, activityLevel])
+	}, [currentWeight, height, gender, user?.dateOfBirth, goalType, finalRate, activityLevel, fitnessProfile?.fitnessLevel])
 
 	const handleSave = async () => {
 		Keyboard.dismiss()
@@ -123,13 +127,32 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 
 		setIsLoading(true)
 
+		let computedTargetBodyFat = null
+		let computedTargetWeight = null
+
+		if (targetType === 'weight') {
+			computedTargetWeight = Number(targetValue)
+			if (currentWeight != null && currentBodyFat != null) {
+				const currentLeanMass = currentWeight * (1 - currentBodyFat / 100)
+				computedTargetBodyFat = (1 - currentLeanMass / computedTargetWeight) * 100
+			}
+		} else {
+			computedTargetBodyFat = Number(targetValue)
+			if (currentWeight != null && currentBodyFat != null) {
+				const currentLeanMass = currentWeight * (1 - currentBodyFat / 100)
+				computedTargetWeight = currentLeanMass / (1 - computedTargetBodyFat / 100)
+			}
+		}
+
 		const payload = {
 			fitnessGoal: goalType,
 			targetType,
-			[targetType === 'weight' ? 'targetWeight' : 'targetBodyFat']: Number(targetValue),
+			targetWeight: computedTargetWeight ? Number(computedTargetWeight.toFixed(2)) : undefined,
+			targetBodyFat: computedTargetBodyFat ? Number(computedTargetBodyFat.toFixed(2)) : undefined,
 			weeklyWeightChange: Number(finalRate),
 			targetDate: finalTargetDate ? finalTargetDate.toISOString() : undefined,
 			activityLevel,
+			fitnessLevel,
 		}
 
 		console.log('SAVING GOAL PAYLOAD:', payload)
@@ -142,6 +165,8 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 			const nutritionPayload = {
 				caloriesTarget: computedTargets.caloriesTarget,
 				proteinTarget: computedTargets.proteinTarget,
+				fatsTarget: computedTargets.fatsTarget,
+				carbsTarget: computedTargets.carbsTarget,
 				calculatedTDEE: computedTargets.caloriesTarget - computedTargets.deficitOrSurplus,
 				deficitOrSurplus: computedTargets.deficitOrSurplus,
 				startDate: new Date().toISOString(),
@@ -251,6 +276,39 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 								<Text
 									className={`font-medium ${
 										activityLevel === level.value
+											? 'text-blue-600 dark:text-blue-400'
+											: 'text-neutral-700 dark:text-neutral-300'
+									}`}
+								>
+									{level.label}
+								</Text>
+							</Pressable>
+						))}
+					</ScrollView>
+				</View>
+
+				<View className="mb-6">
+					<Text className="mb-2 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+						Experience Level
+					</Text>
+					<ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+						{[
+							{ value: 'beginner', label: 'Beginner' },
+							{ value: 'intermediate', label: 'Intermediate' },
+							{ value: 'advanced', label: 'Advanced' },
+						].map(level => (
+							<Pressable
+								key={level.value}
+								onPress={() => setFitnessLevel(level.value as any)}
+								className={`mr-3 rounded-full border px-4 py-2 ${
+									fitnessLevel === level.value
+										? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30'
+										: 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900'
+								}`}
+							>
+								<Text
+									className={`font-medium ${
+										fitnessLevel === level.value
 											? 'text-blue-600 dark:text-blue-400'
 											: 'text-neutral-700 dark:text-neutral-300'
 									}`}

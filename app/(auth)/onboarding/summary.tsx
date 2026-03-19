@@ -1,7 +1,14 @@
 import { Button } from '@/components/ui/Button'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useOnboarding } from '@/stores/onboardingStore'
-import { calculateBMR, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
+import { 
+	calculateBMR, 
+	calculateDailyTargets, 
+	calculateTDEE,
+	calculateBMI,
+	classifyBMI,
+	estimateBodyFatFromBMI
+} from '@/utils/analytics'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useMemo } from 'react'
@@ -11,7 +18,7 @@ import Toast from 'react-native-toast-message'
 
 export default function OnboardingSummary() {
 	const colors = useThemeColor()
-	const { gender, weight, height, dateOfBirth, fitnessGoal, activityLevel, weeklyRate, weightUnit } = useOnboarding()
+	const { gender, weight, height, dateOfBirth, fitnessGoal, activityLevel, fitnessLevel, weeklyRate, weightUnit } = useOnboarding()
 
 	// Compute Derived Stats
 	const stats = useMemo(() => {
@@ -21,11 +28,16 @@ export default function OnboardingSummary() {
 
 		const bmr = calculateBMR(weight, height, age, gender)
 		const tdee = calculateTDEE(bmr, activityLevel)
+		
+		const bmi = calculateBMI(weight, height)
+		const bmiClass = bmi ? classifyBMI(bmi) : null
+		const estimatedBodyFat = estimateBodyFatFromBMI({ weight, height, age, gender })
 
 		const targets = calculateDailyTargets({
 			tdee,
 			weightKg: weight,
 			goal: fitnessGoal,
+			fitnessLevel,
 			weeklyRateKg: weeklyRate,
 		})
 
@@ -59,11 +71,15 @@ export default function OnboardingSummary() {
 
 		return {
 			...targets,
+			bmr,
+			bmi,
+			bmiClass,
+			estimatedBodyFat,
 			tdee,
 			riskBadge,
 			riskColor,
 		}
-	}, [gender, weight, height, dateOfBirth, activityLevel, fitnessGoal, weeklyRate])
+	}, [gender, weight, height, dateOfBirth, activityLevel, fitnessLevel, fitnessGoal, weeklyRate])
 
 	const handleFinish = () => {
 		if (!stats) {
@@ -118,29 +134,97 @@ export default function OnboardingSummary() {
 							</View>
 						</View>
 
+						{/* Body Profile */}
+						<View className="rounded-3xl border border-neutral-200 bg-neutral-50 p-5 dark:border-neutral-800 dark:bg-neutral-900">
+							<Text className="mb-4 text-xl font-bold text-black dark:text-white">Your Profile</Text>
+							
+							<View className="flex-row flex-wrap justify-between gap-y-4">
+								<View className="w-[48%]">
+									<Text className="text-sm text-neutral-500 dark:text-neutral-400">BMI</Text>
+									<View className="mt-1 flex-row items-end gap-2">
+										<Text className="text-2xl font-bold text-black dark:text-white">{stats.bmi ? stats.bmi.toFixed(1) : '--'}</Text>
+										{stats.bmiClass && (
+											<Text className="mb-1 text-xs font-semibold text-blue-600 dark:text-blue-400">{stats.bmiClass}</Text>
+										)}
+									</View>
+								</View>
+								
+								<View className="w-[48%]">
+									<Text className="text-sm text-neutral-500 dark:text-neutral-400">Est. Body Fat</Text>
+									<Text className="mt-1 text-2xl font-bold text-black dark:text-white">
+										{stats.estimatedBodyFat ? `${Math.round(stats.estimatedBodyFat)}%` : '--'}
+									</Text>
+								</View>
+								
+								<View className="w-[48%] mt-2">
+									<Text className="text-sm text-neutral-500 dark:text-neutral-400">Basal (BMR)</Text>
+									<Text className="mt-1 text-lg font-bold text-black dark:text-white">{stats.bmr} kcal</Text>
+								</View>
+								
+								<View className="w-[48%] mt-2">
+									<Text className="text-sm text-neutral-500 dark:text-neutral-400">Total (TDEE)</Text>
+									<Text className="mt-1 text-lg font-bold text-black dark:text-white">{stats.tdee} kcal</Text>
+								</View>
+							</View>
+						</View>
+
 						{/* Nutrition Targets */}
-						<View className="mt-4 flex-row gap-4">
+						<Text className="mt-2 text-xl font-bold text-black dark:text-white">Daily Targets</Text>
+						<View className="flex-row gap-4">
 							<View className="flex-1 rounded-3xl border border-neutral-200 bg-neutral-50 p-5 dark:border-neutral-800 dark:bg-neutral-900">
 								<MaterialCommunityIcons name="fire" size={24} color={colors.primary} className="mb-2" />
 								<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
 									{stats.caloriesTarget}
 								</Text>
 								<Text className="text-sm text-neutral-500 dark:text-neutral-400">
-									Daily Calories (kcal)
+									Calories (kcal)
 								</Text>
 							</View>
+							
 							<View className="flex-1 rounded-3xl border border-neutral-200 bg-neutral-50 p-5 dark:border-neutral-800 dark:bg-neutral-900">
 								<MaterialCommunityIcons
 									name="food-steak"
 									size={24}
-									color={colors.primary}
+									color="#E11D48"
 									className="mb-2"
 								/>
 								<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
 									{stats.proteinTarget}g
 								</Text>
 								<Text className="text-sm text-neutral-500 dark:text-neutral-400">
-									Daily Protein Target
+									Protein
+								</Text>
+							</View>
+						</View>
+						
+						<View className="flex-row gap-4">
+							<View className="flex-1 rounded-3xl border border-neutral-200 bg-neutral-50 p-5 dark:border-neutral-800 dark:bg-neutral-900">
+								<MaterialCommunityIcons
+									name="baguette"
+									size={24}
+									color="#D97706"
+									className="mb-2"
+								/>
+								<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
+									{stats.carbsTarget}g
+								</Text>
+								<Text className="text-sm text-neutral-500 dark:text-neutral-400">
+									Carbs
+								</Text>
+							</View>
+							
+							<View className="flex-1 rounded-3xl border border-neutral-200 bg-neutral-50 p-5 dark:border-neutral-800 dark:bg-neutral-900">
+								<MaterialCommunityIcons
+									name="peanut"
+									size={24}
+									color="#059669"
+									className="mb-2"
+								/>
+								<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
+									{stats.fatsTarget}g
+								</Text>
+								<Text className="text-sm text-neutral-500 dark:text-neutral-400">
+									Fats
 								</Text>
 							</View>
 						</View>

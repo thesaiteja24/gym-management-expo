@@ -221,6 +221,8 @@ export default function Login() {
 				const nutritionPayload = {
 					caloriesTarget: computedTargets.caloriesTarget,
 					proteinTarget: computedTargets.proteinTarget,
+					fatsTarget: computedTargets.fatsTarget,
+					carbsTarget: computedTargets.carbsTarget,
 					calculatedTDEE: computedTargets.caloriesTarget - computedTargets.deficitOrSurplus,
 					deficitOrSurplus: computedTargets.deficitOrSurplus,
 					startDate: new Date().toISOString(),

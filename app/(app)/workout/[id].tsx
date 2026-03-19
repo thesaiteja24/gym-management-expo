@@ -13,6 +13,7 @@ import { BackHandler, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { ReadOnlyExerciseRow } from '@/components/workout/ReadOnlyExerciseRow'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/stores/authStore'
@@ -210,9 +211,14 @@ export default function WorkoutDetails() {
 							}}
 							contentFit="cover"
 						/>
-						<Text className="text-base text-black dark:text-white">
-							{workout?.user?.firstName} {workout?.user?.lastName}
-						</Text>
+						<View className="flex-row items-center gap-2">
+							<Text className="text-base text-black dark:text-white">
+								{workout?.user?.firstName} {workout?.user?.lastName}
+							</Text>
+							{workout?.user?.isPro && (
+								<VerifiedBadge tier={workout.user.proSubscriptionType} size={20} />
+							)}
+						</View>
 					</View>
 					<View className="flex-row items-center justify-between">
 						<Text className="flex-1 text-xl font-bold text-black dark:text-white">

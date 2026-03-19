@@ -1,10 +1,19 @@
 import { zustandStorage } from '@/lib/storage'
 import { enqueueAnalyticsUpdate } from '@/lib/sync/queue/analyticsQueue'
 import { AnalyticsPayload } from '@/lib/sync/types'
-import { getMeasurementsService } from '@/services/analyticsService'
+import { getMeasurementsService, getUserAnalyticsService } from '@/services/analyticsService'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAuth } from './authStore'
+
+export interface AnalyticsMetrics {
+	streakDays: number
+	workoutsThisWeek: number
+	daysSinceLastWorkout: number
+	weeklyVolume: number
+	lastWeekVolume: number
+	workoutDates: Set<string>
+}
 
 export type MeasurementType = {
 	id?: string
@@ -37,6 +46,7 @@ interface AnalyticsState {
 	latestMeasurements: Partial<LatestMeasurements>
 	dailyWeightChange: { diff: number; isPositive: boolean } | null
 	nutritionPlan: any
+	userAnalytics: AnalyticsMetrics | null
 	isLoading: boolean
 	error: string | null
 
@@ -50,6 +60,7 @@ interface AnalyticsState {
 	getMeasurements: () => Promise<any>
 	getFitnessProfile: () => Promise<any>
 	getNutritionPlan: () => Promise<any>
+	getUserAnalytics: () => Promise<any>
 	reconcileMeasurement: (queuePayloadDate: string, realBackendMeasurement: MeasurementType) => void
 	updateFitnessProfile: (data: Partial<AnalyticsPayload>) => Promise<any>
 	addMeasurement: (data: MeasurementType) => Promise<any>
@@ -63,6 +74,7 @@ const initialState = {
 	latestMeasurements: {},
 	dailyWeightChange: null,
 	nutritionPlan: null,
+	userAnalytics: null,
 	isLoading: false,
 	error: null,
 }
@@ -157,6 +169,39 @@ export const useAnalytics = create<AnalyticsState>()(
 
 					set({
 						nutritionPlan: res.data ?? null,
+						isLoading: false,
+					})
+					return { success: true }
+				} catch (err) {
+					set({ error: 'Unexpected error occurred', isLoading: false })
+					return { success: false, error: err }
+				}
+			},
+
+			getUserAnalytics: async () => {
+				set({ isLoading: true, error: null })
+				try {
+					const currentUser = useAuth.getState().user
+					const userId = currentUser?.userId
+					if (!userId) {
+						set({ error: 'User not logged in', isLoading: false })
+						return { success: false, error: 'User not logged in' }
+					}
+
+					const res = await getUserAnalyticsService(userId)
+					if (!res.success) {
+						set({ error: res.message || 'Failed to fetch analytics', isLoading: false })
+						return { success: false, error: res.message }
+					}
+
+					const analyticsData = res.data
+					// Convert workoutDates array to Set
+					if (analyticsData && Array.isArray(analyticsData.workoutDates)) {
+						analyticsData.workoutDates = new Set(analyticsData.workoutDates)
+					}
+
+					set({
+						userAnalytics: analyticsData ?? null,
 						isLoading: false,
 					})
 					return { success: true }
@@ -324,14 +369,6 @@ export const useAnalytics = create<AnalyticsState>()(
 						dailyWeightChange,
 					}
 				})
-
-				console.log(
-					'Add Measurement payload',
-					JSON.stringify({
-						...payload,
-						progressPics: payload.progressPics ? `${payload.progressPics.length} images` : 'none',
-					})
-				)
 
 				try {
 					enqueueAnalyticsUpdate('ADD_MEASUREMENT', payload, userId)

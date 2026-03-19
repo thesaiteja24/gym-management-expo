@@ -1,9 +1,10 @@
-import { convertWeight, displayWeight } from '@/utils/converter'
+import { convertWeight } from '@/utils/converter'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
+import { useCountUp } from '@/hooks/useCountUp'
 
 interface NutritionTargetsCardProps {
 	nutritionPlan: any
@@ -25,6 +26,19 @@ export function NutritionTargetsCard({
 	const isDark = colors.isDark
 
 	const isIncomplete = !nutritionPlan || !nutritionPlan.caloriesTarget || !nutritionPlan.proteinTarget
+
+	const calDisplay = useCountUp(nutritionPlan?.caloriesTarget ?? null, 0, 300)
+	const proteinDisplay = useCountUp(nutritionPlan?.proteinTarget ?? null, 0, 400)
+	const carbsDisplay = useCountUp(nutritionPlan?.carbsTarget ?? null, 0, 500)
+	const fatsDisplay = useCountUp(nutritionPlan?.fatsTarget ?? null, 0, 600)
+
+	const targetWeightVal = Number(fitnessProfile?.targetWeight) > 0 
+		? convertWeight(Number(fitnessProfile!.targetWeight), { from: 'kg', to: preferredWeightUnit as any }) 
+		: null
+	const targetWeightDisplay = useCountUp(targetWeightVal, 1, 700)
+
+	const targetBodyFatVal = Number(fitnessProfile?.targetBodyFat) > 0 ? Number(fitnessProfile!.targetBodyFat) : null
+	const targetBodyFatDisplay = useCountUp(targetBodyFatVal, 1, 800)
 
 	return (
 		<Animated.View entering={FadeInDown.delay(180).duration(500)} style={styles.container}>
@@ -58,51 +72,63 @@ export function NutritionTargetsCard({
 						)}
 					</View>
 				</View>
-				<View className="flex-row gap-4">
-					<View className="flex-1 items-center rounded-2xl bg-neutral-50 px-2 py-4 dark:bg-neutral-800/50">
-						<MaterialCommunityIcons name="fire" size={24} color={colors.primary} className="mb-2" />
-						<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
-							{nutritionPlan?.caloriesTarget ?? '--'}
-						</Text>
-						<Text className="text-xs text-neutral-500 dark:text-neutral-400">Calories/Day</Text>
-					</View>
-					<View className="flex-1 items-center rounded-2xl bg-neutral-50 px-2 py-4 dark:bg-neutral-800/50">
-						<MaterialCommunityIcons name="food-steak" size={24} color={colors.primary} className="mb-2" />
-						<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
-							{nutritionPlan?.proteinTarget != null ? `${nutritionPlan.proteinTarget}g` : '--'}
-						</Text>
-						<Text className="text-xs text-neutral-500 dark:text-neutral-400">Protein/Day</Text>
+				<View className="flex-row flex-wrap gap-4">
+					<View className="w-full flex-row justify-evenly gap-4">
+						<View>
+							<MaterialCommunityIcons name="fire" size={24} color={colors.primary} className="mb-2" />
+							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
+								{calDisplay}
+							</Text>
+							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Calories</Text>
+						</View>
+
+						<View>
+							<MaterialCommunityIcons name="food-steak" size={24} color="#E11D48" className="mb-2" />
+							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
+								{proteinDisplay}
+							</Text>
+							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Protein</Text>
+						</View>
+
+						<View>
+							<MaterialCommunityIcons name="baguette" size={24} color="#D97706" className="mb-2" />
+							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
+								{carbsDisplay}
+							</Text>
+							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Carbs</Text>
+						</View>
+
+						<View>
+							<MaterialCommunityIcons name="peanut" size={24} color="#059669" className="mb-2" />
+							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
+								{fatsDisplay}
+							</Text>
+							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Fats</Text>
+						</View>
 					</View>
 				</View>
 
 				{/* Detailed Stats Sub-Block */}
 				<View className="mt-4 border-t border-neutral-100 pt-4 dark:border-neutral-800/80">
-					<Text className="mb-3 text-sm font-semibold text-neutral-500 dark:text-neutral-400">
-						Biological Details
-					</Text>
-					<View className="flex-row flex-wrap gap-y-3">
-						<View className="w-1/2 pr-2">
-							<Text className="mb-1 text-xs text-neutral-500 dark:text-neutral-400">Est. TDEE</Text>
+					<View className="w-full flex-row justify-evenly gap-4">
+						<View className="flex-col items-center justify-center gap-2">
+							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Target Weight</Text>
 							<Text className="font-semibold text-black dark:text-white">
-								{nutritionPlan?.calculatedTDEE ? `${nutritionPlan.calculatedTDEE} kcal` : '--'}
-							</Text>
-						</View>
-						<View className="w-1/2 pl-2">
-							<Text className="mb-1 text-xs text-neutral-500 dark:text-neutral-400">Est. BMR</Text>
-							<Text className="font-semibold text-black dark:text-white">
-								{bmr ? `${bmr} kcal` : '--'}
-							</Text>
-						</View>
-						<View className="w-1/2 pr-2">
-							<Text className="mb-1 text-xs text-neutral-500 dark:text-neutral-400">Target Weight</Text>
-							<Text className="font-semibold text-black dark:text-white">
-								{fitnessProfile?.targetWeight
-									? `${displayWeight(convertWeight(fitnessProfile.targetWeight, { from: 'kg', to: preferredWeightUnit as any }))} ${preferredWeightUnit.toUpperCase()}`
+								{targetWeightVal != null
+									? `${targetWeightDisplay} ${preferredWeightUnit.toUpperCase()}`
 									: '--'}
 							</Text>
 						</View>
-						<View className="w-1/2 pl-2">
-							<Text className="mb-1 text-xs text-neutral-500 dark:text-neutral-400">Target Date</Text>
+
+						<View className="flex-col items-center justify-center gap-2">
+							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Target Body Fat</Text>
+							<Text className="font-semibold text-black dark:text-white">
+								{targetBodyFatVal != null ? `${targetBodyFatDisplay}%` : '--'}
+							</Text>
+						</View>
+
+						<View className="flex-col items-center justify-center gap-2">
+							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Target Date</Text>
 							<Text className="font-semibold text-black dark:text-white">
 								{fitnessProfile?.targetDate
 									? new Date(fitnessProfile.targetDate).toLocaleDateString(undefined, {
