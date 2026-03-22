@@ -117,7 +117,7 @@ const WeightChart = () => {
 		<SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['bottom']}>
 			<ScrollView className="flex-1">
 				{/* Header Stats */}
-				<View className="p-6">
+				<View className="p-6 pt-0">
 					<View className="flex-row items-center justify-between">
 						<View>
 							<Text className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Average</Text>
