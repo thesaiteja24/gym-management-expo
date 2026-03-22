@@ -181,7 +181,7 @@ export default function HeatMap({
 			Array.from({ length: numWeeks }, (__, wi) => cols[wi]?.[dow] ?? null)
 		)
 		return transposed
-	}, [days, layout, numDays, numRows])
+	}, [days, layout, numDays, numRows, fillLayout])
 
 	// ── Render ────────────────────────────────────────────────────────────────
 

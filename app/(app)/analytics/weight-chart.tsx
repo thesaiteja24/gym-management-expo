@@ -107,7 +107,7 @@ const WeightChart = () => {
 				},
 			],
 		}
-	}, [filteredData, preferredUnit, selectedRange, stats.diff, fitnessGoal])
+	}, [filteredData, preferredUnit, selectedRange])
 
 	const ranges: TimeRange[] = ['1W', '1M', '3M', '6M', '1Y', 'All']
 

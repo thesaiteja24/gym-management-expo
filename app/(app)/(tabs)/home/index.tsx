@@ -29,7 +29,6 @@ export default function HomeScreen() {
 	const getMeasurements = useAnalytics(s => s.getMeasurements)
 	const getUserAnalytics = useAnalytics(s => s.getUserAnalytics)
 	const userAnalytics = useAnalytics(s => s.userAnalytics)
-	const measurements = useAnalytics(s => s.measurements)
 	const latestMeasurements = useAnalytics(state => state.latestMeasurements)
 
 	const { habits, getHabits, getHabitLogs, preSeedDefaultHabits } = useHabitStore()
@@ -49,12 +48,6 @@ export default function HomeScreen() {
 	const neckCm = Number(latestMeasurements?.neck) // cm
 	const waistCm = Number(latestMeasurements?.waist) // cm
 	const hipsCm = Number(latestMeasurements?.hips) // cm
-
-	// ───────────────── UI State ─────────────────
-	const weighIn = measurements.map(m => ({
-		date: m.date,
-		count: Number(m.weight) > 0 ? 1 : 0,
-	}))
 
 	const { width } = useWindowDimensions()
 
@@ -113,55 +106,6 @@ export default function HomeScreen() {
 			},
 		}
 	}, [streakDays, workoutsThisWeek, daysSinceLastWorkout, weeklyVolume, lastWeekVolume, workoutDates])
-
-	const weighInSet = useMemo(() => {
-		const set = new Set<string>()
-
-		for (const m of measurements) {
-			const d = new Date(m.date)
-			const key =
-				d.getFullYear() +
-				'-' +
-				String(d.getMonth() + 1).padStart(2, '0') +
-				'-' +
-				String(d.getDate()).padStart(2, '0')
-
-			if (Number(m.weight) > 0) {
-				set.add(key)
-			}
-		}
-
-		return set
-	}, [measurements])
-
-	const weighInThisWeek = useMemo(() => {
-		const today = new Date()
-
-		// Start of week (Sunday)
-		const startOfWeek = new Date(today)
-		startOfWeek.setDate(today.getDate() - today.getDay())
-		startOfWeek.setHours(0, 0, 0, 0)
-
-		let count = 0
-
-		for (let i = 0; i <= today.getDay(); i++) {
-			const d = new Date(startOfWeek)
-			d.setDate(startOfWeek.getDate() + i)
-
-			const key =
-				d.getFullYear() +
-				'-' +
-				String(d.getMonth() + 1).padStart(2, '0') +
-				'-' +
-				String(d.getDate()).padStart(2, '0')
-
-			if (weighInSet.has(key)) {
-				count++
-			}
-		}
-
-		return count
-	}, [weighInSet])
 
 	const composition = useMemo(() => {
 		if (!weightKg || !heightCm || !gender) return null
