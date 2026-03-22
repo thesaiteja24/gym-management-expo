@@ -2,6 +2,7 @@ import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth } from '@/stores/authStore'
 import { convertWeight } from '@/utils/converter'
+import { router } from 'expo-router'
 import React, { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { LineChart } from 'react-native-chart-kit'
@@ -92,7 +93,9 @@ export function WeightMetricCard({ width }: WeightMetricCardProps) {
 	return (
 		<Animated.View entering={FadeInDown.duration(500)}>
 			<Pressable
-				onPress={() => {}}
+				onPress={() => {
+					router.push('/analytics/weight-chart')
+				}}
 				style={[
 					styles.card,
 					{
@@ -106,8 +109,12 @@ export function WeightMetricCard({ width }: WeightMetricCardProps) {
 				{/* Header (fixed) */}
 				<View style={styles.header}>
 					<View>
-						<Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">Scale Weight</Text>
-						<Text className="text-sm text-neutral-500 dark:text-neutral-400">Last {last7.length} Entries</Text>
+						<Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">
+							Scale Weight
+						</Text>
+						<Text className="text-sm text-neutral-500 dark:text-neutral-400">
+							Last {last7.length} Entries
+						</Text>
 					</View>
 				</View>
 

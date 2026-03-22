@@ -39,6 +39,18 @@ export default function ExercisesLayout() {
 					} as any
 				}
 			/>
+			<Stack.Screen
+				name="weight-chart"
+				options={
+					{
+						title: 'Weight Trend',
+						leftIcon: 'chevron-back-outline',
+						onLeftPress: () => {
+							router.back()
+						},
+					} as any
+				}
+			/>
 		</Stack>
 	)
 }

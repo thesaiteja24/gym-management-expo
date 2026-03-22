@@ -91,21 +91,6 @@ export default function ShimmerAnalyticsScreen() {
 				</View>
 			</View>
 
-			{/* MIDDLE CARDS */}
-			<View className="flex-row gap-4 px-4">
-				<View className="flex-1 items-center gap-2 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-					<SkeletonBlock width="70%" height={22} />
-					<SkeletonBlock width="90%" height={14} />
-					<SkeletonBlock width="80%" height={14} />
-				</View>
-
-				<View className="flex-1 items-start gap-2 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-					<SkeletonBlock width="75%" height={22} />
-					<SkeletonBlock width="55%" height={24} />
-					<SkeletonBlock width={70} height={20} rounded={10} />
-				</View>
-			</View>
-
 			{/* NUTRITION CARD */}
 			<View className="p-4">
 				<View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">

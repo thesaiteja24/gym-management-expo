@@ -190,7 +190,7 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
 				{habit.footerType === 'weeklyCount' && (
 					<View className="mt-1 flex flex-row items-center justify-between">
 						<Text className="text-sm font-semibold text-black dark:text-white">
-							{thisWeekCount} this week
+							{thisWeekCount} time(s) this week
 						</Text>
 					</View>
 				)}
