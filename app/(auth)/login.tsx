@@ -11,7 +11,7 @@ import { useMuscleGroup } from '@/stores/muscleGroupStore'
 import { useOnboarding } from '@/stores/onboardingStore'
 import { useUser } from '@/stores/userStore'
 import { calculateBMR, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
-import { GoogleSignin, isErrorWithCode, statusCodes } from '@react-native-google-signin/google-signin'
+import { GoogleSignin } from '@react-native-google-signin/google-signin'
 import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import {
@@ -70,62 +70,24 @@ export default function Login() {
 	const onGoogleButtonPress = async () => {
 		try {
 			await GoogleSignin.hasPlayServices()
+			await GoogleSignin.signOut()
 			const userInfo = await GoogleSignin.signIn()
 			const idToken = userInfo.data?.idToken
 
 			if (idToken) {
-				googleLogin(idToken, true, privacyPolicyVersion)
-					.then((res: any) => {
-						if (res.success) {
-							handlePostLogin(res.data?.user)
-						} else {
-							Toast.show({
-								type: 'error',
-								text1: res.error?.message || 'Google Login Failed',
-							})
-						}
-					})
-					.catch((err: any) => {
+				googleLogin(idToken, true, privacyPolicyVersion).then((res: any) => {
+					if (res.success) {
+						handlePostLogin(res.data?.user)
+					} else {
 						Toast.show({
 							type: 'error',
-							text1: err.message || 'Google Login Error',
+							text1: res.error?.message || 'Google Login Failed',
 						})
-					})
-			} else {
-				Toast.show({
-					type: 'error',
-					text1: 'Login Failed',
+					}
 				})
 			}
 		} catch (error: any) {
-			if (isErrorWithCode(error)) {
-				switch (error.code) {
-					case statusCodes.SIGN_IN_CANCELLED:
-						// user cancelled the login flow
-						break
-					case statusCodes.IN_PROGRESS:
-						// operation (eg. sign in) already in progress
-						break
-					case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-						Toast.show({
-							type: 'error',
-							text1: 'Play services not available or outdated',
-						})
-						break
-					default:
-						Toast.show({
-							type: 'error',
-							text1: 'Google Sign-In Error',
-							text2: error.message,
-						})
-				}
-			} else {
-				Toast.show({
-					type: 'error',
-					text1: 'Login Error',
-					text2: error.message,
-				})
-			}
+			console.log(error)
 		}
 	}
 

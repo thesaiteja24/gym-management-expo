@@ -61,6 +61,19 @@ export default function WorkoutLayout() {
 			/>
 
 			<Stack.Screen
+				name="history"
+				options={
+					{
+						title: 'Workout History',
+						leftIcon: 'chevron-back-outline',
+						onLeftPress: () => {
+							router.back()
+						},
+					} as any
+				}
+			/>
+
+			<Stack.Screen
 				name="save"
 				options={
 					{

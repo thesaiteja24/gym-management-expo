@@ -155,6 +155,22 @@ export default function TemplateEditor() {
 						type: 'success',
 						text1: isEditing ? 'Template updated' : 'Template created',
 					})
+					
+					if (params.context === 'program' && params.weekIndex !== undefined && params.dayIndex !== undefined) {
+						const { useProgram } = require('@/stores/programStore')
+						const draftProgram = useProgram.getState().draftProgram
+						if (draftProgram && draftProgram.programWeeks) {
+							const wIndex = Number(params.weekIndex)
+							const dIndex = Number(params.dayIndex)
+							const newWeeks = [...draftProgram.programWeeks]
+							if (newWeeks[wIndex]?.days[dIndex]) {
+								// When creating offline first, the client ID is returned/used as the ID
+								newWeeks[wIndex].days[dIndex].templateId = res.id || templateToSave.clientId
+								useProgram.getState().updateDraftProgram({ programWeeks: newWeeks })
+							}
+						}
+					}
+
 					discardDraftTemplate()
 					router.back()
 				} else {
