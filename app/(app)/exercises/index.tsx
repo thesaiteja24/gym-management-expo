@@ -46,6 +46,7 @@ function Chip({ label, onRemove }: ChipProps) {
 
 export default function ExercisesScreen() {
 	const navigation = useNavigation()
+	const isDark = useColorScheme() === 'dark'
 	const lineHeight = Platform.OS === 'ios' ? 0 : 20
 	const role = useAuth(s => s.user?.role)
 	const safeAreaInsets = useSafeAreaInsets()
@@ -229,15 +230,27 @@ export default function ExercisesScreen() {
 	return (
 		<View style={{ paddingBottom: safeAreaInsets.bottom }} className="flex-1 bg-white px-4 pt-4 dark:bg-black">
 			{/* Search */}
-			<View className="mb-4">
+			<View className="relative mb-4 justify-center">
 				<TextInput
 					value={query}
 					onChangeText={setQuery}
 					placeholder="Search exercises, equipment, muscles…"
 					placeholderTextColor="#9CA3AF"
-					className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-lg text-black dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+					className="rounded-xl border border-neutral-200 bg-white pl-4 pr-10 py-3 text-lg text-black dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
 					style={{ lineHeight: lineHeight }}
 				/>
+				{query.length > 0 && (
+					<TouchableOpacity
+						onPress={() => {
+							setQuery('')
+							Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+						}}
+						className="absolute right-3"
+						hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+					>
+						<Ionicons name="close-circle" size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
+					</TouchableOpacity>
+				)}
 			</View>
 
 			{/* Filters */}
