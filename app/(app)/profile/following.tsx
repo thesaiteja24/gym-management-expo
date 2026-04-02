@@ -79,7 +79,6 @@ export default function Following() {
 			const res = await getUserFollowing(targetUserId)
 			if (res.success) {
 				setUsers(res.data)
-				console.log(res.data)
 			}
 		} finally {
 			setLoading(false)

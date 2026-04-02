@@ -74,7 +74,7 @@ export default function EditableAvatar({
 				onChange?.(newUri)
 			}
 		} catch (err) {
-			console.log('Image picking error:', err)
+			console.error('Image picking error:', err)
 		} finally {
 			setLoading(false)
 		}

@@ -87,7 +87,7 @@ export default function Login() {
 				})
 			}
 		} catch (error: any) {
-			console.log(error)
+			console.error(error)
 		}
 	}
 
@@ -362,7 +362,6 @@ export default function Login() {
 				onAgree={version => {
 					setPrivacyAccepted(true)
 					setPrivacyPolicyVersion(version || '1.0')
-					console.log('Accepted policy version:', version)
 				}}
 			/>
 		</SafeAreaView>

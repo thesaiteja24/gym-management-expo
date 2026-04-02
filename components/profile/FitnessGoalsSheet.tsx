@@ -118,7 +118,16 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 			weeklyRateKg: Number(finalRate),
 			fitnessLevel: fitnessProfile?.fitnessLevel,
 		})
-	}, [currentWeight, height, gender, user?.dateOfBirth, goalType, finalRate, activityLevel, fitnessProfile?.fitnessLevel])
+	}, [
+		currentWeight,
+		height,
+		gender,
+		user?.dateOfBirth,
+		goalType,
+		finalRate,
+		activityLevel,
+		fitnessProfile?.fitnessLevel,
+	])
 
 	const handleSave = async () => {
 		Keyboard.dismiss()
@@ -154,8 +163,6 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 			activityLevel,
 			fitnessLevel,
 		}
-
-		console.log('SAVING GOAL PAYLOAD:', payload)
 
 		const { updateFitnessProfile, updateNutritionPlan } = useAnalytics.getState()
 

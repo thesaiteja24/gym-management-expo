@@ -117,7 +117,6 @@ export function useCoach(): CoachVoice {
 
 	// Function to clear the recorded audio
 	const startPlaying = async (uri: string) => {
-		console.log('Playing audio from:', uri)
 		audioPlayer.replace(uri)
 		audioPlayer.seekTo(0)
 		audioPlayer.play()
@@ -156,7 +155,7 @@ export function useCoach(): CoachVoice {
 
 			await startConversation()
 		} catch (err) {
-			console.log('init conversation failed', err)
+			console.error('init conversation failed', err)
 		}
 	}
 
@@ -191,7 +190,7 @@ export function useCoach(): CoachVoice {
 			const audioUri = await downloadSpeechService(ttsId)
 			await startPlaying(audioUri)
 		} catch (e) {
-			console.log(e)
+			console.error(e)
 			setIsThinking(false)
 		}
 	}
@@ -280,7 +279,7 @@ export function useCoach(): CoachVoice {
 			setIsThinking(false)
 			setCoachState(CoachState.idle)
 		} catch (error) {
-			console.log('askQuestion error:', error)
+			console.error('askQuestion error:', error)
 
 			setMessages(prev =>
 				prev.map(msg =>
@@ -313,21 +312,9 @@ export function useCoach(): CoachVoice {
 				setRecordedAudioUri(null)
 			}
 		} catch (error) {
-			console.log('Error deleting conversation', error)
+			console.error('Error deleting conversation', error)
 		}
 	}
-
-	// useEffect(() => {
-	//   console.log(recorderState.metering);
-	// }, [recorderState.metering]);
-
-	// useEffect(() => {
-	//   console.log("isPlaying", isPlaying);
-	// }, [isPlaying, audioPlayer.playing]);
-
-	// useEffect(() => {
-	//   console.log("messages", messages);
-	// }, [messages]);
 
 	return {
 		conversationId,

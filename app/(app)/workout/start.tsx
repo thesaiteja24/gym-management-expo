@@ -263,12 +263,6 @@ export default function StartWorkout() {
 		}
 	}, [])
 
-	// Debugging
-	// const renderCount = React.useRef(0);
-	// renderCount.current += 1;
-
-	// console.log("WorkoutStart render:", renderCount.current);
-
 	/* UI Rendering */
 	if (!workout) {
 		return <View className="flex-1 bg-white dark:bg-black" />

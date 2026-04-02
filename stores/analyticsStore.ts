@@ -2,10 +2,10 @@ import { zustandStorage } from '@/lib/storage'
 import { enqueueAnalyticsUpdate } from '@/lib/sync/queue/analyticsQueue'
 import { AnalyticsPayload } from '@/lib/sync/types'
 import { getMeasurementsService, getUserAnalyticsService } from '@/services/analyticsService'
-import { useHabitStore } from './habitStore'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAuth } from './authStore'
+import { useHabitStore } from './habitStore'
 
 export interface AnalyticsMetrics {
 	streakDays: number
@@ -280,8 +280,6 @@ export const useAnalytics = create<AnalyticsState>()(
 					...data,
 				}
 
-				console.log('Update Fitness Profile payload', JSON.stringify(payload))
-
 				try {
 					enqueueAnalyticsUpdate('UPDATE_FITNESS_PROFILE', payload, userId)
 					return { success: true }
@@ -406,8 +404,6 @@ export const useAnalytics = create<AnalyticsState>()(
 					userId,
 					...data,
 				}
-
-				console.log('Update Nutrition Plan payload', JSON.stringify(payload))
 
 				try {
 					enqueueAnalyticsUpdate('UPDATE_NUTRITION_PLAN', payload, userId)
