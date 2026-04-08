@@ -1,4 +1,5 @@
 import { TemplatePayload, UserPayload } from '@/lib/sync/types'
+import { Program } from '@/stores/programStore'
 import { DraftTemplate } from '@/stores/template/types'
 import { WorkoutLog } from '@/stores/workoutStore'
 
@@ -161,4 +162,24 @@ export function serializeUserUpdateForApi(user: UserPayload): UserPayload {
 	}
 
 	return payload as UserPayload
+}
+
+export function serializeProgramForApi(program: Program) {
+	return {
+		clientId: program.clientId,
+		title: program.title,
+		description: program.description || null,
+		experienceLevel: program.experienceLevel,
+		durationOptions: program.durationOptions,
+		weeks: program.weeks.map(week => ({
+			name: week.name,
+			weekIndex: week.weekIndex,
+			days: week.days.map(day => ({
+				name: day.name,
+				dayIndex: day.dayIndex,
+				isRestDay: day.isRestDay,
+				templateId: day.isRestDay ? null : day.templateId,
+			})),
+		})),
+	}
 }

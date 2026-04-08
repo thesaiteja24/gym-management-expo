@@ -28,6 +28,9 @@ export function reconcileTemplateId(clientId: string, dbId: string): void {
 	})
 
 	useTemplate.setState({ templates: updatedTemplates as any })
+
+	// Update references in other stores
+	updateTemplateReferencesInPrograms(clientId, dbId)
 }
 
 /**
@@ -54,6 +57,11 @@ export function reconcileTemplate(clientId: string, backendTemplate: any): void 
 	})
 
 	useTemplate.setState({ templates: updatedTemplates as any })
+
+	// Update references in other stores
+	if (backendTemplate.id) {
+		updateTemplateReferencesInPrograms(clientId, backendTemplate.id)
+	}
 }
 
 /**
@@ -94,4 +102,37 @@ export function markTemplateSynced(clientId: string): void {
  */
 export function markTemplateFailed(clientId: string): void {
 	updateTemplateSyncStatus(clientId, 'failed')
+}
+
+/**
+ * Internal HELPER: Update any references to a template's clientId with the new dbId in the program draft.
+ */
+function updateTemplateReferencesInPrograms(clientId: string, dbId: string): void {
+	try {
+		const { useProgram } = require('@/stores/programStore')
+		const programState = useProgram.getState()
+		const draftProgram = programState.draftProgram
+
+		if (draftProgram && draftProgram.weeks) {
+			let updated = false
+			const updatedWeeks = draftProgram.weeks.map((week: any) => {
+				const updatedDays = week.days.map((day: any) => {
+					if (!day.isRestDay && day.templateId === clientId) {
+						updated = true
+						return { ...day, templateId: dbId }
+					}
+					return day
+				})
+				return { ...week, days: updatedDays }
+			})
+
+			if (updated) {
+				programState.updateDraftProgram({ weeks: updatedWeeks })
+				console.info(`[Sync] Updated template references in draft program: ${clientId} -> ${dbId}`)
+			}
+		}
+	} catch (e) {
+		// Program store might not be available or initialized, ignore
+		// console.error('[Sync] Failed to update template references in programs', e)
+	}
 }
