@@ -5,7 +5,7 @@ import ExerciseGroupModal, { ExerciseGroupModalHandle } from '@/components/worko
 import ExerciseRow from '@/components/workout/ExerciseRow'
 import { FREE_TIER_LIMITS } from '@/constants/limits'
 import { useAuth } from '@/stores/authStore'
-import { useExercise } from '@/stores/exerciseStore'
+import { useExercises } from '@/hooks/queries/useExercises'
 import { useSubscriptionStore } from '@/stores/subscriptionStore'
 import { DraftTemplate, WorkoutTemplate, useTemplate } from '@/stores/templateStore'
 import { ExerciseGroupType } from '@/stores/workoutStore'
@@ -24,7 +24,7 @@ export default function TemplateEditor() {
 	const navigation = useNavigation()
 	const params = useLocalSearchParams()
 	const preferredWeightUnit = useAuth(s => s.user?.preferredWeightUnit) ?? 'kg'
-	const { exerciseList } = useExercise()
+	const { data: exerciseList = [] } = useExercises()
 
 	const isEditing = params.mode === 'edit'
 

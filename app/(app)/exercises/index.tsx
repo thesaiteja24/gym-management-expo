@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/Button'
 import { DeleteConfirmModal, DeleteConfirmModalHandle } from '@/components/ui/DeleteConfirmModal'
 
 import { ROLES as roles } from '@/constants/roles'
+import { useEquipment } from '@/hooks/queries/useEquipment'
+import { Exercise, useDeleteExercise, useExercises } from '@/hooks/queries/useExercises'
+import { useMuscleGroups } from '@/hooks/queries/useMuscleGroups'
 import { useAuth } from '@/stores/authStore'
-import { useEquipment } from '@/stores/equipmentStore'
-import { Exercise, useExercise } from '@/stores/exerciseStore'
-import { useMuscleGroup } from '@/stores/muscleGroupStore'
+
 import { useTemplate } from '@/stores/templateStore'
 import { useWorkout } from '@/stores/workoutStore'
 import { Ionicons } from '@expo/vector-icons'
@@ -69,21 +70,15 @@ export default function ExercisesScreen() {
 	const removeExerciseFromDraft = useTemplate(s => s.removeExerciseFromDraft)
 	const replaceDraftExercise = useTemplate(s => s.replaceDraftExercise)
 
-	// Equipment Store
-	const equipmentList = useEquipment(s => s.equipmentList)
-	const equipmentLoading = useEquipment(s => s.equipmentLoading)
-	const getAllEquipment = useEquipment(s => s.getAllEquipment)
+	// Equipment (TanStack Query)
+	const { data: equipmentList = [], isLoading: equipmentLoading } = useEquipment()
 
-	// Muscle Group Store
-	const muscleGroupList = useMuscleGroup(s => s.muscleGroupList)
-	const muscleGroupLoading = useMuscleGroup(s => s.muscleGroupLoading)
-	const getAllMuscleGroups = useMuscleGroup(s => s.getAllMuscleGroups)
+	// Muscle Groups (TanStack Query)
+	const { data: muscleGroupList = [], isLoading: muscleGroupLoading } = useMuscleGroups()
 
-	// Exercise Store
-	const exerciseList = useExercise(s => s.exerciseList)
-	const exerciseLoading = useExercise(s => s.exerciseLoading)
-	const getAllExercises = useExercise(s => s.getAllExercises)
-	const deleteExercise = useExercise(s => s.deleteExercise)
+	// Exercises (TanStack Query)
+	const { data: exerciseList = [], isLoading: exerciseLoading } = useExercises()
+	const deleteExerciseMutation = useDeleteExercise()
 
 	const initialSelectedIds = useMemo(() => {
 		if (context === 'template') {
@@ -115,21 +110,6 @@ export default function ExercisesScreen() {
 		id: string
 		title: string
 	} | null>(null)
-
-	/* ───────────────── Load data ───────────────── */
-
-	useEffect(() => {
-		if (!equipmentList.length) getAllEquipment()
-		if (!muscleGroupList.length) getAllMuscleGroups()
-		if (!exerciseList.length) getAllExercises()
-	}, [
-		exerciseList.length,
-		muscleGroupList.length,
-		equipmentList.length,
-		getAllEquipment,
-		getAllExercises,
-		getAllMuscleGroups,
-	])
 
 	useEffect(() => {
 		if (role === roles.systemAdmin) {
@@ -421,8 +401,7 @@ export default function ExercisesScreen() {
 				onCancel={() => setDeleteExerciseId(null)}
 				onConfirm={async () => {
 					if (!deleteExerciseId) return
-					const res = await deleteExercise(deleteExerciseId.id)
-					await getAllExercises()
+					const res = await deleteExerciseMutation.mutateAsync(deleteExerciseId.id)
 					setDeleteExerciseId(null)
 
 					Toast.show({

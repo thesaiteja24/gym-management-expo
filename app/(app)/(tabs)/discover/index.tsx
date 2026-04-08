@@ -1,7 +1,7 @@
 import ShimmerDiscoverScreen from '@/components/discover/ShimmerDiscoverScreen'
 import WorkoutCard from '@/components/home/WorkoutCard'
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { useExercise } from '@/stores/exerciseStore'
+import { useExercises } from '@/hooks/queries/useExercises'
 import { useWorkout } from '@/stores/workoutStore'
 
 import { MaterialCommunityIcons } from '@expo/vector-icons'
@@ -21,8 +21,7 @@ export default function DiscoverScreen() {
 	const discoverPage = useWorkout(s => s.discoverPage)
 	const discoverHasMore = useWorkout(s => s.discoverHasMore)
 
-	const exerciseList = useExercise(s => s.exerciseList)
-	const getAllExercises = useExercise(s => s.getAllExercises)
+	const { data: exerciseList = [] } = useExercises()
 
 	const [refreshing, setRefreshing] = useState(false)
 
@@ -35,15 +34,15 @@ export default function DiscoverScreen() {
 		return map
 	}, [exerciseList])
 
-	// ───────────────── Refresh ─────────────────
 	const onRefresh = useCallback(async () => {
 		try {
 			setRefreshing(true)
-			await Promise.all([getDiscoverWorkouts(1), getAllExercises()])
+			await getDiscoverWorkouts(1)
+			// exercises managed by TanStack Query automatically
 		} finally {
 			setRefreshing(false)
 		}
-	}, [getDiscoverWorkouts, getAllExercises])
+	}, [getDiscoverWorkouts])
 
 	const fetchNextPage = useCallback(() => {
 		if (!discoverLoading && discoverHasMore && discoverPage) {
@@ -51,12 +50,10 @@ export default function DiscoverScreen() {
 		}
 	}, [discoverLoading, discoverHasMore, discoverPage, getDiscoverWorkouts])
 
-	// ───────────────── Initial Load ─────────────────
-	// 1) Load Discovery Config & Feed data on mount
 	useEffect(() => {
-		getAllExercises()
 		getDiscoverWorkouts(1)
-	}, [getAllExercises, getDiscoverWorkouts])
+		// exercises handled by TanStack Query automatically on mount
+	}, [getDiscoverWorkouts])
 
 	// ───────────────── Header animation ─────────────────
 	const headerOpacity = useSharedValue(0)

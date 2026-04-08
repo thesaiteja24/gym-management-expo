@@ -1,5 +1,5 @@
 import EditableAvatar from '@/components/EditableAvatar'
-import { useMuscleGroup } from '@/stores/muscleGroupStore'
+import { useCreateMuscleGroup } from '@/hooks/queries/useMuscleGroups'
 import { prepareImageForUpload } from '@/utils/prepareImageForUpload'
 import { useNavigation } from 'expo-router'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -11,9 +11,7 @@ export default function CreateMuscleGroup() {
 	const navigation = useNavigation()
 	const isDarkMode = useColorScheme() === 'dark'
 
-	const createMuscleGroup = useMuscleGroup(s => s.createMuscleGroup)
-	const refreshMuscleGroups = useMuscleGroup(s => s.getAllMuscleGroups)
-	const muscleGroupLoading = useMuscleGroup(s => s.muscleGroupLoading)
+	const createMuscleGroupMutation = useCreateMuscleGroup()
 
 	const [title, setTitle] = useState('')
 	const [thumbnailUri, setThumbnailUri] = useState<string | null>(null)
@@ -22,11 +20,8 @@ export default function CreateMuscleGroup() {
 	const lineHeight = Platform.OS === 'ios' ? 0 : 30
 
 	const onSave = useCallback(async () => {
-		if (!title.trim() || muscleGroupLoading) {
-			Toast.show({
-				type: 'info',
-				text1: 'Title is required',
-			})
+		if (!title.trim() || createMuscleGroupMutation.isPending) {
+			Toast.show({ type: 'info', text1: 'Title is required' })
 			return
 		}
 
@@ -40,39 +35,28 @@ export default function CreateMuscleGroup() {
 				setUploading(true)
 
 				const prepared = await prepareImageForUpload(
-					{
-						uri: thumbnailUri,
-						fileName: 'muscle-group.jpg',
-						type: 'image/jpeg',
-					},
+					{ uri: thumbnailUri, fileName: 'muscle-group.jpg', type: 'image/jpeg' },
 					'equipment'
 				)
 
 				formData.append('image', prepared as any)
 			}
 
-			const res = await createMuscleGroup(formData)
+			const res = await createMuscleGroupMutation.mutateAsync(formData)
 
 			if (res?.success) {
-				Toast.show({
-					type: 'success',
-					text1: 'Muscle group created successfully',
-				})
-
-				await refreshMuscleGroups()
+				Toast.show({ type: 'success', text1: 'Muscle group created successfully' })
+				// cache is automatically invalidated by useCreateMuscleGroup
 				navigation.goBack()
 			} else {
 				throw new Error()
 			}
 		} catch {
-			Toast.show({
-				type: 'error',
-				text1: 'Failed to create Muscle Group',
-			})
+			Toast.show({ type: 'error', text1: 'Failed to create Muscle Group' })
 		} finally {
 			setUploading(false)
 		}
-	}, [title, thumbnailUri, muscleGroupLoading, createMuscleGroup, refreshMuscleGroups, navigation])
+	}, [title, thumbnailUri, createMuscleGroupMutation, navigation])
 
 	useEffect(() => {
 		;(navigation as any).setOptions({
@@ -81,12 +65,12 @@ export default function CreateMuscleGroup() {
 				{
 					name: 'checkmark-done',
 					onPress: onSave,
-					disabled: muscleGroupLoading || !title.trim(),
+					disabled: createMuscleGroupMutation.isPending || !title.trim(),
 					color: 'green',
 				},
 			],
 		})
-	}, [navigation, onSave, muscleGroupLoading, title])
+	}, [navigation, onSave, createMuscleGroupMutation.isPending, title])
 
 	return (
 		<View className="flex-1 bg-white p-4 dark:bg-black" style={{ paddingBottom: useSafeAreaInsets().bottom }}>
@@ -95,7 +79,7 @@ export default function CreateMuscleGroup() {
 				<EditableAvatar
 					uri={thumbnailUri}
 					size={132}
-					editable={!muscleGroupLoading}
+					editable={!createMuscleGroupMutation.isPending}
 					uploading={uploading}
 					onChange={uri => uri && setThumbnailUri(uri)}
 					shape="circle"
@@ -109,7 +93,7 @@ export default function CreateMuscleGroup() {
 				<TextInput
 					value={title}
 					onChangeText={setTitle}
-					editable={!muscleGroupLoading}
+					editable={!createMuscleGroupMutation.isPending}
 					placeholder="e.g. Chest"
 					className="text-lg text-blue-500"
 					placeholderTextColor={isDarkMode ? '#a3a3a3' : '#737373'}

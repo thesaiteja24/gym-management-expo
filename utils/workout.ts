@@ -1,4 +1,4 @@
-import { ExerciseType } from '@/stores/exerciseStore'
+import { ExerciseType } from '@/hooks/queries/useExercises'
 import { WorkoutHistoryItem, WorkoutLog, WorkoutLogSet, WorkoutPruneReport } from '@/stores/workoutStore'
 
 /* ───────────────── Metrics ───────────────── */

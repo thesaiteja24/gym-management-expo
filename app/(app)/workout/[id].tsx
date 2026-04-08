@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/Button'
 import { DeleteConfirmModal, DeleteConfirmModalHandle } from '@/components/ui/DeleteConfirmModal'
-import { ExerciseType, useExercise } from '@/stores/exerciseStore'
+import { ExerciseType, useExercises } from '@/hooks/queries/useExercises'
 import { TemplateExercise, TemplateExerciseGroup } from '@/stores/template/types'
 import { useTemplate } from '@/stores/templateStore'
 import { useWorkout, WorkoutHistoryExercise, WorkoutHistorySet, WorkoutLogGroup } from '@/stores/workoutStore'
@@ -33,7 +33,7 @@ export default function WorkoutDetails() {
 
 	/* Store Related State */
 	const { getWorkoutById, deleteWorkout } = useWorkout()
-	const { exerciseList } = useExercise()
+	const { data: exerciseList = [] } = useExercises()
 	const currentUserId = useAuth(state => state.user?.userId)
 
 	/* Derived State */

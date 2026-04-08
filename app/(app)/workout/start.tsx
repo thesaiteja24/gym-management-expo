@@ -4,8 +4,8 @@ import ExerciseGroupModal, { ExerciseGroupModalHandle } from '@/components/worko
 import ExerciseRow from '@/components/workout/ExerciseRow'
 import RestTimerSnack from '@/components/workout/RestTimerSnack'
 
+import { Exercise, ExerciseType, useExercises } from '@/hooks/queries/useExercises'
 import { useAuth } from '@/stores/authStore'
-import { Exercise, ExerciseType, useExercise } from '@/stores/exerciseStore'
 import { ExerciseGroupType, useWorkout, WorkoutLogGroup } from '@/stores/workoutStore'
 
 import { convertWeight } from '@/utils/converter'
@@ -81,8 +81,8 @@ export default function StartWorkout() {
 	const stopRestTimer = useWorkout(s => s.stopRestTimer)
 	const adjustRestTimer = useWorkout(s => s.adjustRestTimer)
 
-	// Exercise Store
-	const exerciseList = useExercise(s => s.exerciseList)
+	// Exercises (TanStack Query)
+	const { data: exerciseList = [] } = useExercises()
 
 	// Auth Store
 	const preferredWeightUnit = useAuth(s => s.user?.preferredWeightUnit) ?? 'kg'

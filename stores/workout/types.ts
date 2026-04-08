@@ -1,6 +1,6 @@
+import { ExerciseType } from '@/hooks/queries/useExercises'
 import { SyncStatus } from '@/lib/sync/types'
 import { WorkoutTemplate } from '@/stores/template/types'
-import { ExerciseType } from '../exerciseStore'
 
 /* ───────────────── Types ───────────────── */
 

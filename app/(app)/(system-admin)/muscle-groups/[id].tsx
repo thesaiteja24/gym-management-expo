@@ -1,6 +1,6 @@
 import EditableAvatar from '@/components/EditableAvatar'
 import { DeleteConfirmModal, DeleteConfirmModalHandle } from '@/components/ui/DeleteConfirmModal'
-import { useMuscleGroup } from '@/stores/muscleGroupStore'
+import { useDeleteMuscleGroup, useMuscleGroupById, useUpdateMuscleGroup } from '@/hooks/queries/useMuscleGroups'
 import { prepareImageForUpload } from '@/utils/prepareImageForUpload'
 import { useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -16,13 +16,9 @@ export default function EditMuscleGroup() {
 
 	const normalize = (v: string | null | undefined) => v ?? ''
 
-	const {
-		getMuscleGroupById,
-		getAllMuscleGroups: refreshMuscleGroups,
-		updateMuscleGroup,
-		muscleGroupLoading,
-		deleteMuscleGroup,
-	} = useMuscleGroup()
+	const { data: muscleGroupData, isLoading: loadingData } = useMuscleGroupById(id)
+	const updateMuscleGroupMutation = useUpdateMuscleGroup()
+	const deleteMuscleGroupMutation = useDeleteMuscleGroup()
 
 	const deleteConfirmModalRef = React.useRef<DeleteConfirmModalHandle>(null)
 
@@ -34,37 +30,25 @@ export default function EditMuscleGroup() {
 	const lineHeight = Platform.OS === 'ios' ? 0 : 30
 
 	// snapshot for dirty check
-	const [original, setOriginal] = useState({
-		title: '',
-		thumbnailUrl: '',
-	})
+	const [original, setOriginal] = useState({ title: '', thumbnailUrl: '' })
 
-	// load muscle group
+	// Populate from query data
 	useEffect(() => {
-		if (!id) return
+		if (muscleGroupData) {
+			setTitle(muscleGroupData.title)
+			setThumbnailUri(muscleGroupData.thumbnailUrl)
+			setOriginal({ title: muscleGroupData.title, thumbnailUrl: muscleGroupData.thumbnailUrl })
+		}
+	}, [muscleGroupData])
 
-		getMuscleGroupById(id).then(res => {
-			const data = res.data
-
-			setTitle(data.title)
-			setThumbnailUri(data.thumbnailUrl)
-
-			// ✅ initialize snapshot
-			setOriginal({
-				title: data.title,
-				thumbnailUrl: data.thumbnailUrl,
-			})
-		})
-	}, [id, getMuscleGroupById])
-
-	// dirty checking (same pattern as EditProfile)
+	// dirty checking
 	const isDirty = useMemo(() => {
 		return title !== original.title || normalize(thumbnailUri) !== original.thumbnailUrl
 	}, [title, thumbnailUri, original])
 
 	// save handler
 	const onSave = useCallback(async () => {
-		if (!isDirty || muscleGroupLoading) return
+		if (!isDirty || updateMuscleGroupMutation.isPending) return
 
 		Keyboard.dismiss()
 
@@ -76,50 +60,30 @@ export default function EditMuscleGroup() {
 				setUploading(true)
 
 				const prepared = await prepareImageForUpload(
-					{
-						uri: thumbnailUri,
-						fileName: 'muscle-group.jpg',
-						type: 'image/jpeg',
-					},
+					{ uri: thumbnailUri, fileName: 'muscle-group.jpg', type: 'image/jpeg' },
 					'equipment'
 				)
 
 				formData.append('image', prepared as any)
 			}
 
-			const response = await updateMuscleGroup(id, formData)
-
-			console.warn('Update muscle group response:', response)
+			const response = await updateMuscleGroupMutation.mutateAsync({ id, data: formData })
 
 			if (response?.success) {
-				Toast.show({
-					type: 'success',
-					text1: 'Muscle group updated',
-				})
-
-				await refreshMuscleGroups()
-
-				// ✅ reset snapshot AFTER save
-				setOriginal({
-					title: response.data.title,
-					thumbnailUrl: response.data.thumbnailUrl,
-				})
-
-				// keep editable state in sync
+				Toast.show({ type: 'success', text1: 'Muscle group updated' })
+				// cache is automatically invalidated by useUpdateMuscleGroup
+				setOriginal({ title: response.data.title, thumbnailUrl: response.data.thumbnailUrl })
 				setTitle(response.data.title)
 				setThumbnailUri(response.data.thumbnailUrl)
 			} else {
 				throw new Error()
 			}
 		} catch {
-			Toast.show({
-				type: 'error',
-				text1: 'Muscle group update failed',
-			})
+			Toast.show({ type: 'error', text1: 'Muscle group update failed' })
 		} finally {
 			setUploading(false)
 		}
-	}, [id, title, thumbnailUri, isDirty, muscleGroupLoading, original, updateMuscleGroup, refreshMuscleGroups])
+	}, [id, title, thumbnailUri, isDirty, original, updateMuscleGroupMutation])
 
 	// header save button
 	useEffect(() => {
@@ -128,7 +92,7 @@ export default function EditMuscleGroup() {
 				{
 					name: 'checkmark-done',
 					onPress: onSave,
-					disabled: !isDirty || muscleGroupLoading,
+					disabled: !isDirty || updateMuscleGroupMutation.isPending,
 					color: 'green',
 				},
 				{
@@ -140,9 +104,9 @@ export default function EditMuscleGroup() {
 				},
 			],
 		})
-	}, [navigation, isDirty, onSave, muscleGroupLoading])
+	}, [navigation, isDirty, onSave, updateMuscleGroupMutation.isPending])
 
-	if (muscleGroupLoading) {
+	if (loadingData) {
 		return (
 			<View className="flex-1 items-center justify-center bg-white dark:bg-black">
 				<ActivityIndicator animating size={'large'} />
@@ -157,7 +121,7 @@ export default function EditMuscleGroup() {
 				<EditableAvatar
 					uri={thumbnailUri}
 					size={132}
-					editable={!muscleGroupLoading}
+					editable={!updateMuscleGroupMutation.isPending}
 					uploading={uploading}
 					onChange={uri => uri && setThumbnailUri(uri)}
 					shape="circle"
@@ -170,7 +134,7 @@ export default function EditMuscleGroup() {
 				<TextInput
 					value={title}
 					onChangeText={setTitle}
-					editable={!muscleGroupLoading}
+					editable={!updateMuscleGroupMutation.isPending}
 					placeholder="e.g. Abdominals"
 					className="text-lg text-blue-500"
 					placeholderTextColor={isDarkMode ? '#a3a3a3' : '#737373'}
@@ -185,21 +149,14 @@ export default function EditMuscleGroup() {
 				description="This muscle group will be permanently removed."
 				onCancel={() => {}}
 				onConfirm={async () => {
-					const res = await deleteMuscleGroup(id)
+					const res = await deleteMuscleGroupMutation.mutateAsync(id)
 
 					if (res?.success) {
-						Toast.show({
-							type: 'success',
-							text1: 'Muscle group deleted',
-						})
-
-						await refreshMuscleGroups()
+						Toast.show({ type: 'success', text1: 'Muscle group deleted' })
+						// cache is automatically invalidated by useDeleteMuscleGroup
 						navigation.goBack()
 					} else {
-						Toast.show({
-							type: 'error',
-							text1: 'Failed to delete muscle group',
-						})
+						Toast.show({ type: 'error', text1: 'Failed to delete muscle group' })
 					}
 				}}
 			/>

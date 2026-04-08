@@ -2,8 +2,8 @@ import ExerciseCharts from '@/components/exercises/ExerciseCharts'
 import { CustomModal, ModalHandle } from '@/components/ui/CustomModal'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useThemeColor } from '@/hooks/useThemeColor'
+import { useExercises } from '@/hooks/queries/useExercises'
 import { useAuth } from '@/stores/authStore'
-import { useExercise } from '@/stores/exerciseStore'
 import { convertWeight } from '@/utils/converter'
 import { EvilIcons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useGlobalSearchParams } from 'expo-router'
@@ -25,7 +25,7 @@ export default function ViewExerciseScreen() {
 	const { id } = useGlobalSearchParams<{ id: string }>()
 	const color = useThemeColor()
 
-	const exerciseList = useExercise(s => s.exerciseList)
+	const { data: exerciseList = [] } = useExercises()
 	const preferredWeightUnit = useAuth(s => s.user?.preferredWeightUnit) ?? 'kg'
 	const { getExerciseAnalytics } = useAnalytics()
 	const metrics = getExerciseAnalytics(id)

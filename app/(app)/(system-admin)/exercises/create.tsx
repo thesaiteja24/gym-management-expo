@@ -1,8 +1,9 @@
 import EquipmentModal, { EquipmentModalHandle } from '@/components/exercises/EquipmentModal'
 import MuscleGroupModal, { MuscleGroupModalHandle } from '@/components/exercises/MuscleGroupModal'
-import { useEquipment } from '@/stores/equipmentStore'
-import { ExerciseType, useExercise } from '@/stores/exerciseStore'
-import { useMuscleGroup } from '@/stores/muscleGroupStore'
+import { useEquipment } from '@/hooks/queries/useEquipment'
+import { ExerciseType, useCreateExercise } from '@/hooks/queries/useExercises'
+import { useMuscleGroups } from '@/hooks/queries/useMuscleGroups'
+
 import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
 import { useNavigation } from 'expo-router'
@@ -16,12 +17,9 @@ export default function CreateExercise() {
 	const isDarkMode = useColorScheme() === 'dark'
 	const placeholderColor = isDarkMode ? '#a3a3a3' : '#737373'
 
-	const createExercise = useExercise(s => s.createExercise)
-	const refreshExercises = useExercise(s => s.getAllExercises)
-	const exerciseLoading = useExercise(s => s.exerciseLoading)
-
-	const equipmentList = useEquipment(s => s.equipmentList)
-	const muscleGroupList = useMuscleGroup(s => s.muscleGroupList)
+	const createExerciseMutation = useCreateExercise()
+	const { data: equipmentList = [] } = useEquipment()
+	const { data: muscleGroupList = [] } = useMuscleGroups()
 
 	const [title, setTitle] = useState('')
 	const [instructions, setInstructions] = useState('')
@@ -38,7 +36,7 @@ export default function CreateExercise() {
 	const lineHeight = Platform.OS === 'ios' ? 0 : 30
 
 	const onSave = useCallback(async () => {
-		if (!title.trim() || !equipmentId || !primaryMuscleGroupId || exerciseLoading) {
+		if (!title.trim() || !equipmentId || !primaryMuscleGroupId || createExerciseMutation.isPending) {
 			Toast.show({
 				type: 'info',
 				text1: 'Title, Equipment, and Primary Muscle Group are required',
@@ -65,15 +63,14 @@ export default function CreateExercise() {
 				} as any)
 			}
 
-			const res = await createExercise(formData)
+			const res = await createExerciseMutation.mutateAsync(formData)
 
 			if (res?.success) {
 				Toast.show({
 					type: 'success',
 					text1: 'Exercise created successfully',
 				})
-
-				await refreshExercises()
+				// Query is automatically invalidated by useCreateExercise
 				navigation.goBack()
 			} else {
 				throw new Error()
@@ -93,9 +90,7 @@ export default function CreateExercise() {
 		equipmentId,
 		primaryMuscleGroupId,
 		videoUri,
-		exerciseLoading,
-		createExercise,
-		refreshExercises,
+		createExerciseMutation,
 		navigation,
 	])
 
@@ -106,12 +101,17 @@ export default function CreateExercise() {
 				{
 					name: 'checkmark-done',
 					onPress: onSave,
-					disabled: exerciseLoading || !title.trim() || !equipmentId || !primaryMuscleGroupId || !videoUri,
+					disabled:
+						createExerciseMutation.isPending ||
+						!title.trim() ||
+						!equipmentId ||
+						!primaryMuscleGroupId ||
+						!videoUri,
 					color: 'green',
 				},
 			],
 		})
-	}, [navigation, onSave, exerciseLoading, title, equipmentId, primaryMuscleGroupId, videoUri])
+	}, [navigation, onSave, createExerciseMutation.isPending, title, equipmentId, primaryMuscleGroupId, videoUri])
 
 	const handleSelectVideo = async () => {
 		const result = await ImagePicker.launchImageLibraryAsync({
@@ -132,9 +132,13 @@ export default function CreateExercise() {
 				<View className="mb-6 items-center">
 					<TouchableOpacity
 						onPress={handleSelectVideo}
-						disabled={exerciseLoading || uploading}
+						disabled={createExerciseMutation.isPending || uploading}
 						className="items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-6 py-8 dark:border-neutral-700 dark:bg-neutral-900"
-						style={{ height: 160, width: '100%', opacity: exerciseLoading || uploading ? 0.5 : 1 }}
+						style={{
+							height: 160,
+							width: '100%',
+							opacity: createExerciseMutation.isPending || uploading ? 0.5 : 1,
+						}}
 					>
 						{videoUri ? (
 							<>
@@ -164,7 +168,7 @@ export default function CreateExercise() {
 					<TextInput
 						value={title}
 						onChangeText={setTitle}
-						editable={!exerciseLoading}
+						editable={!createExerciseMutation.isPending}
 						placeholder="e.g. Bench Press"
 						className="flex-1 text-lg text-blue-500"
 						placeholderTextColor={placeholderColor}
@@ -178,7 +182,7 @@ export default function CreateExercise() {
 					<TextInput
 						value={instructions}
 						onChangeText={setInstructions}
-						editable={!exerciseLoading}
+						editable={!createExerciseMutation.isPending}
 						placeholder="Describe how to perform the exercise..."
 						className="min-h-[80px] rounded-xl border border-neutral-200 p-3 text-base text-black dark:border-neutral-800 dark:text-white"
 						placeholderTextColor={placeholderColor}

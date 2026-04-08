@@ -2,10 +2,8 @@ import { Button } from '@/components/ui/Button'
 import DateTimePicker from '@/components/ui/DateTimePicker'
 import VisibilitySelectionModal, { VisibilitySelectionModalHandle } from '@/components/workout/VisibilitySelectionModal'
 
+import { ExerciseType, useExercises } from '@/hooks/queries/useExercises'
 import { useAuth } from '@/stores/authStore'
-import { useEquipment } from '@/stores/equipmentStore'
-import { ExerciseType, useExercise } from '@/stores/exerciseStore'
-import { useMuscleGroup } from '@/stores/muscleGroupStore'
 import { useWorkout, VisibilityType, WorkoutLog } from '@/stores/workoutStore'
 
 import { convertWeight } from '@/utils/converter'
@@ -39,9 +37,8 @@ export default function SaveWorkout() {
 	const saveWorkout = useWorkout(s => s.saveWorkout)
 	const discardWorkout = useWorkout(s => s.discardWorkout)
 
-	const { exerciseList, getAllExercises } = useExercise()
-	const { equipmentList, getAllEquipment } = useEquipment()
-	const { muscleGroupList, getAllMuscleGroups } = useMuscleGroup()
+	// Reference data (TanStack Query)
+	const { data: exerciseList = [] } = useExercises()
 
 	const preferredWeightUnit = useAuth(s => s.user?.preferredWeightUnit) ?? 'kg'
 
@@ -146,25 +143,6 @@ export default function SaveWorkout() {
 			updateWorkout({ endTime: new Date() })
 		}
 	}, [workout, updateWorkout])
-
-	useEffect(() => {
-		if (!exerciseList.length) {
-			getAllExercises()
-		}
-		if (!muscleGroupList.length) {
-			getAllMuscleGroups()
-		}
-		if (!equipmentList.length) {
-			getAllEquipment()
-		}
-	}, [
-		getAllExercises,
-		getAllMuscleGroups,
-		getAllEquipment,
-		exerciseList.length,
-		muscleGroupList.length,
-		equipmentList.length,
-	])
 
 	/* UI Rendering */
 	if (!workout) {

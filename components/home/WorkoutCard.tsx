@@ -1,7 +1,7 @@
+import { ExerciseType } from '@/hooks/queries/useExercises'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/stores/authStore'
 import { useEngagementStore } from '@/stores/engagementStore'
-import { ExerciseType } from '@/stores/exerciseStore'
 import { WorkoutHistoryItem } from '@/stores/workoutStore'
 import { formatDurationFromDates, formatTimeAgo } from '@/utils/time'
 import { calculateWorkoutMetrics } from '@/utils/workout'

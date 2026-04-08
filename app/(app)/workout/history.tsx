@@ -1,7 +1,7 @@
 import WorkoutCard from '@/components/home/WorkoutCard'
+import { ExerciseType, useExercises } from '@/hooks/queries/useExercises'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/stores/authStore'
-import { ExerciseType, useExercise } from '@/stores/exerciseStore'
 import { useUser } from '@/stores/userStore'
 import { useWorkout, WorkoutHistoryItem } from '@/stores/workoutStore'
 import { router } from 'expo-router'
@@ -142,12 +142,10 @@ const History = () => {
 	const workoutPage = useWorkout(s => s.workoutPage)
 	const workoutHasMore = useWorkout(s => s.workoutHasMore)
 
-	const exerciseList = useExercise(s => s.exerciseList)
-	const getAllExercises = useExercise(s => s.getAllExercises)
+	const { data: exerciseList = [] } = useExercises()
 
 	const [refreshing, setRefreshing] = useState(false)
 
-	// Derived state
 	const hasExercises = exerciseList.length > 0
 	const showShimmer = refreshing || !hasExercises || (workoutLoading && workoutHistory.length === 0)
 
@@ -166,18 +164,15 @@ const History = () => {
 		return [{ type: 'section-header' }, ...workoutHistory.map(w => ({ type: 'workout' as const, workout: w }))]
 	}, [workoutHistory, showShimmer])
 
-	// Handlers
 	const onRefresh = useCallback(async () => {
 		try {
 			setRefreshing(true)
-			await Promise.all([getAllWorkouts(1)])
-			if (!exerciseList.length) {
-				await getAllExercises()
-			}
+			await getAllWorkouts(1)
+			// exercises are managed by TanStack Query, no manual call needed
 		} finally {
 			setRefreshing(false)
 		}
-	}, [getAllWorkouts, getAllExercises, exerciseList.length])
+	}, [getAllWorkouts])
 
 	const fetchNextPage = useCallback(() => {
 		if (!workoutLoading && workoutHasMore && workoutPage) {
@@ -186,8 +181,8 @@ const History = () => {
 	}, [workoutLoading, workoutHasMore, workoutPage, getAllWorkouts])
 
 	useEffect(() => {
-		Promise.all([getAllWorkouts(1), getAllExercises(), getUserData(user?.userId ?? '')])
-	}, [getAllWorkouts, getAllExercises, getUserData, user?.userId])
+		Promise.all([getAllWorkouts(1), getUserData(user?.userId ?? '')])
+	}, [getAllWorkouts, getUserData, user?.userId])
 
 	useEffect(() => {
 		const onBackPress = () => {

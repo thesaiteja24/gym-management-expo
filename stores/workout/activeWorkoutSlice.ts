@@ -1,3 +1,5 @@
+import { queryClient } from '@/lib/queryClient'
+import { queryKeys } from '@/lib/queryKeys'
 import { enqueueWorkoutCreate, enqueueWorkoutUpdate } from '@/lib/sync/queue'
 import { SyncStatus } from '@/lib/sync/types'
 import { WorkoutTemplate } from '@/stores/template/types'
@@ -6,7 +8,8 @@ import { finalizeSetTimer, isValidCompletedSet } from '@/utils/workout'
 import * as Crypto from 'expo-crypto'
 import { StateCreator } from 'zustand'
 import { useAuth } from '../authStore'
-import { ExerciseType, useExercise } from '../exerciseStore'
+
+import { Exercise, ExerciseType } from '@/hooks/queries/useExercises'
 import { useHabitStore } from '../habitStore'
 import {
 	ExerciseGroupType,
@@ -119,8 +122,8 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 		const workout = get().workout
 		if (!workout) return null
 
-		const exerciseList = useExercise.getState().exerciseList
-		const exerciseMap = new Map(exerciseList.map(e => [e.id, e.exerciseType]))
+		const exerciseList = queryClient.getQueryData<Exercise[]>(queryKeys.exercises.all) ?? []
+		const exerciseMap = new Map(exerciseList.map(e => [e.id, e.exerciseType as ExerciseType]))
 
 		let droppedSets = 0
 		let droppedExercises = 0
@@ -230,8 +233,8 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 	 * It is called in StartWorkoutFromTemplate() in templateStore
 	 */
 	loadTemplate: (template: WorkoutTemplate) => {
-		const exerciseStore = useExercise.getState()
-		const exerciseMap = new Map(exerciseStore.exerciseList.map(e => [e.id, e]))
+		const exerciseList = queryClient.getQueryData<Exercise[]>(queryKeys.exercises.all) ?? []
+		const exerciseMap = new Map(exerciseList.map(e => [e.id, e.exerciseType as ExerciseType]))
 
 		// Validate and filter exercises that still exist
 		const validExercises = template.exercises.filter(ex => {
@@ -324,7 +327,9 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 				exerciseId: ex.exerciseId,
 				exerciseIndex: ex.exerciseIndex,
 				exerciseGroupId: ex.groupId ?? null,
-				exercise: (useExercise.getState().exerciseList.find(e => e.id === ex.exerciseId) || {
+				exercise: ((queryClient.getQueryData<Exercise[]>(queryKeys.exercises.all) ?? []).find(
+					e => e.id === ex.exerciseId
+				) || {
 					id: ex.exerciseId,
 					title: 'Unknown Exercise',
 					thumbnailUrl: '',

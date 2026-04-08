@@ -1,5 +1,5 @@
 import EditableAvatar from '@/components/EditableAvatar'
-import { useEquipment } from '@/stores/equipmentStore'
+import { useCreateEquipment } from '@/hooks/queries/useEquipment'
 import { prepareImageForUpload } from '@/utils/prepareImageForUpload'
 import { useNavigation } from 'expo-router'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -11,9 +11,7 @@ export default function CreateEquipment() {
 	const navigation = useNavigation()
 	const isDarkMode = useColorScheme() === 'dark'
 
-	const createEquipment = useEquipment(s => s.createEquipment)
-	const refreshEquipment = useEquipment(s => s.getAllEquipment)
-	const equipmentLoading = useEquipment(s => s.equipmentLoading)
+	const createEquipmentMutation = useCreateEquipment()
 
 	const [title, setTitle] = useState('')
 	const [thumbnailUri, setThumbnailUri] = useState<string | null>(null)
@@ -22,7 +20,7 @@ export default function CreateEquipment() {
 	const lineHeight = Platform.OS === 'ios' ? 0 : 30
 
 	const onSave = useCallback(async () => {
-		if (!title.trim() || equipmentLoading) {
+		if (!title.trim() || createEquipmentMutation.isPending) {
 			Toast.show({
 				type: 'info',
 				text1: 'Title is required',
@@ -51,15 +49,14 @@ export default function CreateEquipment() {
 				formData.append('image', prepared as any)
 			}
 
-			const res = await createEquipment(formData)
+			const res = await createEquipmentMutation.mutateAsync(formData)
 
 			if (res?.success) {
 				Toast.show({
 					type: 'success',
 					text1: 'Equipment created successfully',
 				})
-
-				await refreshEquipment()
+				// Query automatically invalidated by useCreateEquipment
 				navigation.goBack()
 			} else {
 				throw new Error()
@@ -72,7 +69,7 @@ export default function CreateEquipment() {
 		} finally {
 			setUploading(false)
 		}
-	}, [title, thumbnailUri, equipmentLoading, createEquipment, refreshEquipment, navigation])
+	}, [title, thumbnailUri, createEquipmentMutation, navigation])
 
 	useEffect(() => {
 		;(navigation as any).setOptions({
@@ -81,12 +78,12 @@ export default function CreateEquipment() {
 				{
 					name: 'checkmark-done',
 					onPress: onSave,
-					disabled: equipmentLoading || !title.trim(),
+					disabled: createEquipmentMutation.isPending || !title.trim(),
 					color: 'green',
 				},
 			],
 		})
-	}, [navigation, onSave, equipmentLoading, title])
+	}, [navigation, onSave, createEquipmentMutation.isPending, title])
 
 	return (
 		<View className="flex-1 bg-white p-4 dark:bg-black" style={{ paddingBottom: useSafeAreaInsets().bottom }}>
@@ -95,7 +92,7 @@ export default function CreateEquipment() {
 				<EditableAvatar
 					uri={thumbnailUri}
 					size={132}
-					editable={!equipmentLoading}
+					editable={!createEquipmentMutation.isPending}
 					uploading={uploading}
 					onChange={uri => uri && setThumbnailUri(uri)}
 					shape="circle"
@@ -109,7 +106,7 @@ export default function CreateEquipment() {
 				<TextInput
 					value={title}
 					onChangeText={setTitle}
-					editable={!equipmentLoading}
+					editable={!createEquipmentMutation.isPending}
 					placeholder="e.g. Barbell"
 					className="text-lg text-blue-500"
 					placeholderTextColor={isDarkMode ? '#a3a3a3' : '#737373'}

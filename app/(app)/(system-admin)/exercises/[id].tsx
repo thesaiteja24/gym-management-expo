@@ -1,9 +1,9 @@
 import EquipmentModal, { EquipmentModalHandle } from '@/components/exercises/EquipmentModal'
 import MuscleGroupModal, { MuscleGroupModalHandle } from '@/components/exercises/MuscleGroupModal'
 import { DeleteConfirmModal, DeleteConfirmModalHandle } from '@/components/ui/DeleteConfirmModal'
-import { useEquipment } from '@/stores/equipmentStore'
-import { ExerciseType, useExercise } from '@/stores/exerciseStore'
-import { useMuscleGroup } from '@/stores/muscleGroupStore'
+import { useEquipment } from '@/hooks/queries/useEquipment'
+import { ExerciseType, useDeleteExercise, useExercises, useUpdateExercise } from '@/hooks/queries/useExercises'
+import { useMuscleGroups } from '@/hooks/queries/useMuscleGroups'
 import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
@@ -19,14 +19,12 @@ export default function EditExercise() {
 	const insets = useSafeAreaInsets()
 	const placeholderColor = isDarkMode ? '#a3a3a3' : '#737373'
 
-	const exerciseList = useExercise(s => s.exerciseList)
-	const updateExercise = useExercise(s => s.updateExercise)
-	const deleteExercise = useExercise(s => s.deleteExercise)
-	const refreshExercises = useExercise(s => s.getAllExercises)
-	const exerciseLoading = useExercise(s => s.exerciseLoading)
+	const { data: exerciseList = [] } = useExercises()
+	const updateExerciseMutation = useUpdateExercise()
+	const deleteExerciseMutation = useDeleteExercise()
 
-	const equipmentList = useEquipment(s => s.equipmentList)
-	const muscleGroupList = useMuscleGroup(s => s.muscleGroupList)
+	const { data: equipmentList = [] } = useEquipment()
+	const { data: muscleGroupList = [] } = useMuscleGroups()
 
 	const original = useMemo(() => exerciseList.find(e => e.id === id), [exerciseList, id])
 
@@ -69,7 +67,7 @@ export default function EditExercise() {
 	}, [original])
 
 	const onSave = useCallback(async () => {
-		if (!title.trim() || !equipmentId || !primaryMuscleGroupId || exerciseLoading || !original) {
+		if (!title.trim() || !equipmentId || !primaryMuscleGroupId || updateExerciseMutation.isPending || !original) {
 			Toast.show({
 				type: 'info',
 				text1: 'Title, Equipment, and Primary Muscle Group are required',
@@ -96,15 +94,14 @@ export default function EditExercise() {
 				} as any)
 			}
 
-			const res = await updateExercise(id, formData)
+			const res = await updateExerciseMutation.mutateAsync({ id, data: formData })
 
 			if (res?.success) {
 				Toast.show({
 					type: 'success',
 					text1: 'Exercise updated successfully',
 				})
-
-				await refreshExercises()
+				// Query is automatically invalidated by useUpdateExercise
 				navigation.goBack()
 			} else {
 				throw new Error()
@@ -125,9 +122,7 @@ export default function EditExercise() {
 		equipmentId,
 		primaryMuscleGroupId,
 		videoUri,
-		exerciseLoading,
-		updateExercise,
-		refreshExercises,
+		updateExerciseMutation,
 		navigation,
 		original,
 	])
@@ -139,18 +134,22 @@ export default function EditExercise() {
 				{
 					name: 'trash-outline',
 					onPress: () => deleteModalRef.current?.present(),
-					disabled: exerciseLoading,
-					color: 'red',
+					disabled: updateExerciseMutation.isPending,
 				},
 				{
 					name: 'checkmark-done',
 					onPress: onSave,
-					disabled: exerciseLoading || !title.trim() || !equipmentId || !primaryMuscleGroupId || !isDirty,
+					disabled:
+						updateExerciseMutation.isPending ||
+						!title.trim() ||
+						!equipmentId ||
+						!primaryMuscleGroupId ||
+						!isDirty,
 					color: 'green',
 				},
 			],
 		})
-	}, [navigation, onSave, exerciseLoading, title, equipmentId, primaryMuscleGroupId, isDirty])
+	}, [navigation, onSave, updateExerciseMutation.isPending, title, equipmentId, primaryMuscleGroupId, isDirty])
 
 	if (!original) {
 		return (
@@ -179,9 +178,13 @@ export default function EditExercise() {
 				<View className="mb-6 items-center">
 					<TouchableOpacity
 						onPress={handleSelectVideo}
-						disabled={exerciseLoading || uploading}
+						disabled={updateExerciseMutation.isPending || uploading}
 						className="items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-6 py-8 dark:border-neutral-700 dark:bg-neutral-900"
-						style={{ height: 160, width: '100%', opacity: exerciseLoading || uploading ? 0.5 : 1 }}
+						style={{
+							height: 160,
+							width: '100%',
+							opacity: updateExerciseMutation.isPending || uploading ? 0.5 : 1,
+						}}
 					>
 						{videoUri ? (
 							<>
@@ -222,7 +225,7 @@ export default function EditExercise() {
 					<TextInput
 						value={title}
 						onChangeText={setTitle}
-						editable={!exerciseLoading}
+						editable={!updateExerciseMutation.isPending}
 						placeholder="e.g. Bench Press"
 						className="flex-1 text-lg text-blue-500"
 						placeholderTextColor={placeholderColor}
@@ -236,7 +239,7 @@ export default function EditExercise() {
 					<TextInput
 						value={instructions}
 						onChangeText={setInstructions}
-						editable={!exerciseLoading}
+						editable={!updateExerciseMutation.isPending}
 						placeholder="Describe how to perform the exercise..."
 						className="min-h-[80px] rounded-xl border border-neutral-200 p-3 text-base text-black dark:border-neutral-800 dark:text-white"
 						placeholderTextColor={placeholderColor}
@@ -302,13 +305,13 @@ export default function EditExercise() {
 				confirmText="Delete"
 				onConfirm={async () => {
 					try {
-						const res = await deleteExercise(id)
+						const res = await deleteExerciseMutation.mutateAsync(id)
 						if (res?.success) {
 							Toast.show({
 								type: 'success',
 								text1: 'Exercise deleted successfully',
 							})
-							await refreshExercises()
+							// Query is automatically invalidated by useDeleteExercise
 							router.back()
 						} else {
 							throw new Error()

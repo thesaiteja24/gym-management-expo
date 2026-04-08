@@ -5,9 +5,6 @@ import PrivacyPolicyModal, { PrivacyPolicyModalHandle } from '@/components/ui/Pr
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth, User } from '@/stores/authStore'
-import { useEquipment } from '@/stores/equipmentStore'
-import { useExercise } from '@/stores/exerciseStore'
-import { useMuscleGroup } from '@/stores/muscleGroupStore'
 import { useOnboarding } from '@/stores/onboardingStore'
 import { useUser } from '@/stores/userStore'
 import { calculateBMR, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
@@ -205,17 +202,6 @@ export default function Login() {
 		// 3. Redirect
 		router.replace('/home')
 	}
-
-	// fetch intialization data
-	const getAllExercises = useExercise(s => s.getAllExercises)
-	const getAllEquipment = useEquipment(s => s.getAllEquipment)
-	const getAllMuscleGroups = useMuscleGroup(s => s.getAllMuscleGroups)
-	// Preload lookups for better UX
-	useEffect(() => {
-		getAllExercises()
-		getAllMuscleGroups()
-		getAllEquipment()
-	}, [getAllExercises, getAllMuscleGroups, getAllEquipment])
 
 	useEffect(() => {
 		opacity.value = withTiming(1, { duration: 800 })

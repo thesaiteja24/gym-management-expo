@@ -107,7 +107,6 @@ export default function ProgramEditor() {
 		setSaving(true)
 		try {
 			let res
-			console.log('draftProgram', JSON.stringify(draftProgram, null, 2))
 			if (isEditing && draftProgram.id) {
 				res = await updateProgram(draftProgram.id, draftProgram as any)
 			} else {
@@ -212,7 +211,6 @@ export default function ProgramEditor() {
 	)
 
 	if (!draftProgram) return null
-
 
 	return (
 		<BottomSheetModalProvider>

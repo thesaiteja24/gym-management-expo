@@ -1,4 +1,4 @@
-import { useExercise } from '@/stores/exerciseStore'
+import { useExercises } from '@/hooks/queries/useExercises'
 import { useGlobalSearchParams } from 'expo-router'
 import { useVideoPlayer, VideoView } from 'expo-video'
 import { Dimensions, ScrollView, Text, View } from 'react-native'
@@ -8,7 +8,7 @@ const { width } = Dimensions.get('window')
 
 export default function GuideScreen() {
 	const { id } = useGlobalSearchParams<{ id: string }>()
-	const exerciseList = useExercise(s => s.exerciseList)
+	const { data: exerciseList = [] } = useExercises()
 	const exercise = exerciseList.find(e => e.id === id)
 	const videoSource = exercise?.videoUrl ?? ''
 

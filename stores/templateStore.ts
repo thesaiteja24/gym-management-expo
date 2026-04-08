@@ -1,3 +1,6 @@
+import { Exercise } from '@/hooks/queries/useExercises'
+import { queryClient } from '@/lib/queryClient'
+import { queryKeys } from '@/lib/queryKeys'
 import { zustandStorage } from '@/lib/storage'
 import { enqueueTemplateCreate, enqueueTemplateDelete, enqueueTemplateUpdate } from '@/lib/sync/queue'
 import { SyncStatus } from '@/lib/sync/types'
@@ -7,7 +10,6 @@ import * as Crypto from 'expo-crypto'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { useAuth } from './authStore'
-import { useExercise } from './exerciseStore'
 import { DraftTemplate, TemplateExercise, TemplateSet, TemplateState, WorkoutTemplate } from './template/types'
 
 export { DraftTemplate, WorkoutTemplate }
@@ -357,8 +359,9 @@ export const useTemplate = create<TemplateState>()(
 				const draft = get().draftTemplate
 				if (!draft) return null
 
-				const exerciseStore = useExercise.getState()
-				const exerciseMap = new Map(exerciseStore.exerciseList.map(e => [e.id, e]))
+				// Read exercise list from TanStack Query cache (replaces useExercise.getState())
+				const exerciseList = queryClient.getQueryData<Exercise[]>(queryKeys.exercises.all) ?? []
+				const exerciseMap = new Map(exerciseList.map(e => [e.id, e]))
 
 				let droppedExercises = 0
 				let droppedGroups = 0
@@ -460,12 +463,12 @@ export const useTemplate = create<TemplateState>()(
 					return
 				}
 
-				// Check if exercise exists in exercise store
-				const exerciseStore = useExercise.getState()
-				const exerciseExists = exerciseStore.exerciseList.find(e => e.id === exerciseId)
+				// Read exercise list from TanStack Query cache (replaces useExercise.getState())
+				const exerciseList = queryClient.getQueryData<Exercise[]>(queryKeys.exercises.all) ?? []
+				const exerciseExists = exerciseList.find(e => e.id === exerciseId)
 
 				if (!exerciseExists) {
-					console.error(`[Template] Exercise ${exerciseId} not found in exercise store`)
+					console.error(`[Template] Exercise ${exerciseId} not found in exercise cache`)
 					return
 				}
 

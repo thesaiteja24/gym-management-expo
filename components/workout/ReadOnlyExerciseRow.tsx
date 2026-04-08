@@ -1,4 +1,4 @@
-import { useExercise } from '@/stores/exerciseStore'
+import { useExercises } from '@/hooks/queries/useExercises'
 import { TemplateExercise, TemplateSet } from '@/stores/template/types'
 import { SetType, WorkoutHistoryExercise, WorkoutHistorySet } from '@/stores/workout/types'
 import { Image } from 'expo-image'
@@ -59,7 +59,7 @@ interface ReadOnlyExerciseRowProps {
 }
 
 export function ReadOnlyExerciseRow({ exercise, group }: ReadOnlyExerciseRowProps) {
-	const { exerciseList } = useExercise()
+	const { data: exerciseList = [] } = useExercises()
 
 	const details = useMemo(() => {
 		// If we have direct exercise details (e.g. from WorkoutHistory), use them

@@ -1,5 +1,5 @@
 import SetRow from '@/components/workout/SetRow'
-import { Exercise, ExerciseType } from '@/stores/exerciseStore'
+import { Exercise, ExerciseType } from '@/hooks/queries/useExercises'
 import { TemplateExercise, TemplateExerciseGroup } from '@/stores/template/types'
 import { WeightUnits } from '@/stores/userStore'
 import { WorkoutLogExercise, WorkoutLogGroup } from '@/stores/workoutStore'

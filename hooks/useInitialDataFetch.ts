@@ -1,7 +1,6 @@
+import { queryClient } from '@/lib/queryClient'
+import { queryKeys } from '@/lib/queryKeys'
 import { useAuth } from '@/stores/authStore'
-import { useEquipment } from '@/stores/equipmentStore'
-import { useExercise } from '@/stores/exerciseStore'
-import { useMuscleGroup } from '@/stores/muscleGroupStore'
 import { useTemplate } from '@/stores/templateStore'
 import { useUser } from '@/stores/userStore'
 import { useWorkout } from '@/stores/workoutStore'
@@ -14,6 +13,13 @@ const SYNC_COOLDOWN_MS = 60 * 1000 // 1 minute cooldown
 /**
  * Hook to fetch initial data when the user opens the app or comes back online.
  * Separates logic for public data (no auth) and user data (auth required).
+ *
+ * Public reference data (exercises, equipment, muscleGroups) is now managed
+ * entirely by TanStack Query via useExercises / useEquipment / useMuscleGroups
+ * hooks — those hooks automatically refetch on foreground / network reconnect
+ * because they are mounted in screens that need them. We still explicitly
+ * invalidate them here so the cache is refreshed even if those screens are
+ * not currently mounted (e.g. after a long background session).
  */
 export function useInitialDataFetch() {
 	const { isConnected, isInternetReachable } = useNetworkStatus()
@@ -46,12 +52,11 @@ export function useInitialDataFetch() {
 		console.log(`[InitialFetch] Triggering fetch (${source})...`)
 		lastFetchTime.current = now
 
-		// 1. Fetch public data
+		// 1. Invalidate public reference data so TanStack Query refetches it
+		//    in the background (non-blocking — screens see cached data instantly)
 		fetchPublicData()
 
 		// 2. Fetch user-specific data (only if logged in)
-		// accessing the *latest* auth state from store directly strictly for the fetch check
-		// or relying on the prop. The prop is reactive.
 		if (useAuth.getState().isAuthenticated) {
 			fetchUserData()
 		}
@@ -87,18 +92,18 @@ export function useInitialDataFetch() {
 	}, [isOnline, isAuthenticated])
 }
 
+/**
+ * Invalidate reference catalogue queries so TanStack Query refetches them.
+ * Because staleTime is Infinity the refetch only happens when the queries
+ * are actually invalid — and components still render the cached data instantly.
+ */
 async function fetchPublicData() {
-	console.log('[InitialFetch] Fetching public data...')
-	try {
-		// Fetch system data concurrently
-		await Promise.all([
-			useEquipment.getState().getAllEquipment(),
-			useMuscleGroup.getState().getAllMuscleGroups(),
-			useExercise.getState().getAllExercises(),
-		])
-	} catch (error) {
-		console.error('[InitialFetch] Error fetching public data:', error)
-	}
+	console.log('[InitialFetch] Invalidating public reference data...')
+	await Promise.all([
+		queryClient.invalidateQueries({ queryKey: queryKeys.exercises.all }),
+		queryClient.invalidateQueries({ queryKey: queryKeys.equipment.all }),
+		queryClient.invalidateQueries({ queryKey: queryKeys.muscleGroups.all }),
+	])
 }
 
 async function fetchUserData() {
