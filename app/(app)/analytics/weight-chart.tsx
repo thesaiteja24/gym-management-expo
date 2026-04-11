@@ -1,5 +1,5 @@
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { useAnalytics } from '@/stores/analyticsStore'
+import { useMeasurementsQuery, useFitnessProfileQuery } from '@/hooks/queries/useAnalytics'
 import { useAuth } from '@/stores/authStore'
 import { convertWeight } from '@/utils/converter'
 import { Ionicons } from '@expo/vector-icons'
@@ -14,8 +14,10 @@ type TimeRange = '1W' | '1M' | '3M' | '6M' | '1Y' | 'All'
 const WeightChart = () => {
 	const colors = useThemeColor()
 	const user = useAuth(s => s.user)
-	const measurements = useAnalytics(s => s.measurements)
-	const fitnessProfile = useAnalytics(s => s.fitnessProfile)
+
+	const { data: measurementsData } = useMeasurementsQuery()
+	const { data: fitnessProfile } = useFitnessProfileQuery()
+	const measurements = useMemo(() => measurementsData?.history || [], [measurementsData?.history])
 	const preferredUnit = user?.preferredWeightUnit ?? 'kg'
 	const fitnessGoal = fitnessProfile?.fitnessGoal as string | undefined
 

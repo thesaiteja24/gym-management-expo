@@ -135,7 +135,6 @@ const History = () => {
 
 	// Stores
 	const user = useAuth(s => s.user)
-	const getUserData = useUser(s => s.getUserData)
 
 	// TanStack Query — infinite pagination with offline-first pending merge
 	const {
@@ -148,7 +147,6 @@ const History = () => {
 
 	const { data: exerciseList = [] } = useExercises()
 
-	const hasExercises = exerciseList.length > 0
 	const showShimmer = workoutLoading && workoutHistory.length === 0
 
 	const exerciseTypeMap = useMemo(() => {

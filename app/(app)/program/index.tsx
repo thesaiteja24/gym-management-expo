@@ -103,11 +103,10 @@ export default function ProgramEditor() {
 
 		setSaving(true)
 		try {
-			let res
 			if (isEditing && draftProgram.id) {
-				res = await updateProgramMutation.mutateAsync({ id: draftProgram.id, data: draftProgram as any })
+				await updateProgramMutation.mutateAsync({ id: draftProgram.id, data: draftProgram as any })
 			} else {
-				res = await createProgramMutation.mutateAsync(draftProgram as any)
+				await createProgramMutation.mutateAsync(draftProgram as any)
 			}
 
 			Toast.show({
@@ -128,7 +127,7 @@ export default function ProgramEditor() {
 		} finally {
 			setSaving(false)
 		}
-	}, [draftProgram, isEditing, createProgramMutation, updateProgramMutation, discardDraftProgram])
+	}, [draftProgram, isEditing, createProgramMutation, updateProgramMutation, discardDraftProgram, isTemplatesSynced])
 
 	useEffect(() => {
 		navigation.setOptions({
@@ -357,8 +356,7 @@ export default function ProgramEditor() {
 
 /* ───── Memoized Sub-components ───── */
 
-const ProgramDayItem = React.memo(
-	({
+const ProgramDayItemComponent = ({
 		day,
 		weekIndex,
 		dayIndex,
@@ -373,87 +371,87 @@ const ProgramDayItem = React.memo(
 		onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<ProgramDay>) => void
 		onSelectTemplate: (wIdx: number, dIdx: number) => void
 	}) => {
-		const selectedTemplateTitle = useMemo(() => {
-			if (!day.templateId) return null
-			return (
-				templates.find(t => t.id === day.templateId || t.clientId === day.templateId)?.title ||
-				'Template Not Found'
-			)
-		}, [day.templateId, templates])
-
+	const selectedTemplateTitle = useMemo(() => {
+		if (!day.templateId) return null
 		return (
-			<View className="mb-3 rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-700 dark:bg-black">
-				<View className="mb-2 flex-row items-center justify-between">
-					<Text className="flex-1 font-medium text-black dark:text-white">{day.name}</Text>
-				</View>
-
-				<View className="mb-2 flex-row items-center justify-between">
-					<Text className="text-neutral-600 dark:text-neutral-400">Rest Day?</Text>
-					<Switch
-						value={day.isRestDay}
-						onValueChange={val =>
-							onUpdateDay(weekIndex, dayIndex, {
-								isRestDay: val,
-								templateId: val ? null : day.templateId,
-							})
-						}
-					/>
-				</View>
-
-				{!day.isRestDay && (
-					<View className="mt-2">
-						<Text className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-500">
-							Selected Template
-						</Text>
-
-						{day.templateId ? (
-							<View className="mb-2 flex-row items-center justify-between rounded-lg bg-neutral-100 p-3 dark:bg-neutral-800">
-								<View className="mr-2 flex-1">
-									<Text className="text-sm font-medium text-black dark:text-white" numberOfLines={1}>
-										{selectedTemplateTitle}
-									</Text>
-								</View>
-								<Button
-									title="Change"
-									variant="secondary"
-									className="!px-3 !py-1"
-									onPress={() => onSelectTemplate(weekIndex, dayIndex)}
-								/>
-							</View>
-						) : (
-							<View className="mt-1 flex-row items-center justify-start gap-3">
-								<Button
-									title="Select Existing"
-									variant="secondary"
-									className="flex-1"
-									onPress={() => onSelectTemplate(weekIndex, dayIndex)}
-								/>
-								<Button
-									title="Create New"
-									variant="primary"
-									className="flex-1"
-									onPress={() => {
-										router.push({
-											pathname: '/(app)/template/editor',
-											params: {
-												context: 'program',
-												weekIndex,
-												dayIndex,
-											},
-										} as any)
-									}}
-								/>
-							</View>
-						)}
-					</View>
-				)}
-			</View>
+			templates.find(t => t.id === day.templateId || t.clientId === day.templateId)?.title ||
+			'Template Not Found'
 		)
-	}
-)
+	}, [day.templateId, templates])
 
-const ProgramWeekItem = React.memo(
-	({
+	return (
+		<View className="mb-3 rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-700 dark:bg-black">
+			<View className="mb-2 flex-row items-center justify-between">
+				<Text className="flex-1 font-medium text-black dark:text-white">{day.name}</Text>
+			</View>
+
+			<View className="mb-2 flex-row items-center justify-between">
+				<Text className="text-neutral-600 dark:text-neutral-400">Rest Day?</Text>
+				<Switch
+					value={day.isRestDay}
+					onValueChange={val =>
+						onUpdateDay(weekIndex, dayIndex, {
+							isRestDay: val,
+							templateId: val ? null : day.templateId,
+						})
+					}
+				/>
+			</View>
+
+			{!day.isRestDay && (
+				<View className="mt-2">
+					<Text className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-500">
+						Selected Template
+					</Text>
+
+					{day.templateId ? (
+						<View className="mb-2 flex-row items-center justify-between rounded-lg bg-neutral-100 p-3 dark:bg-neutral-800">
+							<View className="mr-2 flex-1">
+								<Text className="text-sm font-medium text-black dark:text-white" numberOfLines={1}>
+									{selectedTemplateTitle}
+								</Text>
+							</View>
+							<Button
+								title="Change"
+								variant="secondary"
+								className="!px-3 !py-1"
+								onPress={() => onSelectTemplate(weekIndex, dayIndex)}
+							/>
+						</View>
+					) : (
+						<View className="mt-1 flex-row items-center justify-start gap-3">
+							<Button
+								title="Select Existing"
+								variant="secondary"
+								className="flex-1"
+								onPress={() => onSelectTemplate(weekIndex, dayIndex)}
+							/>
+							<Button
+								title="Create New"
+								variant="primary"
+								className="flex-1"
+								onPress={() => {
+									router.push({
+										pathname: '/(app)/template/editor',
+										params: {
+											context: 'program',
+											weekIndex,
+											dayIndex,
+										},
+									} as any)
+								}}
+							/>
+						</View>
+					)}
+				</View>
+			)}
+		</View>
+	)
+}
+const ProgramDayItem = React.memo(ProgramDayItemComponent)
+ProgramDayItem.displayName = 'ProgramDayItem'
+
+const ProgramWeekItemComponent = ({
 		week,
 		weekIndex,
 		templates,
@@ -470,33 +468,34 @@ const ProgramWeekItem = React.memo(
 		onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<ProgramDay>) => void
 		onSelectTemplate: (wIdx: number, dIdx: number) => void
 	}) => {
-		return (
-			<View className="mb-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
-				<View className="mb-4 flex-row items-center justify-between">
-					<View className="mr-4 flex-1">
-						<TextInput
-							value={week.name}
-							onChangeText={onUpdateWeekName}
-							className="mb-1 text-lg font-bold text-black dark:text-white"
-						/>
-					</View>
-					<TouchableOpacity onPress={onRemoveWeek}>
-						<Ionicons name="trash-outline" size={20} color="red" />
-					</TouchableOpacity>
-				</View>
-
-				{week.days.map((day, dIdx) => (
-					<ProgramDayItem
-						key={day.key}
-						day={day}
-						weekIndex={weekIndex}
-						dayIndex={dIdx}
-						templates={templates}
-						onUpdateDay={onUpdateDay}
-						onSelectTemplate={onSelectTemplate}
+	return (
+		<View className="mb-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
+			<View className="mb-4 flex-row items-center justify-between">
+				<View className="mr-4 flex-1">
+					<TextInput
+						value={week.name}
+						onChangeText={onUpdateWeekName}
+						className="mb-1 text-lg font-bold text-black dark:text-white"
 					/>
-				))}
+				</View>
+				<TouchableOpacity onPress={onRemoveWeek}>
+					<Ionicons name="trash-outline" size={20} color="red" />
+				</TouchableOpacity>
 			</View>
-		)
-	}
-)
+
+			{week.days.map((day, dIdx) => (
+				<ProgramDayItem
+					key={day.key}
+					day={day}
+					weekIndex={weekIndex}
+					dayIndex={dIdx}
+					templates={templates}
+					onUpdateDay={onUpdateDay}
+					onSelectTemplate={onSelectTemplate}
+				/>
+			))}
+		</View>
+	)
+}
+const ProgramWeekItem = React.memo(ProgramWeekItemComponent)
+ProgramWeekItem.displayName = 'ProgramWeekItem'

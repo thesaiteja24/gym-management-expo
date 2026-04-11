@@ -1,8 +1,8 @@
 import { MuscleCompositionCard } from '@/components/analytics/MuscleCompositionCard'
 import { NutritionTargetsCard } from '@/components/analytics/NutritionTargetsCard'
 import ShimmerAnalyticsScreen from '@/components/analytics/ShimmerAnalyticsScreen'
+import { useFitnessProfileQuery, useMeasurementsQuery, useNutritionPlanQuery } from '@/hooks/queries/useAnalytics'
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth } from '@/stores/authStore'
 import {
 	calculateBMI,
@@ -18,11 +18,12 @@ import { BackHandler, ScrollView, View } from 'react-native'
 
 const AnalyticsScreen = () => {
 	const user = useAuth(state => state.user)
-	const getMeasurements = useAnalytics(state => state.getMeasurements)
-	const isLoading = useAnalytics(state => state.isLoading)
-	const latestMeasurements = useAnalytics(state => state.latestMeasurements)
-	const fitnessProfile = useAnalytics(state => state.fitnessProfile)
-	const nutritionPlan = useAnalytics(state => state.nutritionPlan)
+	const { data: measurements, isLoading: measurementsLoading } = useMeasurementsQuery()
+	const { data: fitnessProfile, isLoading: profileLoading } = useFitnessProfileQuery()
+	const { data: nutritionPlan, isLoading: nutritionLoading } = useNutritionPlanQuery()
+	const isLoading = measurementsLoading || profileLoading || nutritionLoading
+
+	const latestMeasurements = measurements?.latestValues
 	const colors = useThemeColor()
 
 	// All values from store are in backend canonical units (kg / cm)
@@ -143,16 +144,6 @@ const AnalyticsScreen = () => {
 
 		return () => subscription.remove()
 	}, [])
-
-	const getFitnessProfile = useAnalytics(state => state.getFitnessProfile)
-	const getNutritionPlan = useAnalytics(state => state.getNutritionPlan)
-
-	useEffect(() => {
-		const initData = async () => {
-			await Promise.all([getMeasurements(), getFitnessProfile(), getNutritionPlan()])
-		}
-		initData()
-	}, [getMeasurements, getFitnessProfile, getNutritionPlan])
 
 	return (
 		<ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>

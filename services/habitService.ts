@@ -16,6 +16,7 @@ export const createHabitService = async (userId: string, data: any) => {
 		const res = await api.post(`/habits/${userId}`, data)
 		return handleApiResponse(res)
 	} catch (error: any) {
+		console.log('Error in createHabitService:', JSON.stringify(error.response.data))
 		const errData = error.response?.data
 		throw new Error(errData?.message || error.message || 'Network error')
 	}

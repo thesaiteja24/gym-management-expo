@@ -5,10 +5,10 @@
  * These types are used across the sync infrastructure.
  */
 
-import { HabitFooterType, HabitSourceType, HabitTrackingType } from '@/stores/habitStore'
+import { HabitFooterType, HabitSourceType, HabitTrackingType } from '@/hooks/queries/useHabits'
 import { LengthUnits, WeightUnits } from '@/stores/userStore'
 
-export type { MeasurementType } from '@/stores/analyticsStore'
+export type { MeasurementType } from '@/hooks/queries/useAnalytics'
 
 /**
  * Sync status for any syncable entity (workout, template, etc.)

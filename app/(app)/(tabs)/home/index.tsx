@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native'
 import Animated, { Easing, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -7,19 +7,17 @@ import ShimmerHomeScreen from '@/components/home/ShimmerHomeScreen'
 import StreakCard, { StreakDay } from '@/components/home/StreakCard'
 
 import { HabitCard } from '@/components/home/HabitCard'
-import { useHabitLogsQuery, useHabitsQuery } from '@/hooks/queries/useHabits'
-import { useAuth } from '@/stores/authStore'
-import { useHabitStore } from '@/stores/habitStore'
-import { useUser } from '@/stores/userStore'
-import { router } from 'expo-router'
-
 import { WeightMetricCard } from '@/components/home/WeightMetricCard'
 import { Button } from '@/components/ui/Button'
-import { useAnalytics } from '@/stores/analyticsStore'
+import { useMeasurementsQuery, useUserAnalyticsQuery } from '@/hooks/queries/useAnalytics'
+import { useHabitLogsQuery, useHabitsQuery } from '@/hooks/queries/useHabits'
+import { useAuth } from '@/stores/authStore'
+import { useUser } from '@/stores/userStore'
 import { calculateBMI, calculateBodyFat, calculateComposition, estimateBodyFatFromBMI } from '@/utils/analytics'
 import { convertWeight } from '@/utils/converter'
 import { getMotivationLine } from '@/utils/motivation'
 import { getGreeting, toDateKey } from '@/utils/time'
+import { router } from 'expo-router'
 import Toast from 'react-native-toast-message'
 
 export default function HomeScreen() {
@@ -27,15 +25,23 @@ export default function HomeScreen() {
 	const user = useAuth(s => s.user)
 	const getUserData = useUser(s => s.getUserData)
 
-	const getMeasurements = useAnalytics(s => s.getMeasurements)
-	const getUserAnalytics = useAnalytics(s => s.getUserAnalytics)
-	const userAnalytics = useAnalytics(s => s.userAnalytics)
-	const latestMeasurements = useAnalytics(state => state.latestMeasurements)
+	// TanStack Query — analytics (auto-fetches on mount, syncs into Zustand)
+	const {
+		data: measurements,
+		refetch: refetchMeasurements,
+		isLoading: isLoadingMeasurements,
+	} = useMeasurementsQuery()
+	const {
+		data: userAnalytics,
+		refetch: refetchUserAnalytics,
+		isLoading: isLoadingUserAnalytics,
+	} = useUserAnalyticsQuery()
+
+	const latestMeasurements = measurements?.latestValues
 
 	// Habits from TanStack Query
-	const { data: habits = [], refetch: refetchHabits } = useHabitsQuery()
-	const { refetch: refetchHabitLogs } = useHabitLogsQuery()
-	const { preSeedDefaultHabits } = useHabitStore()
+	const { data: habits = [], refetch: refetchHabits, isLoading: isLoadingHabits } = useHabitsQuery()
+	const { refetch: refetchHabitLogs, isLoading: isLoadingHabitLogs } = useHabitLogsQuery()
 
 	const preferredWeightUnit = user?.preferredWeightUnit ?? 'kg'
 	const age = useMemo(() => {
@@ -43,7 +49,7 @@ export default function HomeScreen() {
 		return new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()
 	}, [user?.dateOfBirth])
 
-	const [refreshing, setRefreshing] = useState(false)
+	const refreshing = isLoadingMeasurements || isLoadingUserAnalytics || isLoadingHabits || isLoadingHabitLogs
 
 	// All values from store are in backend canonical units (kg / cm)
 	const weightKg = Number(latestMeasurements?.weight ?? user?.weight) // kg
@@ -56,6 +62,7 @@ export default function HomeScreen() {
 	const { width } = useWindowDimensions()
 
 	// ───────────────── Analytics ─────────────────
+
 	const {
 		streakDays = 0,
 		workoutsThisWeek = 0,
@@ -63,7 +70,7 @@ export default function HomeScreen() {
 		weeklyVolume = 0,
 		lastWeekVolume = 0,
 		workoutDates = new Set<string>(),
-	} = userAnalytics || {}
+	} = userAnalytics || ({} as any)
 
 	const { streakData } = useMemo(() => {
 		const today = new Date()
@@ -82,7 +89,7 @@ export default function HomeScreen() {
 			const key = toDateKey(cursor)
 			let status: StreakDay['status']
 
-			if (workoutDates.has(key)) status = 'active'
+			if (workoutDates?.has?.(key)) status = 'active'
 			else if (key === todayKey) status = 'today'
 			else if (cursor > today) status = 'future'
 			else status = 'missed'
@@ -154,19 +161,14 @@ export default function HomeScreen() {
 
 	// ───────────────── Refresh ─────────────────
 	const onRefresh = useCallback(async () => {
-		try {
-			setRefreshing(true)
-			await Promise.all([
-				getUserData(user?.userId ?? ''),
-				getMeasurements(),
-				getUserAnalytics(),
-				refetchHabits(),
-				refetchHabitLogs(),
-			])
-		} finally {
-			setRefreshing(false)
-		}
-	}, [getUserData, getMeasurements, getUserAnalytics, refetchHabits, refetchHabitLogs, user?.userId])
+		await Promise.all([
+			getUserData(user?.userId ?? ''),
+			refetchMeasurements(),
+			refetchUserAnalytics(),
+			refetchHabits(),
+			refetchHabitLogs(),
+		])
+	}, [getUserData, refetchMeasurements, refetchUserAnalytics, refetchHabits, refetchHabitLogs, user?.userId])
 
 	// ───────────────── Header animation ─────────────────
 	const headerOpacity = useSharedValue(0)
@@ -185,23 +187,9 @@ export default function HomeScreen() {
 		transform: [{ translateY: headerTranslateY.value }],
 	}))
 
-	// ───────────────── Initial Fetch ─────────────────
-	// Initial data is fetched automatically by TanStack Query hooks on mount
 	useEffect(() => {
-		Promise.all([getUserData(user?.userId ?? ''), getMeasurements(), getUserAnalytics()])
-	}, [getUserData, getMeasurements, getUserAnalytics, user?.userId])
-
-	useEffect(() => {
-		const run = async () => {
-			const res = await refetchHabits()
-
-			if (res.data && res.data.length === 0) {
-				preSeedDefaultHabits()
-			}
-		}
-
-		run()
-	}, [refetchHabits, preSeedDefaultHabits])
+		getUserData(user?.userId ?? '')
+	}, [getUserData, user?.userId])
 
 	// ───────────────── Render ─────────────────
 	return (

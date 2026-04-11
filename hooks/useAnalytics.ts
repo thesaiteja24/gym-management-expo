@@ -1,4 +1,4 @@
-import { AnalyticsMetrics, useAnalytics as useAnalyticsStore } from '@/stores/analyticsStore'
+import { useUserAnalyticsQuery } from '@/hooks/queries/useAnalytics'
 import { useWorkout } from '@/stores/workoutStore'
 import { useCallback, useMemo } from 'react'
 
@@ -28,7 +28,14 @@ function calculate1RM(weight: number, reps: number): number {
 /* ────────────────────────────────────────────── */
 
 export interface UseAnalyticsResult {
-	userAnalytics: AnalyticsMetrics
+	userAnalytics: {
+		streakDays: number
+		workoutsThisWeek: number
+		daysSinceLastWorkout: number
+		weeklyVolume: number
+		lastWeekVolume: number
+		workoutDates: Set<string>
+	}
 	getExerciseAnalytics: (exerciseId: string) => ExerciseAnalytics
 }
 
@@ -36,11 +43,11 @@ export function useAnalytics(): UseAnalyticsResult {
 	const workoutHistory = useWorkout(s => s.workoutHistory)
 
 	/* ───────────── User-level analytics ───────────── */
-	const storeUserAnalytics = useAnalyticsStore(s => s.userAnalytics)
+	const { data: tqAnalytics } = useUserAnalyticsQuery()
 
 	const userAnalytics = useMemo(() => {
 		return (
-			storeUserAnalytics ?? {
+			tqAnalytics ?? {
 				streakDays: 0,
 				workoutsThisWeek: 0,
 				daysSinceLastWorkout: 0,
@@ -49,7 +56,7 @@ export function useAnalytics(): UseAnalyticsResult {
 				workoutDates: new Set<string>(),
 			}
 		)
-	}, [storeUserAnalytics])
+	}, [tqAnalytics])
 
 	/* ───────────── Exercise-level analytics ───────────── */
 

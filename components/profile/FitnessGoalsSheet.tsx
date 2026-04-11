@@ -1,7 +1,12 @@
 import { Button } from '@/components/ui/Button'
 import DateTimePicker from '@/components/ui/DateTimePicker'
 import { SelectableCard } from '@/components/ui/SelectableCard'
-import { useAnalytics } from '@/stores/analyticsStore'
+import {
+	useFitnessProfileQuery,
+	useMeasurementsQuery,
+	useUpdateFitnessProfile,
+	useUpdateNutritionPlan,
+} from '@/hooks/queries/useAnalytics'
 import { FitnessGoal, useAuth } from '@/stores/authStore'
 
 import { calculateBMR, calculateBodyFat, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
@@ -20,8 +25,9 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	const insets = useSafeAreaInsets()
 
 	const user = useAuth(s => s.user)
-	const latestMeasurements = useAnalytics(s => s.latestMeasurements)
-	const fitnessProfile = useAnalytics(s => s.fitnessProfile)
+	const { data: measurements } = useMeasurementsQuery()
+	const { data: fitnessProfile } = useFitnessProfileQuery()
+	const latestMeasurements = measurements?.latestValues
 	const fitnessGoal = fitnessProfile?.fitnessGoal
 	const currentWeight = latestMeasurements?.weight ?? user?.weight
 	const height = user?.height
@@ -30,6 +36,9 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	const waist = latestMeasurements?.waist
 	const hips = latestMeasurements?.hips
 	const currentGoalType = fitnessGoal || null
+
+	const updateFitnessProfileMutation = useUpdateFitnessProfile()
+	const updateNutritionPlanMutation = useUpdateNutritionPlan()
 
 	const currentBodyFat = calculateBodyFat({
 		gender: gender!,
@@ -164,9 +173,7 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 			fitnessLevel,
 		}
 
-		const { updateFitnessProfile, updateNutritionPlan } = useAnalytics.getState()
-
-		const promises = [updateFitnessProfile(payload)]
+		const promises = [updateFitnessProfileMutation.mutateAsync(payload)]
 
 		if (computedTargets) {
 			const nutritionPayload = {
@@ -178,26 +185,29 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 				deficitOrSurplus: computedTargets.deficitOrSurplus,
 				startDate: new Date().toISOString(),
 			}
-			promises.push(updateNutritionPlan(nutritionPayload))
+			promises.push(updateNutritionPlanMutation.mutateAsync(nutritionPayload))
 		}
 
-		const results = await Promise.all(promises)
-		const res = results[0] // Check fitness profile success
+		try {
+			const results = await Promise.all(promises)
+			const res = results[0] // Check fitness profile success
 
-		setIsLoading(false)
+			setIsLoading(false)
 
-		if (res.success) {
-			Toast.show({
-				type: 'success',
-				text1: 'Goals updated successfully',
-			})
-			// @ts-ignore
-			ref?.current?.dismiss()
-		} else {
+			if (res) {
+				Toast.show({
+					type: 'success',
+					text1: 'Goals updated successfully',
+				})
+				// @ts-ignore
+				ref?.current?.dismiss()
+			}
+		} catch (error: any) {
+			setIsLoading(false)
 			Toast.show({
 				type: 'error',
 				text1: 'Failed to update goals',
-				text2: res.error?.message || 'Please try again',
+				text2: error?.message || 'Please try again',
 			})
 		}
 	}

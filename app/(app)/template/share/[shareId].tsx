@@ -25,7 +25,7 @@ export default function TemplateDetails() {
 	const setSharedTemplate = useTemplate(s => s.setSharedTemplate)
 
 	// TanStack Query — fetch shared template by shareId
-	const { data: sharedTemplate, isLoading: queryLoading } = useTemplateByShareIdQuery(shareId)
+	const { data: sharedTemplate } = useTemplateByShareIdQuery(shareId)
 
 	usePreventRemove(true, e => {
 		router.replace('/(app)/(tabs)/workout')

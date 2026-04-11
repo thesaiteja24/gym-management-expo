@@ -3,11 +3,14 @@ import PhoneInputField from '@/components/auth/PhoneInputField'
 import { Button } from '@/components/ui/Button'
 import PrivacyPolicyModal, { PrivacyPolicyModalHandle } from '@/components/ui/PrivacyPolicyModal'
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth, User } from '@/stores/authStore'
 import { useOnboarding } from '@/stores/onboardingStore'
 import { useUser } from '@/stores/userStore'
 import { calculateBMR, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
+import {
+	updateFitnessProfileService,
+	updateNutritionPlanService,
+} from '@/services/analyticsService'
 import { GoogleSignin } from '@react-native-google-signin/google-signin'
 import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
@@ -187,9 +190,10 @@ export default function Login() {
 					startDate: new Date().toISOString(),
 				}
 
-				const { updateFitnessProfile, updateNutritionPlan } = useAnalytics.getState()
-
-				await Promise.all([updateFitnessProfile(fitnessPayload), updateNutritionPlan(nutritionPayload)])
+				await Promise.all([
+					updateFitnessProfileService(user.userId!, fitnessPayload),
+					updateNutritionPlanService(user.userId!, nutritionPayload),
+				])
 			}
 
 			// Reset onboarding store

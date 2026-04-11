@@ -1,4 +1,3 @@
-import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth } from '@/stores/authStore'
 import { useRouter } from 'expo-router'
 import { useEffect } from 'react'
@@ -13,20 +12,13 @@ export default function AuthGuard({ children, redirectTo = '/(auth)/login' }: Pr
 	const router = useRouter()
 	const isAuthenticated = useAuth(s => s.isAuthenticated)
 	const hasRestored = useAuth(s => s.hasRestored)
-	const getFitnessProfile = useAnalytics(s => s.getFitnessProfile)
-	const getNutritionPlan = useAnalytics(s => s.getNutritionPlan)
 
 	useEffect(() => {
 		if (!hasRestored) return
-
 		if (!isAuthenticated) {
 			router.replace(redirectTo as any)
-		} else {
-			// Trigger analytics fetches on successful auth restore
-			getFitnessProfile()
-			getNutritionPlan()
 		}
-	}, [hasRestored, isAuthenticated, redirectTo, router, getFitnessProfile, getNutritionPlan])
+	}, [hasRestored, isAuthenticated, redirectTo, router])
 
 	// While booting, never decide
 	if (!hasRestored) {

@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/Button'
+import { useAddMeasurement } from '@/hooks/queries/useAnalytics'
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth, User } from '@/stores/authStore'
 import { calculateBodyFat, calculateComposition } from '@/utils/analytics'
 import { convertLength, convertWeight } from '@/utils/converter'
@@ -39,8 +39,8 @@ export const MeasurementsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 	const heightCm = useAuth(s => s.user?.height)
 
 	const user = useAuth(s => s.user) as User | null
-	const addMeasurement = useAnalytics(s => s.addMeasurement)
-	const isLoading = useAnalytics(s => s.isLoading)
+	const addMeasurementMutation = useAddMeasurement()
+	const isLoading = addMeasurementMutation.isPending
 
 	// Preferred units — read from store
 	const weightUnit = user?.preferredWeightUnit ?? 'kg'
@@ -260,9 +260,9 @@ export const MeasurementsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 		if (notes) payload.notes = notes
 		if (progressPics.length > 0) payload.progressPics = progressPics
 
-		const res = await addMeasurement(payload as any)
+		const res = await addMeasurementMutation.mutateAsync(payload as any)
 
-		if (res?.success) {
+		if (res) {
 			Toast.show({ type: 'success', text1: 'Measurements saved successfully!' })
 			// @ts-ignore
 			ref?.current?.dismiss()
@@ -309,7 +309,7 @@ export const MeasurementsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 		notes,
 		progressPics,
 		user?.userId,
-		addMeasurement,
+		addMeasurementMutation,
 		ref,
 		weightUnit,
 		lengthUnit,

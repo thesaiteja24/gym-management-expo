@@ -1,5 +1,5 @@
+import { useFitnessProfileQuery, useMeasurementsQuery } from '@/hooks/queries/useAnalytics'
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { useAnalytics } from '@/stores/analyticsStore'
 import { useAuth } from '@/stores/authStore'
 import { convertWeight } from '@/utils/converter'
 import { router } from 'expo-router'
@@ -16,9 +16,8 @@ export function WeightMetricCard({ width }: WeightMetricCardProps) {
 	const colors = useThemeColor()
 	const user = useAuth(s => s.user)
 
-	const measurements = useAnalytics(s => s.measurements)
-	const fitnessProfile = useAnalytics(s => s.fitnessProfile)
-	const dailyWeightChange = useAnalytics(s => s.dailyWeightChange)
+	const { data: analytics } = useMeasurementsQuery()
+	const { data: fitnessProfile } = useFitnessProfileQuery()
 
 	const preferredUnit = user?.preferredWeightUnit ?? 'kg'
 	const fitnessGoal = fitnessProfile?.fitnessGoal as string | undefined
@@ -32,15 +31,18 @@ export function WeightMetricCard({ width }: WeightMetricCardProps) {
 
 	// ── Last 7 entries ────────────────────────────────────────────
 	const last7 = useMemo(() => {
-		return measurements
-			.filter(m => m.weight != null && Number(m.weight) > 0)
-			.slice()
-			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-			.slice(-7)
-	}, [measurements])
+		return (
+			analytics?.history
+				// TODO(to be done by user only): check if we can fix this any type declartion
+				?.filter((m: any) => m.weight != null && Number(m.weight) > 0)
+				.slice()
+				.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+				.slice(-7) ?? []
+		)
+	}, [analytics])
 
 	// ── Trend logic ───────────────────────────────────────────────
-	const isGaining = dailyWeightChange?.isPositive ?? false
+	const isGaining = analytics?.dailyWeightChange?.isPositive ?? false
 
 	const showPositive = (fitnessGoal === 'gainMuscle' && isGaining) || (fitnessGoal === 'loseWeight' && !isGaining)
 
@@ -49,7 +51,8 @@ export function WeightMetricCard({ width }: WeightMetricCardProps) {
 	// ── Chart data ────────────────────────────────────────────────
 	const chartData = useMemo(() => {
 		if (last7.length === 0) return [0]
-		return last7.map(m =>
+		// TODO(to be done by user only): check if we can fix this any type declartion
+		return last7.map((m: any) =>
 			convertWeight(Number(m.weight), {
 				from: 'kg',
 				to: preferredUnit,

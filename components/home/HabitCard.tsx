@@ -1,8 +1,6 @@
 import { CustomModal, ModalHandle } from '@/components/ui/CustomModal'
 import { TextInput } from '@/components/ui/TextInput'
-import { useAnalytics } from '@/stores/analyticsStore'
-import { useHabitLogsQuery } from '@/hooks/queries/useHabits'
-import { HabitType, useHabitStore } from '@/stores/habitStore'
+import { HabitType, useDeleteHabit, useHabitLogsQuery, useLogHabit, useLogWeight } from '@/hooks/queries/useHabits'
 import { toDateKey } from '@/utils/time'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
@@ -32,7 +30,7 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
 	const { width } = useWindowDimensions()
 
 	// Habit logs from TanStack Query (merged with pending queue entries)
-	const { data: allLogs = {}, refetch: refetchLogs } = useHabitLogsQuery()
+	const { data: allLogs = {} } = useHabitLogsQuery()
 	const habitLogs = allLogs[habit.id] || EMPTY_ARRAY
 
 	const heatmapValues = useMemo(() => {
@@ -89,11 +87,12 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
 
 	const habitModalRef = useRef<ModalHandle>(null)
 	const [weightValue, setWeightValue] = useState('')
-	const addMeasurement = useAnalytics(s => s.addMeasurement)
 
 	const handlePress = () => {
 		habitModalRef.current?.open()
 	}
+
+	const logWeightMutation = useLogWeight()
 
 	const handleWeightSubmit = async () => {
 		if (!weightValue || isNaN(Number(weightValue))) {
@@ -105,12 +104,11 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
 			return
 		}
 
-		const res = await addMeasurement({
-			date: new Date().toISOString(),
-			weight: Number(weightValue),
-		})
-
-		if (res.success) {
+		try {
+			await logWeightMutation.mutateAsync({
+				weight: Number(weightValue),
+				date: new Date().toISOString(),
+			})
 			Toast.show({
 				type: 'success',
 				text1: 'Weight Logged',
@@ -118,38 +116,41 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
 			})
 			setWeightValue('')
 			habitModalRef.current?.close()
-			// Refetch habit logs to reflect new entry
-			refetchLogs()
-		} else {
+		} catch (error: any) {
 			Toast.show({
 				type: 'error',
 				text1: 'Error',
-				text2: res.error || 'Failed to log weight',
+				text2: error.message || 'Failed to log weight',
 			})
 		}
 	}
 
 	const [manualValue, setManualValue] = useState('')
-	const logHabit = useHabitStore(s => s.logHabit)
-	const deleteHabit = useHabitStore(s => s.deleteHabit)
+	const logHabitMutation = useLogHabit()
+	const deleteHabitMutation = useDeleteHabit()
 
 	const handleManualLog = async (val: string) => {
 		const numValue = val ? parseFloat(val) : 0
-		const res = await logHabit(habit.id, numValue)
-		if (res.success) {
+		try {
+			await logHabitMutation.mutateAsync({
+				habitId: habit.id,
+				data: { value: numValue, date: new Date().toISOString() },
+			})
 			Toast.show({ type: 'success', text1: 'Progress saved!' })
 			habitModalRef.current?.close()
 			setManualValue('')
-		} else {
-			Toast.show({ type: 'error', text1: 'Failed to save progress' })
+		} catch (error: any) {
+			Toast.show({ type: 'error', text1: error.message || 'Failed to save progress' })
 		}
 	}
 
 	const handleDelete = async () => {
-		const res = await deleteHabit(habit.id)
-		if (res.success) {
+		try {
+			await deleteHabitMutation.mutateAsync(habit.id)
 			Toast.show({ type: 'success', text1: 'Habit deleted' })
 			habitModalRef.current?.close()
+		} catch (error: any) {
+			Toast.show({ type: 'error', text1: error.message || 'Failed to delete habit' })
 		}
 	}
 
@@ -213,12 +214,14 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
 										variant="danger"
 										className="mr-2 flex-1"
 										onPress={() => handleManualLog('0')}
+										loading={logHabitMutation.isPending}
 									/>
 									<Button
 										title="Yes"
 										variant="primary"
 										className="ml-2 flex-1"
 										onPress={() => handleManualLog('1')}
+										loading={logHabitMutation.isPending}
 									/>
 								</View>
 							) : (
@@ -235,6 +238,7 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
 										variant="success"
 										title="Save Progress"
 										onPress={() => handleManualLog(manualValue)}
+										loading={logHabitMutation.isPending}
 									/>
 								</View>
 							)}
@@ -253,7 +257,12 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
 								className="p-2"
 								autoFocus
 							/>
-							<Button title="Save Weight" onPress={handleWeightSubmit} />
+							<Button
+								title="Save Weight"
+								onPress={handleWeightSubmit}
+								disabled={!weightValue}
+								loading={logWeightMutation.isPending}
+							/>
 						</View>
 					)}
 

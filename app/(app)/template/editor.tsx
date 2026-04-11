@@ -8,6 +8,7 @@ import { useAuth } from '@/stores/authStore'
 import { useExercises } from '@/hooks/queries/useExercises'
 import { useSubscriptionStore } from '@/stores/subscriptionStore'
 import { DraftTemplate, WorkoutTemplate, useTemplate } from '@/stores/templateStore'
+import { useProgram } from '@/stores/programStore'
 import { ExerciseGroupType } from '@/stores/workoutStore'
 import { Ionicons } from '@expo/vector-icons'
 import { usePreventRemove } from '@react-navigation/native'
@@ -157,7 +158,6 @@ export default function TemplateEditor() {
 					})
 					
 					if (params.context === 'program' && params.weekIndex !== undefined && params.dayIndex !== undefined) {
-						const { useProgram } = require('@/stores/programStore')
 						const draftProgram = useProgram.getState().draftProgram
 						if (draftProgram && draftProgram.weeks) {
 							const wIndex = Number(params.weekIndex)
@@ -193,7 +193,15 @@ export default function TemplateEditor() {
 				setPendingSave(null)
 			}
 		},
-		[isEditing, updateTemplate, createTemplate, discardDraftTemplate]
+		[
+			isEditing,
+			updateTemplate,
+			createTemplate,
+			discardDraftTemplate,
+			params.context,
+			params.weekIndex,
+			params.dayIndex,
+		]
 	)
 
 	const hasUnsavedChanges = (!!draftTemplate &&

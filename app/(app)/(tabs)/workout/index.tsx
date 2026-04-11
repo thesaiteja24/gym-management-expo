@@ -22,7 +22,6 @@ export default function WorkoutScreen() {
 	const { width } = useWindowDimensions()
 	const [activeIndex, setActiveIndex] = useState(0)
 	const [activeProgramIndex, setActiveProgramIndex] = useState(0)
-	const [refreshing, setRefreshing] = useState(false)
 
 	// Workout Store
 	const workout = useWorkout(s => s.workout)
@@ -30,20 +29,12 @@ export default function WorkoutScreen() {
 
 	// Template Store — draft/write actions only
 	// Templates list and loading state come from TanStack Query
-	const {
-		data: templates = [],
-		isLoading: templateLoading,
-		isFetching: templateIsFetching,
-		refetch: refetchTemplates,
-	} = useTemplatesQuery()
+	const { data: templates = [], isLoading: templateLoading, refetch: refetchTemplates } = useTemplatesQuery()
 
 	// Programs from TanStack Query
-	const {
-		data: programs = [],
-		isLoading: programLoading,
-		isFetching: programIsFetching,
-		refetch: refetchPrograms,
-	} = usePrograms()
+	const { data: programs = [], isLoading: programLoading, refetch: refetchPrograms } = usePrograms()
+
+	const [refreshing, setRefreshing] = useState(false)
 
 	// Subscription Store
 	const isPro = useSubscriptionStore(s => s.isPro)
@@ -182,7 +173,7 @@ export default function WorkoutScreen() {
 					</View> */}
 
 					{/* Available Programs Carousel */}
-					{programLoading || programIsFetching ? (
+					{programLoading || refreshing ? (
 						<View>
 							<Carousel
 								loop={false}
@@ -264,7 +255,7 @@ export default function WorkoutScreen() {
 						</TouchableOpacity>
 					</View>
 
-					{templateLoading || templateIsFetching ? (
+					{templateLoading || refreshing ? (
 						<View>
 							<Carousel
 								loop={false}

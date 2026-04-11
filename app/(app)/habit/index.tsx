@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/Button'
-import { useHabitsQuery } from '@/hooks/queries/useHabits'
-import { HabitFooterType, useHabitStore } from '@/stores/habitStore'
+import { HabitFooterType, useCreateHabit, useHabitsQuery, useUpdateHabit } from '@/hooks/queries/useHabits'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect, useState } from 'react'
@@ -18,10 +17,10 @@ const COLORS = [
 ]
 
 const INTERNAL_METRICS = [
-	{ id: 'weight', label: 'Body Weight', icon: 'scale-outline' },
-	{ id: 'workout', label: 'Workout Frequency', icon: 'barbell-outline' },
-	{ id: 'bodyFat', label: 'Body Fat %', icon: 'fitness-outline' },
-	{ id: 'waist', label: 'Waist Size', icon: 'body-outline' },
+	{ id: 'weight', title: 'Body Weight', label: 'Body Weight', icon: 'scale-outline' },
+	{ id: 'workout', title: 'Workout', label: 'Workout Frequency', icon: 'barbell-outline' },
+	{ id: 'bodyFat', title: 'Body Fat %', label: 'Body Fat %', icon: 'fitness-outline' },
+	{ id: 'waist', title: 'Waist Size', label: 'Waist Size', icon: 'body-outline' },
 ]
 
 const OPTIONS = [
@@ -47,8 +46,8 @@ export default function HabitCreatorScreen() {
 	const [unit, setUnit] = useState(habitToEdit?.unit || '')
 	const [footerType, setFooterType] = useState<HabitFooterType>(habitToEdit?.footerType || 'weeklyStreak')
 
-	const createHabit = useHabitStore(s => s.createHabit)
-	const updateHabit = useHabitStore(s => s.updateHabit)
+	const createHabitMutation = useCreateHabit()
+	const updateHabitMutation = useUpdateHabit()
 
 	useEffect(() => {
 		if (isEdit && habitToEdit) {
@@ -88,20 +87,18 @@ export default function HabitCreatorScreen() {
 					updateData.unit = unit || null
 				}
 
-				const res = await updateHabit(id, updateData)
-				if (res.success) {
-					router.back()
-					Toast.show({ type: 'success', text1: 'Habit updated!' })
-				} else {
-					Toast.show({ type: 'error', text1: res.error || 'Failed to update habit' })
-				}
+				await updateHabitMutation.mutateAsync({
+					id,
+					data: updateData,
+				})
+				router.back()
 				return
 			}
 
-			const res = await createHabit({
+			await createHabitMutation.mutateAsync({
 				title:
 					source === 'internal'
-						? INTERNAL_METRICS.find(m => m.id === internalMetricId)?.label || title
+						? INTERNAL_METRICS.find(m => m.id === internalMetricId)?.title || title
 						: title,
 				colorScheme: selectedColor,
 				trackingType,
@@ -112,18 +109,13 @@ export default function HabitCreatorScreen() {
 				internalMetricId,
 			})
 
-			if (res.success) {
-				router.back()
-				Toast.show({ type: 'success', text1: 'Habit created!' })
-			} else {
-				Toast.show({ type: 'error', text1: res.error || 'Failed to create habit' })
-			}
+			router.back()
 		} catch (error: any) {
-			console.error('Create Habit Error:', error)
+			console.log('Create Habit Error:', error)
 
 			Toast.show({
 				type: 'error',
-				text1: JSON.stringify(error.message) || 'Failed to create habit',
+				text1: error.message || 'Failed to create habit',
 			})
 		}
 	}

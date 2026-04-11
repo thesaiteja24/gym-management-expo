@@ -1,4 +1,3 @@
-import { useThemeColor } from '@/hooks/useThemeColor'
 import { WorkoutTemplate } from '@/stores/templateStore'
 import { Ionicons } from '@expo/vector-icons'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet'
