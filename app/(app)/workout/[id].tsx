@@ -15,6 +15,8 @@ import Toast from 'react-native-toast-message'
 
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { ReadOnlyExerciseRow } from '@/components/workout/ReadOnlyExerciseRow'
+import ShimmerWorkoutScreen from '@/components/workout/ShimmerWorkoutScreen'
+import { useDiscoverWorkoutsQuery } from '@/hooks/queries/useWorkoutHistory'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/stores/authStore'
 import { Image } from 'expo-image'
@@ -35,6 +37,7 @@ export default function WorkoutDetails() {
 	const { getWorkoutById, deleteWorkout } = useWorkout()
 	const { data: exerciseList = [] } = useExercises()
 	const currentUserId = useAuth(state => state.user?.userId)
+	const { discoverWorkouts, isLoading: isDiscoverLoading } = useDiscoverWorkoutsQuery()
 
 	/* Derived State */
 	const exerciseTypeMap = useMemo(() => {
@@ -45,7 +48,13 @@ export default function WorkoutDetails() {
 		return map
 	}, [exerciseList])
 
-	const workout = getWorkoutById(id!)
+	const workoutFromStore = getWorkoutById(id!)
+	const workoutFromDiscover = useMemo(() => {
+		return discoverWorkouts.find(w => w.id === id || w.clientId === id)
+	}, [discoverWorkouts, id])
+
+	const workout = workoutFromStore ?? workoutFromDiscover
+	const isLoading = !workoutFromStore && isDiscoverLoading
 
 	const isAuthrized = currentUserId === workout?.user?.id
 
@@ -171,6 +180,10 @@ export default function WorkoutDetails() {
 
 		return () => subscription.remove()
 	}, [])
+	if (isLoading) {
+		return <ShimmerWorkoutScreen />
+	}
+
 	if (!workout) {
 		return (
 			<View className="flex-1 items-center justify-center bg-white dark:bg-black">

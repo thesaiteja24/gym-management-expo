@@ -31,6 +31,16 @@ export async function getAllWorkoutsService(page: number = 1, limit: number = 2)
 	}
 }
 
+export async function getWorkoutByIdService(id: string) {
+	try {
+		const res = await client.get(workout_item_endpoint(id))
+		return handleApiResponse(res)
+	} catch (error: any) {
+		const errData = error.response?.data
+		throw new Error(errData?.message || error.message || 'Network error')
+	}
+}
+
 export async function getDiscoverWorkoutsService(page: number = 1, limit: number = 2) {
 	try {
 		const res = await client.get(discover_workouts_endpoint, { params: { page, limit } })

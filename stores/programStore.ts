@@ -99,7 +99,7 @@ export const useProgram = create<ProgramDraftState>(set => ({
 							weekId: '',
 							name: `Day ${i + 1}`,
 							dayIndex: i,
-							isRestDay: true,
+							isRestDay: false,
 							templateId: null,
 							key: Crypto.randomUUID(),
 						})),

@@ -9,6 +9,7 @@ import { ScrollView, Text, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
+import ShimmerTemplateScreen from '@/components/templates/shimmerTemplateScreen'
 import { ReadOnlyExerciseRow } from '@/components/workout/ReadOnlyExerciseRow'
 
 export default function TemplateDetails() {
@@ -20,8 +21,9 @@ export default function TemplateDetails() {
 	// Local list (offline-first — includes pending items)
 	const templateFromStore = useTemplate(s => s.templates.find(t => t.id === id || t.clientId === id))
 	// Fallback to server query if not in local store yet
-	const { data: templateFromQuery } = useTemplateByIdQuery(templateFromStore ? null : id)
+	const { data: templateFromQuery, isLoading: isQueryLoading } = useTemplateByIdQuery(templateFromStore ? null : id)
 	const template = templateFromStore ?? templateFromQuery
+	const isLoading = !templateFromStore && isQueryLoading
 
 	const deleteTemplate = useTemplate(s => s.deleteTemplate)
 	const startWorkoutFromTemplate = useTemplate(s => s.startWorkoutFromTemplate)
@@ -73,6 +75,10 @@ export default function TemplateDetails() {
 		template?.exerciseGroups.forEach(g => map.set(g.id, g))
 		return map
 	}, [template?.exerciseGroups])
+
+	if (isLoading) {
+		return <ShimmerTemplateScreen />
+	}
 
 	if (!template) {
 		return (

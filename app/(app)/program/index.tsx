@@ -9,6 +9,7 @@ import * as Crypto from 'expo-crypto'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+	BackHandler,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
@@ -41,6 +42,7 @@ export default function ProgramEditor() {
 	// Template store — write actions only; list comes from TanStack Query
 	const { data: templates = [] } = useTemplatesQuery()
 	const [saving, setSaving] = useState(false)
+	const [isModalOpen, setIsModalOpen] = useState(false)
 
 	const templateSelectionModalRef = useRef<TemplateSelectionModalHandle>(null)
 	const [activeSelectionContext, setActiveSelectionContext] = useState<{
@@ -198,6 +200,28 @@ export default function ProgramEditor() {
 		[draftProgram, updateDraftProgram]
 	)
 
+	useEffect(() => {
+		const onBackPress = () => {
+			if (isModalOpen) {
+				templateSelectionModalRef.current?.dismiss()
+				return true
+			}
+
+			if (router.canGoBack()) {
+				discardDraftProgram()
+				router.back()
+			} else {
+				discardDraftProgram()
+				router.push('/(app)/(tabs)/workout')
+			}
+			return true
+		}
+
+		const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+
+		return () => subscription.remove()
+	}, [isModalOpen, discardDraftProgram])
+
 	if (!draftProgram) return null
 
 	return (
@@ -325,6 +349,7 @@ export default function ProgramEditor() {
 											weekIndex: wIdx,
 											dayIndex: dIdx,
 										})
+										setIsModalOpen(true)
 										templateSelectionModalRef.current?.present()
 									}}
 								/>
@@ -343,6 +368,7 @@ export default function ProgramEditor() {
 				<TemplateSelectionModal
 					ref={templateSelectionModalRef}
 					templates={templates}
+					onClose={() => setIsModalOpen(false)}
 					onSelect={templateId => {
 						if (activeSelectionContext) {
 							updateDay(activeSelectionContext.weekIndex, activeSelectionContext.dayIndex, { templateId })
@@ -357,25 +383,24 @@ export default function ProgramEditor() {
 /* ───── Memoized Sub-components ───── */
 
 const ProgramDayItemComponent = ({
-		day,
-		weekIndex,
-		dayIndex,
-		templates,
-		onUpdateDay,
-		onSelectTemplate,
-	}: {
-		day: ProgramDay
-		weekIndex: number
-		dayIndex: number
-		templates: any[]
-		onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<ProgramDay>) => void
-		onSelectTemplate: (wIdx: number, dIdx: number) => void
-	}) => {
+	day,
+	weekIndex,
+	dayIndex,
+	templates,
+	onUpdateDay,
+	onSelectTemplate,
+}: {
+	day: ProgramDay
+	weekIndex: number
+	dayIndex: number
+	templates: any[]
+	onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<ProgramDay>) => void
+	onSelectTemplate: (wIdx: number, dIdx: number) => void
+}) => {
 	const selectedTemplateTitle = useMemo(() => {
 		if (!day.templateId) return null
 		return (
-			templates.find(t => t.id === day.templateId || t.clientId === day.templateId)?.title ||
-			'Template Not Found'
+			templates.find(t => t.id === day.templateId || t.clientId === day.templateId)?.title || 'Template Not Found'
 		)
 	}, [day.templateId, templates])
 
@@ -452,22 +477,22 @@ const ProgramDayItem = React.memo(ProgramDayItemComponent)
 ProgramDayItem.displayName = 'ProgramDayItem'
 
 const ProgramWeekItemComponent = ({
-		week,
-		weekIndex,
-		templates,
-		onUpdateWeekName,
-		onRemoveWeek,
-		onUpdateDay,
-		onSelectTemplate,
-	}: {
-		week: ProgramWeek
-		weekIndex: number
-		templates: any[]
-		onUpdateWeekName: (name: string) => void
-		onRemoveWeek: () => void
-		onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<ProgramDay>) => void
-		onSelectTemplate: (wIdx: number, dIdx: number) => void
-	}) => {
+	week,
+	weekIndex,
+	templates,
+	onUpdateWeekName,
+	onRemoveWeek,
+	onUpdateDay,
+	onSelectTemplate,
+}: {
+	week: ProgramWeek
+	weekIndex: number
+	templates: any[]
+	onUpdateWeekName: (name: string) => void
+	onRemoveWeek: () => void
+	onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<ProgramDay>) => void
+	onSelectTemplate: (wIdx: number, dIdx: number) => void
+}) => {
 	return (
 		<View className="mb-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
 			<View className="mb-4 flex-row items-center justify-between">

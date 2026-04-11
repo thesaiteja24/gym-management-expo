@@ -43,8 +43,14 @@ const TemplateSelectionModal = forwardRef<TemplateSelectionModalHandle, Props>(
 				onDismiss={onClose}
 				backgroundStyle={{ backgroundColor: isDark ? '#171717' : 'white' }}
 				handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
+				animationConfigs={{
+					duration: 350,
+				}}
 			>
-				<BottomSheetScrollView style={{ flex: 1, paddingBottom: insets.bottom + 24 }} className="dark:bg-neutral-900">
+				<BottomSheetScrollView
+					style={{ flex: 1, paddingBottom: insets.bottom + 24 }}
+					className="dark:bg-neutral-900"
+				>
 					<View className="flex-1 px-6">
 						<View className="mb-6 flex-row items-center justify-between">
 							<Text className="text-xl font-bold text-black dark:text-white">Select a Template</Text>
@@ -54,7 +60,7 @@ const TemplateSelectionModal = forwardRef<TemplateSelectionModalHandle, Props>(
 						</View>
 
 						{templates.length === 0 ? (
-							<Text className="text-center text-neutral-500 mt-10">No templates found.</Text>
+							<Text className="mt-10 text-center text-neutral-500">No templates found.</Text>
 						) : (
 							<View className="gap-3">
 								{templates.map(type => (
@@ -65,7 +71,7 @@ const TemplateSelectionModal = forwardRef<TemplateSelectionModalHandle, Props>(
 											onSelect(type.id)
 											bottomSheetModalRef.current?.dismiss()
 										}}
-										className="rounded-xl border border-neutral-300 p-4 dark:border-neutral-700 bg-white dark:bg-neutral-800"
+										className="rounded-xl border border-neutral-300 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800"
 									>
 										<Text className="text-lg font-bold text-black dark:text-white">
 											{type.title}

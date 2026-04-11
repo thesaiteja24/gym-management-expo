@@ -83,7 +83,7 @@ export const useTemplate = create<TemplateState>()(
 				enqueueTemplateCreate(payload, userId)
 
 				// Invalidate TanStack Query cache so the list refetches on next focus
-				invalidateTemplatesCache()
+				invalidateTemplatesCache(userId)
 
 				return { success: true, id: clientId }
 			},
@@ -147,7 +147,7 @@ export const useTemplate = create<TemplateState>()(
 						}),
 						userId
 					)
-					invalidateTemplatesCache()
+					invalidateTemplatesCache(userId)
 					return { success: true, id: overwriteId }
 				} else {
 					// New template
@@ -212,7 +212,7 @@ export const useTemplate = create<TemplateState>()(
 				)
 
 				invalidateTemplateCache(id)
-				invalidateTemplatesCache()
+				invalidateTemplatesCache(userId)
 
 				return { success: true }
 			},
@@ -245,7 +245,7 @@ export const useTemplate = create<TemplateState>()(
 				// Pass id as second arg. Logic in queue handles skipping if it's a local CREATE.
 				enqueueTemplateDelete(clientId, actualDbId, userId)
 
-				invalidateTemplatesCache()
+				invalidateTemplatesCache(userId)
 
 				return { success: true }
 			},

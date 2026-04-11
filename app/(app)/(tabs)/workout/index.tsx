@@ -13,7 +13,15 @@ import { useWorkout } from '@/stores/workoutStore'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
-import { RefreshControl, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import {
+	BackHandler,
+	RefreshControl,
+	ScrollView,
+	Text,
+	TouchableOpacity,
+	useWindowDimensions,
+	View,
+} from 'react-native'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import Carousel from 'react-native-reanimated-carousel'
 
@@ -107,6 +115,21 @@ export default function WorkoutScreen() {
 		opacity: programsOpacity.value,
 		transform: [{ translateY: programsOpacity.value === 1 ? 0 : programsTranslateY.value }],
 	}))
+
+	useEffect(() => {
+		const onBackPress = () => {
+			if (router.canGoBack()) {
+				router.back()
+			} else {
+				router.push('/(app)/(tabs)/workout')
+			}
+			return true
+		}
+
+		const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+
+		return () => subscription.remove()
+	}, [])
 
 	return (
 		<ScrollView

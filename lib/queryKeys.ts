@@ -25,13 +25,13 @@ export const queryKeys = {
 	},
 	// Future phases will add more keys here
 	programs: {
-		all: ['programs'] as const,
+		all: (userId: string) => ['programs', userId] as const,
 		byId: (id: string) => ['programs', id] as const,
 		// alias used by usePrograms hook
 		detail: (id: string) => ['programs', id] as const,
 	},
 	templates: {
-		all: ['templates'] as const,
+		all: (userId: string) => ['templates', userId] as const,
 		byId: (id: string) => ['templates', id] as const,
 		byShareId: (shareId: string) => ['templates', 'shared', shareId] as const,
 	},

@@ -3,6 +3,7 @@ import EditableAvatar from '@/components/EditableAvatar'
 import { EditProfileSheet } from '@/components/profile/EditProfileSheet'
 import { FitnessGoalsSheet } from '@/components/profile/FitnessGoalsSheet'
 import { MeasurementsSheet } from '@/components/profile/MeasurementsSheet'
+import { UnitPreferencesSheet } from '@/components/profile/UnitPreferencesSheet'
 import { Button } from '@/components/ui/Button'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { useAuth } from '@/stores/authStore'
@@ -16,9 +17,6 @@ import { BackHandler, Pressable, Text, TouchableOpacity, useColorScheme, View } 
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-type WeightUnit = 'kg' | 'lbs'
-type LengthUnit = 'cm' | 'inches'
-
 export default function ProfileScreen() {
 	const { user, logout } = useAuth()
 	const { getUserData, updatePreferences } = useUser()
@@ -30,39 +28,6 @@ export default function ProfileScreen() {
 	const editProfileSheetRef = useRef<BottomSheetModal>(null)
 	const measurementsSheetRef = useRef<BottomSheetModal>(null)
 	const fitnessGoalsSheetRef = useRef<BottomSheetModal>(null)
-
-	const storedWeightUnit: WeightUnit = user?.preferredWeightUnit ?? 'kg'
-	const storedLengthUnit: LengthUnit = user?.preferredLengthUnit ?? 'cm'
-
-	const [weightUnit, setWeightUnit] = useState<WeightUnit>(storedWeightUnit)
-	const [lengthUnit, setLengthUnit] = useState<LengthUnit>(storedLengthUnit)
-
-	useEffect(() => {
-		setWeightUnit(storedWeightUnit)
-		setLengthUnit(storedLengthUnit)
-	}, [storedWeightUnit, storedLengthUnit])
-
-	const hasChanges = useMemo(() => {
-		return weightUnit !== storedWeightUnit || lengthUnit !== storedLengthUnit
-	}, [weightUnit, lengthUnit, storedWeightUnit, storedLengthUnit])
-
-	const onDismiss = async () => {
-		if (!hasChanges || !user?.userId) return
-
-		await updatePreferences(user.userId, {
-			preferredWeightUnit: weightUnit,
-			preferredLengthUnit: lengthUnit,
-		})
-	}
-
-	const optionClass = (active: boolean, rounded?: string) =>
-		[
-			'w-1/2 py-2 border',
-			rounded,
-			active
-				? 'bg-blue-500 border-blue-500 text-white'
-				: 'bg-white border-neutral-200/60 text-black dark:bg-neutral-900 dark:border-neutral-800 dark:text-white',
-		].join(' ')
 
 	// Animation Values
 	const avatarOpacity = useSharedValue(0)
@@ -303,113 +268,7 @@ export default function ProfileScreen() {
 				/>
 			</Animated.View>
 
-			<BottomSheetModal
-				ref={unitSheetRef}
-				index={0}
-				enableDynamicSizing={true}
-				backdropComponent={props => (
-					<BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
-				)}
-				backgroundStyle={{
-					backgroundColor: isDarkMode ? '#171717' : 'white',
-				}}
-				handleIndicatorStyle={{
-					backgroundColor: isDarkMode ? '#525252' : '#d1d5db',
-				}}
-				onDismiss={onDismiss}
-				animationConfigs={{
-					duration: 350,
-				}}
-			>
-				<BottomSheetView
-					style={{
-						paddingBottom: insets.bottom + 16,
-						paddingHorizontal: 24,
-						paddingTop: 8,
-					}}
-				>
-					<Text className="mb-6 text-center text-xl font-bold text-black dark:text-white">
-						Unit Preferences
-					</Text>
-
-					<View className="flex flex-col gap-6">
-						<View className="flex flex-row items-center justify-between">
-							<Text className="w-1/2 text-lg font-semibold text-black dark:text-white">Weight</Text>
-							<View className="flex w-1/2 flex-row">
-								<TouchableOpacity
-									onPress={() => setWeightUnit('kg')}
-									className={optionClass(weightUnit === 'kg', 'rounded-l-full')}
-								>
-									<Text
-										className={
-											weightUnit === 'kg'
-												? 'text-center text-white'
-												: 'text-center text-black dark:text-white'
-										}
-									>
-										Kg
-									</Text>
-								</TouchableOpacity>
-								<TouchableOpacity
-									onPress={() => setWeightUnit('lbs')}
-									className={optionClass(weightUnit === 'lbs', 'rounded-r-full')}
-								>
-									<Text
-										className={
-											weightUnit === 'lbs'
-												? 'text-center text-white'
-												: 'text-center text-black dark:text-white'
-										}
-									>
-										Lbs
-									</Text>
-								</TouchableOpacity>
-							</View>
-						</View>
-
-						<View className="flex flex-row items-center justify-between">
-							<Text className="w-1/2 text-lg font-semibold text-black dark:text-white">Measurements</Text>
-							<View className="flex w-1/2 flex-row">
-								<TouchableOpacity
-									onPress={() => setLengthUnit('cm')}
-									className={optionClass(lengthUnit === 'cm', 'rounded-l-full')}
-								>
-									<Text
-										className={
-											lengthUnit === 'cm'
-												? 'text-center text-white'
-												: 'text-center text-black dark:text-white'
-										}
-									>
-										Cm
-									</Text>
-								</TouchableOpacity>
-								<TouchableOpacity
-									onPress={() => setLengthUnit('inches')}
-									className={optionClass(lengthUnit === 'inches', 'rounded-r-full')}
-								>
-									<Text
-										className={
-											lengthUnit === 'inches'
-												? 'text-center text-white'
-												: 'text-center text-black dark:text-white'
-										}
-									>
-										Inches
-									</Text>
-								</TouchableOpacity>
-							</View>
-						</View>
-					</View>
-
-					{hasChanges && (
-						<Text className="mt-6 text-center text-sm text-blue-500">
-							Changes will be saved when you close this sheet
-						</Text>
-					)}
-				</BottomSheetView>
-			</BottomSheetModal>
-
+			<UnitPreferencesSheet ref={unitSheetRef} />
 			<EditProfileSheet ref={editProfileSheetRef} />
 			<MeasurementsSheet ref={measurementsSheetRef} />
 			<FitnessGoalsSheet ref={fitnessGoalsSheetRef} />

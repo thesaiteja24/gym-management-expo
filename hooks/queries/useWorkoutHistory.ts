@@ -50,10 +50,9 @@ export function useWorkoutHistoryQuery() {
 	const fetchedClientIds = new Set(fetchedWorkouts.map(w => w.clientId ?? w.id))
 	const uniquePending = pendingWorkouts.filter(w => !fetchedClientIds.has(w.clientId))
 
-	const workoutHistory = [
-		...uniquePending,
-		...fetchedWorkouts,
-	].sort((a, b) => new Date(b.startTime ?? 0).getTime() - new Date(a.startTime ?? 0).getTime())
+	const workoutHistory = [...uniquePending, ...fetchedWorkouts].sort(
+		(a, b) => new Date(b.startTime ?? 0).getTime() - new Date(a.startTime ?? 0).getTime()
+	)
 
 	const hasMore = query.data?.pages?.at(-1)?.meta?.hasMore ?? false
 
@@ -98,10 +97,9 @@ export function useDiscoverWorkoutsQuery() {
 	const fetchedClientIds = new Set(fetchedWorkouts.map(w => w.clientId ?? w.id))
 	const uniquePending = pendingWorkouts.filter(w => !fetchedClientIds.has(w.clientId))
 
-	const discoverWorkouts = [
-		...uniquePending,
-		...fetchedWorkouts,
-	].sort((a, b) => new Date(b.startTime ?? 0).getTime() - new Date(a.startTime ?? 0).getTime())
+	const discoverWorkouts = [...uniquePending, ...fetchedWorkouts].sort(
+		(a, b) => new Date(b.startTime ?? 0).getTime() - new Date(a.startTime ?? 0).getTime()
+	) as WorkoutHistoryItem[]
 
 	const hasMore = query.data?.pages?.at(-1)?.meta?.hasMore ?? false
 

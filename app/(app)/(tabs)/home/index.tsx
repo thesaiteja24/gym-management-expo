@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native'
 import Animated, { Easing, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -49,7 +49,7 @@ export default function HomeScreen() {
 		return new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()
 	}, [user?.dateOfBirth])
 
-	const refreshing = isLoadingMeasurements || isLoadingUserAnalytics || isLoadingHabits || isLoadingHabitLogs
+	const [refreshing, setRefreshing] = useState(false)
 
 	// All values from store are in backend canonical units (kg / cm)
 	const weightKg = Number(latestMeasurements?.weight ?? user?.weight) // kg
@@ -161,6 +161,7 @@ export default function HomeScreen() {
 
 	// ───────────────── Refresh ─────────────────
 	const onRefresh = useCallback(async () => {
+		setRefreshing(true)
 		await Promise.all([
 			getUserData(user?.userId ?? ''),
 			refetchMeasurements(),
@@ -168,6 +169,7 @@ export default function HomeScreen() {
 			refetchHabits(),
 			refetchHabitLogs(),
 		])
+		setRefreshing(false)
 	}, [getUserData, refetchMeasurements, refetchUserAnalytics, refetchHabits, refetchHabitLogs, user?.userId])
 
 	// ───────────────── Header animation ─────────────────
@@ -205,7 +207,7 @@ export default function HomeScreen() {
 				</Text>
 			</Animated.View>
 
-			{refreshing ? (
+			{refreshing || isLoadingMeasurements || isLoadingUserAnalytics || isLoadingHabits || isLoadingHabitLogs ? (
 				<ShimmerHomeScreen />
 			) : (
 				<ScrollView

@@ -2,6 +2,7 @@ import { queryClient } from '@/lib/queryClient'
 import { queryKeys } from '@/lib/queryKeys'
 import { SyncStatus } from '@/lib/sync/types'
 import { getAllTemplatesService, getTemplateByIdService, getTemplateByShareIdService } from '@/services/templateService'
+import { useAuth } from '@/stores/authStore'
 import { WorkoutTemplate } from '@/stores/template/types'
 import { useQuery } from '@tanstack/react-query'
 
@@ -14,9 +15,12 @@ import { useQuery } from '@tanstack/react-query'
 // pending items. We use a short staleTime so the list stays fresh.
 // ─────────────────────────────────────────────────────
 export function useTemplatesQuery() {
+	const userId = useAuth(s => s.user?.userId)
+
 	return useQuery({
-		queryKey: queryKeys.templates.all,
+		queryKey: queryKeys.templates.all(userId ?? ''),
 		queryFn: async () => {
+			if (!userId) return [] as WorkoutTemplate[]
 			const res = await getAllTemplatesService()
 			if (!res.success || !res.data) return [] as WorkoutTemplate[]
 			return res.data.map((item: WorkoutTemplate) => ({
@@ -25,6 +29,7 @@ export function useTemplatesQuery() {
 				syncStatus: 'synced' as SyncStatus,
 			})) as WorkoutTemplate[]
 		},
+		enabled: !!userId,
 		staleTime: 7 * 24 * 60 * 60 * 1000,
 	})
 }
@@ -71,8 +76,8 @@ export function useTemplateByShareIdQuery(shareId: string | null | undefined) {
 // Invalidates the TanStack Query cache so the next useTemplates call
 // picks up the latest data from the backend after sync.
 // ─────────────────────────────────────────────────────
-export function invalidateTemplatesCache() {
-	queryClient.invalidateQueries({ queryKey: queryKeys.templates.all })
+export function invalidateTemplatesCache(userId: string) {
+	queryClient.invalidateQueries({ queryKey: queryKeys.templates.all(userId) })
 }
 
 export function invalidateTemplateCache(id: string) {

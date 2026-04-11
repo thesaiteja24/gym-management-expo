@@ -18,7 +18,7 @@ import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import Fuse from 'fuse.js'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { Keyboard, Platform, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
+import { BackHandler, Keyboard, Platform, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
@@ -111,6 +111,9 @@ export default function ExercisesScreen() {
 		title: string
 	} | null>(null)
 
+	const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false)
+	const [isMuscleGroupModalOpen, setIsMuscleGroupModalOpen] = useState(false)
+
 	useEffect(() => {
 		if (role === roles.systemAdmin) {
 			;(navigation as any).setOptions({
@@ -123,6 +126,23 @@ export default function ExercisesScreen() {
 			})
 		}
 	}, [role, navigation])
+
+	useEffect(() => {
+		const onBackPress = () => {
+			if (isEquipmentModalOpen) {
+				equipmentModalRef.current?.dismiss()
+				return true
+			}
+			if (isMuscleGroupModalOpen) {
+				muscleGroupsModalRef.current?.dismiss()
+				return true
+			}
+			return false // Allow default back behavior
+		}
+
+		const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+		return () => subscription.remove()
+	}, [isEquipmentModalOpen, isMuscleGroupModalOpen])
 
 	/* ───────────────── Fuzzy search ───────────────── */
 
@@ -248,6 +268,7 @@ export default function ExercisesScreen() {
 						<Button
 							title="Equipment"
 							onPress={() => {
+								setIsEquipmentModalOpen(true)
 								equipmentModalRef.current?.present()
 								Keyboard.dismiss()
 							}}
@@ -268,6 +289,7 @@ export default function ExercisesScreen() {
 						<Button
 							title="Muscle Groups"
 							onPress={() => {
+								setIsMuscleGroupModalOpen(true)
 								muscleGroupsModalRef.current?.present()
 								Keyboard.dismiss()
 							}}
@@ -351,7 +373,7 @@ export default function ExercisesScreen() {
 				loading={equipmentLoading}
 				enableCreate={role === roles.systemAdmin}
 				equipment={equipmentList}
-				onClose={() => {}}
+				onClose={() => setIsEquipmentModalOpen(false)}
 				onSelect={item => {
 					setFilter(f => ({ ...f, equipmentId: item.id }))
 					equipmentModalRef.current?.dismiss()
@@ -375,7 +397,7 @@ export default function ExercisesScreen() {
 				loading={muscleGroupLoading}
 				enableCreate={role === roles.systemAdmin}
 				muscleGroups={muscleGroupList}
-				onClose={() => {}}
+				onClose={() => setIsMuscleGroupModalOpen(false)}
 				onSelect={item => {
 					setFilter(f => ({ ...f, muscleGroupId: item.id }))
 					muscleGroupsModalRef.current?.dismiss()
