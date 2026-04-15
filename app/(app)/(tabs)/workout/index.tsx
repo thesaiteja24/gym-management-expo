@@ -1,13 +1,16 @@
 import { Button } from '@/components/ui/Button'
 import { PaywallModal, PaywallModalHandle } from '@/components/ui/PaywallModal'
+import ActiveProgramCard from '@/components/workout/ActiveProgramCard'
 import ProgramCard from '@/components/workout/ProgramCard'
-import SkeletonProgramCard from '@/components/workout/SkeletonProgramCard'
+import { ActiveSkeletonProgramCard, SkeletonProgramCard } from '@/components/workout/SkeletonProgramCard'
 import SkeletonTemplateCard from '@/components/workout/SkeletonTemplateCard'
 import TemplateCard from '@/components/workout/TemplateCard'
 import { FREE_TIER_LIMITS } from '@/constants/limits'
-import { usePrograms } from '@/hooks/queries/usePrograms'
+import { ROLES } from '@/constants/roles'
+import { useActiveProgram, usePrograms } from '@/hooks/queries/usePrograms'
 import { useTemplatesQuery } from '@/hooks/queries/useTemplates'
 import { useThemeColor } from '@/hooks/useThemeColor'
+import { useAuth } from '@/stores/authStore'
 import { useSubscriptionStore } from '@/stores/subscriptionStore'
 import { useWorkout } from '@/stores/workoutStore'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
@@ -34,13 +37,16 @@ export default function WorkoutScreen() {
 	// Workout Store
 	const workout = useWorkout(s => s.workout)
 	const discardWorkout = useWorkout(s => s.discardWorkout)
+	const userRole = useAuth(s => s.user?.role)
 
 	// Template Store — draft/write actions only
 	// Templates list and loading state come from TanStack Query
 	const { data: templates = [], isLoading: templateLoading, refetch: refetchTemplates } = useTemplatesQuery()
 
 	// Programs from TanStack Query
-	const { data: programs = [], isLoading: programLoading, refetch: refetchPrograms } = usePrograms()
+	const { data: programsData, isLoading: programLoading, refetch: refetchPrograms } = usePrograms()
+	const programs = programsData?.programs || []
+	const { data: activeProgram, isLoading: activeLoading, refetch: refetchActive } = useActiveProgram()
 
 	const [refreshing, setRefreshing] = useState(false)
 
@@ -92,9 +98,9 @@ export default function WorkoutScreen() {
 
 	const onRefresh = React.useCallback(async () => {
 		setRefreshing(true)
-		await Promise.all([refetchTemplates(), refetchPrograms()])
+		await Promise.all([refetchTemplates(), refetchPrograms(), refetchActive()])
 		setRefreshing(false)
-	}, [refetchTemplates, refetchPrograms])
+	}, [refetchTemplates, refetchPrograms, refetchActive])
 
 	const activeWorkoutStyle = useAnimatedStyle(() => ({
 		opacity: activeWorkoutOpacity.value,
@@ -168,24 +174,17 @@ export default function WorkoutScreen() {
 					</View>
 				</Animated.View>
 
-				{/* Programs Section */}
 				<Animated.View style={programsStyle} className="mb-8 flex flex-col gap-4">
 					<View className="flex flex-row items-center justify-between">
-						<Text className="text-xl font-semibold text-black dark:text-white">My Programs</Text>
-
-						<TouchableOpacity
-							onPress={() => {
-								router.push('/(app)/program')
-							}}
-						>
-							<MaterialCommunityIcons name="folder-plus" size={24} color={colors.icon} />
-						</TouchableOpacity>
+						<Text className="text-xl font-semibold text-black dark:text-white">Active Program</Text>
 					</View>
 
 					{/* Active Program Card or Dotted Interface */}
-					{/* <View className="mb-4">
-						{activeProgramId && programs.find(p => p.id === activeProgramId) ? (
-							<ProgramCard program={programs.find(p => p.id === activeProgramId)!} />
+					<View className="mb-4">
+						{activeLoading || refreshing ? (
+							<ActiveSkeletonProgramCard />
+						) : activeProgram ? (
+							<ActiveProgramCard program={activeProgram} />
 						) : (
 							<View className="h-32 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
 								<Text className="mb-2 text-neutral-500 dark:text-neutral-400">
@@ -193,7 +192,24 @@ export default function WorkoutScreen() {
 								</Text>
 							</View>
 						)}
-					</View> */}
+					</View>
+				</Animated.View>
+
+				{/* Programs Section */}
+				<Animated.View style={programsStyle} className="mb-8 flex flex-col gap-4">
+					<View className="flex flex-row items-center justify-between">
+						<Text className="text-xl font-semibold text-black dark:text-white">Programs</Text>
+
+						{isPro && userRole === ROLES.systemAdmin && (
+							<TouchableOpacity
+								onPress={() => {
+									router.push('/(app)/program')
+								}}
+							>
+								<MaterialCommunityIcons name="folder-plus" size={24} color={colors.icon} />
+							</TouchableOpacity>
+						)}
+					</View>
 
 					{/* Available Programs Carousel */}
 					{programLoading || refreshing ? (

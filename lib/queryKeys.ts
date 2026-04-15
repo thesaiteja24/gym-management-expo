@@ -24,11 +24,17 @@ export const queryKeys = {
 		byId: (id: string) => ['muscleGroups', id] as const,
 	},
 	// Future phases will add more keys here
+	// Programs (Library / Global)
 	programs: {
 		all: (userId: string) => ['programs', userId] as const,
-		byId: (id: string) => ['programs', id] as const,
-		// alias used by usePrograms hook
-		detail: (id: string) => ['programs', id] as const,
+		detail: (programId: string) => ['programs', 'detail', programId] as const,
+		// User specific program instances
+		user: {
+			all: (userId: string) => ['userPrograms', userId] as const,
+			active: (userId: string) => ['userPrograms', 'active', userId] as const,
+			detail: (userId: string, userProgramId: string) =>
+				['userPrograms', 'detail', userId, userProgramId] as const,
+		},
 	},
 	templates: {
 		all: (userId: string) => ['templates', userId] as const,
