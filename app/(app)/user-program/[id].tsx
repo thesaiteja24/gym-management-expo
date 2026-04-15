@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/Button'
 import { useUserProgram } from '@/hooks/queries/usePrograms'
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect, useState } from 'react'
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
@@ -14,13 +14,30 @@ export default function UserProgramDashboard() {
 	const params = useLocalSearchParams()
 	const navigation = useNavigation()
 	const userProgramId = params.id as string
-	
+
 	// Track which week we are viewing (default to the user's current week)
 	const [viewedWeekIndex, setViewedWeekIndex] = useState<number | null>(null)
-	
+
 	const { data: userProgram, isLoading } = useUserProgram(userProgramId, viewedWeekIndex ?? undefined)
 	const [isModalOpen, setIsModalOpen] = React.useState(false)
 	const workoutDetailsModalRef = React.useRef<WorkoutDetailsModalHandle>(null)
+
+	const getStatusColor = () => {
+		switch (userProgram?.status) {
+			case 'active':
+				return 'blue'
+			case 'completed':
+				return 'green'
+			case 'paused':
+				return 'yellow'
+			case 'cancelled':
+				return 'red'
+			default:
+				return 'neutral'
+		}
+	}
+
+	const statusColor = getStatusColor()
 
 	// Set initial week index once data arrives
 	useEffect(() => {
@@ -32,7 +49,7 @@ export default function UserProgramDashboard() {
 	useEffect(() => {
 		if (userProgram) {
 			navigation.setOptions({
-				title: 'Active Program',
+				title: userProgram.status === 'active' ? 'Active Program' : 'Program Details',
 				rightIcons: [
 					{
 						name: 'settings-outline',
@@ -59,8 +76,7 @@ export default function UserProgramDashboard() {
 
 	const currentWeekData = userProgram.weeks?.[0] // Backend returns requested week at index 0
 	const progressPercent = Math.round(
-		((userProgram.progress.currentWeek * 7 + userProgram.progress.currentDay) /
-			(userProgram.durationWeeks * 7)) *
+		((userProgram.progress.currentWeek * 7 + userProgram.progress.currentDay) / (userProgram.durationWeeks * 7)) *
 			100
 	)
 
@@ -69,13 +85,12 @@ export default function UserProgramDashboard() {
 			<ScrollView contentContainerStyle={{ padding: 16 }}>
 				{/* Header Section */}
 				<View className="mb-6">
-					<Text className="text-3xl font-bold text-black dark:text-white">
-						{userProgram.program.title}
-					</Text>
+					<Text className="text-3xl font-bold text-black dark:text-white">{userProgram.program.title}</Text>
 					<View className="mt-2 flex-row items-center gap-2">
-						<View className="rounded-full bg-indigo-100 px-3 py-1 dark:bg-indigo-900/30">
-							<Text className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-								ACTIVE
+						{/* Status Badge */}
+						<View className={`rounded-full px-2 py-1 bg-${statusColor}-100 dark:bg-${statusColor}-900/40`}>
+							<Text className={`text-sm capitalize text-${statusColor}-600 dark:text-${statusColor}-400`}>
+								{userProgram.status}
 							</Text>
 						</View>
 						<Text className="text-neutral-500">
@@ -91,10 +106,7 @@ export default function UserProgramDashboard() {
 						<Text className="font-bold text-indigo-600">{progressPercent}%</Text>
 					</View>
 					<View className="h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
-						<View
-							className="h-full bg-indigo-600"
-							style={{ width: `${progressPercent}%` }}
-						/>
+						<View className="h-full bg-indigo-600" style={{ width: `${progressPercent}%` }} />
 					</View>
 				</View>
 
@@ -107,9 +119,7 @@ export default function UserProgramDashboard() {
 								key={i}
 								onPress={() => setViewedWeekIndex(i)}
 								className={`mr-2 rounded-xl px-4 py-2 ${
-									viewedWeekIndex === i
-										? 'bg-indigo-600'
-										: 'bg-neutral-100 dark:bg-neutral-800'
+									viewedWeekIndex === i ? 'bg-indigo-600' : 'bg-neutral-100 dark:bg-neutral-800'
 								}`}
 							>
 								<Text
@@ -154,7 +164,7 @@ export default function UserProgramDashboard() {
 										)}
 									</View>
 									{day.isRestDay ? (
-										<Text className="mt-1 text-sm text-emerald-500 font-medium">Rest Day</Text>
+										<Text className="mt-1 text-sm font-medium text-emerald-500">Rest Day</Text>
 									) : (
 										<Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
 											{day.templateSnapshot?.title || 'No Workout Assigned'}
@@ -162,10 +172,10 @@ export default function UserProgramDashboard() {
 									)}
 								</View>
 								<View className="h-10 w-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
-									<MaterialCommunityIcons 
-										name={day.isRestDay ? "coffee-outline" : "arm-flex-outline"} 
-										size={20} 
-										color={isToday ? "#6366f1" : "#9ca3af"} 
+									<MaterialCommunityIcons
+										name={day.isRestDay ? 'coffee-outline' : 'arm-flex-outline'}
+										size={20}
+										color={isToday ? '#6366f1' : '#9ca3af'}
 									/>
 								</View>
 							</TouchableOpacity>
@@ -173,10 +183,10 @@ export default function UserProgramDashboard() {
 					})}
 				</View>
 
-				<Button 
-					title="Log Manual Workout" 
-					variant="secondary" 
-					className="mt-8 mb-4"
+				<Button
+					title="Log Manual Workout"
+					variant="secondary"
+					className="mb-4 mt-8"
 					onPress={() => Toast.show({ type: 'info', text1: 'Manual logging coming soon' })}
 				/>
 			</ScrollView>

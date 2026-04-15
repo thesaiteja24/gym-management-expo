@@ -9,19 +9,57 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 import ShimmerProgramDetails from '@/components/program/ShimmerProgramDetails'
+import { StartProgramSheet, StartProgramSheetHandle } from '@/components/program/StartProgramSheet'
 import { WorkoutDetailsModal, WorkoutDetailsModalHandle } from '@/components/program/WorkoutDetailsModal'
 import { ROLES } from '@/constants/roles'
+import { useActiveProgram } from '@/hooks/queries/usePrograms'
 import { useAuth } from '@/stores/authStore'
+import { useSubscriptionStore } from '@/stores/subscriptionStore'
 
 export default function ProgramTemplateDetails() {
 	const params = useLocalSearchParams()
 	const navigation = useNavigation()
 	const { data: program, isLoading: programByIdLoading } = useProgramById(params.id as string)
+	const { data: activeProgram } = useActiveProgram()
 	const deleteProgramMutation = useDeleteProgram()
 	const startProgramMutation = useStartProgram()
+	const isPro = useSubscriptionStore(s => s.isPro)
+
 	const [isModalOpen, setIsModalOpen] = React.useState(false)
 	const deleteModalRef = useRef<DeleteConfirmModalHandle>(null)
 	const workoutDetailsModalRef = useRef<WorkoutDetailsModalHandle>(null)
+	const startProgramSheetRef = useRef<StartProgramSheetHandle>(null)
+
+	const handleConfirmStart = async (duration: number) => {
+		if (!program?.id) return
+
+		try {
+			await startProgramMutation.mutateAsync({
+				programId: program.id,
+				duration: duration,
+				startDate: new Date(),
+			})
+
+			startProgramSheetRef.current?.dismiss()
+			Toast.show({
+				type: 'success',
+				text1: 'Program Started!',
+				text2: 'Redirecting to your workout dashboard...',
+			})
+
+			// Wait a bit for the animation and sync
+			setTimeout(() => {
+				router.push('/(app)/(tabs)/workout')
+			}, 500)
+		} catch (error: any) {
+			Toast.show({
+				type: 'error',
+				text1: 'Failed to start program',
+				text2: error.message || 'Please try again',
+			})
+		}
+	}
+
 	const userId = useAuth().user?.userId
 	const role = useAuth().user?.role
 
@@ -94,7 +132,7 @@ export default function ProgramTemplateDetails() {
 					title="Start This Program"
 					variant="primary"
 					onPress={() => {
-						// startProgramMutation TODO: Properly implement this
+						startProgramSheetRef.current?.present()
 					}}
 					className="mb-8"
 				/>
@@ -148,6 +186,14 @@ export default function ProgramTemplateDetails() {
 			/>
 
 			<WorkoutDetailsModal ref={workoutDetailsModalRef} onOpenChange={setIsModalOpen} />
+
+			<StartProgramSheet
+				ref={startProgramSheetRef}
+				program={program}
+				activeProgram={activeProgram ?? null}
+				onConfirm={handleConfirmStart}
+				isLoading={startProgramMutation.isPending}
+			/>
 		</SafeAreaView>
 	)
 }

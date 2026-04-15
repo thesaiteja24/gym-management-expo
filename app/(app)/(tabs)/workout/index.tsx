@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/Button'
 import { PaywallModal, PaywallModalHandle } from '@/components/ui/PaywallModal'
-import ActiveProgramCard from '@/components/workout/ActiveProgramCard'
+import UserProgramCard from '@/components/workout/UserProgramCard'
 import ProgramCard from '@/components/workout/ProgramCard'
-import { ActiveSkeletonProgramCard, SkeletonProgramCard } from '@/components/workout/SkeletonProgramCard'
+import { SkeletonUserProgramCard, SkeletonProgramCard } from '@/components/workout/SkeletonProgramCard'
 import SkeletonTemplateCard from '@/components/workout/SkeletonTemplateCard'
 import TemplateCard from '@/components/workout/TemplateCard'
 import { FREE_TIER_LIMITS } from '@/constants/limits'
 import { ROLES } from '@/constants/roles'
-import { useActiveProgram, usePrograms } from '@/hooks/queries/usePrograms'
+import { useActiveProgram, usePrograms, useUserPrograms } from '@/hooks/queries/usePrograms'
 import { useTemplatesQuery } from '@/hooks/queries/useTemplates'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/stores/authStore'
@@ -47,6 +47,9 @@ export default function WorkoutScreen() {
 	const { data: programsData, isLoading: programLoading, refetch: refetchPrograms } = usePrograms()
 	const programs = programsData?.programs || []
 	const { data: activeProgram, isLoading: activeLoading, refetch: refetchActive } = useActiveProgram()
+	const { data: allUserPrograms = [], isLoading: userProgramsLoading } = useUserPrograms()
+
+	const pastPrograms = allUserPrograms.filter(p => p.id !== activeProgram?.id)
 
 	const [refreshing, setRefreshing] = useState(false)
 
@@ -182,9 +185,9 @@ export default function WorkoutScreen() {
 					{/* Active Program Card or Dotted Interface */}
 					<View className="mb-4">
 						{activeLoading || refreshing ? (
-							<ActiveSkeletonProgramCard />
+							<SkeletonUserProgramCard />
 						) : activeProgram ? (
-							<ActiveProgramCard program={activeProgram} />
+							<UserProgramCard program={activeProgram} />
 						) : (
 							<View className="h-32 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
 								<Text className="mb-2 text-neutral-500 dark:text-neutral-400">
@@ -359,6 +362,25 @@ export default function WorkoutScreen() {
 						</View>
 					)}
 				</Animated.View>
+
+				{/* Past Programs Section */}
+				{pastPrograms.length > 0 && (
+					<Animated.View style={programsStyle} className="mt-8 flex flex-col gap-4">
+						<View className="flex flex-row items-center justify-between">
+							<Text className="text-xl font-semibold text-black dark:text-white">Past Programs</Text>
+						</View>
+
+						{userProgramsLoading || refreshing ? (
+							<SkeletonUserProgramCard />
+						) : (
+							<View className="gap-4">
+								{pastPrograms.map(p => (
+									<UserProgramCard key={p.id} program={p} />
+								))}
+							</View>
+						)}
+					</Animated.View>
+				)}
 			</View>
 
 			<PaywallModal
