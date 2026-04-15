@@ -1,14 +1,16 @@
 import { Button } from '@/components/ui/Button'
 import TemplateSelectionModal, { TemplateSelectionModalHandle } from '@/components/workout/TemplateSelectionModal'
-import { useCreateProgram, usePrograms, useUpdateProgram } from '@/hooks/queries/usePrograms'
+import { useCreateProgram, useProgramById, useUpdateProgram } from '@/hooks/queries/usePrograms'
 import { useTemplatesQuery } from '@/hooks/queries/useTemplates'
-import { ProgramDay, ProgramWeek, useProgram } from '@/stores/programStore'
+import { useProgram } from '@/stores/programStore'
+import { DraftProgramDay, DraftProgramWeek } from '@/types/programApi'
 import { Ionicons } from '@expo/vector-icons'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import * as Crypto from 'expo-crypto'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+	ActivityIndicator,
 	BackHandler,
 	KeyboardAvoidingView,
 	Platform,
@@ -35,7 +37,7 @@ export default function ProgramEditor() {
 	const discardDraftProgram = useProgram(s => s.discardDraftProgram)
 
 	// Server data (TanStack Query)
-	const { data: programs = [] } = usePrograms()
+	const { data: programData, isLoading: programsLoading } = useProgramById(params.id as string | null)
 	const createProgramMutation = useCreateProgram()
 	const updateProgramMutation = useUpdateProgram()
 
@@ -72,8 +74,9 @@ export default function ProgramEditor() {
 			}
 			// Avoid infinite loop: only start draft if it's not already set for this ID
 			if (draftProgram?.id === params.id) return
+			if (programsLoading && !programData) return
 
-			const existing = programs.find(p => p.id === params.id)
+			const existing = programData
 			if (existing) {
 				startDraftProgram(JSON.parse(JSON.stringify(existing)))
 			} else {
@@ -85,10 +88,11 @@ export default function ProgramEditor() {
 				startDraftProgram()
 			}
 		}
-	}, [isEditing, params.id, programs, startDraftProgram, draftProgram])
+	}, [isEditing, params.id, programData, startDraftProgram, draftProgram, programsLoading])
 
 	const handleSave = useCallback(async () => {
 		if (!draftProgram) return
+
 		if (!draftProgram.title.trim()) {
 			Toast.show({ type: 'error', text1: 'Title required', text2: 'Please enter a name for your program.' })
 			return
@@ -106,9 +110,9 @@ export default function ProgramEditor() {
 		setSaving(true)
 		try {
 			if (isEditing && draftProgram.id) {
-				await updateProgramMutation.mutateAsync({ id: draftProgram.id, data: draftProgram as any })
+				await updateProgramMutation.mutateAsync({ id: draftProgram.id, data: draftProgram })
 			} else {
-				await createProgramMutation.mutateAsync(draftProgram as any)
+				await createProgramMutation.mutateAsync(draftProgram)
 			}
 
 			Toast.show({
@@ -155,7 +159,7 @@ export default function ProgramEditor() {
 	const addWeek = useCallback(() => {
 		if (!draftProgram) return
 		const newWeekIndex = draftProgram.weeks?.length || 0
-		const newWeek: ProgramWeek = {
+		const newWeek: DraftProgramWeek = {
 			id: '',
 			programId: draftProgram.id || '',
 			key: Crypto.randomUUID(),
@@ -175,7 +179,7 @@ export default function ProgramEditor() {
 	}, [draftProgram, updateDraftProgram])
 
 	const updateDay = useCallback(
-		(weekIndex: number, dayIndex: number, patch: Partial<ProgramDay>) => {
+		(weekIndex: number, dayIndex: number, patch: Partial<DraftProgramDay>) => {
 			if (!draftProgram?.weeks) return
 			const newWeeks = [...draftProgram.weeks]
 			newWeeks[weekIndex].days[dayIndex] = { ...newWeeks[weekIndex].days[dayIndex], ...patch }
@@ -222,6 +226,15 @@ export default function ProgramEditor() {
 		return () => subscription.remove()
 	}, [isModalOpen, discardDraftProgram])
 
+	if (isEditing && programsLoading && draftProgram?.id !== params.id) {
+		return (
+			<View className="flex-1 items-center justify-center bg-white dark:bg-black">
+				<ActivityIndicator size="large" color="#3b82f6" />
+				<Text className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">Loading program...</Text>
+			</View>
+		)
+	}
+
 	if (!draftProgram) return null
 
 	return (
@@ -244,7 +257,7 @@ export default function ProgramEditor() {
 								placeholder="Description (optional)"
 								placeholderTextColor="#9ca3af"
 								multiline
-								className="mb-4 max-h-20 text-base text-neutral-600 dark:text-neutral-400"
+								className="mb-4 text-base text-neutral-600 dark:text-neutral-400"
 							/>
 
 							{/* Program Settings */}
@@ -390,11 +403,11 @@ const ProgramDayItemComponent = ({
 	onUpdateDay,
 	onSelectTemplate,
 }: {
-	day: ProgramDay
+	day: DraftProgramDay
 	weekIndex: number
 	dayIndex: number
 	templates: any[]
-	onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<ProgramDay>) => void
+	onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<DraftProgramDay>) => void
 	onSelectTemplate: (wIdx: number, dIdx: number) => void
 }) => {
 	const selectedTemplateTitle = useMemo(() => {
@@ -485,12 +498,12 @@ const ProgramWeekItemComponent = ({
 	onUpdateDay,
 	onSelectTemplate,
 }: {
-	week: ProgramWeek
+	week: DraftProgramWeek
 	weekIndex: number
 	templates: any[]
 	onUpdateWeekName: (name: string) => void
 	onRemoveWeek: () => void
-	onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<ProgramDay>) => void
+	onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<DraftProgramDay>) => void
 	onSelectTemplate: (wIdx: number, dIdx: number) => void
 }) => {
 	return (

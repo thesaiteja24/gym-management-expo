@@ -1,9 +1,10 @@
 {
-  "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit",
-    "source.organizeImports": "explicit",
-    "source.sortMembers": "explicit"
-  },
-  "git.ignoreLimitWarning": true,
-  "java.configuration.updateBuildConfiguration": "automatic"
+	"editor.codeActionsOnSave": {
+		"source.fixAll": "explicit",
+		"source.organizeImports": "explicit",
+		"source.sortMembers": "explicit"
+	},
+	"git.ignoreLimitWarning": true,
+	"java.configuration.updateBuildConfiguration": "automatic",
+	"prisma.pinToPrisma6": true
 }

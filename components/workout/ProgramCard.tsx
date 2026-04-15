@@ -1,11 +1,11 @@
 import { Button } from '@/components/ui/Button'
-import { Program } from '@/stores/programStore'
+import { ProgramTemplateModel } from '@/types/programApi'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import { Link, router } from 'expo-router'
 import { Pressable, Text, View } from 'react-native'
 
-export default function ProgramCard({ program }: { program: Program }) {
+export default function ProgramCard({ program }: { program: ProgramTemplateModel }) {
 	const handleStart = () => {
 		router.push(`/(app)/program/${program.id}`)
 	}

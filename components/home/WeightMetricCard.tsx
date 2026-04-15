@@ -56,7 +56,7 @@ export function WeightMetricCard({ width }: WeightMetricCardProps) {
 			convertWeight(Number(m.weight), {
 				from: 'kg',
 				to: preferredUnit,
-				precision: 1,
+				precision: 2,
 			})
 		)
 	}, [last7, preferredUnit])
