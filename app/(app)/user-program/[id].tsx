@@ -20,7 +20,6 @@ import Animated, {
 	withSequence,
 	withTiming,
 } from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 import ShimmerProgramDetails from '@/components/program/ShimmerProgramDetails'
@@ -180,7 +179,7 @@ export default function UserProgramDashboard() {
 	const hasWorkout = !!todayDay?.templateSnapshot
 
 	return (
-		<SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['bottom']}>
+		<View className="relative flex-1 bg-white dark:bg-black">
 			<ScrollView
 				contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
 				showsVerticalScrollIndicator={false}
@@ -357,6 +356,6 @@ export default function UserProgramDashboard() {
 					}
 				}}
 			/>
-		</SafeAreaView>
+		</View>
 	)
 }

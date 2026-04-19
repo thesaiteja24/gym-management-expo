@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect, useMemo, useRef } from 'react'
 import { BackHandler, ScrollView, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 import ShimmerProgramDetails from '@/components/program/ShimmerProgramDetails'
@@ -133,7 +132,7 @@ export default function ProgramTemplateDetails() {
 	}
 
 	return (
-		<SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['bottom']}>
+		<View className="relative flex-1 bg-white dark:bg-black">
 			<ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
 				<Text className="mb-2 text-3xl font-bold text-black dark:text-white">{program.title}</Text>
 				{program.description ? (
@@ -208,6 +207,6 @@ export default function ProgramTemplateDetails() {
 				onConfirm={handleConfirmStart}
 				isLoading={startProgramMutation.isPending}
 			/>
-		</SafeAreaView>
+		</View>
 	)
 }

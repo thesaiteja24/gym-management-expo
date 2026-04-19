@@ -90,7 +90,7 @@ export function useUserPrograms() {
 export function useUserProgram(userProgramId: string | null | undefined, weekIndex?: number) {
 	const userId = useAuth(s => s.user?.userId)
 	return useQuery({
-		queryKey: [queryKeys.programs.user.detail(userId ?? '', userProgramId ?? ''), weekIndex],
+		queryKey: [...queryKeys.programs.user.detail(userId ?? '', userProgramId ?? ''), weekIndex ?? 'default'],
 		queryFn: async () => {
 			const res = await getUserProgramService(userProgramId!, weekIndex)
 			return (res.data?.program ?? null) as UserProgram | null

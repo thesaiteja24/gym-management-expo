@@ -2,6 +2,7 @@ import {
 	FITNESS_PROFILE_ENDPOINT,
 	MEASUREMENTS_ENDPOINT,
 	NUTRITION_PLAN_ENDPOINT,
+	TRAINING_ANALYTICS_ENDPOINT,
 	USER_ANALYTICS_ENDPOINT,
 } from '@/constants/urls'
 import { handleApiResponse } from '@/utils/handleApiResponse'
@@ -18,9 +19,9 @@ export async function getFitnessProfileService(id: string) {
 	}
 }
 
-export async function getMeasurementsService(id: string) {
+export async function getMeasurementsService(id: string, duration?: string) {
 	try {
-		const res = await client.get(MEASUREMENTS_ENDPOINT(id))
+		const res = await client.get(MEASUREMENTS_ENDPOINT(id, duration))
 
 		return handleApiResponse(res)
 	} catch (error: any) {
@@ -90,6 +91,17 @@ export async function updateNutritionPlanService(id: string, data: any) {
 export async function getUserAnalyticsService(id: string) {
 	try {
 		const res = await client.get(USER_ANALYTICS_ENDPOINT(id))
+
+		return handleApiResponse(res)
+	} catch (error: any) {
+		const errData = error.response?.data
+		throw new Error(errData?.message || error.message || 'Network error')
+	}
+}
+
+export async function getTrainingAnalyticsService(id: string, duration: string) {
+	try {
+		const res = await client.get(TRAINING_ANALYTICS_ENDPOINT(id, duration))
 
 		return handleApiResponse(res)
 	} catch (error: any) {

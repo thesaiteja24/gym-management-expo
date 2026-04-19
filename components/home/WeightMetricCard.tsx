@@ -99,6 +99,7 @@ export function WeightMetricCard({ width }: WeightMetricCardProps) {
 				onPress={() => {
 					router.push('/analytics/weight-chart')
 				}}
+				pointerEvents="box-only"
 				style={[
 					styles.card,
 					{

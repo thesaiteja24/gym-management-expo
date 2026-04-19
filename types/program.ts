@@ -121,6 +121,8 @@ export interface ProgramTemplateModel {
 	createdAt: string
 	updatedAt: string
 	deletedAt: string | null
+	enrolledCount: number
+	enrolledCountLabel: string
 	weeks?: ProgramWeek[]
 }
 

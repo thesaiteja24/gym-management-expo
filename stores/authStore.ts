@@ -1,3 +1,4 @@
+import { queryClient } from '@/lib/queryClient'
 import { registerUnauthorizedHandler } from '@/lib/authSession'
 import { clearTemplateQueue, clearWorkoutQueue } from '@/lib/sync/queue'
 import { setAccessToken } from '@/services/api'
@@ -147,6 +148,9 @@ export const useAuth = create<AuthState>((set, get) => ({
 		set({ isLoading: true })
 
 		try {
+			// Clear TanStack Query cache
+			queryClient.clear()
+
 			await SecureStore.deleteItemAsync('accessToken')
 			await SecureStore.deleteItemAsync('user')
 		} finally {

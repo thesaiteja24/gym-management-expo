@@ -10,13 +10,7 @@ import {
 	updateHabitService,
 } from '@/services/habitService'
 import { useAuth } from '@/stores/authStore'
-import type {
-	HabitFooterType,
-	HabitLogType,
-	HabitSourceType,
-	HabitTrackingType,
-	HabitType,
-} from '@/types/habits'
+import type { HabitLogType, HabitType } from '@/types/habits'
 import { useMutation, useQuery } from '@tanstack/react-query'
 
 // ─────────────────────────────────────────────────────
@@ -40,6 +34,7 @@ export function useHabitsQuery() {
 		},
 		enabled: Boolean(userId),
 		staleTime: 24 * 60 * 60 * 1000,
+		gcTime: 24 * 60 * 60 * 1000,
 	})
 }
 
@@ -59,6 +54,7 @@ export function useHabitLogsQuery(startDate?: string, endDate?: string) {
 		},
 		enabled: Boolean(userId),
 		staleTime: 24 * 60 * 60 * 1000,
+		gcTime: 24 * 60 * 60 * 1000,
 	})
 }
 
@@ -231,15 +227,4 @@ export function useLogWeight() {
 			queryClient.invalidateQueries({ queryKey: queryKeys.analytics.measurements(userId!) })
 		},
 	})
-}
-
-// ─────────────────────────────────────────────────────
-// Cache helpers
-// ─────────────────────────────────────────────────────
-export function invalidateHabitsCache(userId: string) {
-	queryClient.invalidateQueries({ queryKey: queryKeys.habits.list(userId) })
-}
-
-export function invalidateHabitLogsCache(userId: string) {
-	queryClient.invalidateQueries({ queryKey: queryKeys.habits.logs(userId) })
 }

@@ -5,6 +5,7 @@ import {
 	getFitnessProfileService,
 	getMeasurementsService,
 	getNutritionPlanService,
+	getTrainingAnalyticsService,
 	getUserAnalyticsService,
 	updateFitnessProfileService,
 	updateNutritionPlanService,
@@ -15,9 +16,9 @@ import type {
 	LatestMeasurements,
 	MeasurementType,
 	MeasurementsQueryData,
+	TrainingAnalytics,
 } from '@/types/analytics'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { invalidateHabitLogsCache } from './useHabits'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // READ — measurements (history + latest values + daily weight change)
@@ -25,14 +26,14 @@ import { invalidateHabitLogsCache } from './useHabits'
 // Strategy: TQ fetches and caches. On success it syncs into Zustand so that
 // `addMeasurement` optimistic writes merge correctly with the persisted list.
 // ─────────────────────────────────────────────────────────────────────────────
-export function useMeasurementsQuery() {
+export function useMeasurementsQuery(duration?: string) {
 	const userId = useAuth(s => s.user?.userId)
 
 	return useQuery({
-		queryKey: queryKeys.analytics.measurements(userId ?? ''),
+		queryKey: queryKeys.analytics.measurements(userId ?? '', duration),
 		queryFn: async () => {
 			if (!userId) throw new Error('Not authenticated')
-			const res = await getMeasurementsService(userId)
+			const res = await getMeasurementsService(userId, duration)
 			if (!res.success) throw new Error(res.message || 'Failed to fetch measurements')
 
 			const { history = [], latestValues = {}, dailyWeightChange = null } = res.data ?? {}
@@ -40,6 +41,7 @@ export function useMeasurementsQuery() {
 		},
 		enabled: !!userId,
 		staleTime: 24 * 60 * 60 * 1000,
+		gcTime: 24 * 60 * 60 * 1000,
 	})
 }
 
@@ -59,6 +61,7 @@ export function useFitnessProfileQuery() {
 		},
 		enabled: !!userId,
 		staleTime: 24 * 60 * 60 * 1000,
+		gcTime: 24 * 60 * 60 * 1000,
 	})
 }
 
@@ -78,6 +81,7 @@ export function useNutritionPlanQuery() {
 		},
 		enabled: !!userId,
 		staleTime: 24 * 60 * 60 * 1000,
+		gcTime: 24 * 60 * 60 * 1000,
 	})
 }
 
@@ -95,8 +99,7 @@ export function useUserAnalyticsQuery() {
 			if (!res.success) throw new Error(res.message || 'Failed to fetch analytics')
 
 			const data = res.data || {}
-			// workoutDates comes as an array from the API — convert to Set for consumers
-			data.workoutDates = new Set(Array.isArray(data.workoutDates) ? data.workoutDates : [])
+			// Keep workoutDates as an array for safe JSON serialization in persistent cache
 			return data as AnalyticsMetrics
 		},
 		enabled: !!userId,
@@ -104,6 +107,22 @@ export function useUserAnalyticsQuery() {
 	})
 }
 
+export function useTrainingAnalyticsQuery(duration: string = '3m') {
+	const userId = useAuth(s => s.user?.userId)
+
+	return useQuery({
+		queryKey: queryKeys.analytics.trainingAnalytics(userId ?? '', duration),
+		queryFn: async () => {
+			if (!userId) throw new Error('Not authenticated')
+			const res = await getTrainingAnalyticsService(userId, duration)
+			if (!res.success) throw new Error(res.message || 'Failed to fetch training analytics')
+			return res.data as TrainingAnalytics
+		},
+		enabled: !!userId,
+		staleTime: 24 * 60 * 60 * 1000,
+		gcTime: 24 * 60 * 60 * 1000,
+	})
+}
 // ─────────────────────────────────────────────────────────────────────────────
 // Mutations
 // ─────────────────────────────────────────────────────────────────────────────
@@ -264,7 +283,7 @@ export function useAddMeasurement() {
 
 			// Invalidate habit logs if internal metrics are updated
 			if (measurementData.weight != null || measurementData.bodyFat != null || measurementData.waist != null) {
-				invalidateHabitLogsCache(userId!)
+				queryClient.invalidateQueries({ queryKey: ['habits', 'logs', userId] })
 			}
 
 			return { previousMeasurements }

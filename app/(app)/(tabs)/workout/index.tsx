@@ -8,6 +8,7 @@ import TemplateCard from '@/components/workout/TemplateCard'
 import UserProgramCard from '@/components/workout/UserProgramCard'
 import { FREE_TIER_LIMITS } from '@/constants/limits'
 import { ROLES } from '@/constants/roles'
+import { useExercises } from '@/hooks/queries/useExercises'
 import { useActiveProgram, usePrograms, useUserPrograms } from '@/hooks/queries/usePrograms'
 import { useTemplatesQuery } from '@/hooks/queries/useTemplates'
 import { useThemeColor } from '@/hooks/useThemeColor'
@@ -51,6 +52,9 @@ export default function WorkoutScreen() {
 	const programs = programsData?.programs || []
 	const { data: activeProgram, isLoading: activeLoading, refetch: refetchActive } = useActiveProgram()
 	const { data: allUserPrograms = [], isLoading: userProgramsLoading } = useUserPrograms()
+
+	// Warm up exercise cache
+	const { refetch: refetchExercises } = useExercises()
 
 	const pastPrograms = allUserPrograms.filter(p => p.id !== activeProgram?.id)
 
@@ -105,9 +109,9 @@ export default function WorkoutScreen() {
 
 	const onRefresh = React.useCallback(async () => {
 		setRefreshing(true)
-		await Promise.all([refetchTemplates(), refetchPrograms(), refetchActive()])
+		await Promise.all([refetchTemplates(), refetchPrograms(), refetchActive(), refetchExercises()])
 		setRefreshing(false)
-	}, [refetchTemplates, refetchPrograms, refetchActive])
+	}, [refetchTemplates, refetchPrograms, refetchActive, refetchExercises])
 
 	const activeWorkoutStyle = useAnimatedStyle(() => ({
 		opacity: activeWorkoutOpacity.value,

@@ -33,7 +33,6 @@ import { useAuth } from '@/stores/authStore'
 import { useSyncStore } from '@/stores/syncStore'
 import { TemplateMutation, UserMutation, WorkoutMutation } from '@/types/sync'
 import { useCallback, useEffect, useRef } from 'react'
-import { invalidateHabitLogsCache } from './queries/useHabits'
 import { useNetworkStatus } from './useNetworkStatus'
 
 /* ─────────────────────────────────────────────
@@ -111,13 +110,17 @@ export function useSyncQueue() {
 					}
 
 					// Refetch habit logs to reflect the new workout in the frequency habit
-					invalidateHabitLogsCache(userId!!)
+					queryClient.invalidateQueries({ queryKey: ['habits', 'logs', userId] })
 
 					// Invalidate program-related caches to reflect progress
 					queryClient.invalidateQueries({ queryKey: queryKeys.programs.user.active(userId!!) })
 					queryClient.invalidateQueries({ queryKey: queryKeys.programs.user.all(userId!!) })
 					// Partial match to invalidate all program details for this user
 					queryClient.invalidateQueries({ queryKey: ['userPrograms', 'detail', userId] })
+
+					// Invalidate analytics
+					queryClient.invalidateQueries({ queryKey: queryKeys.analytics.userAnalytics(userId!!) })
+					queryClient.invalidateQueries({ queryKey: ['trainingAnalytics', userId] })
 					return true
 				}
 
@@ -133,13 +136,17 @@ export function useSyncQueue() {
 					}
 
 					// Refetch habit logs to reflect the new workout in the frequency habit
-					invalidateHabitLogsCache(userId!!)
+					queryClient.invalidateQueries({ queryKey: ['habits', 'logs', userId] })
 
 					// Invalidate program-related caches to reflect progress
 					queryClient.invalidateQueries({ queryKey: queryKeys.programs.user.active(userId!!) })
 					queryClient.invalidateQueries({ queryKey: queryKeys.programs.user.all(userId!!) })
 					// Partial match to invalidate all program details for this user
 					queryClient.invalidateQueries({ queryKey: ['userPrograms', 'detail', userId] })
+
+					// Invalidate analytics
+					queryClient.invalidateQueries({ queryKey: queryKeys.analytics.userAnalytics(userId!!) })
+					queryClient.invalidateQueries({ queryKey: ['trainingAnalytics', userId] })
 					return true
 				}
 
@@ -149,13 +156,17 @@ export function useSyncQueue() {
 					}
 
 					// Refetch habit logs to reflect the new workout in the frequency habit
-					invalidateHabitLogsCache(userId!!)
+					queryClient.invalidateQueries({ queryKey: ['habits', 'logs', userId] })
 
 					// Invalidate program-related caches to reflect progress
 					queryClient.invalidateQueries({ queryKey: queryKeys.programs.user.active(userId!!) })
 					queryClient.invalidateQueries({ queryKey: queryKeys.programs.user.all(userId!!) })
 					// Partial match to invalidate all program details for this user
 					queryClient.invalidateQueries({ queryKey: ['userPrograms', 'detail', userId] })
+
+					// Invalidate analytics
+					queryClient.invalidateQueries({ queryKey: queryKeys.analytics.userAnalytics(userId!!) })
+					queryClient.invalidateQueries({ queryKey: ['trainingAnalytics', userId] })
 					return true
 				}
 

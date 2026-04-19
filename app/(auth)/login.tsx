@@ -3,15 +3,12 @@ import PhoneInputField from '@/components/auth/PhoneInputField'
 import { Button } from '@/components/ui/Button'
 import PrivacyPolicyModal, { PrivacyPolicyModalHandle } from '@/components/ui/PrivacyPolicyModal'
 import { useThemeColor } from '@/hooks/useThemeColor'
+import { updateFitnessProfileService, updateNutritionPlanService } from '@/services/analyticsService'
 import { useAuth } from '@/stores/authStore'
 import { useOnboarding } from '@/stores/onboardingStore'
 import { useUser } from '@/stores/userStore'
 import { User } from '@/types/auth'
 import { calculateBMR, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
-import {
-	updateFitnessProfileService,
-	updateNutritionPlanService,
-} from '@/services/analyticsService'
 import { GoogleSignin } from '@react-native-google-signin/google-signin'
 import { router } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
@@ -46,6 +43,7 @@ export default function Login() {
 	const [privacyAccepted, setPrivacyAccepted] = useState(false)
 	const [privacyPolicyVersion, setPrivacyPolicyVersion] = useState<string | null>(null)
 	const privacyModalRef = useRef<PrivacyPolicyModalHandle>(null)
+	const isGooglePending = useRef(false)
 
 	const sendOtp = useAuth((state: any) => state.sendOtp)
 	const isLoading = useAuth((state: any) => state.isLoading)
@@ -68,7 +66,9 @@ export default function Login() {
 		})
 	}, [])
 
-	const onGoogleButtonPress = async () => {
+	const onGoogleButtonPress = async (versionOverride?: string | any) => {
+		const version = typeof versionOverride === 'string' ? versionOverride : privacyPolicyVersion || '1.0'
+
 		try {
 			await GoogleSignin.hasPlayServices()
 			await GoogleSignin.signOut()
@@ -76,7 +76,7 @@ export default function Login() {
 			const idToken = userInfo.data?.idToken
 
 			if (idToken) {
-				googleLogin(idToken, true, privacyPolicyVersion).then((res: any) => {
+				googleLogin(idToken, true, version).then((res: any) => {
 					if (res.success) {
 						handlePostLogin(res.data?.user)
 					} else {
@@ -312,13 +312,18 @@ export default function Login() {
 					<View className="w-full border-t-[0.25px] border-gray-500 dark:border-gray-400"></View>
 				</View>
 				<Button
+					className="min-h-[52px]"
 					title="Continue with Google"
-					onPress={onGoogleButtonPress}
-					variant="secondary"
+					onPress={() => onGoogleButtonPress()}
+					variant="ghost"
 					disabled={!privacyAccepted}
 					loading={isGoogleLoading}
 					rightIcon={<GoogleIcon />}
-					onDisabledPress={() => privacyModalRef.current?.present()}
+					onDisabledPress={() => {
+						isGooglePending.current = true
+						privacyModalRef.current?.present()
+					}}
+					liquidGlass
 				/>
 				<View className="mt-4 flex-row items-center justify-center gap-4 px-6">
 					<Pressable
@@ -327,6 +332,7 @@ export default function Login() {
 								setPrivacyAccepted(false)
 								setPrivacyPolicyVersion(null)
 							} else {
+								isGooglePending.current = false
 								privacyModalRef.current?.present()
 							}
 						}}
@@ -342,7 +348,13 @@ export default function Login() {
 					</Pressable>
 					<Text className="text-sm text-gray-500 dark:text-gray-400">
 						I agree to the{' '}
-						<Text className="text-primary underline" onPress={() => privacyModalRef.current?.present()}>
+						<Text
+							className="text-primary underline"
+							onPress={() => {
+								isGooglePending.current = false
+								privacyModalRef.current?.present()
+							}}
+						>
 							Privacy Policy
 						</Text>
 					</Text>
@@ -352,7 +364,13 @@ export default function Login() {
 				ref={privacyModalRef}
 				onAgree={version => {
 					setPrivacyAccepted(true)
-					setPrivacyPolicyVersion(version || '1.0')
+					const v = version || '1.0'
+					setPrivacyPolicyVersion(v)
+
+					if (isGooglePending.current) {
+						isGooglePending.current = false
+						onGoogleButtonPress(v)
+					}
 				}}
 			/>
 		</SafeAreaView>

@@ -4,7 +4,11 @@ export interface AnalyticsMetrics {
 	daysSinceLastWorkout: number
 	weeklyVolume: number
 	lastWeekVolume: number
-	workoutDates: Set<string>
+	weeklyDuration: number
+	lastWeekDuration: number
+	weeklyReps: number
+	lastWeekReps: number
+	workoutDates: string[]
 }
 
 export type MeasurementType = {
@@ -28,6 +32,16 @@ export type MeasurementType = {
 	rightCalf?: number | null
 	notes?: string | null
 	progressPicUrls?: string[]
+}
+export type TrainingAnalyticsItem = {
+	date: string
+	value: number
+}
+
+export type TrainingAnalytics = {
+	volume: TrainingAnalyticsItem[]
+	duration: TrainingAnalyticsItem[]
+	reps: TrainingAnalyticsItem[]
 }
 
 export type LatestMeasurements = Omit<MeasurementType, 'id' | 'date'>

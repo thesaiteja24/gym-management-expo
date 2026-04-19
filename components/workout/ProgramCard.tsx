@@ -51,7 +51,7 @@ export default function ProgramCard({ program }: { program: ProgramTemplateModel
 						</View>
 						<View>
 							<Text className="self-start rounded-full bg-purple-200 px-2 py-1 text-right text-xs font-normal text-purple-600">
-								{program.durationOptions.join(', ')} weeks
+								{program.enrolledCountLabel} enrolled
 							</Text>
 						</View>
 					</View>

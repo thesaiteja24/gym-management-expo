@@ -248,9 +248,9 @@ export const useTemplate = create<TemplateState>()(
 				return { success: true }
 			},
 
-			startWorkoutFromTemplate: templateId => {
-				const template = get().templates.find(t => t.id === templateId)
-				if (!template) {
+			startWorkoutFromTemplate: (templateId, template?: WorkoutTemplate) => {
+				const targetTemplate = template || get().templates.find(t => t.id === templateId)
+				if (!targetTemplate) {
 					console.error(`[Template] Template not found: ${templateId}`)
 					// Note: Toast import would be needed here for user notification
 					// For now, just log the error for debugging
@@ -259,7 +259,7 @@ export const useTemplate = create<TemplateState>()(
 
 				const { useWorkout } = require('./workoutStore')
 				const { loadTemplate } = useWorkout.getState()
-				loadTemplate(template)
+				loadTemplate(targetTemplate)
 			},
 
 			// Validate template before saving (prune invalid groups only, allow empty sets)

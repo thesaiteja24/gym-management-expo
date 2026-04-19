@@ -126,7 +126,7 @@ export default function Search() {
 
 	return (
 		<View style={{ paddingBottom: safeAreaInsets.bottom }} className="flex-1 bg-white px-4 pt-4 dark:bg-black">
-			<View className="flex-row items-center justify-center gap-2">
+			<View className="flex-row items-center justify-center gap-2 pb-4">
 				{searchLoading ? (
 					<ActivityIndicator size="small" color={colors.primary} style={{ width: 24, height: 24 }} />
 				) : (
@@ -146,6 +146,7 @@ export default function Search() {
 			<FlatList
 				data={data}
 				keyExtractor={item => item.id}
+				showsVerticalScrollIndicator={false}
 				ListHeaderComponent={
 					isSearching ? null : (
 						<View className="mt-4">

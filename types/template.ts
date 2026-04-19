@@ -70,7 +70,7 @@ export interface TemplateState {
 		options?: { overwriteId?: string }
 	) => Promise<{ success: boolean; id?: string; error?: string }>
 	deleteTemplate: (id: string) => Promise<any>
-	startWorkoutFromTemplate: (templateId: string) => void
+	startWorkoutFromTemplate: (templateId: string, template?: WorkoutTemplate) => void
 	prepareTemplateForSave: () => {
 		template: WorkoutTemplate
 		pruneReport: {

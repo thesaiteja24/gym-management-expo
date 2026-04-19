@@ -45,17 +45,26 @@ export function useAnalytics(): UseAnalyticsResult {
 	/* ───────────── User-level analytics ───────────── */
 	const { data: tqAnalytics } = useUserAnalyticsQuery()
 
-	const userAnalytics = useMemo(() => {
-		return (
-			tqAnalytics ?? {
-				streakDays: 0,
-				workoutsThisWeek: 0,
-				daysSinceLastWorkout: 0,
-				weeklyVolume: 0,
-				lastWeekVolume: 0,
-				workoutDates: new Set<string>(),
-			}
-		)
+	const userAnalytics = useMemo<UseAnalyticsResult['userAnalytics']>(() => {
+		const fallback = {
+			streakDays: 0,
+			workoutsThisWeek: 0,
+			daysSinceLastWorkout: 0,
+			weeklyVolume: 0,
+			lastWeekVolume: 0,
+			workoutDates: new Set<string>(),
+		}
+
+		if (!tqAnalytics) return fallback
+
+		return {
+			streakDays: tqAnalytics.streakDays ?? 0,
+			workoutsThisWeek: tqAnalytics.workoutsThisWeek ?? 0,
+			daysSinceLastWorkout: tqAnalytics.daysSinceLastWorkout ?? 0,
+			weeklyVolume: tqAnalytics.weeklyVolume ?? 0,
+			lastWeekVolume: tqAnalytics.lastWeekVolume ?? 0,
+			workoutDates: new Set(Array.isArray(tqAnalytics.workoutDates) ? tqAnalytics.workoutDates : []),
+		}
 	}, [tqAnalytics])
 
 	/* ───────────── Exercise-level analytics ───────────── */

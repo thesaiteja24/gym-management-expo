@@ -139,7 +139,7 @@ export default function TemplateDetails() {
 
 			{/* Floating Action Button */}
 			<View
-				className="absolute bottom-0 left-0 right-0 border-t border-neutral-100 bg-white p-4 dark:border-neutral-900 dark:bg-black"
+				className="absolute bottom-0 left-0 right-0 p-6"
 				style={{ paddingBottom: safeAreaInsets.bottom + 16 }}
 			>
 				<View className="flex-row items-center justify-center gap-4">
@@ -151,6 +151,7 @@ export default function TemplateDetails() {
 							if (id) startWorkoutFromTemplate(id)
 							router.push('/(app)/workout/start')
 						}}
+						liquidGlass
 					/>
 					<Button
 						title="Delete"
@@ -159,6 +160,7 @@ export default function TemplateDetails() {
 						onPress={() => {
 							deleteModalRef.current?.present()
 						}}
+						liquidGlass
 					/>
 				</View>
 			</View>

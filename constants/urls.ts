@@ -59,6 +59,9 @@ export const COACH_SPEECH_ENDPOINT = (id: string) => `${API_BASE_URL}/coach/spee
 
 // Analytics Endpoints
 export const FITNESS_PROFILE_ENDPOINT = (id: string) => `/analytics/fitness-profile/${id}`
-export const MEASUREMENTS_ENDPOINT = (id: string) => `/analytics/measurements/${id}`
+export const MEASUREMENTS_ENDPOINT = (id: string, duration?: string) =>
+	`/analytics/measurements/${id}${duration ? `?duration=${duration}` : ''}`
 export const NUTRITION_PLAN_ENDPOINT = (id: string) => `/analytics/nutrition-plan/${id}`
 export const USER_ANALYTICS_ENDPOINT = (id: string) => `/analytics/user-analytics/${id}`
+export const TRAINING_ANALYTICS_ENDPOINT = (id: string, duration: string) =>
+	`/analytics/training/${id}?duration=${duration}`

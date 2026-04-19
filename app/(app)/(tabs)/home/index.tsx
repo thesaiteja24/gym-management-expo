@@ -7,6 +7,7 @@ import ShimmerHomeScreen from '@/components/home/ShimmerHomeScreen'
 import StreakCard, { StreakDay } from '@/components/home/StreakCard'
 
 import { HabitCard } from '@/components/home/HabitCard'
+import { WeeklyDurationCard, WeeklyRepsCard, WeeklyVolumeCard } from '@/components/home/TrainingMetricCards'
 import { WeightMetricCard } from '@/components/home/WeightMetricCard'
 import { Button } from '@/components/ui/Button'
 import { useMeasurementsQuery, useUserAnalyticsQuery } from '@/hooks/queries/useAnalytics'
@@ -69,8 +70,17 @@ export default function HomeScreen() {
 		daysSinceLastWorkout = 0,
 		weeklyVolume = 0,
 		lastWeekVolume = 0,
-		workoutDates = new Set<string>(),
-	} = userAnalytics || ({} as any)
+		weeklyDuration = 0,
+		lastWeekDuration = 0,
+		weeklyReps = 0,
+		lastWeekReps = 0,
+		workoutDates: workoutDatesArray = [],
+	} = userAnalytics || {}
+
+	const workoutDates = useMemo(
+		() => new Set(Array.isArray(workoutDatesArray) ? workoutDatesArray : []),
+		[workoutDatesArray]
+	)
 
 	const { streakData } = useMemo(() => {
 		const today = new Date()
@@ -213,7 +223,7 @@ export default function HomeScreen() {
 				<ScrollView
 					showsVerticalScrollIndicator={false}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-					contentContainerStyle={{ paddingBottom: 40 }}
+					contentContainerStyle={{ paddingBottom: '50%' }}
 				>
 					<StreakCard {...streakData} />
 
@@ -286,6 +296,45 @@ export default function HomeScreen() {
 											type: 'info',
 											text1: 'Coming Soon',
 										})
+									}}
+									variant="outline"
+									textClassName="text-sm"
+								/>
+							</View>
+						</ScrollView>
+					</Animated.View>
+
+					<Animated.View entering={FadeInDown.delay(800).duration(500)}>
+						<Text className="my-4 text-xl font-semibold text-black dark:text-white">Training</Text>
+					</Animated.View>
+
+					<Animated.View entering={FadeInDown.delay(900).duration(500)}>
+						<ScrollView
+							horizontal
+							showsHorizontalScrollIndicator={false}
+							contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+						>
+							<WeeklyVolumeCard
+								volume={weeklyVolume}
+								lastWeekVolume={lastWeekVolume}
+								unit={preferredWeightUnit}
+								width={width * 0.5}
+							/>
+							<WeeklyDurationCard
+								duration={weeklyDuration}
+								lastWeekDuration={lastWeekDuration}
+								width={width * 0.5}
+							/>
+							<WeeklyRepsCard reps={weeklyReps} lastWeekReps={lastWeekReps} width={width * 0.5} />
+
+							<View
+								style={{ width: width * 0.5 }}
+								className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
+							>
+								<Button
+									title="View Trends"
+									onPress={() => {
+										router.push('/(app)/analytics')
 									}}
 									variant="outline"
 									textClassName="text-sm"

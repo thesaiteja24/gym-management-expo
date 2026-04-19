@@ -13,7 +13,7 @@ export default function TemplateCard({ template }: { template: WorkoutTemplate }
 	const remaining = template.exercises.length - previewExercises.length
 
 	const handleStart = () => {
-		startWorkoutFromTemplate(template.id)
+		startWorkoutFromTemplate(template.id, template)
 		router.push('/(app)/workout/start')
 	}
 

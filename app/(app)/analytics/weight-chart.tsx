@@ -3,7 +3,7 @@ import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/stores/authStore'
 import { convertWeight } from '@/utils/converter'
 import { Ionicons } from '@expo/vector-icons'
-import { format, isAfter, subDays, subMonths, subYears } from 'date-fns'
+import { format } from 'date-fns'
 import { router } from 'expo-router'
 import React, { useEffect, useMemo, useState } from 'react'
 import { BackHandler, Dimensions, Pressable, ScrollView, Text, View } from 'react-native'
@@ -16,45 +16,19 @@ const WeightChart = () => {
 	const colors = useThemeColor()
 	const user = useAuth(s => s.user)
 
-	const { data: measurementsData } = useMeasurementsQuery()
+	const [selectedRange, setSelectedRange] = useState<TimeRange>('1W')
+	const { data: measurementsData } = useMeasurementsQuery(selectedRange.toLowerCase())
 	const { data: fitnessProfile } = useFitnessProfileQuery()
 	const measurements = useMemo(() => measurementsData?.history || [], [measurementsData?.history])
 	const preferredUnit = user?.preferredWeightUnit ?? 'kg'
 	const fitnessGoal = fitnessProfile?.fitnessGoal as string | undefined
 
-	const [selectedRange, setSelectedRange] = useState<TimeRange>('1W')
-
-	// ── Filtering Logic ───────────────────────────────────────────
+	// ── Data Preparation ──────────────────────────────────────────
 	const filteredData = useMemo(() => {
-		const now = new Date()
-		let startDate: Date | null = null
-
-		switch (selectedRange) {
-			case '1W':
-				startDate = subDays(now, 7)
-				break
-			case '1M':
-				startDate = subMonths(now, 1)
-				break
-			case '3M':
-				startDate = subMonths(now, 3)
-				break
-			case '6M':
-				startDate = subMonths(now, 6)
-				break
-			case '1Y':
-				startDate = subYears(now, 1)
-				break
-			case 'All':
-				startDate = null
-				break
-		}
-
 		return measurements
 			.filter(m => m.weight != null && Number(m.weight) > 0)
-			.filter(m => !startDate || isAfter(new Date(m.date), startDate))
 			.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-	}, [measurements, selectedRange])
+	}, [measurements])
 
 	// ── Stats Calculation ─────────────────────────────────────────
 	const stats = useMemo(() => {
@@ -206,7 +180,6 @@ const WeightChart = () => {
 							style={{
 								marginVertical: 8,
 								borderRadius: 16,
-								paddingRight: 40,
 							}}
 						/>
 					) : (

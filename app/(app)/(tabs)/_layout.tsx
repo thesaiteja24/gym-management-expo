@@ -43,7 +43,7 @@ export default function TabsLayout() {
 						bottom: insets.bottom,
 						height: 52,
 						borderRadius: 100,
-						backgroundColor: barBg,
+						// backgroundColor: barBg,
 						borderWidth: 1,
 						borderColor: barBorder,
 						zIndex: 2,

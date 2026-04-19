@@ -19,7 +19,7 @@ import { twMerge } from 'tailwind-merge'
 /**
  * Visual variants supported by the Button component.
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'ghost' | 'outline'
+export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'ghost' | 'outline' | 'warning'
 
 /**
  * Props for the Button component.
@@ -170,6 +170,9 @@ export function Button({
 		outline: liquidGlass
 			? 'border border-white/15 bg-white/8 dark:border-white/8 dark:bg-white/5'
 			: 'bg-transparent border border-neutral-300 dark:border-neutral-700',
+		warning: liquidGlass
+			? 'border border-yellow-500/25 bg-yellow-500/18 dark:border-yellow-400/20 dark:bg-yellow-400/16'
+			: 'bg-yellow-500',
 	}
 
 	const textVariantClass: Record<ButtonVariant, string> = {
@@ -179,6 +182,7 @@ export function Button({
 		danger: liquidGlass ? 'text-neutral-900 dark:text-white' : 'text-red-600',
 		ghost: liquidGlass ? 'text-neutral-900 dark:text-white' : 'text-blue-500',
 		outline: liquidGlass ? 'text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300',
+		warning: liquidGlass ? 'text-neutral-900 dark:text-white' : 'text-yellow-500',
 	}
 
 	const spinnerColor = liquidGlass ? (isDark ? '#ffffff' : '#111827') : variant === 'primary' ? 'white' : '#6b7280'
@@ -231,7 +235,8 @@ export function Button({
 							variant === 'success' && 'border-emerald-200/30 dark:border-emerald-300/15',
 							variant === 'danger' && 'border-red-200/30 dark:border-red-300/15',
 							variant === 'ghost' && 'border-white/15 dark:border-white/10',
-							variant === 'outline' && 'border-white/15 dark:border-white/10'
+							variant === 'outline' && 'border-white/15 dark:border-white/10',
+							variant === 'warning' && 'border-yellow-200/30 dark:border-yellow-300/15'
 						)}
 					/>
 					{/* <View

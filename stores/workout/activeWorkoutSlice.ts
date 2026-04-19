@@ -232,19 +232,6 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 	 * It is called in StartWorkoutFromTemplate() in templateStore
 	 */
 	loadTemplate: (template: WorkoutTemplate) => {
-		const exerciseList = queryClient.getQueryData<Exercise[]>(queryKeys.exercises.all) ?? []
-		const exerciseMap = new Map(exerciseList.map(e => [e.id, e.exerciseType as ExerciseType]))
-
-		// Validate and filter exercises that still exist
-		const validExercises = template.exercises.filter(ex => {
-			const exists = exerciseMap.has(ex.exerciseId)
-			if (!exists) {
-				console.warn(
-					`Exercise ${ex.exerciseId} from template "${template.title}" not found in exercise store, skipping`
-				)
-			}
-			return exists
-		})
 
 		// Generate clientId at creation time (stable identifier)
 		const clientId = Crypto.randomUUID()
@@ -257,7 +244,7 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 			title: template.title || 'New Workout',
 			startTime: new Date(),
 			endTime: new Date(),
-			exercises: validExercises.map((ex, index) => ({
+			exercises: template.exercises.map((ex, index) => ({
 				exerciseId: ex.exerciseId,
 				exerciseIndex: index,
 				groupId: ex.exerciseGroupId || null,
@@ -289,13 +276,6 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 	 * This function is used to load a program day's template snapshot into the active workout state
 	 */
 	loadProgramDay: (userProgramDayId, template) => {
-		const exerciseList = queryClient.getQueryData<Exercise[]>(queryKeys.exercises.all) ?? []
-		const exerciseMap = new Map(exerciseList.map(e => [e.id, e.exerciseType as ExerciseType]))
-
-		const validExercises = (template.exercises as any[]).filter(ex => {
-			const exists = exerciseMap.has(ex.exerciseId)
-			return exists
-		})
 
 		const clientId = Crypto.randomUUID()
 
@@ -307,7 +287,7 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 			startTime: new Date(),
 			endTime: new Date(),
 			userProgramDayId, // Link to the program day
-			exercises: validExercises.map((ex, index) => ({
+			exercises: (template.exercises as any[]).map((ex, index) => ({
 				exerciseId: ex.exerciseId,
 				exerciseIndex: index,
 				groupId: ex.exerciseGroupId || null,

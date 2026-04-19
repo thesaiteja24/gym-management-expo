@@ -52,6 +52,42 @@ export default function ExercisesLayout() {
 					} as any
 				}
 			/>
+			<Stack.Screen
+				name="volume-chart"
+				options={
+					{
+						title: 'Volume Trend',
+						leftIcon: 'chevron-back-outline',
+						onLeftPress: () => {
+							router.back()
+						},
+					} as any
+				}
+			/>
+			<Stack.Screen
+				name="duration-chart"
+				options={
+					{
+						title: 'Duration Trend',
+						leftIcon: 'chevron-back-outline',
+						onLeftPress: () => {
+							router.back()
+						},
+					} as any
+				}
+			/>
+			<Stack.Screen
+				name="reps-chart"
+				options={
+					{
+						title: 'Reps Trend',
+						leftIcon: 'chevron-back-outline',
+						onLeftPress: () => {
+							router.back()
+						},
+					} as any
+				}
+			/>
 		</Stack>
 	)
 }
