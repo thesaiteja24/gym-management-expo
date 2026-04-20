@@ -1,7 +1,7 @@
 import { useCoach } from '@/hooks/useCoach'
-import { CoachMessage } from '@/types/coach'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useSubscriptionStore } from '@/stores/subscriptionStore'
+import { CoachMessage } from '@/types/coach'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import { useRouter } from 'expo-router'
@@ -10,6 +10,7 @@ import { BackHandler, Text, View, useColorScheme } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button } from '../ui/Button'
+import { GlassBackground } from '../ui/GlassBackground'
 
 export interface CoachModalHandle {
 	present: () => void
@@ -123,9 +124,7 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
 				onClose?.()
 			}}
 			enablePanDownToClose
-			backgroundStyle={{
-				backgroundColor: isDark ? '#171717' : 'white',
-			}}
+			backgroundComponent={GlassBackground}
 			handleIndicatorStyle={{
 				backgroundColor: isDark ? '#525252' : '#d1d5db',
 			}}
@@ -139,7 +138,6 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
 					flex: 1,
 					paddingBottom: insets.bottom,
 				}}
-				className="dark:bg-neutral-900"
 			>
 				{isPro ? (
 					<View className="flex-1 flex-col gap-4">
@@ -172,6 +170,7 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
 									onPress={() => {
 										sendVoiceMessage()
 									}}
+									liquidGlass
 								/>
 							) : (
 								<Button
@@ -183,6 +182,7 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
 									onPress={() => {
 										startRecording()
 									}}
+									liquidGlass
 								/>
 							)}
 							<Button
@@ -192,6 +192,7 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
 									clearMessages()
 									setIsOpen(false)
 								}}
+								liquidGlass
 							/>
 						</View>
 					</View>
@@ -216,6 +217,7 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
 									bottomSheetModalRef.current?.dismiss()
 									router.push('/paywall')
 								}}
+								liquidGlass
 							/>
 						</View>
 					</View>

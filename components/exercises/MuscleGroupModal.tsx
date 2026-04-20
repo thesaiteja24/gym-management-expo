@@ -3,6 +3,7 @@ import { Image } from 'expo-image'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { ActivityIndicator, Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { GlassBackground } from '../ui/GlassBackground'
 
 export interface MuscleGroupModalHandle {
 	present: () => void
@@ -48,19 +49,17 @@ const MuscleGroupModal = forwardRef<MuscleGroupModalHandle, Props>(
 				snapPoints={snapPoints}
 				backdropComponent={renderBackdrop}
 				onDismiss={onClose}
-				backgroundStyle={{
-					backgroundColor: isDark ? '#171717' : 'white',
-				}}
 				handleIndicatorStyle={{
 					backgroundColor: isDark ? '#525252' : '#d1d5db',
 				}}
+				backgroundComponent={GlassBackground}
 				enableDynamicSizing={false}
 				// Smoother, slightly slower animation
 				animationConfigs={{
 					duration: 350,
 				}}
 			>
-				<View style={{ flex: 1, paddingBottom: insets.bottom }} className="dark:bg-neutral-900">
+				<View style={{ flex: 1, paddingBottom: insets.bottom }}>
 					<View className="px-6 pt-4">
 						<View
 							className={`flex-row items-center ${

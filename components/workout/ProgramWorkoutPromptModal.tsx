@@ -5,6 +5,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'rea
 import { Text, useColorScheme, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button } from '../ui/Button'
+import { GlassBackground } from '../ui/GlassBackground'
 
 interface ProgramWorkoutPromptProps {
 	programTitle: string
@@ -43,14 +44,11 @@ const ProgramWorkoutPromptModal = forwardRef<ProgramWorkoutPromptHandle, Program
 				enableDynamicSizing={false}
 				enablePanDownToClose={true}
 				backdropComponent={renderBackdrop}
-				backgroundStyle={{ backgroundColor: isDark ? '#171717' : 'white' }}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
 				animationConfigs={{ duration: 350 }}
 			>
-				<BottomSheetView
-					style={{ paddingBottom: insets.bottom + 24 }}
-					className="flex-1 px-6 dark:bg-neutral-900"
-				>
+				<BottomSheetView style={{ paddingBottom: insets.bottom + 24 }} className="flex-1 px-6">
 					<View className="mb-6 items-center">
 						<View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-primary/10">
 							<Ionicons name="calendar-outline" size={32} color={colors.primary} />
@@ -73,6 +71,7 @@ const ProgramWorkoutPromptModal = forwardRef<ProgramWorkoutPromptHandle, Program
 								bottomSheetRef.current?.dismiss()
 							}}
 							fullWidth
+							liquidGlass
 						/>
 						<Button
 							title="Start Empty Workout"
@@ -82,6 +81,7 @@ const ProgramWorkoutPromptModal = forwardRef<ProgramWorkoutPromptHandle, Program
 								bottomSheetRef.current?.dismiss()
 							}}
 							fullWidth
+							liquidGlass
 						/>
 					</View>
 				</BottomSheetView>

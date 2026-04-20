@@ -6,6 +6,7 @@ import { Pressable, Text, View, useColorScheme } from 'react-native'
 import DatePicker from 'react-native-date-picker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button } from './Button'
+import { GlassBackground } from './GlassBackground'
 
 /* --------------------------------------------------
    Types
@@ -186,9 +187,7 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 				index={0}
 				enableDynamicSizing={true}
 				backdropComponent={renderBackdrop}
-				backgroundStyle={{
-					backgroundColor: isDark ? '#171717' : 'white',
-				}}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{
 					backgroundColor: isDark ? '#525252' : '#d1d5db',
 				}}
@@ -221,10 +220,10 @@ export default function DateTimePicker(props: DateTimePickerProps) {
 
 					<View className="mt-6 flex-row gap-4">
 						<View className="w-1/2">
-							<Button title="Cancel" variant="outline" onPress={handleDismiss} />
+							<Button title="Cancel" variant="outline" onPress={handleDismiss} liquidGlass />
 						</View>
 						<View className="w-1/2">
-							<Button title="Confirm" variant="primary" onPress={handleConfirm} />
+							<Button title="Confirm" variant="primary" onPress={handleConfirm} liquidGlass />
 						</View>
 					</View>
 				</BottomSheetView>

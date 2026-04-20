@@ -4,6 +4,7 @@ import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { Text, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { GlassBackground } from './GlassBackground'
 
 export interface DeleteConfirmModalHandle {
 	present: () => void
@@ -69,18 +70,13 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
 				backdropComponent={renderBackdrop}
 				enableDynamicSizing
 				onDismiss={onCancel}
-				backgroundStyle={{
-					backgroundColor: isDark ? '#171717' : 'white',
-				}}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{
 					backgroundColor: isDark ? '#525252' : '#d1d5db',
 				}}
 				animationConfigs={{ duration: 350 }}
 			>
-				<BottomSheetView
-					style={{ paddingBottom: insets.bottom + 24 }}
-					className="px-6 pt-2 dark:bg-neutral-900"
-				>
+				<BottomSheetView style={{ paddingBottom: insets.bottom + 24 }} className="px-6 pt-2">
 					<Text className="text-center text-xl font-bold" style={{ color: colors.text }}>
 						{title}
 					</Text>
@@ -100,6 +96,7 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
 								onCancel?.()
 								bottomSheetModalRef.current?.dismiss()
 							}}
+							liquidGlass
 						/>
 
 						{/* Delete */}
@@ -109,6 +106,7 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
 							variant="danger"
 							loading={isLoading}
 							onPress={handleConfirm}
+							liquidGlass
 						/>
 					</View>
 				</BottomSheetView>

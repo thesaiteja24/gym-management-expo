@@ -1,9 +1,11 @@
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import * as Haptics from 'expo-haptics'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Text, TouchableOpacity, View, useColorScheme } from 'react-native'
+import { Text, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { TimerPicker } from 'react-native-timer-picker'
+import { Button } from '../ui/Button'
+import { GlassBackground } from '../ui/GlassBackground'
 
 /* --------------------------------------------------
    Types
@@ -95,9 +97,7 @@ const RestTimerPickerModal = React.memo(
 				enablePanDownToClose={true}
 				enableDynamicSizing={false}
 				enableContentPanningGesture={false}
-				backgroundStyle={{
-					backgroundColor: isDark ? '#171717' : 'white',
-				}}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{
 					backgroundColor: isDark ? '#525252' : '#d1d5db',
 				}}
@@ -112,7 +112,6 @@ const RestTimerPickerModal = React.memo(
 						paddingHorizontal: 24,
 						paddingBottom: insets.bottom + 24,
 					}}
-					className="dark:bg-neutral-900"
 				>
 					{/* Title */}
 					<Text className="mb-6 text-center text-xl font-bold text-black dark:text-white">Rest Timer</Text>
@@ -148,19 +147,17 @@ const RestTimerPickerModal = React.memo(
 
 					{/* Actions */}
 					<View className="mt-4 flex-row gap-4">
-						<TouchableOpacity
-							onPress={() => bottomSheetModalRef.current?.dismiss()}
-							className="h-12 flex-1 justify-center rounded-2xl border border-neutral-300 dark:border-neutral-700"
-						>
-							<Text className="text-center text-lg font-semibold text-black dark:text-white">Cancel</Text>
-						</TouchableOpacity>
-
-						<TouchableOpacity
-							onPress={handleConfirm}
-							className="h-12 flex-1 justify-center rounded-2xl bg-primary"
-						>
-							<Text className="text-center text-lg font-semibold text-white">Confirm</Text>
-						</TouchableOpacity>
+						<View className="flex-1">
+							<Button
+								title="Cancel"
+								variant="outline"
+								onPress={() => bottomSheetModalRef.current?.dismiss()}
+								liquidGlass
+							/>
+						</View>
+						<View className="flex-1">
+							<Button title="Confirm" variant="primary" onPress={handleConfirm} liquidGlass />
+						</View>
 					</View>
 				</BottomSheetView>
 			</BottomSheetModal>

@@ -1,4 +1,5 @@
 import { DeleteConfirmModal, DeleteConfirmModalHandle } from '@/components/ui/DeleteConfirmModal'
+import { GlassBackground } from '@/components/ui/GlassBackground'
 import { useDeleteComment, useWorkoutComments } from '@/hooks/queries/useComments'
 import { Comment as EngagementComment } from '@/types/comments'
 import { Ionicons } from '@expo/vector-icons'
@@ -237,7 +238,7 @@ const CommentsModal = forwardRef<CommentsModalHandle, Props>(({ workoutId, onClo
 				footerComponent={renderFooter}
 				enablePanDownToClose
 				onDismiss={handleClose}
-				backgroundStyle={{ backgroundColor: bgColor }}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
 				keyboardBehavior="extend"
 				enableDynamicSizing={false}
@@ -259,7 +260,7 @@ const CommentsModal = forwardRef<CommentsModalHandle, Props>(({ workoutId, onClo
 				stackBehavior="push"
 				enableDynamicSizing={true}
 				backdropComponent={renderBackdrop}
-				backgroundStyle={{ backgroundColor: bgColor }}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
 				animationConfigs={{ duration: 550 }}
 			>

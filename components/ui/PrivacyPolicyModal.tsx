@@ -4,6 +4,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, u
 import { View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { WebView } from 'react-native-webview'
+import { GlassBackground } from './GlassBackground'
 
 export interface PrivacyPolicyModalHandle {
 	present: () => void
@@ -66,9 +67,7 @@ const PrivacyPolicyModal = forwardRef<PrivacyPolicyModalHandle, Props>(({ onAgre
 			onDismiss={() => {
 				onClose?.()
 			}}
-			backgroundStyle={{
-				backgroundColor: isDark ? '#171717' : 'white',
-			}}
+			backgroundComponent={GlassBackground}
 			handleIndicatorStyle={{
 				backgroundColor: isDark ? '#525252' : '#d1d5db',
 			}}
@@ -110,6 +109,7 @@ const PrivacyPolicyModal = forwardRef<PrivacyPolicyModalHandle, Props>(({ onAgre
 								onAgree(policyVersion || undefined)
 								bottomSheetModalRef.current?.dismiss()
 							}}
+							liquidGlass
 						/>
 					</View>
 					<View>
@@ -119,6 +119,7 @@ const PrivacyPolicyModal = forwardRef<PrivacyPolicyModalHandle, Props>(({ onAgre
 							onPress={() => {
 								bottomSheetModalRef.current?.dismiss()
 							}}
+							liquidGlass
 						/>
 					</View>
 				</View>

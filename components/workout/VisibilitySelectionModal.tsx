@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { GlassBackground } from '../ui/GlassBackground'
 
 const SET_TYPES: {
 	key: 'public' | 'private'
@@ -67,9 +68,7 @@ const VisibilitySelectionModal = forwardRef<VisibilitySelectionModalHandle, Prop
 				snapPoints={snapPoints}
 				backdropComponent={renderBackdrop}
 				onDismiss={onClose}
-				backgroundStyle={{
-					backgroundColor: isDark ? '#171717' : 'white',
-				}}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{
 					backgroundColor: isDark ? '#525252' : '#d1d5db',
 				}}
@@ -78,7 +77,7 @@ const VisibilitySelectionModal = forwardRef<VisibilitySelectionModalHandle, Prop
 					duration: 350,
 				}}
 			>
-				<BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom + 24 }} className="dark:bg-neutral-900">
+				<BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom + 24 }}>
 					<View className="flex-1 px-6">
 						{/* Header */}
 						<View className="mb-6 flex-row items-center justify-between">

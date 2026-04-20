@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button'
+import { GlassBackground } from '@/components/ui/GlassBackground'
 import { PaywallModal, PaywallModalHandle } from '@/components/ui/PaywallModal'
 import { SelectableCard } from '@/components/ui/SelectableCard'
 import { useSubscriptionStore } from '@/stores/subscriptionStore'
@@ -79,9 +80,7 @@ export const StartProgramSheet = forwardRef<StartProgramSheetHandle, StartProgra
 					ref={bottomSheetModalRef}
 					backdropComponent={renderBackdrop}
 					enableDynamicSizing
-					backgroundStyle={{
-						backgroundColor: isDark ? '#171717' : 'white',
-					}}
+					backgroundComponent={GlassBackground}
 					handleIndicatorStyle={{
 						backgroundColor: isDark ? '#525252' : '#d1d5db',
 					}}
@@ -174,6 +173,7 @@ export const StartProgramSheet = forwardRef<StartProgramSheetHandle, StartProgra
 							className="mt-8"
 							onPress={() => onConfirm(selectedDuration)}
 							loading={isLoading}
+							liquidGlass
 						/>
 					</BottomSheetScrollView>
 				</BottomSheetModal>
@@ -215,9 +215,7 @@ function ComingSoonModal({ onDismiss }: { onDismiss: () => void }) {
 			enableDynamicSizing
 			stackBehavior="push"
 			onDismiss={onDismiss}
-			backgroundStyle={{
-				backgroundColor: isDark ? '#171717' : 'white',
-			}}
+			backgroundComponent={GlassBackground}
 		>
 			<BottomSheetView style={{ paddingBottom: insets.bottom + 24 }} className="px-6 pt-2">
 				<Text className="text-center text-xl font-bold dark:text-white">Coming Soon ✨</Text>
@@ -225,7 +223,13 @@ function ComingSoonModal({ onDismiss }: { onDismiss: () => void }) {
 					Personalized programs are being polished for a perfect experience. We&apos;ll notify you as soon as
 					they&apos;re live!
 				</Text>
-				<Button title="Got it" variant="primary" className="mt-8" onPress={() => modalRef.current?.dismiss()} />
+				<Button
+					title="Got it"
+					variant="primary"
+					className="mt-8"
+					onPress={() => modalRef.current?.dismiss()}
+					liquidGlass
+				/>
 			</BottomSheetView>
 		</BottomSheetModal>
 	)

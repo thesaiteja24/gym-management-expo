@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router'
 import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react'
 import { Text, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { GlassBackground } from './GlassBackground'
 
 export interface PaywallModalHandle {
 	present: () => void
@@ -74,18 +75,13 @@ export const PaywallModal = forwardRef<PaywallModalHandle, Props>(
 				ref={bottomSheetModalRef}
 				backdropComponent={renderBackdrop}
 				enableDynamicSizing
-				backgroundStyle={{
-					backgroundColor: isDark ? '#171717' : 'white',
-				}}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{
 					backgroundColor: isDark ? '#525252' : '#d1d5db',
 				}}
 				animationConfigs={{ duration: 350 }}
 			>
-				<BottomSheetView
-					style={{ paddingBottom: insets.bottom + 24 }}
-					className="px-6 pt-2 dark:bg-neutral-900"
-				>
+				<BottomSheetView style={{ paddingBottom: insets.bottom + 24 }} className="px-6 pt-2">
 					<Text className="text-center text-xl font-bold" style={{ color: colors.text }}>
 						{title}
 					</Text>
@@ -104,10 +100,17 @@ export const PaywallModal = forwardRef<PaywallModalHandle, Props>(
 								bottomSheetModalRef.current?.dismiss()
 								onCancel?.()
 							}}
+							liquidGlass
 						/>
 
 						{/* Continue */}
-						<Button className="flex-1" title={continueText} variant="primary" onPress={handleContinue} />
+						<Button
+							className="flex-1"
+							title={continueText}
+							variant="primary"
+							onPress={handleContinue}
+							liquidGlass
+						/>
 					</View>
 				</BottomSheetView>
 			</BottomSheetModal>

@@ -1,6 +1,7 @@
 import EditableAvatar from '@/components/EditableAvatar'
 import { Button } from '@/components/ui/Button'
 import DateTimePicker from '@/components/ui/DateTimePicker'
+import { GlassBackground } from '@/components/ui/GlassBackground'
 import { SelectableCard } from '@/components/ui/SelectableCard'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/stores/authStore'
@@ -226,7 +227,7 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
 			backdropComponent={props => (
 				<BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
 			)}
-			backgroundStyle={{ backgroundColor: isDarkMode ? '#171717' : 'white' }}
+			backgroundComponent={GlassBackground}
 			handleIndicatorStyle={{ backgroundColor: isDarkMode ? '#525252' : '#d1d5db' }}
 			animationConfigs={{ duration: 350 }}
 			style={{ marginTop: insets.top }}
@@ -380,6 +381,7 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
 						loading={isLoading}
 						className="mt-6"
 						onPress={handleSave}
+						liquidGlass
 					/>
 				</BottomSheetScrollView>
 			</KeyboardAvoidingView>

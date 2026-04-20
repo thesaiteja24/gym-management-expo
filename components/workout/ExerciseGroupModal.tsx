@@ -5,6 +5,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } 
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button } from '../ui/Button'
+import { GlassBackground } from '../ui/GlassBackground'
 
 type GroupExerciseItem = {
 	id: string
@@ -54,9 +55,7 @@ const ExerciseGroupModal = forwardRef<ExerciseGroupModalHandle, Props>(
 				snapPoints={snapPoints}
 				backdropComponent={renderBackdrop}
 				onDismiss={onClose}
-				backgroundStyle={{
-					backgroundColor: isDark ? '#171717' : 'white',
-				}}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{
 					backgroundColor: isDark ? '#525252' : '#d1d5db',
 				}}
@@ -66,7 +65,7 @@ const ExerciseGroupModal = forwardRef<ExerciseGroupModalHandle, Props>(
 					duration: 350,
 				}}
 			>
-				<BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom + 24 }} className="dark:bg-[#111]">
+				<BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom + 24 }}>
 					{/* Header */}
 					<View className="mb-6 flex-row items-center justify-between px-6 pt-4">
 						<Text className="text-xl font-bold text-black dark:text-white">Select Exercises</Text>
@@ -125,6 +124,7 @@ const ExerciseGroupModal = forwardRef<ExerciseGroupModalHandle, Props>(
 									onConfirm()
 									bottomSheetModalRef.current?.dismiss()
 								}}
+								liquidGlass
 							/>
 						</View>
 					)}

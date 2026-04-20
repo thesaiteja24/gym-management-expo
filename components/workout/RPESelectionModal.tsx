@@ -4,6 +4,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } 
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button } from '../ui/Button'
+import { GlassBackground } from '../ui/GlassBackground'
 
 /* ───────────────── Constants ───────────────── */
 
@@ -71,9 +72,7 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(({ currentV
 			snapPoints={snapPoints}
 			backdropComponent={renderBackdrop}
 			onDismiss={onClose}
-			backgroundStyle={{
-				backgroundColor: isDark ? '#171717' : 'white',
-			}}
+			backgroundComponent={GlassBackground}
 			handleIndicatorStyle={{
 				backgroundColor: isDark ? '#525252' : '#d1d5db',
 			}}
@@ -82,7 +81,7 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(({ currentV
 				duration: 350,
 			}}
 		>
-			<BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom }} className="dark:bg-neutral-900">
+			<BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom }}>
 				{/* Header */}
 				<Text className="mb-4 text-center text-lg font-bold text-black dark:text-white">RPE</Text>
 
@@ -146,6 +145,7 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(({ currentV
 								// Done
 								bottomSheetModalRef.current?.dismiss()
 							}}
+							liquidGlass
 						/>
 					</View>
 

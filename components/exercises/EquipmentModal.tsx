@@ -3,6 +3,7 @@ import { Image } from 'expo-image'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { ActivityIndicator, Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { GlassBackground } from '../ui/GlassBackground'
 
 export interface EquipmentModalHandle {
 	present: () => void
@@ -48,9 +49,7 @@ const EquipmentModal = forwardRef<EquipmentModalHandle, Props>(
 				snapPoints={snapPoints}
 				backdropComponent={renderBackdrop}
 				onDismiss={onClose}
-				backgroundStyle={{
-					backgroundColor: isDark ? '#171717' : 'white',
-				}}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{
 					backgroundColor: isDark ? '#525252' : '#d1d5db',
 				}}
@@ -60,7 +59,7 @@ const EquipmentModal = forwardRef<EquipmentModalHandle, Props>(
 					duration: 350,
 				}}
 			>
-				<BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom }} className="dark:bg-neutral-900">
+				<BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom }}>
 					<View className="px-6 pt-4">
 						<View
 							className={`flex-row items-center ${

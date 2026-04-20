@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { GlassBackground } from '../ui/GlassBackground'
 
 export interface TemplateSelectionModalHandle {
 	present: () => void
@@ -41,16 +42,13 @@ const TemplateSelectionModal = forwardRef<TemplateSelectionModalHandle, Props>(
 				snapPoints={snapPoints}
 				backdropComponent={renderBackdrop}
 				onDismiss={onClose}
-				backgroundStyle={{ backgroundColor: isDark ? '#171717' : 'white' }}
+				backgroundComponent={GlassBackground}
 				handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
 				animationConfigs={{
 					duration: 350,
 				}}
 			>
-				<BottomSheetScrollView
-					style={{ flex: 1, paddingBottom: insets.bottom + 24 }}
-					className="dark:bg-neutral-900"
-				>
+				<BottomSheetScrollView style={{ flex: 1, paddingBottom: insets.bottom + 24 }}>
 					<View className="flex-1 px-6">
 						<View className="mb-6 flex-row items-center justify-between">
 							<Text className="text-xl font-bold text-black dark:text-white">Select a Template</Text>
