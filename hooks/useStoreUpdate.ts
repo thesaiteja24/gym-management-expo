@@ -2,7 +2,7 @@ import Constants from 'expo-constants'
 import * as Linking from 'expo-linking'
 import { useEffect, useState } from 'react'
 import { Platform } from 'react-native'
-import VersionCheck from 'react-native-version-check-expo'
+import VersionCheck from 'react-native-version-check'
 
 export function useStoreUpdate() {
 	const [showModal, setShowModal] = useState(false)

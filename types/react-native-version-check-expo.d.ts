@@ -1,4 +1,4 @@
-declare module 'react-native-version-check-expo' {
+declare module 'react-native-version-check' {
 	export interface NeedUpdateResponse {
 		isNeeded: boolean
 		latestVersion: string
