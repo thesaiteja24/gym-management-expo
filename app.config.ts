@@ -55,8 +55,20 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
 				{
 					android: {
 						enableProguardInReleaseBuilds: true,
-						extraProguardRules:
-							'-keep class coil3.** { *; }\n-dontwarn coil3.**\n-dontwarn com.google.api.client.**\n-dontwarn org.joda.time.**\n-dontwarn com.google.crypto.tink.**',
+						extraProguardRules: `
+						-keep class coil3.** { *; }
+						-dontwarn coil3.**
+
+						-dontwarn com.google.api.client.**
+						-dontwarn org.joda.time.**
+						-dontwarn com.google.crypto.tink.**
+
+						-keep class io.grpc.** { *; }
+						-dontwarn io.grpc.**
+
+						-keep class io.opentelemetry.** { *; }
+						-dontwarn io.opentelemetry.**
+					`,
 					},
 				},
 			],
