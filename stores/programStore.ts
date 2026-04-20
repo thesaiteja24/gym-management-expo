@@ -10,13 +10,9 @@
  * Type exports are kept so existing imports compile without changes.
  */
 
-import {
-	DraftProgram,
-	Program,
-} from '@/types/program'
+import { DraftProgram, Program } from '@/types/program'
 import * as Crypto from 'expo-crypto'
 import { create } from 'zustand'
-
 
 // ─── Draft State (pure UI — no network calls) ───────────────────────────────
 

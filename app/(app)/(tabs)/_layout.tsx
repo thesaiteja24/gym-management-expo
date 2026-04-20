@@ -16,7 +16,6 @@ export default function TabsLayout() {
 	const isDark = useColorScheme() === 'dark'
 	const insets = useSafeAreaInsets()
 
-	const barBg = isDark ? 'rgba(10, 10, 10, 0.55)' : 'rgba(255, 255, 255, 0.72)'
 	const barBorder = isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(17, 24, 39, 0.08)'
 	const activeColor = colors.text
 	const inactiveColor = '#A8A8A8'

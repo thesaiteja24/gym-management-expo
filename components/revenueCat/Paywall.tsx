@@ -19,8 +19,7 @@ export function Paywall({ isVisible = true, onSuccess, onCancel }: PaywallProps)
 	const scheme = useColorScheme()
 	const colors = useThemeColor()
 
-	const { offerings, isLoadingOfferings, isPurchasing, fetchOfferings, purchasePackage } =
-		useSubscriptionStore()
+	const { offerings, isLoadingOfferings, isPurchasing, fetchOfferings, purchasePackage } = useSubscriptionStore()
 
 	const [selected, setSelected] = useState<PurchasesPackage | null>(null)
 

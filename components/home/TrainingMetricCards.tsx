@@ -1,4 +1,3 @@
-import { useThemeColor } from '@/hooks/useThemeColor'
 import { convertWeight } from '@/utils/converter'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { router } from 'expo-router'
@@ -16,8 +15,6 @@ interface TrainingMetricCardProps {
 }
 
 function TrainingMetricCard({ title, value, subtitle, icon, iconColor, width, onPress }: TrainingMetricCardProps) {
-	const colors = useThemeColor()
-
 	return (
 		<Pressable
 			onPress={onPress}

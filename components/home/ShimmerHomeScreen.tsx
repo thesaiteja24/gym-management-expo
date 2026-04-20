@@ -1,5 +1,12 @@
 import React, { useEffect } from 'react'
-import { ScrollView, useWindowDimensions, View, useColorScheme, type DimensionValue, type ViewStyle } from 'react-native'
+import {
+	ScrollView,
+	useWindowDimensions,
+	View,
+	useColorScheme,
+	type DimensionValue,
+	type ViewStyle,
+} from 'react-native'
 import Animated, {
 	FadeInDown,
 	useAnimatedStyle,
@@ -159,4 +166,3 @@ export default function ShimmerHomeScreen() {
 		</Animated.View>
 	)
 }
-

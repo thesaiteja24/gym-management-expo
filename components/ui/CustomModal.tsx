@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/Button'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import React, { forwardRef, useImperativeHandle, useState } from 'react'
-import { Pressable, Modal as RNModal, Text, View, useColorScheme } from 'react-native'
+import { Pressable, Modal as RNModal, Text, View } from 'react-native'
 import { GlassView } from './GlassView'
 
 export interface ModalHandle {
@@ -33,7 +33,6 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
 		ref
 	) => {
 		const colors = useThemeColor()
-		const isDark = useColorScheme() === 'dark'
 
 		const [visible, setVisible] = useState(false)
 		const [isLoading, setIsLoading] = useState(false)
@@ -72,9 +71,7 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
 
 				{/* Centered modal */}
 				<View className="absolute inset-0 items-center justify-center px-6">
-					<GlassView
-						className="w-full p-6 shadow-lg"
-					>
+					<GlassView className="w-full p-6 shadow-lg">
 						{/* Title */}
 						<Text className="text-center text-xl font-bold" style={{ color: colors.text }}>
 							{title}

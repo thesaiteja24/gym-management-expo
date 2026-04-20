@@ -1,5 +1,5 @@
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { Modal, Text, View, useColorScheme } from 'react-native'
+import { Modal, Text, View } from 'react-native'
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
 import { Button } from '../ui/Button'
 import { GlassView } from '../ui/GlassView'
@@ -13,15 +13,11 @@ type Props = {
 
 export function StoreUpdateModal({ visible, onLater, onUpdate, latestVersion }: Props) {
 	const colors = useThemeColor()
-	const isDark = useColorScheme() === 'dark'
 
 	return (
 		<Modal transparent visible={visible} animationType="fade">
 			<View className="flex-1 items-center justify-center bg-black/40 px-6">
-				<Animated.View
-					entering={FadeIn.duration(400)}
-					className="w-full"
-				>
+				<Animated.View entering={FadeIn.duration(400)} className="w-full">
 					<GlassView
 						className="w-full p-6"
 						style={{

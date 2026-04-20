@@ -98,9 +98,9 @@ export function moveAnalyticsToFailedQueue(queueId: string): void {
 
 	const failedQueue = getAnalyticsFailedQueue()
 	failedQueue.push({
-...mutation,
-retryCount: mutation.retryCount + 1,
-})
+		...mutation,
+		retryCount: mutation.retryCount + 1,
+	})
 	saveAnalyticsFailedQueue(failedQueue)
 }
 

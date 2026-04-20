@@ -232,7 +232,6 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 	 * It is called in StartWorkoutFromTemplate() in templateStore
 	 */
 	loadTemplate: (template: WorkoutTemplate) => {
-
 		// Generate clientId at creation time (stable identifier)
 		const clientId = Crypto.randomUUID()
 
@@ -276,7 +275,6 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
 	 * This function is used to load a program day's template snapshot into the active workout state
 	 */
 	loadProgramDay: (userProgramDayId, template) => {
-
 		const clientId = Crypto.randomUUID()
 
 		const workoutLog: WorkoutLog = {

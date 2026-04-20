@@ -1,16 +1,9 @@
 import { useEffect, useState } from 'react'
-import {
-	Easing,
-	runOnJS,
-	useAnimatedReaction,
-	useSharedValue,
-	withDelay,
-	withTiming,
-} from 'react-native-reanimated'
+import { Easing, runOnJS, useAnimatedReaction, useSharedValue, withDelay, withTiming } from 'react-native-reanimated'
 
 /** Animates a number from 0 → target on mount, returns formatted string */
 export function useCountUp(target: number | null | undefined, decimals = 1, delay = 400): string {
-    const defaultPlaceholder = '--'
+	const defaultPlaceholder = '--'
 	const [display, setDisplay] = useState(defaultPlaceholder)
 	const sv = useSharedValue(0)
 
@@ -19,11 +12,11 @@ export function useCountUp(target: number | null | undefined, decimals = 1, dela
 			setDisplay(defaultPlaceholder)
 			return
 		}
-		
+
 		// Reset logic when target changes
 		sv.value = 0
 		setDisplay(decimals > 0 ? '0.' + '0'.repeat(decimals) : '0')
-		
+
 		sv.value = withDelay(
 			delay,
 			withTiming(target, {

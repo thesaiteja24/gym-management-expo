@@ -18,7 +18,11 @@ import Toast from 'react-native-toast-message'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { ReadOnlyExerciseRow } from '@/components/workout/ReadOnlyExerciseRow'
 import ShimmerWorkoutScreen from '@/components/workout/ShimmerWorkoutScreen'
-import { useDiscoverWorkoutsQuery, useUserWorkoutHistoryQuery, useWorkoutByIdQuery } from '@/hooks/queries/useWorkoutHistory'
+import {
+	useDiscoverWorkoutsQuery,
+	useUserWorkoutHistoryQuery,
+	useWorkoutByIdQuery,
+} from '@/hooks/queries/useWorkoutHistory'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { useAuth } from '@/stores/authStore'
 import { Image } from 'expo-image'

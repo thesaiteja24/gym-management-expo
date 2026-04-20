@@ -202,7 +202,6 @@ export const StartProgramSheet = forwardRef<StartProgramSheetHandle, StartProgra
 
 function ComingSoonModal({ onDismiss }: { onDismiss: () => void }) {
 	const insets = useSafeAreaInsets()
-	const isDark = useColorScheme() === 'dark'
 	const modalRef = useRef<BottomSheetModal>(null)
 
 	React.useEffect(() => {

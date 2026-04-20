@@ -53,14 +53,14 @@ export default function OnboardingPace() {
 
 		if (targetType === 'weight' && targetWeight) {
 			kgDifference = Math.abs(wKg - targetWeight)
-			
+
 			// Calculate projected Target Body Fat % based on current lean mass
 			if (currentBodyFat !== null) {
 				const currentFatMass = wKg * (currentBodyFat / 100)
 				const leanMass = wKg - currentFatMass
 				const projectedFatMass = Math.max(0, targetWeight - leanMass)
 				const computedTargetBodyFat = (projectedFatMass / targetWeight) * 100
-				
+
 				storeSetTargetBodyFat(computedTargetBodyFat)
 			}
 		} else if (targetType === 'bodyFat' && targetBodyFat && currentBodyFat !== null) {
@@ -68,7 +68,7 @@ export default function OnboardingPace() {
 			const leanMass = wKg - currentFatMass
 			const targetWeightToHitFat = leanMass / (1 - targetBodyFat / 100)
 			kgDifference = Math.abs(wKg - targetWeightToHitFat)
-			
+
 			// Fill in the missing targetWeight for backend payload
 			storeSetTargetWeight(targetWeightToHitFat, 'kg')
 		}

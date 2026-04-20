@@ -108,7 +108,6 @@ const CommentsModal = forwardRef<CommentsModalHandle, Props>(({ workoutId, onClo
 	const activeThreadComment = workoutComments.find(c => c.id === viewingThreadId)
 
 	const textColor = isDark ? 'white' : 'black'
-	const bgColor = isDark ? '#171717' : 'white'
 	const borderColor = isDark ? '#262626' : '#e5e5e5'
 
 	const renderBackdrop = useCallback(

@@ -599,10 +599,10 @@ export function calculateDailyTargets({
 	// 1g Protein = 4 kcal
 	const fatsTargetCalories = caloriesTarget * 0.25
 	const fatsTarget = Math.round(fatsTargetCalories / 9)
-	
+
 	const proteinTargetCalories = proteinTarget * 4
 	const remainingCaloriesForCarbs = caloriesTarget - fatsTargetCalories - proteinTargetCalories
-	
+
 	// Ensure carbs don't go negative on extreme cut logic, floor to 0
 	const carbsTarget = Math.max(0, Math.round(remainingCaloriesForCarbs / 4))
 

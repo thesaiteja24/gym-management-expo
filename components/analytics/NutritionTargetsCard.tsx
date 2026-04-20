@@ -32,9 +32,10 @@ export function NutritionTargetsCard({
 	const carbsDisplay = useCountUp(nutritionPlan?.carbsTarget ?? null, 0, 500)
 	const fatsDisplay = useCountUp(nutritionPlan?.fatsTarget ?? null, 0, 600)
 
-	const targetWeightVal = Number(fitnessProfile?.targetWeight) > 0 
-		? convertWeight(Number(fitnessProfile!.targetWeight), { from: 'kg', to: preferredWeightUnit as any }) 
-		: null
+	const targetWeightVal =
+		Number(fitnessProfile?.targetWeight) > 0
+			? convertWeight(Number(fitnessProfile!.targetWeight), { from: 'kg', to: preferredWeightUnit as any })
+			: null
 	const targetWeightDisplay = useCountUp(targetWeightVal, 1, 700)
 
 	const targetBodyFatVal = Number(fitnessProfile?.targetBodyFat) > 0 ? Number(fitnessProfile!.targetBodyFat) : null
@@ -76,33 +77,25 @@ export function NutritionTargetsCard({
 					<View className="w-full flex-row justify-evenly gap-4">
 						<View>
 							<MaterialCommunityIcons name="fire" size={24} color={colors.primary} className="mb-2" />
-							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
-								{calDisplay}
-							</Text>
+							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">{calDisplay}</Text>
 							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Calories</Text>
 						</View>
 
 						<View>
 							<MaterialCommunityIcons name="food-steak" size={24} color="#E11D48" className="mb-2" />
-							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
-								{proteinDisplay}
-							</Text>
+							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">{proteinDisplay}</Text>
 							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Protein</Text>
 						</View>
 
 						<View>
 							<MaterialCommunityIcons name="baguette" size={24} color="#D97706" className="mb-2" />
-							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
-								{carbsDisplay}
-							</Text>
+							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">{carbsDisplay}</Text>
 							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Carbs</Text>
 						</View>
 
 						<View>
 							<MaterialCommunityIcons name="peanut" size={24} color="#059669" className="mb-2" />
-							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">
-								{fatsDisplay}
-							</Text>
+							<Text className="mb-1 text-2xl font-bold text-black dark:text-white">{fatsDisplay}</Text>
 							<Text className="text-xs text-neutral-500 dark:text-neutral-400">Fats</Text>
 						</View>
 					</View>

@@ -211,7 +211,7 @@ export function useAddMeasurement() {
 			await queryClient.cancelQueries({ queryKey: queryKeys.habits.logs(userId!) })
 
 			const previousMeasurements = queryClient.getQueriesData<MeasurementsQueryData>({
-				queryKey: queryKeys.analytics.measurements(userId!)
+				queryKey: queryKeys.analytics.measurements(userId!),
 			})
 
 			// Prepare measurement data for optimistic UI
@@ -220,62 +220,65 @@ export function useAddMeasurement() {
 				measurementData.progressPicUrls = progressPics.map(p => p.uri)
 			}
 
-			queryClient.setQueriesData<MeasurementsQueryData>({ queryKey: queryKeys.analytics.measurements(userId!) }, old => {
-				if (!old) return old;
-				const normalize = (d: string) => {
-					if (!d) return ''
-					const parsed = new Date(d)
-					return isNaN(parsed.getTime()) ? d : parsed.toISOString().split('T')[0]
-				}
-				const normalizedDataDate = normalize(measurementData.date)
+			queryClient.setQueriesData<MeasurementsQueryData>(
+				{ queryKey: queryKeys.analytics.measurements(userId!) },
+				old => {
+					if (!old) return old
+					const normalize = (d: string) => {
+						if (!d) return ''
+						const parsed = new Date(d)
+						return isNaN(parsed.getTime()) ? d : parsed.toISOString().split('T')[0]
+					}
+					const normalizedDataDate = normalize(measurementData.date)
 
-				const updatedHistory = [...(old?.history || [])]
-				const existingIndex = updatedHistory.findIndex(m => normalize(m.date) === normalizedDataDate)
+					const updatedHistory = [...(old?.history || [])]
+					const existingIndex = updatedHistory.findIndex(m => normalize(m.date) === normalizedDataDate)
 
-				if (existingIndex !== -1) {
-					updatedHistory[existingIndex] = { ...updatedHistory[existingIndex], ...measurementData }
-				} else {
-					updatedHistory.push(measurementData)
-				}
+					if (existingIndex !== -1) {
+						updatedHistory[existingIndex] = { ...updatedHistory[existingIndex], ...measurementData }
+					} else {
+						updatedHistory.push(measurementData)
+					}
 
-				// Sort by date descending
-				updatedHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+					// Sort by date descending
+					updatedHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-				// Re-calculate latestValues
-				const latestMeasurements: Partial<LatestMeasurements> = {}
-				for (const entry of updatedHistory) {
-					Object.entries(entry).forEach(([key, value]) => {
-						if (
-							key !== 'progressPicUrls' &&
-							key !== 'id' &&
-							key !== 'date' &&
-							value !== null &&
-							value !== undefined &&
-							latestMeasurements[key as keyof LatestMeasurements] === undefined
-						) {
-							latestMeasurements[key as keyof LatestMeasurements] = value as any
+					// Re-calculate latestValues
+					const latestMeasurements: Partial<LatestMeasurements> = {}
+					for (const entry of updatedHistory) {
+						Object.entries(entry).forEach(([key, value]) => {
+							if (
+								key !== 'progressPicUrls' &&
+								key !== 'id' &&
+								key !== 'date' &&
+								value !== null &&
+								value !== undefined &&
+								latestMeasurements[key as keyof LatestMeasurements] === undefined
+							) {
+								latestMeasurements[key as keyof LatestMeasurements] = value as any
+							}
+						})
+					}
+
+					// Re-calculate dailyWeightChange
+					let dailyWeightChange = old?.dailyWeightChange || null
+					const weightEntries = updatedHistory.filter(m => m.weight !== null && m.weight !== undefined)
+					if (weightEntries.length >= 2) {
+						const latestWeight = Number(weightEntries[0].weight)
+						const previousWeight = Number(weightEntries[1].weight)
+						dailyWeightChange = {
+							diff: Math.abs(latestWeight - previousWeight),
+							isPositive: latestWeight > previousWeight,
 						}
-					})
-				}
+					}
 
-				// Re-calculate dailyWeightChange
-				let dailyWeightChange = old?.dailyWeightChange || null
-				const weightEntries = updatedHistory.filter(m => m.weight !== null && m.weight !== undefined)
-				if (weightEntries.length >= 2) {
-					const latestWeight = Number(weightEntries[0].weight)
-					const previousWeight = Number(weightEntries[1].weight)
-					dailyWeightChange = {
-						diff: Math.abs(latestWeight - previousWeight),
-						isPositive: latestWeight > previousWeight,
+					return {
+						history: updatedHistory,
+						latestValues: latestMeasurements,
+						dailyWeightChange,
 					}
 				}
-
-				return {
-					history: updatedHistory,
-					latestValues: latestMeasurements,
-					dailyWeightChange,
-				}
-			})
+			)
 
 			// Optimistically update authStore user weight
 			if (measurementData.weight != null) {

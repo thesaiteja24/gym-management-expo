@@ -157,8 +157,12 @@ export default function TemplateEditor() {
 						type: 'success',
 						text1: isEditing ? 'Template updated' : 'Template created',
 					})
-					
-					if (params.context === 'program' && params.weekIndex !== undefined && params.dayIndex !== undefined) {
+
+					if (
+						params.context === 'program' &&
+						params.weekIndex !== undefined &&
+						params.dayIndex !== undefined
+					) {
 						const draftProgram = useProgram.getState().draftProgram
 						if (draftProgram && draftProgram.weeks) {
 							const wIndex = Number(params.weekIndex)

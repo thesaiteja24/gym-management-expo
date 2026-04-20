@@ -188,7 +188,9 @@ export function useLogWeight() {
 			const previousHabitLogs = queryClient.getQueryData<Record<string, HabitLogType[]>>(
 				queryKeys.habits.logs(userId!)
 			)
-			const previousMeasurements = queryClient.getQueriesData({ queryKey: queryKeys.analytics.measurements(userId!) })
+			const previousMeasurements = queryClient.getQueriesData({
+				queryKey: queryKeys.analytics.measurements(userId!),
+			})
 
 			// 1. Update Habit Logs Cache (find weight habit)
 			const habits = queryClient.getQueryData<HabitType[]>(queryKeys.habits.list(userId!)) || []

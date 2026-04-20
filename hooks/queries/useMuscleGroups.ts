@@ -68,8 +68,7 @@ export function useCreateMuscleGroup() {
 export function useUpdateMuscleGroup() {
 	const queryClient = useQueryClient()
 	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: FormData }) =>
-			updateMuscleGroupService(id, data),
+		mutationFn: ({ id, data }: { id: string; data: FormData }) => updateMuscleGroupService(id, data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.muscleGroups.all })
 		},
