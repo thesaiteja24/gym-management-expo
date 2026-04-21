@@ -344,7 +344,7 @@ export default function WorkoutScreen() {
 							</View>
 						</View>
 					) : templates.length === 0 ? (
-						<View className="h-32 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
+						<View className="h-40 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
 							<Text className="text-neutral-500 dark:text-neutral-400">
 								No templates yet. Create one!
 							</Text>

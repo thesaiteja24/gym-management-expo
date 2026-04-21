@@ -58,7 +58,7 @@ function SkeletonBlock({
 
 export default function SkeletonTemplateCard() {
 	return (
-		<View className="ml-4 w-[80%] rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+		<View className="ml-4 h-40 w-[80%] rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
 			{/* Header */}
 			<View className="mb-3 flex-col justify-between gap-1">
 				<View className="flex-row items-center justify-between gap-4">

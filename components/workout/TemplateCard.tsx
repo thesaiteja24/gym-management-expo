@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/Button'
-import { WorkoutTemplate } from '@/types/template'
 import { useTemplate } from '@/stores/templateStore'
+import { WorkoutTemplate } from '@/types/template'
 import * as Haptics from 'expo-haptics'
 import { Image } from 'expo-image'
 import { Link, router } from 'expo-router'
@@ -23,7 +23,7 @@ export default function TemplateCard({ template }: { template: WorkoutTemplate }
 			onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
 			asChild
 		>
-			<Pressable className="ml-4 w-[80%] rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+			<Pressable className="ml-4 h-40 w-[80%] rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
 				{/* Header */}
 				<View className="mb-3 flex-col justify-between gap-1">
 					<View className="flex-row items-center justify-between gap-4">
