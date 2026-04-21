@@ -1,7 +1,6 @@
 import { OtaUpdateModal } from '@/components/auth/OtaUpdateModal'
 import { CustomToast } from '@/components/ui/CustomToast'
 import { useOneSignal } from '@/hooks/notifications/useOneSignal'
-import { useSyncQueue } from '@/hooks/useSyncQueue'
 import { useThemeColor } from '@/hooks/useThemeColor'
 import { queryClient } from '@/lib/queryClient'
 import { useAuth } from '@/stores/authStore'
@@ -52,9 +51,6 @@ export default function RootLayout() {
 	const loginSubscription = useSubscriptionStore(s => s.login)
 	const logoutSubscription = useSubscriptionStore(s => s.logout)
 	const { user } = useAuth()
-
-	// ───── Offline sync ─────
-	useSyncQueue()
 
 	// ───── OneSignal SDK ─────
 	const { login: loginOneSignal, logout: logoutOneSignal } = useOneSignal()
