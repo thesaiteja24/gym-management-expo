@@ -120,7 +120,6 @@ export interface RestState {
 }
 
 export interface WorkoutState {
-	workoutLoading: boolean
 	workoutSaving: boolean
 	workout: WorkoutLog | null
 	rest: RestState

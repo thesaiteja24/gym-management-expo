@@ -6,7 +6,6 @@ import { createRestTimerSlice } from './workout/restTimerSlice'
 import { WorkoutState } from '@/types/workout'
 
 const initialState = {
-	workoutLoading: false,
 	workoutSaving: false,
 	workout: null,
 	rest: {
