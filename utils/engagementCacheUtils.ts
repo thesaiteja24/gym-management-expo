@@ -172,3 +172,36 @@ export function toggleLikeInLikesList(
 		return old.filter(like => like.userId !== user?.id)
 	})
 }
+
+/**
+ * Optimistically toggles a like in workout caches (discover and history)
+ */
+export function toggleLikeInWorkouts(qc: QueryClient, id: string, liked: boolean) {
+	// 1. Update in discover feed
+	qc.setQueriesData({ queryKey: queryKeys.workouts.discover }, (old: InfiniteData<{ workouts: any[] }> | undefined) =>
+		updateInfiniteData(old, 'workouts', items =>
+			items.map((w: any) =>
+				w.id === id ? { ...w, isLiked: liked, likesCount: Math.max(0, w.likesCount + (liked ? 1 : -1)) } : w
+			)
+		)
+	)
+
+	// 2. Update in user history
+	qc.setQueriesData({ queryKey: queryKeys.workouts.all }, (old: InfiniteData<{ workouts: any[] }> | undefined) =>
+		updateInfiniteData(old, 'workouts', items =>
+			items.map((w: any) =>
+				w.id === id ? { ...w, isLiked: liked, likesCount: Math.max(0, w.likesCount + (liked ? 1 : -1)) } : w
+			)
+		)
+	)
+
+	// 3. Update in single workout detail
+	qc.setQueryData(queryKeys.workouts.byId(id), (old: any) => {
+		if (!old) return old
+		return {
+			...old,
+			isLiked: liked,
+			likesCount: Math.max(0, old.likesCount + (liked ? 1 : -1)),
+		}
+	})
+}

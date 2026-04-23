@@ -4,11 +4,13 @@ import { useExercises } from '@/hooks/queries/useExercises'
 import { useDiscoverWorkoutsQuery } from '@/hooks/queries/useWorkoutHistory'
 import { useThemeColor } from '@/hooks/useThemeColor'
 
+import { queryKeys } from '@/lib/queryKeys'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function DiscoverScreen() {
@@ -24,6 +26,8 @@ export default function DiscoverScreen() {
 		refetch: refetchDiscover,
 	} = useDiscoverWorkoutsQuery()
 
+	const qc = useQueryClient()
+
 	const { data: exerciseList = [] } = useExercises()
 
 	const [refreshing, setRefreshing] = useState(false)
@@ -37,9 +41,10 @@ export default function DiscoverScreen() {
 
 	const onRefresh = useCallback(async () => {
 		setRefreshing(true)
-		await refetchDiscover()
+		// resetQueries will clear the cache and refetch ONLY the first page
+		await qc.resetQueries({ queryKey: queryKeys.workouts.discover })
 		setRefreshing(false)
-	}, [refetchDiscover])
+	}, [qc])
 
 	const onEndReached = useCallback(() => {
 		if (!discoverLoading && discoverHasMore) {

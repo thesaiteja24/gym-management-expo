@@ -135,7 +135,7 @@ export async function editCommentService(commentId: string, content: string) {
 
 export async function getLikesService(id: string, type: string) {
 	try {
-		const res = await client.get(likes_endpoint(id), { params: { type } })
+		const res = await client.get(likes_endpoint(id, type))
 		return handleApiResponse(res)
 	} catch (error: any) {
 		const errData = error.response?.data
@@ -145,7 +145,7 @@ export async function getLikesService(id: string, type: string) {
 
 export async function toggleLikeService(id: string, type: string, liked: boolean) {
 	try {
-		const res = await client.put(toggle_like_endpoint(id), { params: { type, liked } })
+		const res = await client.put(toggle_like_endpoint(id, type, liked))
 		return handleApiResponse(res)
 	} catch (error: any) {
 		const errData = error.response?.data

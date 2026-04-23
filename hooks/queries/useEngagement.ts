@@ -22,6 +22,7 @@ import {
 	toggleLikeInComments,
 	toggleLikeInLikesList,
 	toggleLikeInReplies,
+	toggleLikeInWorkouts,
 	updateCommentAcrossCaches,
 } from '@/utils/engagementCacheUtils'
 import {
@@ -417,20 +418,29 @@ export function useToggleLikeMutation() {
 			// Snapshot current state
 			const prevComments = qc.getQueriesData({ queryKey: queryKeys.engagement.commentsRoot })
 			const prevReplies = qc.getQueriesData({ queryKey: queryKeys.engagement.repliesRoot })
+			const prevDiscover = qc.getQueriesData({ queryKey: queryKeys.workouts.discover })
+			const prevHistory = qc.getQueriesData({ queryKey: queryKeys.workouts.all })
+			const prevWorkoutDetail = qc.getQueryData(queryKeys.workouts.byId(id))
 			const prevLikes = qc.getQueryData(queryKeys.engagement.likes(id, type))
 
 			// Optimistic updates
 			toggleLikeInComments(qc, id, liked)
 			toggleLikeInReplies(qc, id, liked)
+			toggleLikeInWorkouts(qc, id, liked)
 			toggleLikeInLikesList(qc, id, type, liked, user)
 
-			return { prevComments, prevReplies, prevLikes }
+			return { prevComments, prevReplies, prevDiscover, prevHistory, prevWorkoutDetail, prevLikes }
 		},
 
 		onError: (_err, { id, type }, ctx) => {
 			// Rollback on error
 			ctx?.prevComments?.forEach(([key, data]) => qc.setQueryData(key, data))
 			ctx?.prevReplies?.forEach(([key, data]) => qc.setQueryData(key, data))
+			ctx?.prevDiscover?.forEach(([key, data]) => qc.setQueryData(key, data))
+			ctx?.prevHistory?.forEach(([key, data]) => qc.setQueryData(key, data))
+			if (ctx?.prevWorkoutDetail) {
+				qc.setQueryData(queryKeys.workouts.byId(id), ctx.prevWorkoutDetail)
+			}
 			if (ctx?.prevLikes) {
 				qc.setQueryData(queryKeys.engagement.likes(id, type), ctx.prevLikes)
 			}
@@ -455,6 +465,18 @@ export function useToggleLikeMutation() {
 			}
 			qc.invalidateQueries({
 				queryKey: queryKeys.engagement.repliesRoot,
+				refetchType: 'inactive',
+			})
+			qc.invalidateQueries({
+				queryKey: queryKeys.workouts.discover,
+				refetchType: 'inactive',
+			})
+			qc.invalidateQueries({
+				queryKey: queryKeys.workouts.all,
+				refetchType: 'inactive',
+			})
+			qc.invalidateQueries({
+				queryKey: queryKeys.workouts.byId(id),
 				refetchType: 'inactive',
 			})
 		},
