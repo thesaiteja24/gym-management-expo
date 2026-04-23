@@ -13,7 +13,7 @@ import { WorkoutHistoryItem, WorkoutLog } from '@/types/workout'
 import { serializeWorkoutForApi } from '@/utils/serializeForApi'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-const PAGE_LIMIT = 1
+const PAGE_LIMIT = 2
 
 // ─────────────────────────────────────────────────────
 // READ — workout history (paginated, infinite scroll)
