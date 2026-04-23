@@ -1,5 +1,9 @@
 import { Button } from '@/components/ui/Button'
-import { useSaveSharedTemplateMutation, useTemplateByShareIdQuery, useTemplatesQuery } from '@/hooks/queries/useTemplates'
+import {
+	useSaveSharedTemplateMutation,
+	useTemplateByShareIdQuery,
+	useTemplatesQuery,
+} from '@/hooks/queries/useTemplates'
 import { usePreventRemove } from '@react-navigation/native'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect, useMemo } from 'react'
@@ -80,10 +84,17 @@ export default function TemplateDetails() {
 										onSuccess: res => {
 											setLoading(false)
 											Alert.alert('Success', 'Template updated!', [
-												{ text: 'View Template', onPress: () => router.replace(`/(app)/template/${existingTemplate.id}`) },
+												{
+													text: 'View Template',
+													onPress: () =>
+														router.replace(`/(app)/template/${existingTemplate.id}`),
+												},
 											])
 										},
-										onError: () => { setLoading(false); Alert.alert('Error', 'Failed to save template.') },
+										onError: () => {
+											setLoading(false)
+											Alert.alert('Error', 'Failed to save template.')
+										},
 									}
 								)
 							},
@@ -99,7 +110,10 @@ export default function TemplateDetails() {
 											Alert.alert('Success', 'Template saved as new copy!')
 											router.replace('/(app)/(tabs)/workout')
 										},
-										onError: () => { setLoading(false); Alert.alert('Error', 'Failed to save template.') },
+										onError: () => {
+											setLoading(false)
+											Alert.alert('Error', 'Failed to save template.')
+										},
 									}
 								)
 							},
@@ -115,7 +129,10 @@ export default function TemplateDetails() {
 							Alert.alert('Success', 'Template saved to your library!')
 							router.replace('/(app)/(tabs)/workout')
 						},
-						onError: () => { setLoading(false); Alert.alert('Error', 'Failed to save template.') },
+						onError: () => {
+							setLoading(false)
+							Alert.alert('Error', 'Failed to save template.')
+						},
 					}
 				)
 			}

@@ -65,21 +65,16 @@ export const useTemplate = create<TemplateState>()((set, get) => ({
 			}
 		}
 
-		const validGroupIds = new Set(
-			[...groupCounts.entries()].filter(([, count]) => count >= 2).map(([id]) => id)
-		)
+		const validGroupIds = new Set([...groupCounts.entries()].filter(([, count]) => count >= 2).map(([id]) => id))
 
-		droppedGroups =
-			draft.exerciseGroups.length - draft.exerciseGroups.filter(g => validGroupIds.has(g.id)).length
+		droppedGroups = draft.exerciseGroups.length - draft.exerciseGroups.filter(g => validGroupIds.has(g.id)).length
 
 		// Filter out invalid groups
 		const finalGroups = draft.exerciseGroups.filter(g => validGroupIds.has(g.id))
 
 		// Clear groupId from exercises in invalid groups
 		const finalExercises = reindexedExercises.map(ex =>
-			ex.exerciseGroupId && !validGroupIds.has(ex.exerciseGroupId)
-				? { ...ex, exerciseGroupId: undefined }
-				: ex
+			ex.exerciseGroupId && !validGroupIds.has(ex.exerciseGroupId) ? { ...ex, exerciseGroupId: undefined } : ex
 		)
 
 		return {
@@ -203,9 +198,7 @@ export const useTemplate = create<TemplateState>()((set, get) => ({
 		const draft = get().draftTemplate
 		if (!draft) return
 
-		const newExercises = draft.exercises.map(e =>
-			e.exerciseId === oldId ? { ...e, exerciseId: newId } : e
-		)
+		const newExercises = draft.exercises.map(e => (e.exerciseId === oldId ? { ...e, exerciseId: newId } : e))
 
 		set({
 			draftTemplate: { ...draft, exercises: newExercises },

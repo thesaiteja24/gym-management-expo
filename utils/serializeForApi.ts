@@ -122,7 +122,6 @@ export function serializeWorkoutForApi(workout: WorkoutLog) {
 	}
 }
 
-
 // Program serialization
 /**
  * Normalizes duration options for API

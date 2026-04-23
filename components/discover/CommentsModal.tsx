@@ -82,10 +82,13 @@ const CommentsModal = forwardRef<CommentsModalHandle, Props>(({ workoutId, onClo
 		}, 300)
 	}
 
-	const handleViewReplies = useCallback((comment: Comment) => {
-		setViewingThreadId(comment.id)
-		sliderRef.current?.scrollTo({ x: screenWidth, animated: true })
-	}, [screenWidth])
+	const handleViewReplies = useCallback(
+		(comment: Comment) => {
+			setViewingThreadId(comment.id)
+			sliderRef.current?.scrollTo({ x: screenWidth, animated: true })
+		},
+		[screenWidth]
+	)
 
 	const handleBackToMain = () => {
 		sliderRef.current?.scrollTo({ x: 0, animated: true })

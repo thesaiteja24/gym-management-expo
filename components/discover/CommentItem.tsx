@@ -73,13 +73,16 @@ const CommentItem = ({
 
 	const avatarSize = 24
 
-	const paddingStyles = useMemo(() => ({
-		flexDirection: 'row' as const,
-		paddingTop: depth === 1 ? 0 : 16,
-		paddingBottom: depth === 1 ? 32 : 0,
-		paddingLeft: depth > 0 ? 0 : 16,
-		paddingRight: depth > 1 ? 0 : 16,
-	}), [depth])
+	const paddingStyles = useMemo(
+		() => ({
+			flexDirection: 'row' as const,
+			paddingTop: depth === 1 ? 0 : 16,
+			paddingBottom: depth === 1 ? 32 : 0,
+			paddingLeft: depth > 0 ? 0 : 16,
+			paddingRight: depth > 1 ? 0 : 16,
+		}),
+		[depth]
+	)
 
 	const renderAvatarColumn = () => (
 		<View className="mr-2 items-center gap-4" style={{ width: avatarSize }}>

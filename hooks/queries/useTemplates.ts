@@ -127,9 +127,8 @@ export function useDeleteTemplateMutation() {
 			// Optimistic removal from list cache
 			await qc.cancelQueries({ queryKey: queryKeys.templates.all(userId) })
 			const previous = qc.getQueryData<WorkoutTemplate[]>(queryKeys.templates.all(userId))
-			qc.setQueryData<WorkoutTemplate[]>(
-				queryKeys.templates.all(userId),
-				old => (old ?? []).filter(t => t.id !== id)
+			qc.setQueryData<WorkoutTemplate[]>(queryKeys.templates.all(userId), old =>
+				(old ?? []).filter(t => t.id !== id)
 			)
 			return { previous }
 		},
@@ -155,13 +154,7 @@ export function useSaveSharedTemplateMutation() {
 	const qc = useQueryClient()
 
 	return useMutation({
-		mutationFn: ({
-			template,
-			overwriteId,
-		}: {
-			template: WorkoutTemplate
-			overwriteId?: string
-		}) => {
+		mutationFn: ({ template, overwriteId }: { template: WorkoutTemplate; overwriteId?: string }) => {
 			const uid = useAuth.getState().user?.userId || ''
 			const payload = serializeTemplateForApi({
 				...template,

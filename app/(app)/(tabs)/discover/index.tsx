@@ -10,7 +10,7 @@ import { router } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function DiscoverScreen() {
@@ -23,7 +23,6 @@ export default function DiscoverScreen() {
 		isLoading: discoverLoading,
 		isFetchingNextPage: discoverLoadingNextPage,
 		fetchNextPage,
-		refetch: refetchDiscover,
 	} = useDiscoverWorkoutsQuery()
 
 	const qc = useQueryClient()

@@ -173,12 +173,7 @@ export default function HomeScreen() {
 	// ───────────────── Refresh ─────────────────
 	const onRefresh = useCallback(async () => {
 		setRefreshing(true)
-		await Promise.all([
-			refetchMeasurements(),
-			refetchUserAnalytics(),
-			refetchHabits(),
-			refetchHabitLogs(),
-		])
+		await Promise.all([refetchMeasurements(), refetchUserAnalytics(), refetchHabits(), refetchHabitLogs()])
 		setRefreshing(false)
 	}, [refetchMeasurements, refetchUserAnalytics, refetchHabits, refetchHabitLogs])
 

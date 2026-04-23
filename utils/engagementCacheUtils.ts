@@ -107,8 +107,9 @@ export function prependCommentToCaches(qc: QueryClient, newComment: Comment) {
  * Adds a reply to a specific thread's cache
  */
 export function prependReplyToThread(qc: QueryClient, parentId: string, newReply: Comment) {
-	qc.setQueriesData({ queryKey: queryKeys.engagement.replies(parentId) }, (old: InfiniteData<RepliesPage> | undefined) =>
-		prependToInfiniteData(old, 'replies', newReply)
+	qc.setQueriesData(
+		{ queryKey: queryKeys.engagement.replies(parentId) },
+		(old: InfiniteData<RepliesPage> | undefined) => prependToInfiniteData(old, 'replies', newReply)
 	)
 }
 

@@ -4,7 +4,11 @@ import DateTimePicker from '@/components/ui/DateTimePicker'
 import { GlassBackground } from '@/components/ui/GlassBackground'
 import { SelectableCard } from '@/components/ui/SelectableCard'
 import { useThemeColor } from '@/hooks/useThemeColor'
-import { useUpdateProfilePicMutation, useDeleteProfilePicMutation, useUpdateUserMutation } from '@/hooks/queries/useUser'
+import {
+	useUpdateProfilePicMutation,
+	useDeleteProfilePicMutation,
+	useUpdateUserMutation,
+} from '@/hooks/queries/useUser'
 import { useAuth } from '@/stores/authStore'
 import { convertLength, convertWeight, displayLength, displayWeight } from '@/utils/converter'
 import { prepareImageForUpload } from '@/utils/prepareImageForUpload'
@@ -242,26 +246,26 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
 
 					<View className="mb-6 items-center">
 						<EditableAvatar
-						uri={user?.profilePicUrl ?? null}
-						size={110}
-						editable={!uploading}
-						uploading={uploading}
-						onChange={newUri => newUri && onPick(newUri)}
-					/>
+							uri={user?.profilePicUrl ?? null}
+							size={110}
+							editable={!uploading}
+							uploading={uploading}
+							onChange={newUri => newUri && onPick(newUri)}
+						/>
 						{user?.profilePicUrl && (
 							<TouchableOpacity
 								onPress={async () => {
-						if (!user?.userId) return
-						setUploading(true)
-						try {
-							await deleteProfilePicMutation.mutateAsync(user.userId)
-							Toast.show({ type: 'success', text1: 'Avatar removed successfully' })
-						} catch {
-							Toast.show({ type: 'error', text1: 'Failed to remove avatar' })
-						} finally {
-							setUploading(false)
-						}
-					}}
+									if (!user?.userId) return
+									setUploading(true)
+									try {
+										await deleteProfilePicMutation.mutateAsync(user.userId)
+										Toast.show({ type: 'success', text1: 'Avatar removed successfully' })
+									} catch {
+										Toast.show({ type: 'error', text1: 'Failed to remove avatar' })
+									} finally {
+										setUploading(false)
+									}
+								}}
 								className="mt-4"
 								disabled={uploading}
 							>

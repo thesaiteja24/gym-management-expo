@@ -34,7 +34,7 @@ export default function RootLayout() {
 
 	useEffect(() => {
 		setColorScheme('dark')
-	}, [])
+	}, [setColorScheme])
 
 	// ───── Fonts ─────
 	const [fontsLoaded] = useFonts({
@@ -170,7 +170,9 @@ export default function RootLayout() {
 	// ─────────────────────────────────────────────
 	if (!fontsLoaded || !hasRestored) {
 		return (
-			<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+			<View
+				style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}
+			>
 				<ActivityIndicator color={colors.primary} />
 			</View>
 		)
@@ -196,10 +198,7 @@ export default function RootLayout() {
 							<Stack.Screen name="(app)" />
 						</Stack>
 
-						<StatusBar
-							barStyle="light-content"
-							backgroundColor={colors.background}
-						/>
+						<StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
 						<Toast
 							config={{
