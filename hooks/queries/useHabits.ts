@@ -172,8 +172,7 @@ export function useLogWeight() {
 	return useMutation({
 		mutationFn: async (data: { weight: number; date: string }) => {
 			const res = await addMeasurementsService(data)
-			if (!res.success) throw new Error(res.message || 'Failed to log weight')
-			return res.data
+			return res
 		},
 		onMutate: async (data: { weight: number; date: string }) => {
 			// Cancel concurrent refetches

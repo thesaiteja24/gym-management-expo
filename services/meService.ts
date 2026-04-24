@@ -106,7 +106,9 @@ export async function getTrainingAnalyticsService(duration: string): Promise<Tra
 	}
 }
 
-export async function addMeasurementsService(data: FormData | Partial<import('@/types/user').Measurements>): Promise<Measurements> {
+export async function addMeasurementsService(
+	data: FormData | Partial<import('@/types/user').Measurements>
+): Promise<Measurements> {
 	try {
 		const isFormData = data instanceof FormData
 		const res = await client.put(my_measurements_endpoint(), data, {

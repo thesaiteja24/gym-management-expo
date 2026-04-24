@@ -178,7 +178,7 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
 			fitnessLevel,
 		}
 
-		const promises = [updateFitnessProfileMutation.mutateAsync(payload)]
+		const promises: Promise<any>[] = [updateFitnessProfileMutation.mutateAsync(payload)]
 
 		if (computedTargets) {
 			const nutritionPayload = {
