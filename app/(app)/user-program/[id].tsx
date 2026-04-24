@@ -22,7 +22,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import Toast from 'react-native-toast-message'
 
-import ShimmerProgramDetails from '@/components/program/ShimmerProgramDetails'
+import ShimmerProgramDetails from '@/components/shimmers/ShimmerProgramDetails'
 import { WorkoutDetailsModal, WorkoutDetailsModalHandle } from '@/components/modals/WorkoutDetailsModal'
 import { useWorkout } from '@/stores/workoutStore'
 

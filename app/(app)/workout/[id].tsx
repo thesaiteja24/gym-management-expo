@@ -17,7 +17,7 @@ import Toast from 'react-native-toast-message'
 
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { ReadOnlyExerciseRow } from '@/components/workout/ReadOnlyExerciseRow'
-import ShimmerWorkoutScreen from '@/components/workout/ShimmerWorkoutScreen'
+import ShimmerWorkoutScreen from '@/components/shimmers/ShimmerWorkoutScreen'
 import {
 	useDeleteWorkoutMutation,
 	useDiscoverWorkoutsQuery,

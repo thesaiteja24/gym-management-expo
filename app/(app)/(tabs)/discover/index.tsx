@@ -1,4 +1,4 @@
-import ShimmerDiscoverScreen from '@/components/discover/ShimmerDiscoverScreen'
+import ShimmerDiscoverScreen from '@/components/shimmers/ShimmerDiscoverScreen'
 import WorkoutCard from '@/components/home/WorkoutCard'
 import { useExercises } from '@/hooks/queries/useExercises'
 import { useDiscoverWorkoutsQuery } from '@/hooks/queries/useWorkoutHistory'

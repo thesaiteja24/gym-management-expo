@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useRef } from 'react'
 import { BackHandler, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import Toast from 'react-native-toast-message'
 
-import ShimmerProgramDetails from '@/components/program/ShimmerProgramDetails'
+import ShimmerProgramDetails from '@/components/shimmers/ShimmerProgramDetails'
 import { StartProgramSheet, StartProgramSheetHandle } from '@/components/modals/StartProgramSheet'
 import { WorkoutDetailsModal, WorkoutDetailsModalHandle } from '@/components/modals/WorkoutDetailsModal'
 import { ROLES } from '@/constants/roles'

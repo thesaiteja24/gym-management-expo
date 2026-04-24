@@ -1,6 +1,6 @@
 import { MuscleCompositionCard } from '@/components/analytics/MuscleCompositionCard'
 import { NutritionTargetsCard } from '@/components/analytics/NutritionTargetsCard'
-import ShimmerAnalyticsScreen from '@/components/analytics/ShimmerAnalyticsScreen'
+import ShimmerAnalyticsScreen from '@/components/shimmers/ShimmerAnalyticsScreen'
 import {
 	useFitnessProfileQuery,
 	useMeasurementsQuery,

@@ -4,7 +4,7 @@ import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'rea
 import Animated, { Easing, FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import ShimmerHomeScreen from '@/components/home/ShimmerHomeScreen'
+import ShimmerHomeScreen from '@/components/shimmers/ShimmerHomeScreen'
 import StreakCard, { StreakDay } from '@/components/home/StreakCard'
 
 import { HabitCard } from '@/components/home/HabitCard'

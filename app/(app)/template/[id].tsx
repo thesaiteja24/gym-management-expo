@@ -9,7 +9,7 @@ import { BackHandler, ScrollView, Text, View, useColorScheme } from 'react-nativ
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
-import ShimmerTemplateScreen from '@/components/templates/shimmerTemplateScreen'
+import ShimmerTemplateScreen from '@/components/shimmers/ShimmerTemplateScreen'
 import { ReadOnlyExerciseRow } from '@/components/workout/ReadOnlyExerciseRow'
 
 export default function TemplateDetails() {
