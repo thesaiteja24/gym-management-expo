@@ -11,12 +11,12 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
 import { SplashScreen, Stack } from 'expo-router'
 import * as Updates from 'expo-updates'
+import { useColorScheme } from 'nativewind'
 import { useEffect, useState } from 'react'
 import { ActivityIndicator, StatusBar, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import Toast from 'react-native-toast-message'
 import { vexo } from 'vexo-analytics'
-import { useColorScheme } from 'nativewind'
 import './globals.css'
 
 // ─────────────────────────────────────────────
@@ -57,9 +57,6 @@ export default function RootLayout() {
 	const logoutSubscription = useSubscriptionStore(s => s.logout)
 	const userId = useAuth(s => s.userId)
 	const { login: loginOneSignal, logout: logoutOneSignal } = useOneSignal()
-
-	// ───── Initial Data Fetch ─────
-	// useInitialDataFetch();
 
 	// ─────────────────────────────────────────────
 	// 1️⃣ Restore auth from storage (once)

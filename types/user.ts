@@ -16,15 +16,6 @@ export type ActivityLevel = 'sedentary' | 'lightlyActive' | 'moderatelyActive' |
 
 export type TargetType = 'weight' | 'bodyFat'
 
-export type EquipmentType =
-	| 'bodyweight'
-	| 'dumbbells'
-	| 'barbells'
-	| 'kettlebells'
-	| 'resistanceBands'
-	| 'machines'
-	| 'other'
-
 export interface FitnessProfile {
 	fitnessGoal: FitnessGoal | null
 	fitnessLevel: FitnessLevel | null

@@ -59,14 +59,37 @@ export const useOneSignal = () => {
 		}
 	}, [])
 
+	useEffect(() => {
+		OneSignal.initialize(ONESIGNAL_APP_ID)
+
+		const setup = async () => {
+			const permission = await OneSignal.Notifications.requestPermission(true)
+
+			if (permission) {
+				OneSignal.User.pushSubscription.optIn()
+
+				const subId = await OneSignal.User.pushSubscription.getIdAsync()
+				console.log('✅ Subscription ID:', subId)
+			}
+		}
+
+		setup()
+	}, [])
+
 	const requestPermission = useCallback(async () => {
 		const granted = await OneSignal.Notifications.requestPermission(true)
 		setHasPermission(granted)
 		return granted
 	}, [])
 
-	const login = useCallback((externalId: string) => {
-		OneSignal.login(externalId)
+	const login = useCallback(async (externalId: string) => {
+		const subId = await OneSignal.User.pushSubscription.getIdAsync()
+
+		if (subId) {
+			OneSignal.login(externalId)
+		} else {
+			console.log('⚠️ Cannot login — no subscription yet')
+		}
 	}, [])
 
 	const logout = useCallback(() => {

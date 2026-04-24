@@ -464,5 +464,3 @@ function GoalCard({ selected, onSelect, title }: any) {
 }
 
 FitnessGoalsSheet.displayName = 'FitnessGoalsSheet'
-
-export default FitnessGoalsSheet

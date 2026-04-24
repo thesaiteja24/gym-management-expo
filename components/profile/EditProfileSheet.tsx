@@ -385,5 +385,3 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
 })
 
 EditProfileSheet.displayName = 'EditProfileSheet'
-
-export default EditProfileSheet

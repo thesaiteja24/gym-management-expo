@@ -651,5 +651,3 @@ const SectionHeader = React.memo(({ title }: { title: string }) => (
 SectionHeader.displayName = 'SectionHeader'
 
 MeasurementsSheet.displayName = 'MeasurementsSheet'
-
-export default MeasurementsSheet
