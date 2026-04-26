@@ -1,6 +1,5 @@
 import { queryKeys } from '@/lib/queryKeys'
 import { getUserByIdService } from '@/services/me.service'
-import { User } from '@/types/me'
 import { useQuery } from '@tanstack/react-query'
 
 /**

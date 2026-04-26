@@ -9,21 +9,27 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
     slug: 'pump',
     version: '0.1.0',
     orientation: 'portrait',
-    icon: isProd ? './assets/images/icon.png' : './assets/images/icon.png',
-    scheme: 'pump',
-    userInterfaceStyle: 'dark',
+    icon: isProd ? './src/assets/images/icon.png' : './src/assets/images/icon.png',
+    userInterfaceStyle: 'automatic',
 
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.thesaiteja.pump',
+      bundleIdentifier: isProd ? 'com.thesaiteja.pump' : 'com.thesaiteja.pump.dev',
+      config: {
+        usesNonExemptEncryption: false,
+      },
+      icon: {
+        dark: './src/assets/images/icon.png',
+        light: './src/assets/images/icon.png',
+      },
       associatedDomains: ['applinks:pump.thesaiteja.dev'],
     },
 
     android: {
-      package: 'com.thesaiteja.pump',
+      package: isProd ? 'com.thesaiteja.pump' : 'com.thesaiteja.pump.dev',
       versionCode: 1,
       adaptiveIcon: {
-        foregroundImage: './assets/images/icon.png',
+        foregroundImage: './src/assets/images/icon.png',
         backgroundColor: '#000000',
       },
       intentFilters: [
@@ -40,11 +46,17 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
           category: ['BROWSABLE', 'DEFAULT'],
         },
       ],
+      permissions: [
+        'android.permission.RECORD_AUDIO',
+        'android.permission.MODIFY_AUDIO_SETTINGS',
+      ],
+      softwareKeyboardLayoutMode: 'pan',
     },
 
     web: {
       output: 'static',
-      favicon: './assets/images/favicon.png',
+      favicon: './src/assets/images/favicon.png',
+      bundler: 'metro',
     },
 
     plugins: [
@@ -81,7 +93,7 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
       [
         'expo-splash-screen',
         {
-          image: './assets/images/icon.png',
+          image: './src/assets/images/icon.png',
           imageWidth: 200,
           resizeMode: 'contain',
           backgroundColor: '#000000',

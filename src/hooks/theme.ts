@@ -1,9 +1,7 @@
-import tailwindConfig from '@/tailwind.config'
-import { useEffect } from 'react'
-import { Appearance } from 'react-native'
+import tailwindConfig from '../../tailwind.config'
 import resolveConfig from 'tailwindcss/resolveConfig'
 
-const fullConfig = resolveConfig(tailwindConfig)
+resolveConfig(tailwindConfig)
 
 // Manual map for now since resolving tailwind config at runtime in expo can be tricky without extra setup.
 // In a full nativewind setup we might rely on CSS vars, but this is a safe bridge.
@@ -22,11 +20,7 @@ const COLORS = {
   },
 }
 
-type ColorToken = keyof typeof COLORS
-
 export function useThemeColor() {
-  const isDark = true
-
   const colors = {
     ...COLORS,
     // Add semantic overrides if needed for dark mode specifically

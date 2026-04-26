@@ -1,4 +1,4 @@
-import { TemplatePayload, UserPayload } from '@/types/payloads'
+import { TemplatePayload } from '@/types/payloads'
 import {
   DraftProgram,
   ProgramCreatePayload,

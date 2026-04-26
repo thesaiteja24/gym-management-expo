@@ -1,5 +1,5 @@
 import { useUserWorkoutHistoryQuery } from '@/hooks/queries/workouts'
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 
 /* ────────────────────────────────────────────── */
 /* Exercise analytics types */

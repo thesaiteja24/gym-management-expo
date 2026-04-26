@@ -1,4 +1,4 @@
-import GoogleIcon from '@/assets/components/icons/Google'
+import GoogleIcon from '../../assets/components/icons/Google'
 import { Button } from '@/components/ui/buttons/Button'
 import PrivacyPolicyModal, {
   PrivacyPolicyModalHandle,

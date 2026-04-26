@@ -1,4 +1,3 @@
-import { StoreUpdateModal } from '@/components/ui/modals/StoreUpdateModal'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native'
 import Animated, {
@@ -24,7 +23,6 @@ import { Button } from '@/components/ui/buttons/Button'
 import { useAskNotificationPermission } from '@/hooks/notifications/useAskNotificationPermission'
 import { useHabitLogsQuery, useHabitsQuery } from '@/hooks/queries/habits'
 import { useMeasurementsQuery, useProfileQuery, useUserAnalyticsQuery } from '@/hooks/queries/me'
-import { useStoreUpdate } from '@/hooks/system'
 import { SelfUser } from '@/types/me'
 import {
   calculateBMI,
@@ -221,13 +219,6 @@ export default function HomeScreen() {
     transform: [{ translateY: headerTranslateY.value }],
   }))
 
-  // ───── Store Update check ─────
-  const {
-    showModal: updateModalVisible,
-    latestVersion: storeLatestVersion,
-    handleUpdate: onStoreUpdate,
-    handleLater: onStoreLater,
-  } = useStoreUpdate()
 
   const isFullyLoaded =
     !isLoadingMeasurements &&
@@ -397,12 +388,6 @@ export default function HomeScreen() {
         </ScrollView>
       )}
 
-      <StoreUpdateModal
-        visible={updateModalVisible && isFullyLoaded && hasFinishedAnimations}
-        latestVersion={storeLatestVersion}
-        onLater={onStoreLater}
-        onUpdate={onStoreUpdate}
-      />
     </SafeAreaView>
   )
 }

@@ -8,7 +8,6 @@ import {
 import { downloadSpeechService } from '@/services/coach.service'
 
 import { CoachState, type CoachMessage } from '@/types/coach'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   AudioModule,
   RecorderState,
@@ -47,7 +46,6 @@ interface CoachVoice {
 }
 
 export function useCoach(): CoachVoice {
-  const queryClient = useQueryClient()
   const { data: conversation, isLoading: isLoadingConv } = useCoachConversation()
   const startMutation = useStartCoachConversation()
   const deleteMutation = useDeleteCoachConversation()
@@ -190,7 +188,7 @@ export function useCoach(): CoachVoice {
         { id: coachThinkingId, role: 'coach', text: '', thinking: true },
       ])
 
-      const { text, ttsId } = await sendMutation.mutateAsync({
+      const { ttsId } = await sendMutation.mutateAsync({
         conversationId: conversation!.id,
         question: transcription,
       })

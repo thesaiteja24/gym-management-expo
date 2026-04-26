@@ -53,7 +53,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       })
 
       set({ offerings, isLoadingOfferings: false })
-    } catch (error) {
+    } catch {
       set({ isLoadingOfferings: false })
     }
   },
@@ -65,7 +65,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       get().updateCustomerInfo(customerInfo)
       set({ isPurchasing: false })
       return typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined'
-    } catch (error) {
+    } catch {
       set({ isPurchasing: false })
       return false
     }
@@ -78,7 +78,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       get().updateCustomerInfo(customerInfo)
       set({ isPurchasing: false })
       return typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined'
-    } catch (error) {
+    } catch {
       set({ isPurchasing: false })
       return false
     }

@@ -1,8 +1,8 @@
-export const CoachState = {
-  idle: 'idle',
-  recording: 'recording',
-  stopped: 'stopped',
-} as const
+export enum CoachState {
+  idle = 'idle',
+  recording = 'recording',
+  stopped = 'stopped',
+}
 
 export interface CoachMessage {
   id: string
@@ -10,5 +10,3 @@ export interface CoachMessage {
   text: string
   thinking: boolean
 }
-
-export type CoachState = (typeof CoachState)[keyof typeof CoachState]
