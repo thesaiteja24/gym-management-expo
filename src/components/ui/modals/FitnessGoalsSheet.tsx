@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/buttons/Button'
 import DateTimePicker from '@/components/ui/DateTimePicker'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { SelectableCard } from '@/components/ui/SelectableCard'
 import {
   useFitnessProfileQuery,
@@ -259,7 +258,7 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
       backdropComponent={(props) => (
         <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
       )}
-      backgroundComponent={GlassBackground}
+      
       handleIndicatorStyle={{ backgroundColor: isDarkMode ? '#525252' : '#d1d5db' }}
       onChange={(index) => {
         setIsOpen(index >= 0)
@@ -476,7 +475,7 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal>((props, ref) => {
           variant="primary"
           disabled={!targetValue || !weeklyRate || isLoading}
           loading={isLoading}
-          liquidGlass
+          
         />
       </BottomSheetScrollView>
     </BottomSheetModal>

@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { useCoach } from '@/hooks/coach'
 import { useThemeColor } from '@/hooks/theme'
 import { useSubscriptionStore } from '@/stores/subscriptions.store'
@@ -136,7 +135,6 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
         onClose?.()
       }}
       enablePanDownToClose
-      backgroundComponent={GlassBackground}
       handleIndicatorStyle={{
         backgroundColor: isDark ? '#525252' : '#d1d5db',
       }}
@@ -182,7 +180,6 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
                   onPress={() => {
                     sendVoiceMessage()
                   }}
-                  liquidGlass
                 />
               ) : (
                 <Button
@@ -194,7 +191,6 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
                   onPress={() => {
                     startRecording()
                   }}
-                  liquidGlass
                 />
               )}
               <Button
@@ -204,7 +200,6 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
                   clearMessages()
                   setIsOpen(false)
                 }}
-                liquidGlass
               />
             </View>
           </View>
@@ -232,7 +227,6 @@ const CoachModal = forwardRef<CoachModalHandle, Props>(({ onClose }, ref) => {
                   bottomSheetModalRef.current?.dismiss()
                   router.push('/paywall')
                 }}
-                liquidGlass
               />
             </View>
           </View>

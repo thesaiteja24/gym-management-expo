@@ -1,3 +1,4 @@
+import { OneSignal } from 'react-native-onesignal'
 import { queryKeys } from '@/lib/queryKeys'
 import {
   createCommentService,
@@ -119,6 +120,9 @@ export function useFollowUserMutation() {
         ...updatedUser,
         followLoading: false,
       }))
+
+      // Request notification permissions after a social interaction
+      OneSignal.Notifications.requestPermission(true)
     },
 
     onError: (_err, targetUserId) => {
@@ -235,6 +239,9 @@ export function useCommentMutation(workoutId: string) {
       if (!newComment) return
 
       prependCommentToCaches(qc, newComment)
+
+      // Request notification permissions after a social interaction
+      OneSignal.Notifications.requestPermission(true)
     },
 
     onError: (_err, _newComment, context) => {
@@ -276,6 +283,9 @@ export function useReplyMutation(workoutId: string, parentId: string) {
 
       incrementReplyCount(qc, parentId)
       prependReplyToThread(qc, parentId, newReply)
+
+      // Request notification permissions after a social interaction
+      OneSignal.Notifications.requestPermission(true)
     },
 
     onError: (_err, _newReply, context) => {
@@ -439,7 +449,12 @@ export function useToggleLikeMutation() {
       }
     },
 
-    onSettled: (_res, _err, { id, type, workoutId }) => {
+    onSettled: (_res, _err, { id, type, workoutId, liked }) => {
+      // Request notification permissions after a social interaction (if liking)
+      if (liked) {
+        OneSignal.Notifications.requestPermission(true)
+      }
+
       // Invalidate all related caches to stay in sync with server
       qc.invalidateQueries({
         queryKey: queryKeys.engagement.likes(id, type),

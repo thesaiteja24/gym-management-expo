@@ -4,7 +4,6 @@ import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/
 import React, { forwardRef, useEffect, useMemo, useState } from 'react'
 import { BackHandler, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 
 type WeightUnit = 'kg' | 'lbs'
 type LengthUnit = 'cm' | 'inches'
@@ -74,7 +73,7 @@ export const UnitPreferencesSheet = forwardRef<BottomSheetModal>((props, ref) =>
       backdropComponent={(props) => (
         <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
       )}
-      backgroundComponent={GlassBackground}
+      
       handleIndicatorStyle={{
         backgroundColor: isDarkMode ? '#525252' : '#d1d5db',
       }}

@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassView } from '@/components/ui/GlassView'
 import { useThemeColor } from '@/hooks/theme'
 import { type UpdateState } from '@/types/app-updates'
 import { useRef } from 'react'
@@ -22,11 +21,13 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View className="flex-1 items-center justify-center bg-black/40 px-6">
-        <GlassView
-          className="w-full overflow-hidden rounded-3xl"
+        <View
+          className="w-full overflow-hidden rounded-[28px] border shadow-xl"
+          style={{
+            backgroundColor: colors.neutral[900],
+            borderColor: colors.neutral[800],
+          }}
           pointerEvents={isBusy ? 'none' : 'auto'}
-          lightIntensity={Platform.OS === 'ios' ? 25 : 85}
-          darkIntensity={Platform.OS === 'ios' ? 25 : 85}
         >
           <View className="p-6">
             <Text className="text-center text-xl font-bold" style={{ color: colors.text }}>
@@ -59,7 +60,6 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
                   variant="secondary"
                   onPress={onLater}
                   disabled={isBusy}
-                  liquidGlass
                 />
               </View>
               <View className="flex-1">
@@ -77,12 +77,11 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
                   }}
                   disabled={isBusy}
                   loading={state === 'restarting'}
-                  liquidGlass
                 />
-              </View>
             </View>
           </View>
-        </GlassView>
+        </View>
+        </View>
       </View>
     </Modal>
   )

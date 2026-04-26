@@ -8,7 +8,9 @@ export const useOneSignal = () => {
   const [isInitialized, setIsInitialized] = useState(false)
   const [hasPermission, setHasPermission] = useState(false)
 
-  useEffect(() => {
+  const initialize = useCallback(() => {
+    if (isInitialized) return
+
     if (__DEV__) {
       OneSignal.Debug.setLogLevel(LogLevel.Verbose)
     }
@@ -57,32 +59,19 @@ export const useOneSignal = () => {
       OneSignal.Notifications.removeEventListener('click', clickListener)
       OneSignal.Notifications.removeEventListener('foregroundWillDisplay', foregroundListener)
     }
-  }, [])
-
-  useEffect(() => {
-    OneSignal.initialize(ONESIGNAL_APP_ID)
-
-    const setup = async () => {
-      const permission = await OneSignal.Notifications.requestPermission(true)
-
-      if (permission) {
-        OneSignal.User.pushSubscription.optIn()
-
-        const subId = await OneSignal.User.pushSubscription.getIdAsync()
-        console.log('✅ Subscription ID:', subId)
-      }
-    }
-
-    setup()
-  }, [])
+  }, [isInitialized])
 
   const requestPermission = useCallback(async () => {
     const granted = await OneSignal.Notifications.requestPermission(true)
+    if (granted) {
+      OneSignal.User.pushSubscription.optIn()
+    }
     setHasPermission(granted)
     return granted
   }, [])
 
   const login = useCallback(async (externalId: string) => {
+    if (!isInitialized) return
     const subId = await OneSignal.User.pushSubscription.getIdAsync()
 
     if (subId) {
@@ -90,15 +79,17 @@ export const useOneSignal = () => {
     } else {
       console.log('⚠️ Cannot login — no subscription yet')
     }
-  }, [])
+  }, [isInitialized])
 
   const logout = useCallback(() => {
+    if (!isInitialized) return
     OneSignal.logout()
-  }, [])
+  }, [isInitialized])
 
   return {
     isInitialized,
     hasPermission,
+    initialize,
     requestPermission,
     login,
     logout,

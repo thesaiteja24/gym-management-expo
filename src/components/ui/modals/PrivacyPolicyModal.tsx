@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import React, {
   forwardRef,
@@ -77,7 +76,7 @@ const PrivacyPolicyModal = forwardRef<PrivacyPolicyModalHandle, Props>(
         onDismiss={() => {
           onClose?.()
         }}
-        backgroundComponent={GlassBackground}
+        
         handleIndicatorStyle={{
           backgroundColor: isDark ? '#525252' : '#d1d5db',
         }}
@@ -119,7 +118,7 @@ const PrivacyPolicyModal = forwardRef<PrivacyPolicyModalHandle, Props>(
                   onAgree(policyVersion || undefined)
                   bottomSheetModalRef.current?.dismiss()
                 }}
-                liquidGlass
+                
               />
             </View>
             <View>
@@ -129,7 +128,7 @@ const PrivacyPolicyModal = forwardRef<PrivacyPolicyModalHandle, Props>(
                 onPress={() => {
                   bottomSheetModalRef.current?.dismiss()
                 }}
-                liquidGlass
+                
               />
             </View>
           </View>

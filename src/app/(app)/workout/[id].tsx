@@ -287,7 +287,7 @@ export default function WorkoutDetails() {
             title="Save as Template"
             className="min-h-[52px] w-2/3"
             onPress={handleSaveAsTemplate}
-            liquidGlass
+            
           />
 
           {isAuthrized && (

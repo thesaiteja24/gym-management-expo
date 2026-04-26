@@ -215,7 +215,7 @@ export default function Login() {
             isGooglePending.current = true
             privacyModalRef.current?.present()
           }}
-          liquidGlass
+          
         />
         <View className="mt-4 flex-row items-center justify-center gap-4 px-6">
           <Pressable

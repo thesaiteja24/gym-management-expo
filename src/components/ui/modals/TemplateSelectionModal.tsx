@@ -5,7 +5,6 @@ import * as Haptics from 'expo-haptics'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 
 export interface TemplateSelectionModalHandle {
   present: () => void
@@ -44,7 +43,7 @@ const TemplateSelectionModal = forwardRef<TemplateSelectionModalHandle, Props>(
         snapPoints={snapPoints}
         backdropComponent={renderBackdrop}
         onDismiss={onClose}
-        backgroundComponent={GlassBackground}
+        
         handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
         animationConfigs={{
           duration: 350,

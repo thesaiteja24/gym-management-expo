@@ -31,7 +31,7 @@ export const useTemplate = create<TemplateState>()((set, get) => ({
     }
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { useWorkout } = require('./workoutStore')
+    const { useWorkout } = require('./workouts.store')
     const { loadTemplate } = useWorkout.getState()
     loadTemplate(template)
   },

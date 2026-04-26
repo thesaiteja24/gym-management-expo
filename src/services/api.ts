@@ -148,7 +148,7 @@ client.interceptors.response.use(
 
         return client(originalConfig)
       } catch (refreshError) {
-        log.error('Token refresh failed', refreshError)
+        log.warn('Token refresh failed', refreshError)
 
         processQueue(refreshError, null)
         setAccessToken(null)

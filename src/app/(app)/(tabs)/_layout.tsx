@@ -4,7 +4,6 @@ import CoachModal, { CoachModalHandle } from '@/components/ui/modals/CoachModal'
 
 import { useThemeColor } from '@/hooks/theme'
 import { Ionicons } from '@expo/vector-icons'
-import { BlurView } from 'expo-blur'
 import * as Haptics from 'expo-haptics'
 import { Tabs } from 'expo-router'
 import React, { useRef } from 'react'
@@ -55,10 +54,13 @@ export default function TabsLayout() {
             elevation: 2,
           },
           tabBarBackground: () => (
-            <BlurView
-              tint={isDark ? 'dark' : 'light'}
-              blurMethod="dimezisBlurViewSdk31Plus"
-              style={StyleSheet.absoluteFill}
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: isDark ? '#171717' : '#ffffff',
+                },
+              ]}
             />
           ),
 
@@ -218,42 +220,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-
-      {/* <View
-				pointerEvents="none"
-				style={{
-					position: 'absolute',
-					left: 0,
-					right: 0,
-					bottom: 0,
-					height: insets.bottom,
-					zIndex: 1,
-					elevation: 0,
-				}}
-			>
-				<BlurView
-					intensity={isDark ? 20 : 20}
-					tint={isDark ? 'dark' : 'light'}
-					style={StyleSheet.absoluteFill}
-				/>
-
-				<LinearGradient
-					pointerEvents="none"
-					colors={[
-						isDark ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)',
-						isDark ? 'rgba(0, 0, 0, 0.18)' : 'rgba(255, 255, 255, 0.22)',
-					]}
-					start={{ x: 0.5, y: 0 }}
-					end={{ x: 0.5, y: 1 }}
-					style={{
-						position: 'absolute',
-						left: 0,
-						right: 0,
-						top: 0,
-						height: 22,
-					}}
-				/>
-			</View> */}
 
       <View
         style={{

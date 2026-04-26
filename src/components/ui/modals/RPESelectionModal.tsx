@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import * as Haptics from 'expo-haptics'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
@@ -75,7 +74,7 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(
         snapPoints={snapPoints}
         backdropComponent={renderBackdrop}
         onDismiss={onClose}
-        backgroundComponent={GlassBackground}
+        
         handleIndicatorStyle={{
           backgroundColor: isDark ? '#525252' : '#d1d5db',
         }}
@@ -148,7 +147,7 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(
                   // Done
                   bottomSheetModalRef.current?.dismiss()
                 }}
-                liquidGlass
+                
               />
             </View>
 

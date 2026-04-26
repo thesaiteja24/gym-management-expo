@@ -1,19 +1,13 @@
 import { CustomToast } from '@/components/ui/CustomToast'
-import { OtaUpdateModal } from '@/components/ui/modals/OtaUpdateModal'
-import { useOneSignal } from '@/hooks/notifications/useOneSignal'
 import { useThemeColor } from '@/hooks/theme'
 import { queryClient } from '@/lib/queryClient'
 import { useAuth } from '@/stores/auth.store'
-import { useSubscriptionStore } from '@/stores/subscriptions.store'
-import { UpdateState } from '@/types/app-updates'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
 import { SplashScreen, Stack } from 'expo-router'
-import * as Updates from 'expo-updates'
 import { useColorScheme } from 'nativewind'
-import { BlurTargetView } from 'expo-blur'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { ActivityIndicator, StatusBar, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import Toast from 'react-native-toast-message'
@@ -45,19 +39,6 @@ export default function RootLayout() {
   // ───── Auth state ─────
   const restoreFromStorage = useAuth((s) => s.restoreFromStorage)
   const hasRestored = useAuth((s) => s.hasRestored)
-  const isAuthenticated = useAuth((s) => s.isAuthenticated)
-
-  // ───── OTA state ─────
-  const [updateAvailable, setUpdateAvailable] = useState(false)
-  const [showOtaModal, setShowOtaModal] = useState(false)
-  const [updateState, setUpdateState] = useState<UpdateState>('idle')
-
-  // ───── Subscription state ─────
-  const initializeSubscription = useSubscriptionStore((s) => s.initialize)
-  const loginSubscription = useSubscriptionStore((s) => s.login)
-  const logoutSubscription = useSubscriptionStore((s) => s.logout)
-  const userId = useAuth((s) => s.userId)
-  const { login: loginOneSignal, logout: logoutOneSignal } = useOneSignal()
 
   // ─────────────────────────────────────────────
   // 1️⃣ Restore auth from storage (once)
@@ -65,66 +46,6 @@ export default function RootLayout() {
   useEffect(() => {
     restoreFromStorage()
   }, [restoreFromStorage])
-
-  // ─────────────────────────────────────────────
-  // 1.5️⃣ Initialize Subscription Store
-  // ─────────────────────────────────────────────
-  useEffect(() => {
-    if (hasRestored) {
-      initializeSubscription()
-    }
-  }, [hasRestored, initializeSubscription])
-
-  // ─────────────────────────────────────────────
-  // 1.6️⃣ Sync Stores with Auth (Subscription & OneSignal)
-  // ─────────────────────────────────────────────
-  useEffect(() => {
-    if (hasRestored) {
-      if (isAuthenticated && userId) {
-        loginSubscription(userId)
-        loginOneSignal(userId)
-      } else if (!isAuthenticated) {
-        logoutSubscription()
-        logoutOneSignal()
-      }
-    }
-  }, [
-    hasRestored,
-    isAuthenticated,
-    userId,
-    loginSubscription,
-    logoutSubscription,
-    loginOneSignal,
-    logoutOneSignal,
-  ])
-
-  // ─────────────────────────────────────────────
-  // 2️⃣ Silent OTA check (NO UI, NO splash blocking)
-  // ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!hasRestored) return
-
-    let cancelled = false
-
-    async function checkForUpdates() {
-      try {
-        const update = await Updates.checkForUpdateAsync()
-        if (!cancelled && update.isAvailable) {
-          setUpdateAvailable(true)
-        }
-      } catch (e) {
-        if (__DEV__) {
-          console.log('OTA check failed:', e)
-        }
-      }
-    }
-
-    checkForUpdates()
-
-    return () => {
-      cancelled = true
-    }
-  }, [hasRestored])
 
   // ─────────────────────────────────────────────
   // 3️⃣ Release splash when boot is complete
@@ -150,18 +71,6 @@ export default function RootLayout() {
   }, [hasRestored])
 
   // ─────────────────────────────────────────────
-  // 5️⃣ Show OTA modal ONLY after login
-  // ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!isAuthenticated) return
-    if (!updateAvailable) return
-
-    requestAnimationFrame(() => {
-      setShowOtaModal(true)
-    })
-  }, [isAuthenticated, updateAvailable])
-
-  // ─────────────────────────────────────────────
   // 6️⃣ Fallback loader (should rarely appear)
   // ─────────────────────────────────────────────
   if (!fontsLoaded || !hasRestored) {
@@ -185,57 +94,31 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
-        <BlurTargetView style={{ flex: 1 }}>
-          <BottomSheetModalProvider>
-            <>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  animation: 'slide_from_right',
-                  contentStyle: { backgroundColor: colors.background },
-                }}
-              >
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(app)" />
-              </Stack>
+        <BottomSheetModalProvider>
+          <>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                // animation: 'slide_from_right',
+                contentStyle: { backgroundColor: colors.background },
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(app)" />
+            </Stack>
 
-              <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+            <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
-              <Toast
-                config={{
-                  success: (props) => <CustomToast {...props} type="success" />,
-                  error: (props) => <CustomToast {...props} type="error" />,
-                  info: (props) => <CustomToast {...props} type="info" />,
-                }}
-              />
-
-              <OtaUpdateModal
-                visible={showOtaModal}
-                state={updateState}
-                onLater={() => {
-                  if (updateState === 'idle') {
-                    setShowOtaModal(false)
-                  }
-                }}
-                onRestart={async () => {
-                  try {
-                    setUpdateState('downloading')
-                    await Updates.fetchUpdateAsync()
-
-                    setUpdateState('restarting')
-                    await Updates.reloadAsync()
-                  } catch (e) {
-                    if (__DEV__) {
-                      console.log('OTA update failed:', e)
-                    }
-                    setUpdateState('idle')
-                  }
-                }}
-              />
-            </>
-          </BottomSheetModalProvider>
-        </BlurTargetView>
+            <Toast
+              config={{
+                success: (props) => <CustomToast {...props} type="success" />,
+                error: (props) => <CustomToast {...props} type="error" />,
+                info: (props) => <CustomToast {...props} type="info" />,
+              }}
+            />
+          </>
+        </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   )

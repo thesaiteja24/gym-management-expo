@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { PaywallModal, PaywallModalHandle } from '@/components/ui/modals/PaywallModal'
 import { SelectableCard } from '@/components/ui/SelectableCard'
 import { useSubscriptionStore } from '@/stores/subscriptions.store'
@@ -87,7 +86,7 @@ export const StartProgramSheet = forwardRef<StartProgramSheetHandle, StartProgra
           ref={bottomSheetModalRef}
           backdropComponent={renderBackdrop}
           enableDynamicSizing
-          backgroundComponent={GlassBackground}
+          
           handleIndicatorStyle={{
             backgroundColor: isDark ? '#525252' : '#d1d5db',
           }}
@@ -180,7 +179,7 @@ export const StartProgramSheet = forwardRef<StartProgramSheetHandle, StartProgra
               className="mt-8"
               onPress={() => onConfirm(selectedDuration)}
               loading={isLoading}
-              liquidGlass
+              
             />
           </BottomSheetScrollView>
         </BottomSheetModal>
@@ -221,7 +220,7 @@ function ComingSoonModal({ onDismiss }: { onDismiss: () => void }) {
       enableDynamicSizing
       stackBehavior="push"
       onDismiss={onDismiss}
-      backgroundComponent={GlassBackground}
+      
     >
       <BottomSheetView style={{ paddingBottom: insets.bottom + 24 }} className="px-6 pt-2">
         <Text className="text-center text-xl font-bold dark:text-white">Coming Soon ✨</Text>
@@ -234,7 +233,7 @@ function ComingSoonModal({ onDismiss }: { onDismiss: () => void }) {
           variant="primary"
           className="mt-8"
           onPress={() => modalRef.current?.dismiss()}
-          liquidGlass
+          
         />
       </BottomSheetView>
     </BottomSheetModal>

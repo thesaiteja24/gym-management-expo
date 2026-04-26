@@ -358,7 +358,7 @@ export default function UserProgramDashboard() {
             }
             variant="primary"
             className="mb-4 min-h-[52px]"
-            liquidGlass
+            
             onPress={() => {
               if (!todayDay) return
 

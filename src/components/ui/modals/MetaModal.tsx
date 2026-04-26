@@ -3,7 +3,6 @@ import { Image } from 'expo-image'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { ActivityIndicator, Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { MetaItem } from '@/types/meta'
 
 export interface MetaModalHandle {
@@ -56,7 +55,7 @@ const MetaModal = forwardRef<MetaModalHandle, Props>(
         handleIndicatorStyle={{
           backgroundColor: isDark ? '#525252' : '#d1d5db',
         }}
-        backgroundComponent={GlassBackground}
+        
         enableDynamicSizing={false}
         animationConfigs={{
           duration: 350,

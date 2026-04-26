@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { useThemeColor } from '@/hooks/theme'
 import { Ionicons } from '@expo/vector-icons'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
@@ -46,7 +45,7 @@ const ProgramWorkoutPromptModal = forwardRef<ProgramWorkoutPromptHandle, Program
         enableDynamicSizing={false}
         enablePanDownToClose={true}
         backdropComponent={renderBackdrop}
-        backgroundComponent={GlassBackground}
+        
         handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
         animationConfigs={{ duration: 350 }}
       >
@@ -75,7 +74,7 @@ const ProgramWorkoutPromptModal = forwardRef<ProgramWorkoutPromptHandle, Program
                 bottomSheetRef.current?.dismiss()
               }}
               fullWidth
-              liquidGlass
+              
             />
             <Button
               title="Start Empty Workout"
@@ -85,7 +84,7 @@ const ProgramWorkoutPromptModal = forwardRef<ProgramWorkoutPromptHandle, Program
                 bottomSheetRef.current?.dismiss()
               }}
               fullWidth
-              liquidGlass
+              
             />
           </View>
         </BottomSheetView>

@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { ReadOnlyExerciseRow } from '@/components/workouts/ReadOnlyExerciseRow'
 import { ProgramDay, UserProgramDay } from '@/types/programs'
 import { TemplateExerciseGroup } from '@/types/templates'
@@ -164,7 +163,7 @@ export const WorkoutDetailsModal = forwardRef<WorkoutDetailsModalHandle, Workout
                     pathname: '/(app)/workout/start',
                   })
                 }}
-                liquidGlass
+                
               />
             </View>
           )}
@@ -178,7 +177,7 @@ export const WorkoutDetailsModal = forwardRef<WorkoutDetailsModalHandle, Workout
         snapPoints={snapPoints}
         enableDynamicSizing={dynamicSizing}
         backdropComponent={renderBackdrop}
-        backgroundComponent={GlassBackground}
+        
         onDismiss={() => {
           setIsOpen(false)
           onOpenChange?.(false)

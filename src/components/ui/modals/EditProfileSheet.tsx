@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/buttons/Button'
 import DateTimePicker from '@/components/ui/DateTimePicker'
 import EditableAvatar from '@/components/me/EditableAvatar'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { SelectableCard } from '@/components/ui/SelectableCard'
 import {
   useDeleteProfilePicMutation,
@@ -226,7 +225,7 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
       backdropComponent={(props) => (
         <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
       )}
-      backgroundComponent={GlassBackground}
+      
       handleIndicatorStyle={{ backgroundColor: isDarkMode ? '#525252' : '#d1d5db' }}
       animationConfigs={{ duration: 350 }}
       style={{ marginTop: insets.top }}
@@ -388,7 +387,7 @@ export const EditProfileSheet = forwardRef<BottomSheetModal>((props, ref) => {
             loading={updateUserDataMutation.isPending}
             className="mt-6"
             onPress={handleSave}
-            liquidGlass
+            
           />
         </BottomSheetScrollView>
       </KeyboardAvoidingView>

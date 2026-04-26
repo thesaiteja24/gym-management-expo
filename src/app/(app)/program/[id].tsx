@@ -203,7 +203,7 @@ export default function ProgramTemplateDetails() {
             startProgramSheetRef.current?.present()
           }}
           className="mb-4 min-h-[52px]"
-          liquidGlass
+          
         />
       </View>
       <DeleteConfirmModal

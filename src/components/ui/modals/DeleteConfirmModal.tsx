@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { useThemeColor } from '@/hooks/theme'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
@@ -72,7 +71,7 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
         backdropComponent={renderBackdrop}
         enableDynamicSizing
         onDismiss={onCancel}
-        backgroundComponent={GlassBackground}
+        
         handleIndicatorStyle={{
           backgroundColor: isDark ? '#525252' : '#d1d5db',
         }}
@@ -98,7 +97,7 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
                 onCancel?.()
                 bottomSheetModalRef.current?.dismiss()
               }}
-              liquidGlass
+              
             />
 
             {/* Delete */}
@@ -108,7 +107,7 @@ export const DeleteConfirmModal = forwardRef<DeleteConfirmModalHandle, Props>(
               variant="danger"
               loading={isLoading}
               onPress={handleConfirm}
-              liquidGlass
+              
             />
           </View>
         </BottomSheetView>

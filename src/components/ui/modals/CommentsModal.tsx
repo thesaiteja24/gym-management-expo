@@ -1,6 +1,5 @@
 import CommentInputFooter from '@/components/engagement/CommentInputFooter'
 import CommentItem from '@/components/engagement/CommentItem'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import {
   DeleteConfirmModal,
   DeleteConfirmModalHandle,
@@ -264,7 +263,7 @@ const CommentsModal = forwardRef<CommentsModalHandle, Props>(({ workoutId, onClo
         footerComponent={renderFooter}
         enablePanDownToClose
         onDismiss={handleClose}
-        backgroundComponent={GlassBackground}
+        
         handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
         keyboardBehavior="extend"
         enableDynamicSizing={false}
@@ -286,7 +285,7 @@ const CommentsModal = forwardRef<CommentsModalHandle, Props>(({ workoutId, onClo
         stackBehavior="push"
         enableDynamicSizing={true}
         backdropComponent={renderBackdrop}
-        backgroundComponent={GlassBackground}
+        
         handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
         animationConfigs={{ duration: 550 }}
       >

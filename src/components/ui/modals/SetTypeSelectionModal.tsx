@@ -6,7 +6,6 @@ import * as Haptics from 'expo-haptics'
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 
 const SET_TYPES: {
   key: WorkoutLogSet['setType']
@@ -82,7 +81,7 @@ const SetTypeSelectionModal = forwardRef<SetTypeSelectionModalHandle, Props>(
         snapPoints={snapPoints}
         backdropComponent={renderBackdrop}
         onDismiss={onClose}
-        backgroundComponent={GlassBackground}
+        
         handleIndicatorStyle={{
           backgroundColor: isDark ? '#525252' : '#d1d5db',
         }}

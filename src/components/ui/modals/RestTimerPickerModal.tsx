@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import * as Haptics from 'expo-haptics'
 import React, {
@@ -107,7 +106,6 @@ const RestTimerPickerModal = React.memo(
           enablePanDownToClose={true}
           enableDynamicSizing={false}
           enableContentPanningGesture={false}
-          backgroundComponent={GlassBackground}
           handleIndicatorStyle={{
             backgroundColor: isDark ? '#525252' : '#d1d5db',
           }}
@@ -164,11 +162,10 @@ const RestTimerPickerModal = React.memo(
                   title="Cancel"
                   variant="outline"
                   onPress={() => bottomSheetModalRef.current?.dismiss()}
-                  liquidGlass
                 />
               </View>
               <View className="flex-1">
-                <Button title="Confirm" variant="primary" onPress={handleConfirm} liquidGlass />
+                <Button title="Confirm" variant="primary" onPress={handleConfirm} />
               </View>
             </View>
           </BottomSheetView>

@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassView } from '@/components/ui/GlassView'
 import { useThemeColor } from '@/hooks/theme'
 import React, { forwardRef, useImperativeHandle, useState } from 'react'
 import { Pressable, Modal as RNModal, Text, View } from 'react-native'
@@ -71,7 +70,13 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
 
         {/* Centered modal */}
         <View className="absolute inset-0 items-center justify-center px-6">
-          <GlassView className="w-full p-6 shadow-lg">
+          <View
+            className="w-full overflow-hidden rounded-[28px] border p-6 shadow-xl"
+            style={{
+              backgroundColor: colors.neutral[900],
+              borderColor: colors.neutral[800],
+            }}
+          >
             {/* Title */}
             <Text className="text-center text-xl font-bold" style={{ color: colors.text }}>
               {title}
@@ -96,7 +101,6 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
                     variant="danger"
                     disabled={isLoading}
                     onPress={handleCancel}
-                    liquidGlass
                   />
                 )}
 
@@ -107,12 +111,11 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
                     variant="primary"
                     loading={isLoading}
                     onPress={handleConfirm}
-                    liquidGlass
                   />
                 )}
               </View>
             )}
-          </GlassView>
+          </View>
         </View>
       </RNModal>
     )

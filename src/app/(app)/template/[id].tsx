@@ -157,7 +157,7 @@ export default function TemplateDetails() {
               if (id) startWorkoutFromTemplate(id)
               router.push('/(app)/workout/start')
             }}
-            liquidGlass
+            
           />
           <Button
             title="Delete"
@@ -166,7 +166,7 @@ export default function TemplateDetails() {
             onPress={() => {
               deleteModalRef.current?.present()
             }}
-            liquidGlass
+            
           />
         </View>
       </View>

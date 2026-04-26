@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { useAddMeasurementMutation, useProfileQuery } from '@/hooks/queries/me'
 import { useThemeColor } from '@/hooks/theme'
 import { SelfUser } from '@/types/me'
@@ -329,7 +328,7 @@ export const MeasurementsSheet = forwardRef<BottomSheetModal>((props, ref) => {
       backdropComponent={(props) => (
         <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
       )}
-      backgroundComponent={GlassBackground}
+      
       handleIndicatorStyle={{ backgroundColor: isDarkMode ? '#525252' : '#d1d5db' }}
       animationConfigs={{ duration: 350 }}
       keyboardBehavior="interactive"
@@ -581,7 +580,7 @@ export const MeasurementsSheet = forwardRef<BottomSheetModal>((props, ref) => {
             loading={isLoading}
             className="mt-8"
             onPress={handleSave}
-            liquidGlass
+            
           />
         </BottomSheetScrollView>
       </KeyboardAvoidingView>

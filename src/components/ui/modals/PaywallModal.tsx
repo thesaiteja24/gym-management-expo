@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { GlassBackground } from '@/components/ui/GlassBackground'
 import { useThemeColor } from '@/hooks/theme'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import { useRouter } from 'expo-router'
@@ -77,7 +76,7 @@ export const PaywallModal = forwardRef<PaywallModalHandle, Props>(
         ref={bottomSheetModalRef}
         backdropComponent={renderBackdrop}
         enableDynamicSizing
-        backgroundComponent={GlassBackground}
+        
         handleIndicatorStyle={{
           backgroundColor: isDark ? '#525252' : '#d1d5db',
         }}
@@ -102,7 +101,7 @@ export const PaywallModal = forwardRef<PaywallModalHandle, Props>(
                 bottomSheetModalRef.current?.dismiss()
                 onCancel?.()
               }}
-              liquidGlass
+              
             />
 
             {/* Continue */}
@@ -111,7 +110,7 @@ export const PaywallModal = forwardRef<PaywallModalHandle, Props>(
               title={continueText}
               variant="primary"
               onPress={handleContinue}
-              liquidGlass
+              
             />
           </View>
         </BottomSheetView>

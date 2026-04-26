@@ -5,16 +5,17 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
   const isProd = env === 'production'
 
   return {
-    name: isProd ? 'PUMP' : 'PUMP (Dev)',
+    name: 'PUMP',
     slug: 'pump',
     version: '0.1.0',
     orientation: 'portrait',
-    icon: isProd ? './src/assets/images/icon.png' : './src/assets/images/icon.png',
+    icon: './src/assets/images/icon.png',
+    scheme: 'pump',
     userInterfaceStyle: 'automatic',
 
     ios: {
       supportsTablet: true,
-      bundleIdentifier: isProd ? 'com.thesaiteja.pump' : 'com.thesaiteja.pump.dev',
+      bundleIdentifier: 'com.thesaiteja.pump',
       config: {
         usesNonExemptEncryption: false,
       },
@@ -26,7 +27,7 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
     },
 
     android: {
-      package: isProd ? 'com.thesaiteja.pump' : 'com.thesaiteja.pump.dev',
+      package: 'com.thesaiteja.pump',
       versionCode: 1,
       adaptiveIcon: {
         foregroundImage: './src/assets/images/icon.png',
@@ -46,10 +47,7 @@ export default ({ config }: { config: ExpoConfig }): ExpoConfig => {
           category: ['BROWSABLE', 'DEFAULT'],
         },
       ],
-      permissions: [
-        'android.permission.RECORD_AUDIO',
-        'android.permission.MODIFY_AUDIO_SETTINGS',
-      ],
+      permissions: ['android.permission.RECORD_AUDIO', 'android.permission.MODIFY_AUDIO_SETTINGS'],
       softwareKeyboardLayoutMode: 'pan',
     },
 
