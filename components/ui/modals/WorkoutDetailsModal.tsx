@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/buttons/Button'
 import { GlassBackground } from '@/components/ui/GlassBackground'
 import { ReadOnlyExerciseRow } from '@/components/workout/ReadOnlyExerciseRow'
 import { ProgramDay, UserProgramDay } from '@/types/program'
+import { TemplateExercise, TemplateExerciseGroup } from '@/types/template'
 import { FontAwesome6 } from '@expo/vector-icons'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import { router } from 'expo-router'
@@ -77,8 +78,8 @@ export const WorkoutDetailsModal = forwardRef<WorkoutDetailsModalHandle, Workout
     }, [selectedDay])
 
     const groupMap = useMemo(() => {
-      const map = new Map<string, any>()
-      template?.exerciseGroups?.forEach((g: any) => map.set(g.id, g))
+      const map = new Map<string, TemplateExerciseGroup>()
+      template?.exerciseGroups?.forEach((g) => map.set(g.id, g))
       return map
     }, [template?.exerciseGroups])
 
@@ -140,7 +141,7 @@ export const WorkoutDetailsModal = forwardRef<WorkoutDetailsModalHandle, Workout
 
           {/* Exercise List */}
           <View className="gap-4 p-4">
-            {template.exercises.map((ex: any, idx: number) => (
+            {template.exercises.map((ex, idx) => (
               <ReadOnlyExerciseRow
                 key={ex.id || idx}
                 exercise={ex}

@@ -11,6 +11,7 @@ import {
   WorkoutPruneReport,
   WorkoutState,
 } from '@/types/workout'
+import { WorkoutTemplateSnapshot } from '@/types/program'
 import { finalizeSetTimer, isValidCompletedSet } from '@/utils/workout'
 import * as Crypto from 'expo-crypto'
 import { StateCreator } from 'zustand'
@@ -22,7 +23,7 @@ export interface ActiveWorkoutSlice {
   startWorkout: () => void
   loadWorkoutHistory: (historyItem: WorkoutHistoryItem) => void
   loadTemplate: (template: WorkoutTemplate) => void
-  loadProgramDay: (userProgramDayId: string, template: any) => void
+  loadProgramDay: (userProgramDayId: string, template: WorkoutTemplateSnapshot) => void
   updateWorkout: (patch: Partial<WorkoutLog>) => void
   prepareWorkoutForSave: () => {
     workout: WorkoutLog
@@ -252,18 +253,18 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
   /**
    * This function is used to load a program day's template snapshot into the active workout state
    */
-  loadProgramDay: (userProgramDayId, template) => {
+  loadProgramDay: (userProgramDayId: string, template: WorkoutTemplateSnapshot) => {
     const workoutLog: WorkoutLog = {
       id: null,
       title: template.title || 'Program Workout',
       startTime: new Date(),
       endTime: new Date(),
       userProgramDayId,
-      exercises: (template.exercises as any[]).map((ex, index) => ({
+      exercises: template.exercises.map((ex, index) => ({
         exerciseId: ex.exerciseId,
         exerciseIndex: index,
         groupId: ex.exerciseGroupId || null,
-        sets: ex.sets.map((s: any) => ({
+        sets: ex.sets.map((s) => ({
           id: Crypto.randomUUID(),
           setIndex: s.setIndex,
           setType: s.setType,
@@ -276,7 +277,7 @@ export const createActiveWorkoutSlice: StateCreator<WorkoutState, [], [], Active
           completed: false,
         })),
       })),
-      exerciseGroups: (template.exerciseGroups as any[]).map((g: any) => ({
+      exerciseGroups: template.exerciseGroups.map((g) => ({
         id: g.id,
         groupType: g.groupType,
         groupIndex: g.groupIndex,

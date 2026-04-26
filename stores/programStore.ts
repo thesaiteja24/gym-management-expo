@@ -31,22 +31,22 @@ function toDraftProgram(program: Program): DraftProgram {
     description: program.description ?? '',
     experienceLevel: program.experienceLevel,
     durationOptions: program.durationOptions,
-    weeks: program.weeks
+    weeks: (program.weeks || [])
       .map((week) => ({
         id: week.id,
-        programId: week.programId,
+        programId: program.id,
         name: week.name,
         weekIndex: week.weekIndex,
-        key: week.key || Crypto.randomUUID(),
+        key: Crypto.randomUUID(),
         days: week.days
           .map((day) => ({
             id: day.id,
-            weekId: day.weekId,
+            weekId: week.id,
             name: day.name,
             dayIndex: day.dayIndex,
             isRestDay: day.isRestDay,
             templateId: day.isRestDay ? null : (day.templateId ?? null),
-            key: day.key || Crypto.randomUUID(),
+            key: Crypto.randomUUID(),
           }))
           .sort((a, b) => a.dayIndex - b.dayIndex),
       }))

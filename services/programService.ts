@@ -1,67 +1,49 @@
-import { useAuth } from '@/stores/authStore'
 import {
-  ActiveUserProgramResponse,
+  PaginatedPrograms,
+  Program,
   ProgramCreatePayload,
-  ProgramDetailResponse,
-  ProgramListResponse,
-  ProgramMutationResponse,
   ProgramUpdatePayload,
-  UserProgramDetailResponse,
-  UserProgramsListResponse,
+  UserProgram,
   UserProgramStartPayload,
-  UserProgramStartResponse,
 } from '@/types/program'
-import { ApiError, ApiResponse, handleApiResponse } from '@/utils/handleApiResponse'
-import { AxiosError } from 'axios'
+import { handleApiResponse } from '@/utils/handleApiResponse'
 import client from './api'
 
-export const createProgramService = async (
-  data: ProgramCreatePayload,
-): Promise<ApiResponse<ProgramMutationResponse>> => {
-  const userId = useAuth.getState().userId
-  if (!userId) return { success: false, error: 'User not authenticated' } as any
+// SECTION: GLOBAL PROGRAMS (LIBRARY)
 
+export const getAllProgramsService = async (
+  page: number = 1,
+  limit: number = 20,
+): Promise<PaginatedPrograms> => {
   try {
-    const response = await client.post(`/programs`, data)
-    return handleApiResponse<ProgramMutationResponse>(response)
+    const response = await client.get(`/programs`, { params: { page, limit } })
+    const handled = handleApiResponse<PaginatedPrograms>(response)
+    if (!handled.success) throw new Error(handled.message || 'Failed to fetch programs')
+    return handled.data!
   } catch (error: any) {
     const errData = error.response?.data
     throw new Error(errData?.message || error.message || 'Network error')
   }
 }
 
-export const getAllProgramsService = async (
-  page: number = 1,
-  limit: number = 20,
-): Promise<ApiResponse<ProgramListResponse>> => {
-  const userId = useAuth.getState().userId
-  if (!userId) {
-    throw new ApiError('User not authenticated', 401)
-  }
-
+export const getProgramByIdService = async (programId: string): Promise<Program> => {
   try {
-    const response = await client.get(`/programs`, { params: { page, limit } })
-    return handleApiResponse<ProgramListResponse>(response)
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      const message = error.response?.data?.message || error.message || 'Network error'
-
-      throw new ApiError(message, error.response?.status, error.response?.data)
-    }
-
-    throw new ApiError('Unexpected error occurred')
+    const response = await client.get(`/programs/${programId}`)
+    const handled = handleApiResponse<{ program: Program }>(response)
+    if (!handled.success) throw new Error(handled.message || 'Failed to fetch program detail')
+    return handled.data!.program
+  } catch (error: any) {
+    const errData = error.response?.data
+    throw new Error(errData?.message || error.message || 'Network error')
   }
 }
 
-export const getProgramByIdService = async (
-  programId: string,
-): Promise<ApiResponse<ProgramDetailResponse>> => {
-  const userId = useAuth.getState().userId
-  if (!userId) return { success: false, error: 'User not authenticated' } as any
-
+export const createProgramService = async (data: ProgramCreatePayload): Promise<Program> => {
   try {
-    const response = await client.get(`/programs/${programId}`)
-    return handleApiResponse<ProgramDetailResponse>(response)
+    const response = await client.post(`/programs`, data)
+    const handled = handleApiResponse<{ program: Program }>(response)
+    if (!handled.success) throw new Error(handled.message || 'Failed to create program')
+    return handled.data!.program
   } catch (error: any) {
     const errData = error.response?.data
     throw new Error(errData?.message || error.message || 'Network error')
@@ -71,26 +53,49 @@ export const getProgramByIdService = async (
 export const updateProgramService = async (
   programId: string,
   data: ProgramUpdatePayload,
-): Promise<ApiResponse<ProgramMutationResponse>> => {
-  const userId = useAuth.getState().userId
-  if (!userId) return { success: false, error: 'User not authenticated' } as any
-
+): Promise<Program> => {
   try {
     const response = await client.put(`/programs/${programId}`, data)
-    return handleApiResponse<ProgramMutationResponse>(response)
+    const handled = handleApiResponse<{ program: Program }>(response)
+    if (!handled.success) throw new Error(handled.message || 'Failed to update program')
+    return handled.data!.program
   } catch (error: any) {
     const errData = error.response?.data
     throw new Error(errData?.message || error.message || 'Network error')
   }
 }
 
-export const deleteProgramService = async (programId: string): Promise<ApiResponse<void>> => {
-  const userId = useAuth.getState().userId
-  if (!userId) return { success: false, error: 'User not authenticated' } as any
-
+export const deleteProgramService = async (programId: string): Promise<void> => {
   try {
     const response = await client.delete(`/programs/${programId}`)
-    return handleApiResponse<void>(response)
+    const handled = handleApiResponse<void>(response)
+    if (!handled.success) throw new Error(handled.message || 'Failed to delete program')
+  } catch (error: any) {
+    const errData = error.response?.data
+    throw new Error(errData?.message || error.message || 'Network error')
+  }
+}
+
+// SECTION: USER PROGRAMS (ME)
+
+export const listUserProgramsService = async (): Promise<UserProgram[]> => {
+  try {
+    const response = await client.get(`/me/programs`)
+    const handled = handleApiResponse<{ programs: UserProgram[] }>(response)
+    if (!handled.success) throw new Error(handled.message || 'Failed to fetch user programs')
+    return handled.data!.programs
+  } catch (error: any) {
+    const errData = error.response?.data
+    throw new Error(errData?.message || error.message || 'Network error')
+  }
+}
+
+export const getActiveUserProgramService = async (): Promise<UserProgram | null> => {
+  try {
+    const response = await client.get(`/me/programs/active`)
+    const handled = handleApiResponse<{ program: UserProgram | null }>(response)
+    if (!handled.success) throw new Error(handled.message || 'Failed to fetch active program')
+    return handled.data!.program
   } catch (error: any) {
     const errData = error.response?.data
     throw new Error(errData?.message || error.message || 'Network error')
@@ -100,34 +105,14 @@ export const deleteProgramService = async (programId: string): Promise<ApiRespon
 export const getUserProgramService = async (
   userProgramId: string,
   weekIndex?: number,
-): Promise<ApiResponse<UserProgramDetailResponse>> => {
-  const userId = useAuth.getState().userId
-  if (!userId) {
-    throw new ApiError('User not authenticated', 401)
-  }
-
+): Promise<UserProgram> => {
   try {
     const response = await client.get(`/me/programs/${userProgramId}`, {
       params: { weekIndex },
     })
-    return handleApiResponse<UserProgramDetailResponse>(response)
-  } catch (error: any) {
-    const errData = error.response?.data
-    throw new Error(errData?.message || error.message || 'Network error')
-  }
-}
-
-export const getActiveUserProgramService = async (): Promise<
-  ApiResponse<ActiveUserProgramResponse>
-> => {
-  const userId = useAuth.getState().userId
-  if (!userId) {
-    throw new ApiError('User not authenticated', 401)
-  }
-
-  try {
-    const response = await client.get(`/me/programs/active`)
-    return handleApiResponse<ActiveUserProgramResponse>(response)
+    const handled = handleApiResponse<{ program: UserProgram }>(response)
+    if (!handled.success) throw new Error(handled.message || 'Failed to fetch user program detail')
+    return handled.data!.program
   } catch (error: any) {
     const errData = error.response?.data
     throw new Error(errData?.message || error.message || 'Network error')
@@ -137,30 +122,12 @@ export const getActiveUserProgramService = async (): Promise<
 export const startProgramService = async (
   programId: string,
   payload: UserProgramStartPayload,
-): Promise<ApiResponse<UserProgramStartResponse>> => {
-  const userId = useAuth.getState().userId
-  if (!userId) {
-    throw new ApiError('User not authenticated', 401)
-  }
-
+): Promise<UserProgram> => {
   try {
     const response = await client.post(`/me/programs/${programId}`, payload)
-    return handleApiResponse<UserProgramStartResponse>(response)
-  } catch (error: any) {
-    const errData = error.response?.data
-    throw new Error(errData?.message || error.message || 'Network error')
-  }
-}
-
-export const listUserProgramsService = async (): Promise<ApiResponse<UserProgramsListResponse>> => {
-  const userId = useAuth.getState().userId
-  if (!userId) {
-    throw new ApiError('User not authenticated', 401)
-  }
-
-  try {
-    const response = await client.get(`/me/programs`)
-    return handleApiResponse<UserProgramsListResponse>(response)
+    const handled = handleApiResponse<{ userProgram: UserProgram }>(response)
+    if (!handled.success) throw new Error(handled.message || 'Failed to start program')
+    return handled.data!.userProgram
   } catch (error: any) {
     const errData = error.response?.data
     throw new Error(errData?.message || error.message || 'Network error')

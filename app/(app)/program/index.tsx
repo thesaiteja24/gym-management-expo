@@ -5,6 +5,7 @@ import TemplateSelectionModal, {
 import { useCreateProgram, useProgramById, useUpdateProgram } from '@/hooks/queries/usePrograms'
 import { useTemplatesQuery } from '@/hooks/queries/useTemplates'
 import { useProgram } from '@/stores/programStore'
+import { WorkoutTemplate } from '@/types/template'
 import { DraftProgramDay, DraftProgramWeek } from '@/types/program'
 import { Ionicons } from '@expo/vector-icons'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
@@ -40,7 +41,7 @@ export default function ProgramEditor() {
 
   // Server data (TanStack Query)
   const { data: programData, isLoading: programsLoading } = useProgramById(
-    params.id as string | null,
+    params.id as string | undefined,
   )
   const createProgramMutation = useCreateProgram()
   const updateProgramMutation = useUpdateProgram()
@@ -422,7 +423,7 @@ const ProgramDayItemComponent = ({
   day: DraftProgramDay
   weekIndex: number
   dayIndex: number
-  templates: any[]
+  templates: WorkoutTemplate[]
   onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<DraftProgramDay>) => void
   onSelectTemplate: (wIdx: number, dIdx: number) => void
 }) => {
@@ -514,7 +515,7 @@ const ProgramWeekItemComponent = ({
 }: {
   week: DraftProgramWeek
   weekIndex: number
-  templates: any[]
+  templates: WorkoutTemplate[]
   onUpdateWeekName: (name: string) => void
   onRemoveWeek: () => void
   onUpdateDay: (wIdx: number, dIdx: number, patch: Partial<DraftProgramDay>) => void

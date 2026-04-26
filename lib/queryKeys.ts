@@ -34,6 +34,20 @@ export const queryKeys = {
     byId: (userId: string) => ['user', userId] as const,
   },
 
+  meta: {
+    root: ['meta'] as const,
+    resource: (resource: 'equipment' | 'muscle-groups') => ['meta', resource] as const,
+    all: (resource: 'equipment' | 'muscle-groups') => ['meta', resource, 'list'] as const,
+    byId: (resource: 'equipment' | 'muscle-groups', id: string) =>
+      ['meta', resource, 'detail', id] as const,
+  },
+
+  exercises: {
+    root: ['exercises'] as const,
+    all: ['exercises', 'list'] as const,
+    byId: (id: string) => ['exercises', 'detail', id] as const,
+  },
+
   engagement: {
     root: ['engagement'] as const,
 
@@ -55,18 +69,24 @@ export const queryKeys = {
     likes: (id: string, type: LikeType) => ['engagement', 'likes', type, id] as const,
   },
 
-  meta: {
-    root: ['meta'] as const,
-    resource: (resource: 'equipment' | 'muscle-groups') => ['meta', resource] as const,
-    all: (resource: 'equipment' | 'muscle-groups') => ['meta', resource, 'list'] as const,
-    byId: (resource: 'equipment' | 'muscle-groups', id: string) =>
-      ['meta', resource, 'detail', id] as const,
+  habits: {
+    root: ['habits'] as const,
+    all: (userId: string) => ['habits', userId, 'list'] as const,
+    logsRoot: ['habits', 'logs'] as const,
+    logs: (userId: string, startDate?: string, endDate?: string) =>
+      ['habits', 'logs', userId, startDate, endDate] as const,
   },
 
-  exercises: {
-    root: ['exercises'] as const,
-    all: ['exercises', 'list'] as const,
-    byId: (id: string) => ['exercises', 'detail', id] as const,
+  programs: {
+    root: ['programs'] as const,
+    all: ['programs', 'list'] as const,
+    detail: (id: string) => ['programs', 'detail', id] as const,
+    user: {
+      root: ['user-programs'] as const,
+      all: ['user-programs', 'list'] as const,
+      active: ['user-programs', 'active'] as const,
+      detail: (id: string) => ['user-programs', 'detail', id] as const,
+    },
   },
 
   coach: {
@@ -74,19 +94,6 @@ export const queryKeys = {
     conversation: ['coach', 'conversation'] as const,
   },
 
-  // Future phases will add more keys here
-  // Programs (Library / Global)
-  programs: {
-    all: (userId: string) => ['programs', userId] as const,
-    detail: (programId: string) => ['programs', 'detail', programId] as const,
-    // User specific program instances
-    user: {
-      all: (userId: string) => ['userPrograms', userId] as const,
-      active: (userId: string) => ['userPrograms', 'active', userId] as const,
-      detail: (userId: string, userProgramId: string) =>
-        ['userPrograms', 'detail', userId, userProgramId] as const,
-    },
-  },
   templates: {
     all: (userId: string) => ['templates', userId] as const,
     byId: (id: string) => ['templates', id] as const,
@@ -96,12 +103,5 @@ export const queryKeys = {
     all: ['workouts'] as const,
     discover: ['discoverWorkouts'] as const,
     byId: (id: string) => ['workouts', 'detail', id] as const,
-  },
-  habits: {
-    root: ['habits'] as const,
-    all: (userId: string) => ['habits', userId, 'list'] as const,
-    logsRoot: ['habits', 'logs'] as const,
-    logs: (userId: string, startDate?: string, endDate?: string) =>
-      ['habits', 'logs', userId, startDate, endDate] as const,
   },
 } as const
