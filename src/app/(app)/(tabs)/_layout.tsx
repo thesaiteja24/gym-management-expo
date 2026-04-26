@@ -11,13 +11,12 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function TabsLayout() {
-  const colors = useThemeColor()
-  const isDark = true
+  const { isDark, ...colors } = useThemeColor()
   const insets = useSafeAreaInsets()
 
   const barBorder = isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(17, 24, 39, 0.08)'
   const activeColor = colors.text
-  const inactiveColor = '#A8A8A8'
+  const inactiveColor = isDark ? '#A8A8A8' : '#666666'
 
   const coachModalRef = useRef<CoachModalHandle>(null)
 
@@ -58,7 +57,7 @@ export default function TabsLayout() {
               style={[
                 StyleSheet.absoluteFill,
                 {
-                  backgroundColor: isDark ? '#171717' : '#ffffff',
+                  backgroundColor: colors.card,
                 },
               ]}
             />

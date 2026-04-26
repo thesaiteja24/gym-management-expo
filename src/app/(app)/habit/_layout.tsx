@@ -1,17 +1,17 @@
 import CustomHeader from '@/components/ui/CustomHeader'
+import { useThemeColor } from '@/hooks/theme'
 import { router, Stack } from 'expo-router'
 import React from 'react'
-import { useColorScheme } from 'react-native'
 
 export default function HabitLayout() {
-  const colorScheme = useColorScheme()
+  const colors = useThemeColor()
 
   return (
     <Stack
       screenOptions={{
         animation: 'slide_from_right',
         contentStyle: {
-          backgroundColor: colorScheme === 'dark' ? '#000000' : '#ffffff',
+          backgroundColor: colors.background,
         },
         header: (props) => {
           const { options } = props

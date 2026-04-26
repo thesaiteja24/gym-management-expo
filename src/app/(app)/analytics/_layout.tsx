@@ -1,14 +1,17 @@
 import CustomHeader from '@/components/ui/CustomHeader'
+import { useThemeColor } from '@/hooks/theme'
 import { router, Stack } from 'expo-router'
 import React from 'react'
 
 export default function ExercisesLayout() {
+  const colors = useThemeColor()
+
   return (
     <Stack
       screenOptions={{
         animation: 'slide_from_right',
         contentStyle: {
-          backgroundColor: '#000000',
+          backgroundColor: colors.background,
         },
         header: (props) => {
           const { options } = props

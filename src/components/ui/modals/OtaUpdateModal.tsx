@@ -24,8 +24,8 @@ export function OtaUpdateModal({ visible, state, onLater, onRestart }: Props) {
         <View
           className="w-full overflow-hidden rounded-[28px] border shadow-xl"
           style={{
-            backgroundColor: colors.neutral[900],
-            borderColor: colors.neutral[800],
+            backgroundColor: colors.card,
+            borderColor: colors.border,
           }}
           pointerEvents={isBusy ? 'none' : 'auto'}
         >

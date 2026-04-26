@@ -27,10 +27,6 @@ export default function RootLayout() {
   const colors = useThemeColor()
   const { setColorScheme } = useColorScheme()
 
-  useEffect(() => {
-    setColorScheme('dark')
-  }, [setColorScheme])
-
   // ───── Fonts ─────
   const [fontsLoaded] = useFonts({
     Monoton: require('../assets/fonts/Monoton-Regular.ttf'),
@@ -108,7 +104,10 @@ export default function RootLayout() {
               <Stack.Screen name="(app)" />
             </Stack>
 
-            <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+            <StatusBar
+              barStyle={colors.isDark ? 'light-content' : 'dark-content'}
+              backgroundColor={colors.background}
+            />
 
             <Toast
               config={{

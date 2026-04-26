@@ -1,16 +1,16 @@
 import CustomHeader from '@/components/ui/CustomHeader'
+import { useThemeColor } from '@/hooks/theme'
 import { router, Stack } from 'expo-router'
-import { useColorScheme } from 'react-native'
 
 export default function ExerciseDetailsStack() {
-  const scheme = useColorScheme()
+  const colors = useThemeColor()
 
   return (
     <Stack
       screenOptions={{
         animation: 'slide_from_right',
         contentStyle: {
-          backgroundColor: scheme === 'dark' ? '#000' : '#fff',
+          backgroundColor: colors.background,
         },
         header: (props) => {
           const { options } = props
