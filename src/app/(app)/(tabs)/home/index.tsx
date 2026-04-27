@@ -33,10 +33,11 @@ import {
 import { convertWeight } from '@/utils/converter'
 import { getMotivationLine } from '@/utils/motivation'
 import { getGreeting, toDateKey } from '@/utils/time'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import Toast from 'react-native-toast-message'
 
 export default function HomeScreen() {
+  const router = useRouter()
   const { data: userData } = useProfileQuery()
   const user = userData as SelfUser | null
 
@@ -219,7 +220,6 @@ export default function HomeScreen() {
     transform: [{ translateY: headerTranslateY.value }],
   }))
 
-
   const isFullyLoaded =
     !isLoadingMeasurements &&
     !isLoadingUserAnalytics &&
@@ -387,7 +387,6 @@ export default function HomeScreen() {
           </Animated.View>
         </ScrollView>
       )}
-
     </SafeAreaView>
   )
 }

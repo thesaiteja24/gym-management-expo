@@ -1,10 +1,11 @@
 import { Button } from '@/components/ui/buttons/Button'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React from 'react'
 import { Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function OnboardingWelcome() {
+  const router = useRouter()
   // If already authenticated, we shouldn't be here ideally, but logic in _layout should handle it.
   // However, for the "I have an account" flow, we just navigate to login.
 

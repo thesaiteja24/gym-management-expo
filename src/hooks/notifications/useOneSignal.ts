@@ -1,10 +1,11 @@
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { useCallback, useState } from 'react'
 import { LogLevel, OneSignal } from 'react-native-onesignal'
 
 const ONESIGNAL_APP_ID = '412e5d5a-c5e4-485b-a462-2ecbaf6c833a'
 
 export const useOneSignal = () => {
+  const router = useRouter()
   const [isInitialized, setIsInitialized] = useState(false)
   const [hasPermission, setHasPermission] = useState(false)
 

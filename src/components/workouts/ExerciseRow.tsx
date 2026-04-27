@@ -148,6 +148,7 @@ function ExerciseRow({
 }: Props) {
   const isDark = useColorScheme() === 'dark'
   const [notesExpanded, setNotesExpanded] = useState(false)
+  const insets = useSafeAreaInsets()
 
   const { hasWeight, hasReps, hasDuration } = EXERCISE_CAPABILITIES[exerciseDetails.exerciseType]
 
@@ -315,7 +316,7 @@ function ExerciseRow({
       >
         <BottomSheetView
           style={{
-            paddingBottom: useSafeAreaInsets().bottom + 16,
+            paddingBottom: insets.bottom + 16,
           }}
         >
           <TouchableOpacity

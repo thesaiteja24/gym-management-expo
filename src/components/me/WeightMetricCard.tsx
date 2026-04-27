@@ -1,12 +1,8 @@
-import {
-  useFitnessProfileQuery,
-  useMeasurementsQuery,
-  useProfileQuery,
-} from '@/hooks/queries/me'
+import { useFitnessProfileQuery, useMeasurementsQuery, useProfileQuery } from '@/hooks/queries/me'
 import { useThemeColor } from '@/hooks/theme'
 import { SelfUser } from '@/types/me'
 import { convertWeight } from '@/utils/converter'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useMemo } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { LineChart } from 'react-native-chart-kit'
@@ -17,6 +13,7 @@ interface WeightMetricCardProps {
 }
 
 export function WeightMetricCard({ width }: WeightMetricCardProps) {
+  const router = useRouter()
   const colors = useThemeColor()
   const { data: userData } = useProfileQuery()
   const user = userData as SelfUser | null

@@ -4,7 +4,7 @@ import { useUserWorkoutHistoryQuery } from '@/hooks/queries/workouts'
 import { useThemeColor } from '@/hooks/theme'
 import { ExerciseType } from '@/types/exercises'
 import { WorkoutHistoryItem } from '@/types/workouts'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useCallback, useEffect, useMemo } from 'react'
 import {
   ActivityIndicator,
@@ -26,6 +26,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated'
+
 
 /* ──────────────────────────────────────────────
    Core Skeleton Block (fade-in + shimmer)
@@ -133,6 +134,7 @@ function SectionHeader() {
 }
 
 const History = () => {
+  const router = useRouter()
   const colors = useThemeColor()
 
   // TanStack Query — infinite pagination with offline-first pending merge

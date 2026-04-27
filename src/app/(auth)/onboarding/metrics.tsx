@@ -1,16 +1,17 @@
+import { UnitToggle } from '@/components/me/UnitToggle'
 import { Button } from '@/components/ui/buttons/Button'
 import { TextInput } from '@/components/ui/TextInput'
-import { UnitToggle } from '@/components/me/UnitToggle'
 import { useThemeColor } from '@/hooks/theme'
 import { useOnboarding } from '@/stores/me.store'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 export default function OnboardingMetrics() {
+  const router = useRouter()
   const colors = useThemeColor()
   const {
     weight,

@@ -1,14 +1,10 @@
-import {
-  useFitnessProfileQuery,
-  useMeasurementsQuery,
-  useProfileQuery,
-} from '@/hooks/queries/me'
+import { useFitnessProfileQuery, useMeasurementsQuery, useProfileQuery } from '@/hooks/queries/me'
 import { useThemeColor } from '@/hooks/theme'
 import { SelfUser } from '@/types/me'
 import { convertWeight } from '@/utils/converter'
 import { Ionicons } from '@expo/vector-icons'
 import { format } from 'date-fns'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useEffect, useMemo, useState } from 'react'
 import { BackHandler, Dimensions, Pressable, ScrollView, Text, View } from 'react-native'
 import { LineChart } from 'react-native-chart-kit'
@@ -17,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 type TimeRange = '1W' | '1M' | '3M' | '6M' | '1Y' | 'All'
 
 const WeightChart = () => {
+  const router = useRouter()
   const colors = useThemeColor()
   const { data: userData } = useProfileQuery()
   const user = userData as SelfUser | null

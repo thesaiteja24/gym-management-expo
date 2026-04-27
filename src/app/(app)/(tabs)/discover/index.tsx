@@ -7,7 +7,7 @@ import { useThemeColor } from '@/hooks/theme'
 import { queryKeys } from '@/lib/queryKeys'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useQueryClient } from '@tanstack/react-query'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native'
 import Animated, {
@@ -19,6 +19,7 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function DiscoverScreen() {
+  const router = useRouter()
   const colors = useThemeColor()
 
   // TanStack Query — infinite pagination with pending merge

@@ -11,7 +11,7 @@ import { calculateWorkoutMetrics } from '@/utils/workout'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import { Image } from 'expo-image'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import { Alert, Pressable, Share, Text, TouchableOpacity, View } from 'react-native'
 import Animated, {
@@ -35,6 +35,7 @@ function WorkoutCard({
   exerciseTypeMap: Map<string, ExerciseType>
   index?: number
 }) {
+  const router = useRouter()
   const duration = formatDurationFromDates(workout.startTime, workout.endTime)
   const volume = calculateWorkoutMetrics(workout, exerciseTypeMap).tonnage
   const isDark = useThemeColor().isDark

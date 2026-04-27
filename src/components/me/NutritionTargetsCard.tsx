@@ -1,10 +1,10 @@
+import { useCountUp } from '@/hooks/ui-utils'
 import { convertWeight } from '@/utils/converter'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import { useCountUp } from '@/hooks/ui-utils'
 
 interface NutritionTargetsCardProps {
   nutritionPlan: any
@@ -23,6 +23,7 @@ export function NutritionTargetsCard({
   colors,
   preferredWeightUnit,
 }: NutritionTargetsCardProps) {
+  const router = useRouter()
   const isDark = colors.isDark
 
   const isIncomplete =

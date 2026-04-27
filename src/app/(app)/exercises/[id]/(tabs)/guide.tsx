@@ -21,12 +21,13 @@ export default function GuideScreen() {
   })
 
   const colors = useThemeColor()
+  const insets = useSafeAreaInsets()
 
   return (
     <View
       className="flex-1 items-center justify-center"
       style={{
-        paddingBottom: useSafeAreaInsets().bottom,
+        paddingBottom: insets.bottom,
         backgroundColor: colors.background,
       }}
     >

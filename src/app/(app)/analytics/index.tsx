@@ -17,11 +17,12 @@ import {
   estimateBodyFatFromBMI,
 } from '@/utils/analytics'
 import { convertWeight } from '@/utils/converter'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useEffect, useMemo } from 'react'
 import { BackHandler, ScrollView, View } from 'react-native'
 
 const AnalyticsScreen = () => {
+  const router = useRouter()
   const { data: userData } = useProfileQuery()
   const user = userData as SelfUser | null
 

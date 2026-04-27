@@ -2,7 +2,7 @@ import { useTrainingAnalyticsQuery } from '@/hooks/queries/me'
 import { useThemeColor } from '@/hooks/theme'
 import { Ionicons } from '@expo/vector-icons'
 import { format } from 'date-fns'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { BackHandler, Dimensions, Pressable, ScrollView, Text, View } from 'react-native'
 import { BarChart, LineChart } from 'react-native-chart-kit'
@@ -27,6 +27,7 @@ export function BaseTrainingChart({
   icon,
   formatValue = (val) => val.toLocaleString(),
 }: BaseTrainingChartProps) {
+  const router = useRouter()
   const colors = useThemeColor()
   const [selectedRange, setSelectedRange] = useState<TimeRange>('1M')
   const [chartType, setChartType] = useState<'line' | 'bar'>('bar')

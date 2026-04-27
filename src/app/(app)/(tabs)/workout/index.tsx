@@ -22,7 +22,7 @@ import { useSubscriptionStore } from '@/stores/subscriptions.store'
 import { useWorkout } from '@/stores/workouts.store'
 import { SelfUser } from '@/types/me'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import {
   BackHandler,
@@ -43,6 +43,7 @@ import Animated, {
 import Carousel from 'react-native-reanimated-carousel'
 
 export default function WorkoutScreen() {
+  const router = useRouter()
   const colors = useThemeColor()
   const { width } = useWindowDimensions()
   const [activeIndex, setActiveIndex] = useState(0)

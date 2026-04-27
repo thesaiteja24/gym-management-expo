@@ -1,8 +1,9 @@
 import { convertWeight } from '@/utils/converter'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React from 'react'
 import { Pressable, Text, View } from 'react-native'
+
 
 interface TrainingMetricCardProps {
   title: string
@@ -57,6 +58,7 @@ export function WeeklyVolumeCard({
   unit: string
   width: number
 }) {
+  const router = useRouter()
   const displayVolume = convertWeight(volume, { from: 'kg', to: unit as any, precision: 0 })
   const diff = volume - lastWeekVolume
   const isPositive = diff >= 0
@@ -95,6 +97,7 @@ export function WeeklyDurationCard({
   lastWeekDuration: number
   width: number
 }) {
+  const router = useRouter()
   const diff = duration - lastWeekDuration
   const isPositive = diff >= 0
 
@@ -124,6 +127,7 @@ export function WeeklyRepsCard({
   lastWeekReps: number
   width: number
 }) {
+  const router = useRouter()
   const diff = reps - lastWeekReps
   const isPositive = diff >= 0
 

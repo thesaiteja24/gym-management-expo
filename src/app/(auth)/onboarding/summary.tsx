@@ -10,13 +10,14 @@ import {
   estimateBodyFatFromBMI,
 } from '@/utils/analytics'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useMemo } from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 export default function OnboardingSummary() {
+  const router = useRouter()
   const colors = useThemeColor()
   const {
     gender,

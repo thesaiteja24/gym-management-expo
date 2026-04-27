@@ -13,7 +13,7 @@ import { useOnboarding } from '@/stores/me.store'
 import { SelfUser } from '@/types/me'
 import { calculateBMR, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
 import { GoogleSignin } from '@react-native-google-signin/google-signin'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import { KeyboardAvoidingView, Pressable, Text, View } from 'react-native'
 import Animated, {
@@ -29,6 +29,7 @@ import Toast from 'react-native-toast-message'
 import GoogleIcon from '../../assets/components/icons/Google'
 
 export default function Login() {
+  const router = useRouter()
   const [privacyAccepted, setPrivacyAccepted] = useState(false)
   const [privacyPolicyVersion, setPrivacyPolicyVersion] = useState<string | null>(null)
   const privacyModalRef = useRef<PrivacyPolicyModalHandle>(null)

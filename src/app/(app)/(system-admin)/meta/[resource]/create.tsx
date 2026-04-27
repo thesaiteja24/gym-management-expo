@@ -35,6 +35,7 @@ export default function CreateMeta() {
   const [uploading, setUploading] = useState(false)
 
   const lineHeight = Platform.OS === 'ios' ? 0 : 30
+  const insets = useSafeAreaInsets()
 
   const onSave = useCallback(async () => {
     if (!title.trim() || createMutation.isPending) {
@@ -88,10 +89,7 @@ export default function CreateMeta() {
   }, [navigation, onSave, createMutation.isPending, title, label])
 
   return (
-    <View
-      className="flex-1 bg-white p-4 dark:bg-black"
-      style={{ paddingBottom: useSafeAreaInsets().bottom }}
-    >
+    <View className="flex-1 bg-white p-4 dark:bg-black" style={{ paddingBottom: insets.bottom }}>
       <View className="mb-6 items-center">
         <EditableAvatar
           uri={thumbnailUri}

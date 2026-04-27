@@ -1,8 +1,8 @@
 import ExerciseCharts from '@/components/exercises/ExerciseCharts'
 import { CustomModal, ModalHandle } from '@/components/ui/modals/CustomModal'
+import { useAnalytics } from '@/hooks/analytics'
 import { useExercises } from '@/hooks/queries/exercises'
 import { useProfileQuery } from '@/hooks/queries/me'
-import { useAnalytics } from '@/hooks/analytics'
 import { useThemeColor } from '@/hooks/theme'
 import { SelfUser } from '@/types/me'
 import { convertWeight } from '@/utils/converter'
@@ -36,6 +36,7 @@ export default function ViewExerciseScreen() {
   const best1RMModalRef = useRef<ModalHandle>(null)
   const bestSetVolumeModalRef = useRef<ModalHandle>(null)
   const heaviestWeightModalRef = useRef<ModalHandle>(null)
+  const insets = useSafeAreaInsets()
 
   const isOpen = useSharedValue(0) // 1 = open, 0 = closed
 
@@ -81,7 +82,7 @@ export default function ViewExerciseScreen() {
   return (
     <View
       className="flex-1 items-center justify-center bg-white dark:bg-black"
-      style={{ paddingBottom: useSafeAreaInsets().bottom }}
+      style={{ paddingBottom: insets.bottom }}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <VideoView

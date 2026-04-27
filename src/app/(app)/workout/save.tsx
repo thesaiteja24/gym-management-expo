@@ -16,13 +16,14 @@ import { convertWeight } from '@/utils/converter'
 import { buildPruneMessage, calculateWorkoutMetrics } from '@/utils/workout'
 
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, Text, TextInput, useColorScheme, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 export default function SaveWorkout() {
+  const router = useRouter()
   /* Local State */
   const lineHeight = Platform.OS === 'ios' ? undefined : 28
   const insets = useSafeAreaInsets()

@@ -1,6 +1,6 @@
 import { useThemeColor } from '@/hooks/theme'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useEffect } from 'react'
 import { Text, View } from 'react-native'
 import Animated, {
@@ -26,6 +26,7 @@ const StreakCard = React.memo(function StreakCard({
   days: StreakDay[]
   message: string
 }) {
+  const router = useRouter()
   const colors = useThemeColor()
 
   return (

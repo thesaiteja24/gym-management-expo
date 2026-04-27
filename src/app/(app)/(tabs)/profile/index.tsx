@@ -1,4 +1,3 @@
-// app/(app)/(tabs)/profile.tsx
 import EditableAvatar from '@/components/me/EditableAvatar'
 import { VerifiedBadge } from '@/components/subscriptions/VerifiedBadge'
 import { Button } from '@/components/ui/buttons/Button'
@@ -10,11 +9,12 @@ import { useProfileQuery } from '@/hooks/queries/me'
 import { useAuth } from '@/stores/auth.store'
 import { useSubscriptionStore } from '@/stores/subscriptions.store'
 import { SelfUser } from '@/types/me'
-import { AntDesign, MaterialCommunityIcons } from '@expo/vector-icons'
+import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
+import { useColorScheme } from 'nativewind'
 import React, { useEffect, useRef } from 'react'
-import { BackHandler, Pressable, Text, useColorScheme, View } from 'react-native'
+import { BackHandler, Pressable, Text, View } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -23,14 +23,19 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import switchTheme from 'react-native-theme-switch-animation'
+import { twMerge } from 'tailwind-merge'
 
 export default function ProfileScreen() {
+  const router = useRouter()
   const logout = useAuth((s) => s.logout)
   const { data: userData } = useProfileQuery()
   const user = userData as SelfUser | null
 
   const { isPro, activePlanId } = useSubscriptionStore()
-  const isDarkMode = useColorScheme() === 'dark'
+  const { colorScheme, setColorScheme } = useColorScheme()
+  const isDarkMode = colorScheme === 'dark'
+  const insets = useSafeAreaInsets()
 
   const unitSheetRef = useRef<BottomSheetModal>(null)
   const editProfileSheetRef = useRef<BottomSheetModal>(null)
@@ -50,7 +55,6 @@ export default function ProfileScreen() {
   useEffect(() => {
     // 1. Avatar: Fade In + Scale Up
     avatarOpacity.value = withTiming(1, { duration: 500 })
-    // avatarScale.value = withSpring(1, { damping: 12, stiffness: 200 });
 
     // 2. Name: Fade In + Slide Up (delayed 100ms)
     nameOpacity.value = withDelay(100, withTiming(1, { duration: 500 }))
@@ -84,10 +88,15 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const onBackPress = () => {
-      if (router.canGoBack()) {
-        router.back()
-      } else {
-        router.push('/(app)/(tabs)/home')
+      try {
+        if (router.canGoBack()) {
+          router.back()
+        } else {
+          router.push('/(app)/(tabs)/home')
+        }
+      } catch (e) {
+        // Fallback if navigation context is lost during transition
+        console.warn('Navigation error in BackHandler:', e)
       }
       return true
     }
@@ -97,11 +106,29 @@ export default function ProfileScreen() {
     return () => subscription.remove()
   }, [])
 
+  const lightIconRef = useRef<View>(null)
+  const darkIconRef = useRef<View>(null)
+
+  const handleThemeToggle = (e: any) => {
+    const { pageX, pageY } = e.nativeEvent
+
+    switchTheme({
+      switchThemeFunction: () => {
+        setColorScheme(colorScheme === 'dark' ? 'light' : 'dark')
+      },
+      animationConfig: {
+        type: 'circular',
+        duration: 700,
+        startingPoint: {
+          cx: pageX,
+          cy: pageY,
+        },
+      },
+    })
+  }
+
   return (
-    <View
-      className="flex-1 bg-white p-4 dark:bg-black"
-      style={{ paddingBottom: useSafeAreaInsets().bottom }}
-    >
+    <View className="flex-1 bg-white p-4 dark:bg-black" style={{ paddingBottom: insets.bottom }}>
       {/* Avatar */}
       <View className="flex-row items-center gap-4">
         <Animated.View style={avatarStyle} className="mb-6 items-center">
@@ -257,6 +284,65 @@ export default function ProfileScreen() {
           }
           onPress={() => unitSheetRef.current?.present()}
         />
+
+        <View className="ml-14 h-[1px] bg-neutral-100 dark:bg-neutral-800" />
+
+        {/* Inline Theme Toggle - Pill Style */}
+        <View className="flex-row items-center justify-between py-2 pr-2">
+          <View className="flex-row items-center gap-2">
+            <MaterialCommunityIcons
+              name="palette-outline"
+              size={24}
+              color={isDarkMode ? '#D4D4D4' : '#525252'}
+              className="ml-4 mr-2"
+            />
+            <Text className="text-base font-medium text-neutral-700 dark:text-neutral-300">
+              App Theme
+            </Text>
+          </View>
+
+          <View className="flex-row items-center gap-1 rounded-full bg-neutral-100 p-1 dark:bg-neutral-900">
+            <Pressable
+              onPress={(e) => handleThemeToggle(e)}
+              className={twMerge(
+                'flex-row items-center gap-2 rounded-full px-4 py-2',
+                colorScheme === 'light' && 'bg-white dark:bg-neutral-800',
+              )}
+            >
+              <View ref={lightIconRef}>
+                <Ionicons
+                  name="sunny"
+                  size={18}
+                  color={colorScheme === 'light' ? '#EAB308' : '#737373'}
+                />
+              </View>
+              {colorScheme === 'light' && (
+                <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
+                  Light
+                </Text>
+              )}
+            </Pressable>
+
+            <Pressable
+              onPress={(e) => handleThemeToggle(e)}
+              className={twMerge(
+                'flex-row items-center gap-2 rounded-full px-4 py-2',
+                colorScheme === 'dark' && 'bg-white dark:bg-neutral-800',
+              )}
+            >
+              <View ref={darkIconRef}>
+                <Ionicons
+                  name="moon"
+                  size={18}
+                  color={colorScheme === 'dark' ? '#3b82f6' : '#737373'}
+                />
+              </View>
+              {colorScheme === 'dark' && (
+                <Text className="text-sm font-semibold text-neutral-900 dark:text-white">Dark</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
 
         <View className="ml-14 h-[1px] bg-neutral-100 dark:bg-neutral-800" />
 

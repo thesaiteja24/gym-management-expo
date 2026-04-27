@@ -5,7 +5,7 @@ import { ProgramDay, UserProgramDay } from '@/types/programs'
 import { TemplateExerciseGroup } from '@/types/templates'
 import { FontAwesome6 } from '@expo/vector-icons'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, {
   forwardRef,
   useCallback,
@@ -30,6 +30,7 @@ export interface WorkoutDetailsModalProps {
 
 export const WorkoutDetailsModal = forwardRef<WorkoutDetailsModalHandle, WorkoutDetailsModalProps>(
   ({ onOpenChange, onStartWorkout, persistOnNavigation = false }, ref) => {
+    const router = useRouter()
     const [selectedDay, setSelectedDay] = useState<ProgramDay | UserProgramDay | null>(null)
     const [isStartable, setIsStartable] = useState(false)
     const isDark = useColorScheme() === 'dark'
@@ -38,11 +39,14 @@ export const WorkoutDetailsModal = forwardRef<WorkoutDetailsModalHandle, Workout
     const bottomSheetModalRef = useRef<BottomSheetModal>(null)
     const dynamicSizing = selectedDay?.isRestDay ? true : false
 
-    const presentModal = useCallback((day: ProgramDay | UserProgramDay, startable: boolean = false) => {
-      setSelectedDay(day)
-      setIsStartable(startable)
-      bottomSheetModalRef.current?.present()
-    }, [])
+    const presentModal = useCallback(
+      (day: ProgramDay | UserProgramDay, startable: boolean = false) => {
+        setSelectedDay(day)
+        setIsStartable(startable)
+        bottomSheetModalRef.current?.present()
+      },
+      [],
+    )
 
     const dismissModal = useCallback(() => {
       bottomSheetModalRef.current?.dismiss()

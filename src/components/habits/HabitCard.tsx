@@ -9,7 +9,7 @@ import {
 import { HabitType } from '@/types/habits'
 import { toDateKey } from '@/utils/time'
 import { Ionicons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useMemo, useRef, useState } from 'react'
 import { Pressable, Text, useWindowDimensions, View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
@@ -33,6 +33,7 @@ const COLOR_MAP: Record<string, string> = {
 const EMPTY_ARRAY: any[] = []
 
 export const HabitCard = ({ habit }: HabitCardProps) => {
+  const router = useRouter()
   const { width } = useWindowDimensions()
 
   // Habit logs from TanStack Query (merged with pending queue entries)

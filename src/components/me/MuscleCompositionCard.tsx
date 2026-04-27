@@ -1,9 +1,9 @@
-import { useCountUp } from '@/hooks/ui-utils'
 import { useThemeColor } from '@/hooks/theme'
+import { useCountUp } from '@/hooks/ui-utils'
 import { WeightUnits } from '@/types/me'
 import { BodyFatFeedback, classifyBodyFat } from '@/utils/analytics'
 import { Ionicons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { Text, View } from 'react-native'
 import Animated, {
@@ -42,6 +42,7 @@ export function MuscleCompositionCard({
   goal,
   preferredWeightUnit,
 }: MuscleCompositionCardProps) {
+  const router = useRouter()
   const colors = useThemeColor()
   const isDark = colors.isDark
 

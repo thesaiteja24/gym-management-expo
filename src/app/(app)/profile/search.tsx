@@ -9,7 +9,7 @@ import { useThemeColor } from '@/hooks/theme'
 import { useAuth } from '@/stores/auth.store'
 import { SearchedUser } from '@/types/engagement'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { useRouter } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
@@ -24,6 +24,7 @@ import { TextInput } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function Search() {
+  const router = useRouter()
   const colors = useThemeColor()
   const lineHeight = Platform.OS === 'ios' ? 0 : 20
   const safeAreaInsets = useSafeAreaInsets()

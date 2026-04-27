@@ -45,6 +45,8 @@ export default function CreateExercise() {
 
   const lineHeight = Platform.OS === 'ios' ? 0 : 30
 
+  const insets = useSafeAreaInsets()
+
   const onSave = useCallback(async () => {
     if (
       !title.trim() ||
@@ -146,10 +148,7 @@ export default function CreateExercise() {
   }
 
   return (
-    <View
-      className="flex-1 bg-white dark:bg-black"
-      style={{ paddingBottom: useSafeAreaInsets().bottom }}
-    >
+    <View className="flex-1 bg-white dark:bg-black" style={{ paddingBottom: insets.bottom }}>
       <ScrollView className="p-4">
         {/* Video picker */}
         <View className="mb-6 items-center">
