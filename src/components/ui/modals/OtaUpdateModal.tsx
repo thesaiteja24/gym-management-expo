@@ -3,7 +3,7 @@ import { useModalBackHandler, useModalNavigationSync } from '@/hooks/modal'
 import { useThemeColor } from '@/hooks/theme'
 import { type UpdateState } from '@/types/app-updates'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react'
 import { Text, View } from 'react-native'
 
 type Props = {
@@ -54,11 +54,9 @@ export const OtaUpdateModal = forwardRef<BottomSheetModal, Props>(
         enablePanDownToClose={!isBusy}
         handleIndicatorStyle={{ backgroundColor: colors.isDark ? '#525252' : '#d1d5db' }}
         enableDynamicSizing={true}
+        animationConfigs={{ duration: 350 }}
       >
-        <BottomSheetView
-          className="p-6 pb-10"
-          pointerEvents={isBusy ? 'none' : 'auto'}
-        >
+        <BottomSheetView className="p-6 pb-10" pointerEvents={isBusy ? 'none' : 'auto'}>
           <Text className="text-center text-xl font-bold" style={{ color: colors.text }}>
             Update available
           </Text>
@@ -84,12 +82,7 @@ export const OtaUpdateModal = forwardRef<BottomSheetModal, Props>(
 
           <View className="mt-6 flex-row gap-3">
             <View className="flex-1">
-              <Button
-                title="Later"
-                variant="secondary"
-                onPress={onLater}
-                disabled={isBusy}
-              />
+              <Button title="Later" variant="secondary" onPress={onLater} disabled={isBusy} />
             </View>
             <View className="flex-1">
               <Button

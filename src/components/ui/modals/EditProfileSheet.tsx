@@ -1,14 +1,14 @@
+import EditableAvatar from '@/components/me/EditableAvatar'
 import { Button } from '@/components/ui/buttons/Button'
 import DateTimePicker from '@/components/ui/DateTimePicker'
-import EditableAvatar from '@/components/me/EditableAvatar'
 import { SelectableCard } from '@/components/ui/SelectableCard'
+import { useModalBackHandler, useModalNavigationSync } from '@/hooks/modal'
 import {
   useDeleteProfilePicMutation,
   useProfileQuery,
   useUpdateProfileMutation,
   useUpdateProfilePicMutation,
 } from '@/hooks/queries/me'
-import { useModalBackHandler, useModalNavigationSync } from '@/hooks/modal'
 import { useThemeColor } from '@/hooks/theme'
 import { SelfUser } from '@/types/me'
 import { convertLength, convertWeight, displayLength, displayWeight } from '@/utils/converter'
@@ -313,7 +313,9 @@ export const EditProfileSheet = forwardRef<BottomSheetModal, Props>(
 
               {/* gender section */}
               <View className="border-b border-neutral-100 pb-4 dark:border-neutral-800">
-                <Text className="mb-3 text-lg font-semibold text-black dark:text-white">Gender</Text>
+                <Text className="mb-3 text-lg font-semibold text-black dark:text-white">
+                  Gender
+                </Text>
                 <View className="flex-row items-center gap-2">
                   <SelectableCard
                     selected={gender === 'male'}

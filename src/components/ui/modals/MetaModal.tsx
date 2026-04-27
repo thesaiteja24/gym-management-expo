@@ -1,11 +1,18 @@
 import { useModalBackHandler, useModalNavigationSync } from '@/hooks/modal'
 import { useThemeColor } from '@/hooks/theme'
+import { MetaItem } from '@/types/meta'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import { Image } from 'expo-image'
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { MetaItem } from '@/types/meta'
 
 export interface MetaModalHandle {
   present: () => void
@@ -25,17 +32,20 @@ type Props = {
 }
 
 const MetaModal = forwardRef<MetaModalHandle, Props>(
-  ({
-    title,
-    loading,
-    enableCreate,
-    items,
-    onClose,
-    onSelect,
-    onLongPress,
-    onCreatePress,
-    persistOnNavigation = false,
-  }, ref) => {
+  (
+    {
+      title,
+      loading,
+      enableCreate,
+      items,
+      onClose,
+      onSelect,
+      onLongPress,
+      onCreatePress,
+      persistOnNavigation = false,
+    },
+    ref,
+  ) => {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null)
     const insets = useSafeAreaInsets()
     const colors = useThemeColor()
@@ -78,9 +88,7 @@ const MetaModal = forwardRef<MetaModalHandle, Props>(
           backgroundColor: colors.isDark ? '#525252' : '#d1d5db',
         }}
         enableDynamicSizing={false}
-        animationConfigs={{
-          duration: 350,
-        }}
+        animationConfigs={{ duration: 350 }}
       >
         <View style={{ flex: 1, paddingBottom: insets.bottom }}>
           <View className="px-6 pt-4">

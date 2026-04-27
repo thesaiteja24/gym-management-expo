@@ -2,7 +2,14 @@ import { Button } from '@/components/ui/buttons/Button'
 import { useModalBackHandler, useModalNavigationSync } from '@/hooks/modal'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import * as Haptics from 'expo-haptics'
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -90,9 +97,7 @@ const RPESelectionModal = forwardRef<RPESelectionModalHandle, Props>(
           backgroundColor: isDark ? '#525252' : '#d1d5db',
         }}
         // Smoother, slightly slower animation
-        animationConfigs={{
-          duration: 350,
-        }}
+        animationConfigs={{ duration: 350 }}
       >
         <BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom }}>
           {/* Header */}

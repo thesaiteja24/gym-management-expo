@@ -2,7 +2,14 @@ import { Button } from '@/components/ui/buttons/Button'
 import { useModalBackHandler, useModalNavigationSync } from '@/hooks/modal'
 import { useThemeColor } from '@/hooks/theme'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Text, View } from 'react-native'
 
 export interface ModalHandle {
@@ -99,6 +106,7 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
         enablePanDownToClose
         handleIndicatorStyle={{ backgroundColor: colors.isDark ? '#525252' : '#d1d5db' }}
         enableDynamicSizing={true}
+        animationConfigs={{ duration: 350 }}
       >
         <BottomSheetView className="p-6 pb-10">
           {/* Title */}

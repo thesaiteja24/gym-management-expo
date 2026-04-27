@@ -9,7 +9,14 @@ import {
   BottomSheetView,
 } from '@gorhom/bottom-sheet'
 import { Image } from 'expo-image'
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -78,9 +85,7 @@ const ExerciseGroupModal = forwardRef<ExerciseGroupModalHandle, Props>(
           backgroundColor: colors.isDark ? '#525252' : '#d1d5db',
         }}
         enableDynamicSizing={false}
-        animationConfigs={{
-          duration: 350,
-        }}
+        animationConfigs={{ duration: 350 }}
       >
         <BottomSheetView style={{ flex: 1, paddingBottom: insets.bottom + 24 }}>
           {/* Header */}

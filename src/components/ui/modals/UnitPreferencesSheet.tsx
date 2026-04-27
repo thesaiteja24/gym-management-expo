@@ -1,5 +1,5 @@
-import { useProfileQuery, useUpdateProfileMutation } from '@/hooks/queries/me'
 import { useModalBackHandler, useModalNavigationSync } from '@/hooks/modal'
+import { useProfileQuery, useUpdateProfileMutation } from '@/hooks/queries/me'
 import { SelfUser } from '@/types/me'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react'
@@ -85,9 +85,7 @@ export const UnitPreferencesSheet = forwardRef<BottomSheetModal, Props>(
         }}
         onDismiss={onDismiss}
         onChange={(index) => setIsOpen(index >= 0)}
-        animationConfigs={{
-          duration: 350,
-        }}
+        animationConfigs={{ duration: 350 }}
       >
         <BottomSheetView
           style={{

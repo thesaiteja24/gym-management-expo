@@ -220,7 +220,11 @@ export default function ProgramTemplateDetails() {
         onCancel={() => {}}
       />
 
-      <WorkoutDetailsModal ref={workoutDetailsModalRef} onOpenChange={setIsModalOpen} />
+      <WorkoutDetailsModal
+        ref={workoutDetailsModalRef}
+        onOpenChange={setIsModalOpen}
+        // persistOnNavigation={true} TODO: when set to true we cannot dismiss it normally it reopening even after closing manually
+      />
 
       <StartProgramSheet
         ref={startProgramSheetRef}

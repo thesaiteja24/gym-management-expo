@@ -192,9 +192,7 @@ export default function DateTimePicker(props: DateTimePickerProps) {
           backgroundColor: isDark ? '#525252' : '#d1d5db',
         }}
         // Smoother, slightly slower animation
-        animationConfigs={{
-          duration: 350,
-        }}
+        animationConfigs={{ duration: 350 }}
         stackBehavior="push"
       >
         <BottomSheetView

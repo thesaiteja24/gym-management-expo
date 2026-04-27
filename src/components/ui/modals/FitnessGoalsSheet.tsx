@@ -265,6 +265,7 @@ export const FitnessGoalsSheet = forwardRef<BottomSheetModal, Props>(
         )}
         handleIndicatorStyle={{ backgroundColor: isDarkMode ? '#525252' : '#d1d5db' }}
         onChange={(index) => setIsOpen(index >= 0)}
+        animationConfigs={{ duration: 350 }}
       >
         <BottomSheetScrollView
           contentContainerStyle={{

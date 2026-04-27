@@ -3,8 +3,8 @@ import RestTimerPickerModal, {
 } from '@/components/ui/modals/RestTimerPickerModal'
 import SetRow from '@/components/workouts/SetRow'
 import { Exercise, ExerciseType } from '@/types/exercises'
-import { TemplateExercise, TemplateExerciseGroup } from '@/types/templates'
 import { WeightUnits } from '@/types/me'
+import { TemplateExercise, TemplateExerciseGroup } from '@/types/templates'
 import { WorkoutLogExercise, WorkoutLogGroup } from '@/types/workouts'
 import { Entypo } from '@expo/vector-icons'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
@@ -311,9 +311,7 @@ function ExerciseRow({
           backgroundColor: isDark ? '#525252' : '#d1d5db',
         }}
         // Smoother, slightly slower animation
-        animationConfigs={{
-          duration: 350,
-        }}
+        animationConfigs={{ duration: 350 }}
       >
         <BottomSheetView
           style={{

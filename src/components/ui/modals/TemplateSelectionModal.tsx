@@ -3,7 +3,14 @@ import { WorkoutTemplate } from '@/types/templates'
 import { Ionicons } from '@expo/vector-icons'
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import * as Haptics from 'expo-haptics'
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -55,9 +62,7 @@ const TemplateSelectionModal = forwardRef<TemplateSelectionModalHandle, Props>(
         onDismiss={onClose}
         onChange={(index) => setIsOpen(index >= 0)}
         handleIndicatorStyle={{ backgroundColor: isDark ? '#525252' : '#d1d5db' }}
-        animationConfigs={{
-          duration: 350,
-        }}
+        animationConfigs={{ duration: 350 }}
       >
         <BottomSheetScrollView style={{ flex: 1, paddingBottom: insets.bottom + 24 }}>
           <View className="flex-1 px-6">
