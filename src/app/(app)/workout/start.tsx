@@ -25,7 +25,7 @@ import {
   DeleteConfirmModalHandle,
 } from '@/components/ui/modals/DeleteConfirmModal'
 import { useThemeColor } from '@/hooks/theme'
-import { usePreventRemove } from '@react-navigation/native'
+import { useFocusEffect, usePreventRemove } from '@react-navigation/native'
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Keyboard, KeyboardAvoidingView, Text, useColorScheme, Vibration, View } from 'react-native'
 import DraggableFlatList from 'react-native-draggable-flatlist'
@@ -215,10 +215,13 @@ export default function StartWorkout() {
   })
 
   /* Effects */
-  // Start a new workout if none exists
-  useEffect(() => {
-    if (!workout) startWorkout()
-  }, [startWorkout, workout])
+  useFocusEffect(
+    useCallback(() => {
+      if (!workout) {
+        router.replace('/(app)/(tabs)/workout')
+      }
+    }, [workout]),
+  )
 
   // Set Completion Effect - Start/Stop rest timer based on set completion
   useEffect(() => {

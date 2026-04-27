@@ -10,7 +10,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { Text, View } from 'react-native'
+import { Modal, Pressable, Text, View } from 'react-native'
 
 export interface ModalHandle {
   present: () => void
@@ -30,6 +30,7 @@ type Props = {
   onCancel?: () => void
   children?: React.ReactNode
   persistOnNavigation?: boolean
+  floating?: boolean
 }
 
 export const CustomModal = forwardRef<ModalHandle, Props>(
@@ -43,6 +44,7 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
       onCancel,
       children,
       persistOnNavigation = false,
+      floating = false,
     },
     ref,
   ) => {
@@ -53,12 +55,20 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
 
     const present = useCallback(() => {
       setIsLoading(false)
-      bottomSheetModalRef.current?.present()
-    }, [])
+      if (floating) {
+        setIsOpen(true)
+      } else {
+        bottomSheetModalRef.current?.present()
+      }
+    }, [floating])
 
     const dismiss = useCallback(() => {
-      bottomSheetModalRef.current?.dismiss()
-    }, [])
+      if (floating) {
+        setIsOpen(false)
+      } else {
+        bottomSheetModalRef.current?.dismiss()
+      }
+    }, [floating])
 
     useImperativeHandle(ref, () => ({
       present,
@@ -97,6 +107,74 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
 
     const snapPoints = useMemo(() => ['40%'], [])
 
+    const ModalContent = (
+      <View className={floating ? 'p-6' : 'p-6 pb-10'}>
+        {/* Title */}
+        <Text className="text-center text-xl font-bold" style={{ color: colors.text }}>
+          {title}
+        </Text>
+
+        {/* Description */}
+        {description ? (
+          <Text className="mt-3 text-center text-base" style={{ color: colors.neutral[500] }}>
+            {description}
+          </Text>
+        ) : null}
+
+        {/* Custom Body (replaces Default Actions if provided) */}
+        {children ? (
+          <View className="mt-4">{children}</View>
+        ) : (
+          <View className="mt-8 flex-row gap-3">
+            {cancelText && (
+              <Button
+                className="flex-1"
+                title={cancelText}
+                variant="danger"
+                disabled={isLoading}
+                onPress={handleCancel}
+              />
+            )}
+
+            {confirmText && (
+              <Button
+                className="flex-1"
+                title={confirmText}
+                variant="primary"
+                loading={isLoading}
+                onPress={handleConfirm}
+              />
+            )}
+          </View>
+        )}
+      </View>
+    )
+
+    if (floating) {
+      return (
+        <Modal
+          transparent
+          visible={isOpen}
+          animationType="fade"
+          onRequestClose={dismiss}
+          statusBarTranslucent
+        >
+          <Pressable
+            className="flex-1 items-center justify-center bg-black/40 px-6"
+            onPress={dismiss}
+          >
+            <Pressable
+              className="w-full overflow-hidden rounded-3xl"
+              style={{ backgroundColor: colors.background }}
+              onPress={(e) => e.stopPropagation()}
+            >
+              {ModalContent}
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )
+    }
+
     return (
       <BottomSheetModal
         ref={bottomSheetModalRef}
@@ -108,46 +186,7 @@ export const CustomModal = forwardRef<ModalHandle, Props>(
         enableDynamicSizing={true}
         animationConfigs={{ duration: 350 }}
       >
-        <BottomSheetView className="p-6 pb-10">
-          {/* Title */}
-          <Text className="text-center text-xl font-bold" style={{ color: colors.text }}>
-            {title}
-          </Text>
-
-          {/* Description */}
-          {description ? (
-            <Text className="mt-3 text-center text-base" style={{ color: colors.neutral[500] }}>
-              {description}
-            </Text>
-          ) : null}
-
-          {/* Custom Body (replaces Default Actions if provided) */}
-          {children ? (
-            <View className="mt-4">{children}</View>
-          ) : (
-            <View className="mt-8 flex-row gap-3">
-              {cancelText && (
-                <Button
-                  className="flex-1"
-                  title={cancelText}
-                  variant="danger"
-                  disabled={isLoading}
-                  onPress={handleCancel}
-                />
-              )}
-
-              {confirmText && (
-                <Button
-                  className="flex-1"
-                  title={confirmText}
-                  variant="primary"
-                  loading={isLoading}
-                  onPress={handleConfirm}
-                />
-              )}
-            </View>
-          )}
-        </BottomSheetView>
+        <BottomSheetView>{ModalContent}</BottomSheetView>
       </BottomSheetModal>
     )
   },

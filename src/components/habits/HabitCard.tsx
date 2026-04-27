@@ -214,7 +214,7 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
         )}
       </Pressable>
 
-      <CustomModal ref={habitModalRef} title={habit.title}>
+      <CustomModal ref={habitModalRef} title={habit.title} floating={true}>
         <View className="flex flex-col">
           {/* Manual Habis Logger */}
           {habit.source === 'manual' && (
