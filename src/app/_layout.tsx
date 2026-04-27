@@ -1,4 +1,5 @@
 import { CustomToast } from '@/components/ui/CustomToast'
+import { useInAppUpdate } from '@/hooks/useInAppUpdate'
 import { useThemeColor } from '@/hooks/theme'
 import { queryClient } from '@/lib/queryClient'
 import { useAuth } from '@/stores/auth.store'
@@ -7,7 +8,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
 import { SplashScreen, Stack } from 'expo-router'
 import { useColorScheme } from 'nativewind'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { ActivityIndicator, StatusBar, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import Toast from 'react-native-toast-message'
@@ -26,6 +27,8 @@ if (!__DEV__) {
 export default function RootLayout() {
   const colors = useThemeColor()
   const { setColorScheme } = useColorScheme()
+  // ───── Updates ─────
+  useInAppUpdate()
 
   // ───── Fonts ─────
   const [fontsLoaded] = useFonts({

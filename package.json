@@ -71,7 +71,7 @@
     "react-native-purchases": "^9.11.2",
     "react-native-reanimated": "4.2.1",
     "react-native-reanimated-carousel": "^4.0.3",
-    "react-native-safe-area-context": "^5.6.2",
+    "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.23.0",
     "react-native-svg": "15.15.3",
     "react-native-theme-switch-animation": "^0.8.0",
@@ -81,6 +81,7 @@
     "react-native-web": "~0.21.0",
     "react-native-webview": "13.16.0",
     "react-native-worklets": "0.7.4",
+    "sp-react-native-in-app-updates": "^1.5.0",
     "tailwind-merge": "^3.5.0",
     "vexo-analytics": "^1.5.3",
     "zustand": "^5.0.9"
@@ -95,10 +96,20 @@
   },
   "private": true,
   "overrides": {
-    "hermes-compiler": "250829098.0.4"
+    "hermes-compiler": "250829098.0.4",
+    "react-native-device-info": "10.3.0"
   },
   "resolutions": {
     "hermes-compiler": "250829098.0.4"
   },
-  "expo": {}
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "vexo-analytics",
+          "sp-react-native-in-app-updates"
+        ]
+      }
+    }
+  }
 }
