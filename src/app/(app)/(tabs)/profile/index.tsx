@@ -14,7 +14,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import { useRouter } from 'expo-router'
 import { useColorScheme } from 'nativewind'
 import React, { useEffect, useRef } from 'react'
-import { BackHandler, Pressable, Text, View } from 'react-native'
+import { BackHandler, GestureResponderEvent, Pressable, Text, View } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -109,21 +109,24 @@ export default function ProfileScreen() {
   const lightIconRef = useRef<View>(null)
   const darkIconRef = useRef<View>(null)
 
-  const handleThemeToggle = (e: any) => {
-    const { pageX, pageY } = e.nativeEvent
-
-    switchTheme({
-      switchThemeFunction: () => {
-        setColorScheme(colorScheme === 'dark' ? 'light' : 'dark')
-      },
-      animationConfig: {
-        type: 'circular',
-        duration: 700,
-        startingPoint: {
-          cx: pageX,
-          cy: pageY,
+  const handleThemeToggle = (e: GestureResponderEvent) => {
+    const theme = colorScheme === 'dark' ? 'light' : 'dark'
+    e.currentTarget.measure((x1, y1, width, height, px, py) => {
+      switchTheme({
+        switchThemeFunction: () => {
+          setTimeout(() => {
+            setColorScheme(theme)
+          }, 100)
         },
-      },
+        animationConfig: {
+          type: 'inverted-circular',
+          duration: 1200,
+          startingPoint: {
+            cy: py + height / 2,
+            cx: px + width / 2,
+          },
+        },
+      })
     })
   }
 
