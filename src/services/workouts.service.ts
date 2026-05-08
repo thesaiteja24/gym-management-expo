@@ -25,9 +25,10 @@ export async function getWorkoutByShareIdService(shareId: string): Promise<Worko
 export async function getUserWorkoutsService(
   page: number = 1,
   limit: number = 2,
+  userId?: string,
 ): Promise<WorkoutsPaginatedResponse> {
   try {
-    const res = await client.get(workouts_endpoint, { params: { page, limit } })
+    const res = await client.get(workouts_endpoint, { params: { page, limit, userId } })
     const handled = handleApiResponse<WorkoutsPaginatedResponse>(res)
     if (!handled.success) throw new Error(handled.message || 'Request failed')
     return handled.data!
