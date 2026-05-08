@@ -1,3 +1,4 @@
+export * from './TopLifts'
 export * from './UserAuthGuard'
 export * from './UserBodyFatRing'
 export * from './UserEditableAvatar'
