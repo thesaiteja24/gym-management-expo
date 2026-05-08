@@ -7,6 +7,8 @@ export const API_BASE_URL = (() => {
   return url
 })()
 
+export const SHARE_BASE_URL = 'https://pump.thesaiteja.dev/share'
+
 // AUTH
 export const REFRESH_TOKEN_ENDPOINT = `/auth/refresh-token`
 export const GOOGLE_LOGIN_ENDPOINT = `/auth/google`
@@ -24,6 +26,7 @@ export const MY_MEASUREMENTS_ENDPOINT = (duration?: string) =>
 
 // USERS (PUBLIC)
 export const USER_ENDPOINT = (id: string) => `/users/${id}`
+export const USER_NUDGE_ENDPOINT = (id: string) => `/users/${id}/nudge`
 
 // ENGAGEMENT
 export const SEARCH_USERS_ENDPOINT = (query: string) => `/engagement/search?query=${query}`
