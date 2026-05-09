@@ -32,6 +32,9 @@ export const queryKeys = {
 
   user: {
     byId: (userId: string) => ['user', userId] as const,
+
+    workoutActivity: (userId: string) => ['user', userId, 'workoutActivity'] as const,
+    topLifts: (userId: string) => ['user', userId, 'topLifts'] as const,
   },
 
   meta: {

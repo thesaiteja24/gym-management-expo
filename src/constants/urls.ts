@@ -25,8 +25,12 @@ export const MY_MEASUREMENTS_ENDPOINT = (duration?: string) =>
   `/me/measurements${duration ? `?duration=${duration}` : ''}`
 
 // USERS (PUBLIC)
-export const USER_ENDPOINT = (id: string) => `/users/${id}`
-export const USER_NUDGE_ENDPOINT = (id: string) => `/users/${id}/nudge`
+export const USER_ENDPOINT = (userId: string) => `/users/${userId}`
+export const USER_NUDGE_ENDPOINT = (userId: string) => `/users/${userId}/nudge`
+export const USER_WORKOUT_ACTIVITY_ENDPOINT = (userId: string, days: number) =>
+  `/users/${userId}/analytics/workout-activity?days=${days}`
+export const USER_TOP_LIFTS_ENDPOINT = (userId: string, limit: number) =>
+  `/users/${userId}/analytics/top-lifts?limit=${limit}`
 
 // ENGAGEMENT
 export const SEARCH_USERS_ENDPOINT = (query: string) => `/engagement/search?query=${query}`
