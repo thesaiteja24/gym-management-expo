@@ -1,9 +1,8 @@
 import { FlashList } from '@shopify/flash-list'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native'
+import { ActivityIndicator, Text, View } from 'react-native'
 
-import { HabitHeatMap } from '@/components/habit'
 import { BaseModalHandle, NudgeModal } from '@/components/modals'
 import { SocialWorkoutCard } from '@/components/social/SocialWorkoutCard'
 import { Button } from '@/components/ui/buttons/Button'
@@ -11,10 +10,15 @@ import { ShimmerProfileScreen } from '@/components/ui/shimmers'
 import { TopLifts, UserHeader } from '@/components/user'
 import { useFollowUserMutation, useUnfollowUserMutation } from '@/hooks/queries/engagement'
 import { useExercises } from '@/hooks/queries/exercises'
-import { useNudgeMutation } from '@/hooks/queries/useNudgeMutation'
-import { usePublicUserQuery } from '@/hooks/queries/usePublicUser'
+import {
+  useNudgeMutation,
+  usePublicUserQuery,
+  useUserTopLiftsQuery,
+  useUserWorkoutActivityQuery,
+} from '@/hooks/queries/usePublicUser'
 import { useWorkoutsQuery } from '@/hooks/queries/workouts'
 import { useShare } from '@/hooks/useShare'
+import { Arise } from '@/lib/arise'
 import { useAuth } from '@/stores/auth.store'
 import { useMeStore } from '@/stores/me.store'
 
@@ -26,6 +30,9 @@ export default function UserProfile() {
   const { shareEntity } = useShare()
 
   const { data: user, isLoading: isUserLoading } = usePublicUserQuery(id)
+  const { data: activity = {} } = useUserWorkoutActivityQuery(id, 100)
+  const { data: topLifts = [], isLoading: isTopLiftsLoading } = useUserTopLiftsQuery(id)
+
   const nudgeModalRef = useRef<BaseModalHandle>(null)
   const { data: exerciseList = [] } = useExercises()
   const nudgeMutation = useNudgeMutation()
@@ -46,22 +53,12 @@ export default function UserProfile() {
   const isSelf = id === currentUserId
 
   const heatmapData = useMemo(() => {
-    const data = []
-    const today = new Date()
-    for (let i = 0; i < 365; i++) {
-      const d = new Date(today)
-      d.setDate(today.getDate() - i)
-      // Randomly populate some days to simulate history
-      if (Math.random() > 0.8) {
-        data.push({
-          date: d.toISOString().split('T')[0],
-          count: 1,
-          intensity: Math.random(),
-        })
-      }
-    }
-    return data
-  }, [])
+    return Object.entries(activity).map(([date, data]) => ({
+      date,
+      count: data.count,
+      intensity: data.volume > 0 ? Math.min(1, data.volume / 10000) : 0,
+    }))
+  }, [activity])
 
   const handleShare = useCallback(async () => {
     if (!user) return
@@ -114,7 +111,7 @@ export default function UserProfile() {
     const isPending = followMutation.isPending || unfollowMutation.isPending
 
     return (
-      <View className="flex-col gap-4">
+      <View className="flex-col gap-6">
         <UserHeader user={user ?? null} />
 
         {!isSelf && (
@@ -136,25 +133,11 @@ export default function UserProfile() {
           </View>
         )}
 
-        <View>
-          <Text className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-            Workout Activity
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <HabitHeatMap
-              values={heatmapData}
-              numDays={180}
-              layout="fill"
-              activeColor="#22c55e"
-              squareSize={8}
-              numRows={7}
-            />
-          </ScrollView>
-        </View>
+        <View></View>
 
-        <TopLifts />
+        <TopLifts lifts={topLifts} isLoading={isTopLiftsLoading} />
 
-        <Text className="pb-2 text-lg font-bold text-neutral-900 dark:text-neutral-100">
+        <Text className="pb-4 text-lg font-thin text-neutral-900 dark:text-neutral-100">
           Recent Workouts
         </Text>
       </View>
@@ -168,6 +151,8 @@ export default function UserProfile() {
     handleToggleFollow,
     followMutation.isPending,
     unfollowMutation.isPending,
+    topLifts,
+    isTopLiftsLoading,
   ])
 
   const renderItem = useCallback(
@@ -223,7 +208,13 @@ export default function UserProfile() {
           nudgeMutation.mutate(
             { userId: id, note },
             {
-              onSuccess: () => nudgeModalRef.current?.dismiss(),
+              onSuccess: () => {
+                Arise.success({
+                  heading: 'Nudge sent successfully',
+                  content: `${user?.firstName ?? 'The user'} has been notified of your encouragement`,
+                })
+                nudgeModalRef.current?.dismiss()
+              },
             },
           )
         }}
