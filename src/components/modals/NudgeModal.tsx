@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { Text, TextInput, View } from 'react-native'
 
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
@@ -54,21 +54,13 @@ export const NudgeModal = forwardRef<BaseModalHandle, NudgeModalProps>(
               Personal Message (Optional)
             </Text>
             <TextInput
-              multiline
-              numberOfLines={3}
-              placeholder="Add a custom note..."
+              placeholder="Add a note..."
               placeholderTextColor={colors.neutral[500]}
               value={personalMessage}
               onChangeText={setPersonalMessage}
-              className="min-h-[100px] rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
+              className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100"
               style={{ textAlignVertical: 'top' }}
             />
-          </View>
-
-          <View className="rounded-2xl bg-neutral-50 p-4 dark:bg-neutral-900">
-            <Text className="text-xs text-neutral-500 dark:text-neutral-400">
-              {targetUserName} will receive this as a push notification.
-            </Text>
           </View>
         </View>
       </BaseModal>

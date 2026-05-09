@@ -16,11 +16,11 @@ import React, {
 } from 'react'
 import {
   BackHandler,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   useColorScheme,
   View,
@@ -119,6 +119,22 @@ export const BaseModal = forwardRef<BaseModalHandle, BaseModalProps>(
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
       return () => subscription.remove()
     }, [isOpen, isVisible, floating])
+    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
+
+    useEffect(() => {
+      const showSub = Keyboard.addListener(
+        Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+        () => setIsKeyboardVisible(true),
+      )
+      const hideSub = Keyboard.addListener(
+        Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+        () => setIsKeyboardVisible(false),
+      )
+      return () => {
+        showSub.remove()
+        hideSub.remove()
+      }
+    }, [])
 
     // Note: We avoid an aggressive "Ghost Killer" useEffect here as it interferes with transitions.
     // Instead, we use the `key` prop on BottomSheetModal below to force a reset on theme change.
@@ -290,12 +306,16 @@ export const BaseModal = forwardRef<BaseModalHandle, BaseModalProps>(
             onDismiss?.()
           }}
         >
-          <View className="flex-1 justify-center bg-black/40 px-4">
+          <View className="flex-1 bg-black/40 px-4 pt-[40%]">
             <Pressable
               className="absolute inset-0"
               onPress={() => {
-                setIsVisible(false)
-                onDismiss?.()
+                if (isKeyboardVisible) {
+                  Keyboard.dismiss()
+                } else {
+                  setIsVisible(false)
+                  onDismiss?.()
+                }
               }}
             />
             <KeyboardAvoidingView
@@ -304,11 +324,9 @@ export const BaseModal = forwardRef<BaseModalHandle, BaseModalProps>(
             >
               <View
                 className="overflow-hidden rounded-[32px] p-6 shadow-xl"
-                style={{ backgroundColor: colors.background }}
+                style={{ backgroundColor: isDark ? colors.neutral[900] : colors.neutral[100] }}
               >
-                <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-                  {renderContent()}
-                </ScrollView>
+                {renderContent()}
               </View>
             </KeyboardAvoidingView>
           </View>
