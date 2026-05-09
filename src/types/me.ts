@@ -157,12 +157,6 @@ export type AddMeasurementPayload = Partial<Measurements> & {
   progressPics?: { uri: string; name?: string; type?: string }[]
 }
 
-export interface WorkoutActivity {
-  [date: string]: {
-    count: number
-    volume: number
-  }
-}
 
 export interface BestSet {
   weight: number | null

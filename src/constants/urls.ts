@@ -17,8 +17,6 @@ export const GOOGLE_LOGIN_ENDPOINT = `/auth/google`
 export const ME_ENDPOINT = `/me`
 export const MY_PROFILE_PIC_ENDPOINT = `/me/profile-picture`
 export const MY_ANALYTICS_ENDPOINT = `/me/analytics`
-export const MY_TRAINING_ANALYTICS_ENDPOINT = (duration: string) =>
-  `/me/analytics/training?duration=${duration}`
 export const MY_FITNESS_PROFILE_ENDPOINT = `/me/fitness-profile`
 export const MY_NUTRITION_PLAN_ENDPOINT = `/me/nutrition-plan`
 export const MY_MEASUREMENTS_ENDPOINT = (duration?: string) =>
@@ -27,10 +25,10 @@ export const MY_MEASUREMENTS_ENDPOINT = (duration?: string) =>
 // USERS (PUBLIC)
 export const USER_ENDPOINT = (userId: string) => `/users/${userId}`
 export const USER_NUDGE_ENDPOINT = (userId: string) => `/users/${userId}/nudge`
-export const USER_WORKOUT_ACTIVITY_ENDPOINT = (userId: string, days: number) =>
-  `/users/${userId}/analytics/workout-activity?days=${days}`
 export const USER_TOP_LIFTS_ENDPOINT = (userId: string, limit: number) =>
   `/users/${userId}/analytics/top-lifts?limit=${limit}`
+export const USER_TRAINING_ANALYTICS_ENDPOINT = (userId: string, duration: string) =>
+  `/users/${userId}/analytics/training?duration=${duration}`
 
 // ENGAGEMENT
 export const SEARCH_USERS_ENDPOINT = (query: string) => `/engagement/search?query=${query}`

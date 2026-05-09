@@ -4,7 +4,7 @@ import { queryKeys } from '@/lib/queryKeys'
 import { getUserByIdService } from '@/services/me.service'
 import {
   getUserTopLiftsService,
-  getUserWorkoutActivityService,
+  getUserTrainingAnalyticsService,
   nudgeUserService,
 } from '@/services/user.service'
 import { useMeStore } from '@/stores/me.store'
@@ -37,19 +37,19 @@ export function useNudgeMutation() {
   })
 }
 
-export function useUserWorkoutActivityQuery(userId: string, days?: number) {
+export function useUserTopLiftsQuery(userId: string, limit?: number) {
   return useQuery({
-    queryKey: queryKeys.user.workoutActivity(userId),
-    queryFn: () => getUserWorkoutActivityService(userId, days),
+    queryKey: queryKeys.user.topLifts(userId),
+    queryFn: () => getUserTopLiftsService(userId, limit),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
   })
 }
 
-export function useUserTopLiftsQuery(userId: string, limit?: number) {
+export function useUserTrainingAnalyticsQuery(userId: string, duration: string = 'all') {
   return useQuery({
-    queryKey: queryKeys.user.topLifts(userId),
-    queryFn: () => getUserTopLiftsService(userId, limit),
+    queryKey: queryKeys.user.trainingAnalytics(userId, duration),
+    queryFn: () => getUserTrainingAnalyticsService(userId, duration),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
   })

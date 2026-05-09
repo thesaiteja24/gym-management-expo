@@ -8,7 +8,6 @@ import {
   getMeasurementsService,
   getMeService,
   getNutritionPlanService,
-  getTrainingAnalyticsService,
   getUserAnalyticsService,
   updateFitnessProfileService,
   updateMeService,
@@ -74,15 +73,6 @@ export function useUserAnalyticsQuery() {
     queryKey: queryKeys.me.userAnalytics,
     queryFn: () => getUserAnalyticsService(),
     staleTime: 24 * 60 * 60 * 1000,
-  })
-}
-
-export function useTrainingAnalyticsQuery(duration: string = '3m') {
-  return useQuery({
-    queryKey: queryKeys.me.trainingAnalytics(duration),
-    queryFn: () => getTrainingAnalyticsService(duration),
-    staleTime: 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
   })
 }
 
