@@ -58,13 +58,16 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
   const thisWeekStreak = useMemo(() => {
     const today = new Date()
     const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - today.getDay())
+    const day = today.getDay()
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1)
+    startOfWeek.setDate(diff)
     startOfWeek.setHours(0, 0, 0, 0)
 
     let count = 0
     const loggedDates = new Set(habitLogs.map((l) => format(new Date(l.date), 'yyyy-MM-dd')))
 
-    for (let i = 0; i <= today.getDay(); i++) {
+    const daysPassed = day === 0 ? 6 : day - 1
+    for (let i = 0; i <= daysPassed; i++) {
       const d = new Date(startOfWeek)
       d.setDate(startOfWeek.getDate() + i)
       if (loggedDates.has(format(d, 'yyyy-MM-dd'))) {
@@ -77,11 +80,14 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
   const thisWeekCount = useMemo(() => {
     const today = new Date()
     const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - today.getDay())
+    const day = today.getDay()
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1)
+    startOfWeek.setDate(diff)
     startOfWeek.setHours(0, 0, 0, 0)
 
     let count = 0
-    for (let i = 0; i <= today.getDay(); i++) {
+    const daysPassed = day === 0 ? 6 : day - 1
+    for (let i = 0; i <= daysPassed; i++) {
       const d = new Date(startOfWeek)
       d.setDate(startOfWeek.getDate() + i)
       const key = format(d, 'yyyy-MM-dd')
