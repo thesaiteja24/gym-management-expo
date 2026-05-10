@@ -21,7 +21,7 @@ import {
   useUserTopLiftsQuery,
   useUserTrainingAnalyticsQuery,
 } from '@/hooks/queries/usePublicUser'
-import { useWorkoutsQuery } from '@/hooks/queries/workouts'
+import { useWorkoutListQuery } from '@/hooks/queries/workouts'
 import { useShare } from '@/hooks/useShare'
 import { Arise } from '@/lib/arise'
 import { useAuth } from '@/stores/auth.store'
@@ -50,7 +50,7 @@ export default function UserProfile() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useWorkoutsQuery(id)
+  } = useWorkoutListQuery(id)
 
   const { data: trainingAnalytics, isLoading: isTrainingLoading } = useUserTrainingAnalyticsQuery(
     id,

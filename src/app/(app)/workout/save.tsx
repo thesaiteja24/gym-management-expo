@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router'
 import { useMemo, useRef } from 'react'
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import {
@@ -10,6 +10,7 @@ import {
 import { VisibilitySelectionModal } from '@/components/modals/VisibilitySelectionModal'
 import { Button } from '@/components/ui'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { DateTimePicker } from '@/components/ui/inputs/DateTimePicker'
 import { useExercises } from '@/hooks/queries/exercises'
 import {
@@ -198,18 +199,36 @@ export default function WorkoutSaveScreen() {
     })
   }
 
-  return (
-    <SafeAreaView
-      style={{ paddingBottom: insets.bottom }}
-      className="flex-1 bg-white dark:bg-black"
-    >
-      <Stack.Screen options={{ headerShown: false }} />
+  const renderFooter = () => (
+    <View className="absolute bottom-0 left-0 right-0 mb-2 bg-transparent p-4">
+      <View className="flex-col gap-4">
+        <Button
+          title={
+            mode === 'edit-history'
+              ? 'Update Workout'
+              : mode === 'program-workout'
+                ? 'Save Program Workout'
+                : 'Save Workout'
+          }
+          variant="primary"
+          className="rounded-full"
+          onPress={() => {
+            void handleSaveWorkout()
+          }}
+        />
+        <Button
+          title="Back to Workout"
+          variant="secondary"
+          className="rounded-full"
+          onPress={() => router.back()}
+        />
+      </View>
+    </View>
+  )
 
-      <ScrollView
-        className="flex-1 px-4 pt-4"
-        contentContainerStyle={{ paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-      >
+  return (
+    <BaseScreen footerComponent={renderFooter()}>
+      <View className="flex-1">
         <Text className="mb-1 text-neutral-500">Workout title</Text>
         <TextInput
           value={workout.title}
@@ -249,23 +268,6 @@ export default function WorkoutSaveScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-
-      <View className="gap-3 px-4 pb-4">
-        <Button
-          title={
-            mode === 'edit-history'
-              ? 'Update Workout'
-              : mode === 'program-workout'
-                ? 'Save Program Workout'
-                : 'Save Workout'
-          }
-          variant="primary"
-          onPress={() => {
-            void handleSaveWorkout()
-          }}
-        />
-        <Button title="Back to Workout" variant="secondary" onPress={() => router.back()} />
       </View>
 
       <TimerDurationModal
@@ -281,6 +283,6 @@ export default function WorkoutSaveScreen() {
         onSelect={(visibility) => updateWorkoutMeta({ visibility })}
         onClose={() => visibilityModalRef.current?.dismiss()}
       />
-    </SafeAreaView>
+    </BaseScreen>
   )
 }

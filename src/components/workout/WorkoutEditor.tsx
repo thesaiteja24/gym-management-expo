@@ -1,7 +1,7 @@
 import { router } from 'expo-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { WorkoutDurationModal } from '@/components/modals/WorkoutDurationModal'
 import { Button } from '@/components/ui'
@@ -17,6 +17,7 @@ import {
 import type { ExerciseType } from '@/types/exercises'
 import { formatSeconds } from '@/utils/workout'
 
+import BaseScreen from '../ui/BaseScreen'
 import { WorkoutExerciseRow } from './WorkoutExerciseRow'
 import { WorkoutReorderList } from './WorkoutReorderList'
 import { WorkoutRestTimerBar } from './WorkoutRestTimerBar'
@@ -151,7 +152,7 @@ export function WorkoutEditor() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black">
+    <BaseScreen padded={false}>
       <View className="border-b border-neutral-200 px-4 py-4 dark:border-neutral-800">
         <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1">
@@ -292,7 +293,7 @@ export function WorkoutEditor() {
         onPause={mode === 'edit-history' ? undefined : pauseWorkout}
         onResume={mode === 'edit-history' ? undefined : resumeWorkout}
       />
-    </SafeAreaView>
+    </BaseScreen>
   )
 }
 export default WorkoutEditor

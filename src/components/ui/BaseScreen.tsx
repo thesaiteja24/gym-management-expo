@@ -10,6 +10,7 @@ import { Button } from './buttons'
 
 interface BaseScreenProps {
   children: React.ReactNode
+  footerComponent?: React.ReactNode
 
   title?: string
   subTitle?: string
@@ -87,6 +88,7 @@ Header.displayName = 'Header'
 
 const BaseScreen = ({
   children,
+  footerComponent,
   title,
   subTitle,
   left,
@@ -127,7 +129,9 @@ const BaseScreen = ({
 
   return (
     <SafeAreaView className={`flex-1 bg-white dark:bg-black ${padded ? 'px-4 pt-4' : ''}`}>
-      <Header title={title} subTitle={subTitle} left={renderedLeft} right={right} />
+      {title || subTitle || left || right ? (
+        <Header title={title} subTitle={subTitle} left={renderedLeft} right={right} />
+      ) : null}
 
       {isLoading && shimmer ? (
         shimmer
@@ -142,6 +146,7 @@ const BaseScreen = ({
       ) : (
         children
       )}
+      {footerComponent}
     </SafeAreaView>
   )
 }

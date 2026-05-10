@@ -11,7 +11,7 @@ import { Button } from '@/components/ui'
 import BaseScreen from '@/components/ui/BaseScreen'
 import { ShimmerDiscoverScreen } from '@/components/ui/shimmers/ShimmerDiscoverScreen'
 import { useExercises } from '@/hooks/queries/exercises'
-import { useWorkoutsQuery } from '@/hooks/queries/workouts'
+import { useWorkoutListQuery } from '@/hooks/queries/workouts'
 import { useThemeColor } from '@/hooks/theme'
 import { queryKeys } from '@/lib/queryKeys'
 
@@ -22,11 +22,11 @@ export default function DiscoverScreen() {
   // TanStack Query — infinite pagination with pending merge
   const {
     workouts,
-    hasMore: discoverHasMore,
+    hasNextPage: discoverHasMore,
     isLoading: discoverLoading,
     isFetchingNextPage: discoverLoadingNextPage,
     fetchNextPage,
-  } = useWorkoutsQuery()
+  } = useWorkoutListQuery()
 
   const qc = useQueryClient()
 
@@ -115,6 +115,13 @@ export default function DiscoverScreen() {
               </Text>
             </View>
           )
+        }
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center pt-20">
+            <Text className="text-lg text-neutral-500 dark:text-neutral-400">
+              It's quiet empty out here 🤧
+            </Text>
+          </View>
         }
       />
 

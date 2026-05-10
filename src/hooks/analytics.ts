@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { useUserWorkoutHistoryQuery } from '@/hooks/queries/workouts'
+import { useWorkoutHistoryQuery } from '@/hooks/queries/workouts'
 
 /* ────────────────────────────────────────────── */
 /* Exercise analytics types */
@@ -32,7 +32,7 @@ export interface UseAnalyticsResult {
 }
 
 export function useAnalytics(): UseAnalyticsResult {
-  const { workoutHistory } = useUserWorkoutHistoryQuery()
+  const { workoutHistory } = useWorkoutHistoryQuery()
 
   /* ───────────── User-level analytics ───────────── */
   /* ───────────── Exercise-level analytics ───────────── */

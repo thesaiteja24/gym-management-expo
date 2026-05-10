@@ -5,9 +5,8 @@ import { queryKeys } from '@/lib/queryKeys'
 import {
   createWorkoutService,
   deleteWorkoutService,
-  getDiscoverWorkoutsService,
-  getUserWorkoutsService,
   getWorkoutByIdService,
+  listWorkoutsService,
   updateWorkoutService,
 } from '@/services/workouts.service'
 import { useAuth } from '@/stores/auth.store'
@@ -20,11 +19,12 @@ const PAGE_LIMIT = 2
 // ─────────────────────────────────────────────────────
 // READ — workout history (paginated, infinite scroll)
 // ─────────────────────────────────────────────────────
-export function useUserWorkoutHistoryQuery() {
+export function useWorkoutHistoryQuery() {
+  const userId = useAuth((s) => s.userId)
   const query = useInfiniteQuery({
     queryKey: queryKeys.workouts.all,
     queryFn: async ({ pageParam = 1 }) => {
-      const data = await getUserWorkoutsService(pageParam as number, PAGE_LIMIT)
+      const data = await listWorkoutsService(pageParam as number, PAGE_LIMIT, userId!)
       const workouts = data.workouts || []
       return { workouts, meta: data.meta }
     },
@@ -39,31 +39,21 @@ export function useUserWorkoutHistoryQuery() {
   })
 
   const workoutHistory: WorkoutHistoryItem[] = (query.data?.pages ?? []).flatMap((p) => p.workouts)
-  const hasMore = query.data?.pages?.at(-1)?.meta?.hasMore ?? false
 
   return {
     ...query,
     workoutHistory,
-    hasMore,
   }
 }
 
 // ─────────────────────────────────────────────────────
-// READ — discover workouts (paginated)
+// READ — list workouts (generic, paginated)
 // ─────────────────────────────────────────────────────
-export function useWorkoutsQuery(userId?: string) {
+export function useWorkoutListQuery(userId?: string) {
   const query = useInfiniteQuery({
     queryKey: userId ? queryKeys.workouts.user(userId) : queryKeys.workouts.discover,
     queryFn: async ({ pageParam = 1 }) => {
-      if (userId) {
-        const data = await getUserWorkoutsService(pageParam as number, PAGE_LIMIT, userId)
-        return {
-          workouts: data.workouts || [],
-          meta: data.meta,
-        }
-      }
-
-      const data = await getDiscoverWorkoutsService(pageParam as number, PAGE_LIMIT)
+      const data = await listWorkoutsService(pageParam as number, PAGE_LIMIT, userId)
       return {
         workouts: data.workouts || [],
         meta: data.meta,
@@ -78,12 +68,10 @@ export function useWorkoutsQuery(userId?: string) {
   })
 
   const workouts: WorkoutHistoryItem[] = (query.data?.pages ?? []).flatMap((p) => p.workouts)
-  const hasMore = query.data?.pages?.at(-1)?.meta?.hasMore ?? false
 
   return {
     ...query,
     workouts,
-    hasMore,
   }
 }
 

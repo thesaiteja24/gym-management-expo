@@ -25,7 +25,7 @@ import { useUserTopLiftsQuery } from '@/hooks/queries/usePublicUser'
 import { useUnitConverter } from '@/hooks/useUnitConverter'
 import { Arise } from '@/lib/arise'
 import { queryKeys } from '@/lib/queryKeys'
-import { getUserWorkoutsService } from '@/services/workouts.service'
+import { listWorkoutsService } from '@/services/workouts.service'
 import { SelfUser } from '@/types/me'
 import {
   calculateBMI,
@@ -69,7 +69,7 @@ export default function HomeScreen() {
 
         // Fetch until we have everything (with a safety cap of 20 pages / 1000 workouts)
         while (hasMore && currentPage <= 20) {
-          const data = await getUserWorkoutsService(currentPage, 50, user.id)
+          const data = await listWorkoutsService(currentPage, 50, user.id)
           allPages.push({ workouts: data.workouts || [], meta: data.meta })
           allParams.push(currentPage)
           hasMore = data.meta.hasMore
