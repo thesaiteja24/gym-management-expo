@@ -2,18 +2,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { FlashList } from '@shopify/flash-list'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ActivityIndicator, Pressable, RefreshControl, Text, View } from 'react-native'
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { ActivityIndicator, RefreshControl, Text, View } from 'react-native'
 
 import CommentsModal, { CommentsModalHandle } from '@/components/modals/SocialCommentsModal'
 import { SocialWorkoutCard } from '@/components/social/SocialWorkoutCard'
+import { Button } from '@/components/ui'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { ShimmerDiscoverScreen } from '@/components/ui/shimmers/ShimmerDiscoverScreen'
 import { useExercises } from '@/hooks/queries/exercises'
 import { useWorkoutsQuery } from '@/hooks/queries/workouts'
@@ -60,23 +55,6 @@ export default function DiscoverScreen() {
     }
   }, [discoverLoading, discoverHasMore, fetchNextPage])
 
-  // ───────────────── Header animation ─────────────────
-  const headerOpacity = useSharedValue(0)
-  const headerTranslateY = useSharedValue(-20)
-
-  useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 600 })
-    headerTranslateY.value = withTiming(0, {
-      duration: 600,
-      easing: Easing.out(Easing.exp),
-    })
-  }, [headerOpacity, headerTranslateY])
-
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerTranslateY.value }],
-  }))
-
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => (
       <SocialWorkoutCard
@@ -93,29 +71,26 @@ export default function DiscoverScreen() {
 
   // ───────────────── Render ─────────────────
   return (
-    <SafeAreaView className="flex-1 bg-white px-4 pt-4 dark:bg-black" edges={['top']}>
-      {/* Header */}
-      <Animated.View
-        style={headerAnimatedStyle}
-        className="mb-4 flex-row items-center justify-between"
-      >
-        <Text numberOfLines={1} className="text-2xl font-semibold text-black dark:text-white">
-          Discover
-        </Text>
-
-        <Pressable
+    <BaseScreen
+      title="Discover"
+      right={
+        <Button
+          title=""
+          variant="ghost"
+          className="p-0"
           onPress={() => {
             router.push('/(app)/profile/search')
           }}
-        >
-          <MaterialCommunityIcons
-            name="magnify"
-            size={24}
-            color={colors.isDark ? 'white' : 'black'}
-          />
-        </Pressable>
-      </Animated.View>
-
+          rightIcon={
+            <MaterialCommunityIcons
+              name="magnify"
+              size={24}
+              color={colors.isDark ? 'white' : 'black'}
+            />
+          }
+        />
+      }
+    >
       {/* Workout List */}
       {refreshing || discoverLoading ? (
         <ShimmerDiscoverScreen />
@@ -147,6 +122,6 @@ export default function DiscoverScreen() {
       )}
 
       <CommentsModal ref={commentsModalRef} />
-    </SafeAreaView>
+    </BaseScreen>
   )
 }

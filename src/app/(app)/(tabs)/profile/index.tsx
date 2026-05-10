@@ -3,13 +3,13 @@ import { useRouter } from 'expo-router'
 import { useColorScheme } from 'nativewind'
 import { useEffect, useRef } from 'react'
 import { BackHandler, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { UserEditProfileModal } from '@/components/modals/UserEditProfileModal'
 import { UserFitnessGoalsModal } from '@/components/modals/UserFitnessGoalsModal'
 import { UserMeasurementsModal } from '@/components/modals/UserMeasurementsModal'
 import { UserUnitPreferencesModal } from '@/components/modals/UserUnitPreferencesModal'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { UserHeader } from '@/components/user/UserHeader'
 import { UserMenuItem } from '@/components/user/UserMenuItem'
 import { UserThemeToggle } from '@/components/user/UserThemeToggle'
@@ -23,7 +23,6 @@ export default function ProfileScreen() {
 
   const { colorScheme } = useColorScheme()
   const isDarkMode = colorScheme === 'dark'
-  const insets = useSafeAreaInsets()
 
   const unitSheetRef = useRef<BaseModalHandle>(null)
   const editProfileSheetRef = useRef<BaseModalHandle>(null)
@@ -51,83 +50,84 @@ export default function ProfileScreen() {
   }, [router])
 
   return (
-    <View
-      className="flex-1 gap-6 bg-white p-4 dark:bg-black"
-      style={{ paddingBottom: insets.bottom }}
-    >
-      <UserHeader user={user ?? null} />
+    <BaseScreen title="Profile">
+      <View className="flex-1 gap-6">
+        <UserHeader user={user ?? null} />
 
-      {/* Info Card / Action List */}
-      <View className="flex-1 gap-1">
-        <UserMenuItem
-          title="Account Details"
-          onPress={() => editProfileSheetRef.current?.present()}
-          leftIcon={<AntDesign name="user" size={20} color={isDarkMode ? '#D4D4D4' : '#525252'} />}
-        />
+        {/* Info Card / Action List */}
+        <View className="flex-1 gap-1">
+          <UserMenuItem
+            title="Account Details"
+            onPress={() => editProfileSheetRef.current?.present()}
+            leftIcon={
+              <AntDesign name="user" size={20} color={isDarkMode ? '#D4D4D4' : '#525252'} />
+            }
+          />
 
-        <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
+          <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
 
-        <UserMenuItem
-          title="Measurements"
-          onPress={() => measurementsSheetRef.current?.present()}
-          leftIcon={
-            <MaterialCommunityIcons
-              name="ruler"
-              size={20}
-              color={isDarkMode ? '#D4D4D4' : '#525252'}
-            />
-          }
-        />
+          <UserMenuItem
+            title="Measurements"
+            onPress={() => measurementsSheetRef.current?.present()}
+            leftIcon={
+              <MaterialCommunityIcons
+                name="ruler"
+                size={20}
+                color={isDarkMode ? '#D4D4D4' : '#525252'}
+              />
+            }
+          />
 
-        <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
+          <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
 
-        <UserMenuItem
-          title="Fitness Goals"
-          onPress={() => fitnessGoalsSheetRef.current?.present()}
-          leftIcon={
-            <MaterialCommunityIcons
-              name="bullseye-arrow"
-              size={24}
-              color={isDarkMode ? '#D4D4D4' : '#525252'}
-              className="mr-2"
-            />
-          }
-        />
+          <UserMenuItem
+            title="Fitness Goals"
+            onPress={() => fitnessGoalsSheetRef.current?.present()}
+            leftIcon={
+              <MaterialCommunityIcons
+                name="bullseye-arrow"
+                size={24}
+                color={isDarkMode ? '#D4D4D4' : '#525252'}
+                className="mr-2"
+              />
+            }
+          />
 
-        <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
+          <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
 
-        <UserMenuItem
-          title="Unit Preferences"
-          onPress={() => unitSheetRef.current?.present()}
-          leftIcon={
-            <MaterialCommunityIcons
-              name="tune-variant"
-              size={24}
-              color={isDarkMode ? '#D4D4D4' : '#525252'}
-              className="mr-2"
-            />
-          }
-        />
+          <UserMenuItem
+            title="Unit Preferences"
+            onPress={() => unitSheetRef.current?.present()}
+            leftIcon={
+              <MaterialCommunityIcons
+                name="tune-variant"
+                size={24}
+                color={isDarkMode ? '#D4D4D4' : '#525252'}
+                className="mr-2"
+              />
+            }
+          />
 
-        <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
+          <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
 
-        <UserThemeToggle />
+          <UserThemeToggle />
 
-        <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
+          <View className="h-[1px] bg-neutral-100 dark:bg-neutral-800" />
 
-        <UserMenuItem
-          title="Logout"
-          onPress={logout}
-          isDestructive
-          leftIcon={
-            <AntDesign
-              name="logout"
-              size={22}
-              color={isDarkMode ? '#EF4444' : '#DC2626'}
-              className="ml-[2px] mr-2"
-            />
-          }
-        />
+          <UserMenuItem
+            title="Logout"
+            onPress={logout}
+            isDestructive
+            leftIcon={
+              <AntDesign
+                name="logout"
+                size={22}
+                color={isDarkMode ? '#EF4444' : '#DC2626'}
+                className="ml-[2px] mr-2"
+              />
+            }
+          />
+        </View>
       </View>
 
       {/* Modals */}
@@ -135,6 +135,6 @@ export default function ProfileScreen() {
       <UserEditProfileModal ref={editProfileSheetRef} />
       <UserMeasurementsModal ref={measurementsSheetRef} />
       <UserFitnessGoalsModal ref={fitnessGoalsSheetRef} />
-    </View>
+    </BaseScreen>
   )
 }

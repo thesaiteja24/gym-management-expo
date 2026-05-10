@@ -4,16 +4,10 @@ import { format } from 'date-fns'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native'
-import Animated, {
-  Easing,
-  FadeInDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import Animated, { FadeInDown } from 'react-native-reanimated'
 
 import { HabitCard } from '@/components/habit/HabitCard'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { Button } from '@/components/ui/buttons/Button'
 import { ShimmerHomeScreen } from '@/components/ui/shimmers/ShimmerHomeScreen'
 import { TopLifts } from '@/components/user'
@@ -246,23 +240,6 @@ export default function HomeScreen() {
     setRefreshing(false)
   }, [refetchMeasurements, refetchUserAnalytics, refetchHabits, refetchHabitLogs])
 
-  // ───────────────── Header animation ─────────────────
-  const headerOpacity = useSharedValue(0)
-  const headerTranslateY = useSharedValue(-20)
-
-  useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 800 })
-    headerTranslateY.value = withTiming(0, {
-      duration: 800,
-      easing: Easing.out(Easing.exp),
-    })
-  }, [headerOpacity, headerTranslateY])
-
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerTranslateY.value }],
-  }))
-
   const isFullyLoaded =
     !isLoadingMeasurements &&
     !isLoadingUserAnalytics &&
@@ -285,25 +262,28 @@ export default function HomeScreen() {
 
   useAskNotificationPermission(isFullyLoaded && hasFinishedAnimations)
 
+  const title = useMemo(() => {
+    const hours = new Date().getHours()
+    if (hours < 12)
+      return `Good Morning, ${user?.firstName ? `${user.firstName.split(' ').at(-1)}` : ''}!`
+    if (hours < 18)
+      return `Good Afternoon, ${user?.firstName ? `${user.firstName.split(' ').at(-1)}` : ''}!`
+    return `Good Evening, ${user?.firstName ? `${user.firstName.split(' ').at(-1)}` : ''}!`
+  }, [user?.firstName])
+
+  const subTitle = useMemo(() => {
+    return `Ready to get pumped?`
+  }, [])
+
   // ───────────────── Render ─────────────────
   return (
-    <SafeAreaView className="flex-1 bg-white px-4 pt-4 dark:bg-black" edges={['top']}>
-      {/* Header */}
-      <Animated.View style={headerAnimatedStyle} className="mb-4">
-        <Text numberOfLines={1} className="text-2xl font-semibold text-black dark:text-white">
-          {(() => {
-            const hours = new Date().getHours()
-            if (hours < 12) return 'Good Morning'
-            if (hours < 18) return 'Good Afternoon'
-            return 'Good Evening'
-          })()}
-          {user?.firstName ? `, ${user.firstName.split(' ').at(-1)}` : ''}!
-        </Text>
-        <Text className="text-base font-normal text-neutral-600 dark:text-neutral-400">
-          Ready to get pumped?
-        </Text>
-      </Animated.View>
-
+    <BaseScreen
+      title={title}
+      subTitle={subTitle}
+      scroll
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      contentContainerStyle={{ paddingBottom: '50%' }}
+    >
       {refreshing ||
       isLoadingMeasurements ||
       isLoadingUserAnalytics ||
@@ -311,11 +291,7 @@ export default function HomeScreen() {
       isLoadingHabitLogs ? (
         <ShimmerHomeScreen />
       ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          contentContainerStyle={{ paddingBottom: '50%' }}
-        >
+        <>
           <UserStreakCard {...streakData} />
 
           <Animated.View
@@ -459,8 +435,8 @@ export default function HomeScreen() {
               </View>
             )}
           </Animated.View>
-        </ScrollView>
+        </>
       )}
-    </SafeAreaView>
+    </BaseScreen>
   )
 }

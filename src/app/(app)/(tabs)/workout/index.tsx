@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   BackHandler,
   RefreshControl,
-  ScrollView,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -25,6 +24,7 @@ import { ProgramCard } from '@/components/program/ProgramCard'
 import { UserProgramCard } from '@/components/program/UserProgramCard'
 import { TemplateCard } from '@/components/template/TemplateCard'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { Button } from '@/components/ui/buttons/Button'
 import {
   SkeletonProgramCard,
@@ -180,9 +180,9 @@ export default function WorkoutScreen() {
   }, [router])
 
   return (
-    <ScrollView
-      className="flex-1 bg-white p-4 dark:bg-black"
-      showsVerticalScrollIndicator={false}
+    <BaseScreen
+      title="Workout"
+      scroll
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
@@ -480,6 +480,6 @@ export default function WorkoutScreen() {
         description={`You can only add up to ${FREE_TIER_LIMITS.MAX_CUSTOM_TEMPLATES} custom templates on the Free plan. Upgrade to create UNLIMITED Templates`}
         continueText="View Plans"
       />
-    </ScrollView>
+    </BaseScreen>
   )
 }
