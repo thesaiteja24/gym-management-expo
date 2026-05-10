@@ -12,7 +12,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { useCreateHabit, useHabitsQuery, useUpdateHabit } from '@/hooks/queries/habits'
 import { Arise } from '@/lib/arise'
 import {

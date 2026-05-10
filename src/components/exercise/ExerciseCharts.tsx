@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { useThemeColor } from '@/hooks/theme'
 
 /* --------------------------------------------------

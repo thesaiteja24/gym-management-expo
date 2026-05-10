@@ -13,8 +13,8 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { PrivacyPolicyModal } from '@/components/modals/PrivacyPolicyModal'
+import { Button } from '@/components/ui'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
 import { useGoogleLoginMutation } from '@/hooks/queries/auth'
 import { Arise } from '@/lib/arise'
 import {

@@ -23,7 +23,7 @@ import {
   WorkoutDetailsModal,
   WorkoutDetailsModalHandle,
 } from '@/components/modals/WorkoutDetailsModal'
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { ShimmerProgramDetails } from '@/components/ui/shimmers/ShimmerProgramDetails'
 import { useUserProgram } from '@/hooks/queries/programs'
 import { Arise } from '@/lib/arise'
@@ -345,7 +345,7 @@ export default function UserProgramDashboard() {
         )}
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 bg-transparent p-4 flex items-center">
+      <View className="absolute bottom-0 left-0 right-0 flex items-center bg-transparent p-4">
         {
           <Button
             title={

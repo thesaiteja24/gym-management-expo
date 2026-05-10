@@ -1,10 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { useThemeColor } from '@/hooks/theme'
 import { Arise } from '@/lib/arise'
 import { useOnboarding } from '@/stores/me.store'

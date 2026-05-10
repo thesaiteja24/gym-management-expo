@@ -3,7 +3,7 @@ import { Image } from 'expo-image'
 import { Link, router } from 'expo-router'
 import { Pressable, Text, View } from 'react-native'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { useWorkoutEditor } from '@/stores/workout-editor.store'
 import { WorkoutTemplate } from '@/types/templates'
 

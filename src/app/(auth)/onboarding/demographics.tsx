@@ -1,10 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import React from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { SelectableCard } from '@/components/ui/cards/SelectableCard'
 import { DateTimePicker } from '@/components/ui/inputs/DateTimePicker'
 import { useThemeColor } from '@/hooks/theme'

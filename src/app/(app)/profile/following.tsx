@@ -5,7 +5,6 @@ import Fuse from 'fuse.js'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, BackHandler, Platform, RefreshControl, Text, View } from 'react-native'
 import { TextInput } from 'react-native-gesture-handler'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { SocialUserItem } from '@/components/social/SocialUserItem'
 import { Button } from '@/components/ui'
@@ -22,7 +21,7 @@ import { SearchedUser } from '@/types/engagement'
 export default function Following() {
   const colors = useThemeColor()
   const lineHeight = Platform.OS === 'ios' ? 0 : 20
-  const safeAreaInsets = useSafeAreaInsets()
+
   const { userId } = useLocalSearchParams<{ userId: string }>()
 
   const [query, setQuery] = useState('')

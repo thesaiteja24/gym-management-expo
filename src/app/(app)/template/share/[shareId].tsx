@@ -1,10 +1,10 @@
 import { usePreventRemove } from '@react-navigation/native'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect, useMemo } from 'react'
-import { Alert, ScrollView, Text, TouchableOpacity, useColorScheme,View } from 'react-native'
+import { Alert, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
 import {
   useSaveSharedTemplateMutation,

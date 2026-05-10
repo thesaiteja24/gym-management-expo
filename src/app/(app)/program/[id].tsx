@@ -8,8 +8,8 @@ import {
   WorkoutDetailsModal,
   WorkoutDetailsModalHandle,
 } from '@/components/modals/WorkoutDetailsModal'
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
 import { ShimmerProgramDetails } from '@/components/ui/shimmers/ShimmerProgramDetails'
 import { ROLES } from '@/constants/roles'
 import { useProfileQuery } from '@/hooks/queries/me'

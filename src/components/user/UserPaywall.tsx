@@ -1,10 +1,10 @@
 import { Feather } from '@expo/vector-icons'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { PurchasesPackage } from 'react-native-purchases'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { useThemeColor } from '@/hooks/theme'
 import { Arise } from '@/lib/arise'
 import { useSubscriptionStore } from '@/stores/subscriptions.store'

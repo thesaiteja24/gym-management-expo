@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons'
 import { forwardRef } from 'react'
 import { Text, View } from 'react-native'
 
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
 import { useThemeColor } from '@/hooks/theme'
 
 interface ProgramWorkoutPromptProps {

@@ -7,8 +7,8 @@ import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'rea
 import Animated, { FadeInDown } from 'react-native-reanimated'
 
 import { HabitCard } from '@/components/habit/HabitCard'
+import { Button } from '@/components/ui'
 import BaseScreen from '@/components/ui/BaseScreen'
-import { Button } from '@/components/ui/buttons/Button'
 import { ShimmerHomeScreen } from '@/components/ui/shimmers/ShimmerHomeScreen'
 import { TopLifts } from '@/components/user'
 import { StreakDay, UserStreakCard } from '@/components/user/UserStreakCard'

@@ -2,12 +2,18 @@ import { Entypo, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import { memo, useMemo, useRef, useState } from 'react'
-import { Text, TouchableOpacity, useColorScheme,View } from 'react-native'
+import { Text, TouchableOpacity, useColorScheme, View } from 'react-native'
 
-import { ExerciseGroupModal, ExerciseGroupModalHandle } from '@/components/modals/ExerciseGroupModal'
-import { TimerDurationModal, TimerDurationModalHandle } from '@/components/modals/TimerDurationModal'
+import {
+  ExerciseGroupModal,
+  ExerciseGroupModalHandle,
+} from '@/components/modals/ExerciseGroupModal'
+import {
+  TimerDurationModal,
+  TimerDurationModalHandle,
+} from '@/components/modals/TimerDurationModal'
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
 import { useExercises } from '@/hooks/queries/exercises'
 import { useUnitConverter } from '@/hooks/useUnitConverter'
 import { useWorkoutEditor } from '@/stores/workout-editor.store'

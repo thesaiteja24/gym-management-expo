@@ -1,7 +1,7 @@
 import { Image } from 'expo-image'
 import { Text, View } from 'react-native'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { UserVerifiedBadge } from '@/components/user/UserVerifiedBadge'
 import { useThemeColor } from '@/hooks/theme'
 import { useAuth } from '@/stores/auth.store'

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Alert, ScrollView, Text, useColorScheme, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
 import { useSaveWorkoutMutation } from '@/hooks/queries/workouts'
 import { getWorkoutByShareIdService } from '@/services/workouts.service'

@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics'
 import { Link, router } from 'expo-router'
 import { Pressable, Text, View } from 'react-native'
 
-import { Button } from '@/components/ui/buttons/Button'
+import { Button } from '@/components/ui'
 import { Program } from '@/types/programs'
 
 export function ProgramCard({ program }: { program: Program }) {

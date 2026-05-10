@@ -1,12 +1,15 @@
-import { router,Stack } from 'expo-router'
+import { router, Stack } from 'expo-router'
 import { useMemo, useRef } from 'react'
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { TimerDurationModal, TimerDurationModalHandle } from '@/components/modals/TimerDurationModal'
+import {
+  TimerDurationModal,
+  TimerDurationModalHandle,
+} from '@/components/modals/TimerDurationModal'
 import { VisibilitySelectionModal } from '@/components/modals/VisibilitySelectionModal'
+import { Button } from '@/components/ui'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
 import { DateTimePicker } from '@/components/ui/inputs/DateTimePicker'
 import { useExercises } from '@/hooks/queries/exercises'
 import {
@@ -104,7 +107,9 @@ export default function WorkoutSaveScreen() {
         invalidCompletedSetCount > 0 && validation.validSetIds.length === 0
 
       Arise.error({
-        heading: hasOnlyInvalidCompletedSets ? 'Completed sets need fixes' : 'Workout cannot be saved',
+        heading: hasOnlyInvalidCompletedSets
+          ? 'Completed sets need fixes'
+          : 'Workout cannot be saved',
         content:
           invalidCompletedSetCount > 0
             ? `${invalidCompletedSetCount} completed set${invalidCompletedSetCount === 1 ? ' is' : 's are'} missing required values. Fix them or uncheck them before saving.`
@@ -194,7 +199,10 @@ export default function WorkoutSaveScreen() {
   }
 
   return (
-    <SafeAreaView style={{ paddingBottom: insets.bottom }} className="flex-1 bg-white dark:bg-black">
+    <SafeAreaView
+      style={{ paddingBottom: insets.bottom }}
+      className="flex-1 bg-white dark:bg-black"
+    >
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView
@@ -236,7 +244,9 @@ export default function WorkoutSaveScreen() {
             className="mt-1"
             onPress={() => durationModalRef.current?.present(durationSeconds)}
           >
-            <Text className="text-base font-medium text-primary">{formatSeconds(durationSeconds)}</Text>
+            <Text className="text-base font-medium text-primary">
+              {formatSeconds(durationSeconds)}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

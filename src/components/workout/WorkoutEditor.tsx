@@ -4,8 +4,8 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { WorkoutDurationModal } from '@/components/modals/WorkoutDurationModal'
+import { Button } from '@/components/ui'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
 import { useExercises } from '@/hooks/queries/exercises'
 import { Arise } from '@/lib/arise'
 import {
@@ -121,7 +121,7 @@ export function WorkoutEditor() {
     }
   }, [workout])
 
-   useEffect(() => {
+  useEffect(() => {
     if (!workout) {
       router.replace('/(app)/(tabs)/workout')
     }

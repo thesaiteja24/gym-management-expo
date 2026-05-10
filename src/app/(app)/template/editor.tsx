@@ -5,8 +5,8 @@ import { ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { UserSubscriptionPaywallModal } from '@/components/modals/SubscriptionPaywallModal'
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
 import { WorkoutExerciseRow } from '@/components/workout/WorkoutExerciseRow'
 import { WorkoutReorderList } from '@/components/workout/WorkoutReorderList'
 import { FREE_TIER_LIMITS } from '@/constants/limits'
@@ -318,7 +318,8 @@ export default function TemplateEditor() {
     if (finalized.template.exercises.length === 0) {
       Arise.error({
         heading: 'No valid exercises',
-        content: 'All exercises in this template are unavailable. Add valid exercises and try again.',
+        content:
+          'All exercises in this template are unavailable. Add valid exercises and try again.',
       })
       return
     }

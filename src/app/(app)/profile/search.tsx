@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, BackHandler, Platform, RefreshControl, Text, View } from 'react-native'
 import { TextInput } from 'react-native-gesture-handler'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { SocialUserItem } from '@/components/social/SocialUserItem'
 import { Button } from '@/components/ui'
@@ -23,7 +22,6 @@ export default function Search() {
   const router = useRouter()
   const colors = useThemeColor()
   const lineHeight = Platform.OS === 'ios' ? 0 : 20
-  const safeAreaInsets = useSafeAreaInsets()
 
   const [query, setQuery] = useState('')
   const [refreshing, setRefreshing] = useState(false)

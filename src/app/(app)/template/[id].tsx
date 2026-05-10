@@ -1,10 +1,10 @@
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { BackHandler, ScrollView, Text, useColorScheme,View } from 'react-native'
+import { BackHandler, ScrollView, Text, useColorScheme, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
 import { ShimmerTemplateScreen } from '@/components/ui/shimmers/ShimmerTemplateScreen'
 import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
 import { useDeleteTemplateMutation, useTemplateByIdQuery } from '@/hooks/queries/templates'

@@ -23,9 +23,9 @@ import { UserSubscriptionPaywallModal } from '@/components/modals/SubscriptionPa
 import { ProgramCard } from '@/components/program/ProgramCard'
 import { UserProgramCard } from '@/components/program/UserProgramCard'
 import { TemplateCard } from '@/components/template/TemplateCard'
+import { Button } from '@/components/ui'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
 import BaseScreen from '@/components/ui/BaseScreen'
-import { Button } from '@/components/ui/buttons/Button'
 import {
   SkeletonProgramCard,
   SkeletonUserProgramCard,
