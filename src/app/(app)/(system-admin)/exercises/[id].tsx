@@ -80,7 +80,7 @@ export default function EditExercise() {
     }
   }, [original])
 
-  const onSave = useCallback(async () => {
+  const onSave = useCallback(() => {
     if (
       !title.trim() ||
       !equipmentId ||
@@ -97,40 +97,44 @@ export default function EditExercise() {
 
     Keyboard.dismiss()
 
-    try {
-      const formData = new FormData()
-      formData.append('title', title.trim())
-      formData.append('instructions', instructions.trim())
-      formData.append('exerciseType', exerciseType)
-      formData.append('equipmentId', equipmentId)
-      formData.append('primaryMuscleGroupId', primaryMuscleGroupId)
+    const formData = new FormData()
+    formData.append('title', title.trim())
+    formData.append('instructions', instructions.trim())
+    formData.append('exerciseType', exerciseType)
+    formData.append('equipmentId', equipmentId)
+    formData.append('primaryMuscleGroupId', primaryMuscleGroupId)
 
-      if (videoUri) {
-        setUploading(true)
-        formData.append('video', {
-          uri: videoUri,
-          name: 'exercise.mp4',
-          type: 'video/mp4',
-        } as any)
-      }
-
-      await updateExerciseMutation.mutateAsync({ id, data: formData })
-
-      Toast.show({
-        type: 'success',
-        text1: 'Exercise updated successfully',
-      })
-      // Query is automatically invalidated by useUpdateExercise
-      navigation.goBack()
-    } catch (e: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to update exercise',
-        text2: e.message,
-      })
-    } finally {
-      setUploading(false)
+    if (videoUri) {
+      setUploading(true)
+      formData.append('video', {
+        uri: videoUri,
+        name: 'exercise.mp4',
+        type: 'video/mp4',
+      } as any)
     }
+
+    updateExerciseMutation.mutate(
+      { id, data: formData },
+      {
+        onSuccess: () => {
+          Toast.show({
+            type: 'success',
+            text1: 'Exercise updated successfully',
+          })
+          navigation.goBack()
+        },
+        onError: (e: any) => {
+          Toast.show({
+            type: 'error',
+            text1: 'Failed to update exercise',
+            text2: e.message,
+          })
+        },
+        onSettled: () => {
+          setUploading(false)
+        },
+      },
+    )
   }, [
     id,
     title,
@@ -338,22 +342,24 @@ export default function EditExercise() {
         description="Are you sure you want to delete this exercise? This action cannot be undone."
         deleteAction={{
           title: 'Delete',
-          onPress: async () => {
-            try {
-              await deleteExerciseMutation.mutateAsync(id)
-              Toast.show({
-                type: 'success',
-                text1: 'Exercise deleted successfully',
-              })
-              deleteModalRef.current?.dismiss()
-              router.back()
-            } catch (e: any) {
-              Toast.show({
-                type: 'error',
-                text1: 'Failed to delete exercise',
-                text2: e.message,
-              })
-            }
+          onPress: () => {
+            deleteExerciseMutation.mutate(id, {
+              onSuccess: () => {
+                Toast.show({
+                  type: 'success',
+                  text1: 'Exercise deleted successfully',
+                })
+                deleteModalRef.current?.dismiss()
+                router.back()
+              },
+              onError: (e: any) => {
+                Toast.show({
+                  type: 'error',
+                  text1: 'Failed to delete exercise',
+                  text2: e.message,
+                })
+              },
+            })
           },
         }}
         cancelAction={{

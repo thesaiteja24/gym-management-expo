@@ -47,7 +47,7 @@ export default function CreateExercise() {
 
   const insets = useSafeAreaInsets()
 
-  const onSave = useCallback(async () => {
+  const onSave = useCallback(() => {
     if (
       !title.trim() ||
       !equipmentId ||
@@ -63,40 +63,41 @@ export default function CreateExercise() {
 
     Keyboard.dismiss()
 
-    try {
-      const formData = new FormData()
-      formData.append('title', title.trim())
-      formData.append('instructions', instructions.trim())
-      formData.append('exerciseType', exerciseType)
-      formData.append('equipmentId', equipmentId)
-      formData.append('primaryMuscleGroupId', primaryMuscleGroupId)
+    const formData = new FormData()
+    formData.append('title', title.trim())
+    formData.append('instructions', instructions.trim())
+    formData.append('exerciseType', exerciseType)
+    formData.append('equipmentId', equipmentId)
+    formData.append('primaryMuscleGroupId', primaryMuscleGroupId)
 
-      if (videoUri) {
-        setUploading(true)
-        formData.append('video', {
-          uri: videoUri,
-          name: 'exercise.mp4',
-          type: 'video/mp4',
-        } as any)
-      }
-
-      await createExerciseMutation.mutateAsync(formData)
-
-      Toast.show({
-        type: 'success',
-        text1: 'Exercise created successfully',
-      })
-      // Query is automatically invalidated by useCreateExercise
-      navigation.goBack()
-    } catch (e: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to create exercise',
-        text2: e.message,
-      })
-    } finally {
-      setUploading(false)
+    if (videoUri) {
+      setUploading(true)
+      formData.append('video', {
+        uri: videoUri,
+        name: 'exercise.mp4',
+        type: 'video/mp4',
+      } as any)
     }
+
+    createExerciseMutation.mutate(formData, {
+      onSuccess: () => {
+        Toast.show({
+          type: 'success',
+          text1: 'Exercise created successfully',
+        })
+        navigation.goBack()
+      },
+      onError: (e: any) => {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to create exercise',
+          text2: e.message,
+        })
+      },
+      onSettled: () => {
+        setUploading(false)
+      },
+    })
   }, [
     title,
     instructions,

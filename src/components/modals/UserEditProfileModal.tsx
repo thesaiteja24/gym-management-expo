@@ -111,7 +111,7 @@ export const UserEditProfileModal = forwardRef<BaseModalHandle, Props>((_, ref) 
   }, [firstName, lastName, heightDisplay, weightDisplay, dateOfBirth, gender])
 
   // Save handler — convert display-unit values back to backend canonical units (kg, cm)
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(() => {
     Keyboard.dismiss()
 
     if (!hasChanges) {
@@ -139,23 +139,24 @@ export const UserEditProfileModal = forwardRef<BaseModalHandle, Props>((_, ref) 
       gender: gender ?? undefined,
     }
 
-    try {
-      await updateUserDataMutation.mutateAsync(payload)
-      Toast.show({ type: 'success', text1: 'Profile updated successfully' })
-
-      originalRef.current = {
-        firstName,
-        lastName,
-        heightDisplay,
-        weightDisplay,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
-        gender,
-      }
-      const modalRef = ref as React.RefObject<BaseModalHandle>
-      modalRef.current?.dismiss()
-    } catch {
-      Toast.show({ type: 'error', text1: 'Profile update failed, try again' })
-    }
+    updateUserDataMutation.mutate(payload, {
+      onSuccess: () => {
+        Toast.show({ type: 'success', text1: 'Profile updated successfully' })
+        originalRef.current = {
+          firstName,
+          lastName,
+          heightDisplay,
+          weightDisplay,
+          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+          gender,
+        }
+        const modalRef = ref as React.RefObject<BaseModalHandle>
+        modalRef.current?.dismiss()
+      },
+      onError: () => {
+        Toast.show({ type: 'error', text1: 'Profile update failed, try again' })
+      },
+    })
   }, [
     hasChanges,
     firstName,
@@ -183,11 +184,20 @@ export const UserEditProfileModal = forwardRef<BaseModalHandle, Props>((_, ref) 
 
       const formData = new FormData()
       formData.append('profilePic', prepared as any)
-      await updateProfilePicMutation.mutateAsync(formData)
-      Toast.show({ type: 'success', text1: 'Profile picture updated' })
+
+      updateProfilePicMutation.mutate(formData, {
+        onSuccess: () => {
+          Toast.show({ type: 'success', text1: 'Profile picture updated' })
+        },
+        onError: (error: any) => {
+          Toast.show({ type: 'error', text1: error?.message || 'Profile picture update failed' })
+        },
+        onSettled: () => {
+          setUploading(false)
+        },
+      })
     } catch (error: any) {
       Toast.show({ type: 'error', text1: error?.message || 'Image processing failed' })
-    } finally {
       setUploading(false)
     }
   }
@@ -212,15 +222,19 @@ export const UserEditProfileModal = forwardRef<BaseModalHandle, Props>((_, ref) 
         />
         {user?.profilePicUrl && (
           <TouchableOpacity
-            onPress={async () => {
-              try {
-                await deleteProfilePicMutation.mutateAsync()
-                Toast.show({ type: 'success', text1: 'Avatar removed successfully' })
-              } catch {
-                Toast.show({ type: 'error', text1: 'Failed to remove avatar' })
-              } finally {
-                setUploading(false)
-              }
+            onPress={() => {
+              setUploading(true)
+              deleteProfilePicMutation.mutate(undefined, {
+                onSuccess: () => {
+                  Toast.show({ type: 'success', text1: 'Avatar removed successfully' })
+                },
+                onError: () => {
+                  Toast.show({ type: 'error', text1: 'Failed to remove avatar' })
+                },
+                onSettled: () => {
+                  setUploading(false)
+                },
+              })
             }}
             className="mt-4"
             disabled={uploading}

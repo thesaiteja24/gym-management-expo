@@ -221,61 +221,68 @@ export default function TemplateEditor() {
   }, [exerciseList, workout])
 
   const commitSave = useCallback(
-    async (templateToSave: ReturnType<typeof finalizeTemplateForSave>['template']) => {
-      try {
-        const response =
-          mode === 'template-edit' && source?.templateId
-            ? await updateMutation.mutateAsync({
-                id: source.templateId,
-                draft: templateToSave,
-              })
-            : await createMutation.mutateAsync(templateToSave)
+    (templateToSave: ReturnType<typeof finalizeTemplateForSave>['template']) => {
+      const options = {
+        onSuccess: (response: any) => {
+          const savedId = response?.id || source?.templateId || templateToSave.id
 
-        const savedId = response?.id || source?.templateId || templateToSave.id
+          if (source?.programWeekIndex != null && source?.programDayIndex != null) {
+            const draftProgram = useProgram.getState().draftProgram
 
-        if (source?.programWeekIndex != null && source?.programDayIndex != null) {
-          const draftProgram = useProgram.getState().draftProgram
-
-          if (draftProgram?.weeks) {
-            const nextWeeks = [...draftProgram.weeks]
-            if (nextWeeks[source.programWeekIndex]?.days[source.programDayIndex]) {
-              nextWeeks[source.programWeekIndex].days[source.programDayIndex].templateId =
-                savedId || templateToSave.clientId
-              useProgram.getState().updateDraftProgram({ weeks: nextWeeks })
+            if (draftProgram?.weeks) {
+              const nextWeeks = [...draftProgram.weeks]
+              if (nextWeeks[source.programWeekIndex]?.days[source.programDayIndex]) {
+                nextWeeks[source.programWeekIndex].days[source.programDayIndex].templateId =
+                  savedId || templateToSave.clientId
+                useProgram.getState().updateDraftProgram({ weeks: nextWeeks })
+              }
             }
           }
-        }
 
-        Toast.show({
-          type: 'success',
-          text1: mode === 'template-edit' ? 'Template updated' : 'Template created',
-        })
-
-        discardWorkout()
-        setPendingPrunedTemplate(null)
-        setPruneMessage(null)
-
-        if (source?.programWeekIndex != null && source?.programDayIndex != null) {
-          router.back()
-          return
-        }
-
-        if (savedId) {
-          router.replace({
-            pathname: '/(app)/template/[id]',
-            params: { id: savedId },
+          Toast.show({
+            type: 'success',
+            text1: mode === 'template-edit' ? 'Template updated' : 'Template created',
           })
-          return
-        }
 
-        router.replace('/(app)/(tabs)/workout')
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'The template request failed.'
-        Toast.show({
-          type: 'error',
-          text1: 'Failed to save template',
-          text2: message,
-        })
+          discardWorkout()
+          setPendingPrunedTemplate(null)
+          setPruneMessage(null)
+
+          if (source?.programWeekIndex != null && source?.programDayIndex != null) {
+            router.back()
+            return
+          }
+
+          if (savedId) {
+            router.replace({
+              pathname: '/(app)/template/[id]',
+              params: { id: savedId },
+            })
+            return
+          }
+
+          router.replace('/(app)/(tabs)/workout')
+        },
+        onError: (error: any) => {
+          const message = error instanceof Error ? error.message : 'The template request failed.'
+          Toast.show({
+            type: 'error',
+            text1: 'Failed to save template',
+            text2: message,
+          })
+        },
+      }
+
+      if (mode === 'template-edit' && source?.templateId) {
+        updateMutation.mutate(
+          {
+            id: source.templateId,
+            draft: templateToSave,
+          },
+          options,
+        )
+      } else {
+        createMutation.mutate(templateToSave, options)
       }
     },
     [
@@ -289,7 +296,7 @@ export default function TemplateEditor() {
     ],
   )
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(() => {
     if (!workout) return
 
     if (!workout.title.trim()) {
@@ -327,7 +334,7 @@ export default function TemplateEditor() {
       return
     }
 
-    await commitSave(finalized.template)
+    commitSave(finalized.template)
   }, [commitSave, source, validExerciseIds, workout])
 
   const handleCancel = useCallback(() => {
@@ -379,7 +386,7 @@ export default function TemplateEditor() {
                   setIsReorderMode(false)
                   return
                 }
-                void handleSave()
+                handleSave()
               }}
             />
           </View>

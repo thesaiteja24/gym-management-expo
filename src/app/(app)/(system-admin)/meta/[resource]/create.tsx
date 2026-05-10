@@ -63,13 +63,23 @@ export default function CreateMeta() {
         formData.append('image', prepared as any)
       }
 
-      await createMutation.mutateAsync(formData)
-
-      Toast.show({ type: 'success', text1: `${label} created successfully` })
-      navigation.goBack()
+      createMutation.mutate(formData, {
+        onSuccess: () => {
+          Toast.show({ type: 'success', text1: `${label} created successfully` })
+          navigation.goBack()
+        },
+        onError: (e: any) => {
+          Toast.show({
+            type: 'error',
+            text1: e.message || `Failed to create ${label.toLowerCase()}`,
+          })
+        },
+        onSettled: () => {
+          setUploading(false)
+        },
+      })
     } catch (e: any) {
       Toast.show({ type: 'error', text1: e.message || `Failed to create ${label.toLowerCase()}` })
-    } finally {
       setUploading(false)
     }
   }, [title, equipmentType, thumbnailUri, createMutation, navigation, isEquipment, label, resource])

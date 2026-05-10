@@ -205,7 +205,7 @@ export const UserMeasurementsModal = forwardRef<BaseModalHandle, Props>((_, ref)
     setProgressPics((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(() => {
     if (!user?.id) return
 
     const hasAnyInput = Object.values(measurements).some((v) => v.trim().length > 0)
@@ -241,19 +241,19 @@ export const UserMeasurementsModal = forwardRef<BaseModalHandle, Props>((_, ref)
     if (notes) payload.notes = notes
     if (progressPics.length > 0) payload.progressPics = progressPics
 
-    try {
-      const res = await addMeasurementMutation.mutateAsync(payload as any)
-      if (res) {
+    addMeasurementMutation.mutate(payload as any, {
+      onSuccess: () => {
         Toast.show({ type: 'success', text1: 'Measurements saved successfully!' })
         const modalRef = ref as React.RefObject<BaseModalHandle>
         modalRef.current?.dismiss()
         setMeasurements(INITIAL_MEASUREMENTS)
         setNotes('')
         setProgressPics([])
-      }
-    } catch {
-      Toast.show({ type: 'error', text1: 'Failed to save check-in' })
-    }
+      },
+      onError: () => {
+        Toast.show({ type: 'error', text1: 'Failed to save check-in' })
+      },
+    })
   }, [
     user?.id,
     measurements,

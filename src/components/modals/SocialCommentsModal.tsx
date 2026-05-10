@@ -332,14 +332,16 @@ const CommentsModal = forwardRef<CommentsModalHandle, Props>(({ workoutId, onClo
         description="Are you sure you want to delete this comment? This action cannot be undone."
         deleteAction={{
           title: 'Delete',
-          onPress: async () => {
+          onPress: () => {
             if (selectedCommentForOptions) {
-              try {
-                await deleteCommentMutation.mutateAsync(selectedCommentForOptions)
-                deleteModalRef.current?.dismiss()
-              } catch (error) {
-                Toast.show({ type: 'error', text1: 'Error', text2: error as string })
-              }
+              deleteCommentMutation.mutate(selectedCommentForOptions, {
+                onSuccess: () => {
+                  deleteModalRef.current?.dismiss()
+                },
+                onError: (error: any) => {
+                  Toast.show({ type: 'error', text1: 'Error', text2: error as string })
+                },
+              })
             }
           },
         }}

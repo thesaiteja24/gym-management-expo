@@ -36,34 +36,38 @@ export default function ProgramTemplateDetails() {
   const workoutDetailsModalRef = useRef<WorkoutDetailsModalHandle>(null)
   const startProgramSheetRef = useRef<BaseModalHandle>(null)
 
-  const handleConfirmStart = async (duration: number) => {
+  const handleConfirmStart = (duration: number) => {
     if (!program?.id) return
 
-    try {
-      await startProgramMutation.mutateAsync({
+    startProgramMutation.mutate(
+      {
         programId: program.id,
         duration: duration,
         startDate: new Date(),
-      })
+      },
+      {
+        onSuccess: () => {
+          startProgramSheetRef.current?.dismiss()
+          Toast.show({
+            type: 'success',
+            text1: 'Program Started!',
+            text2: 'Redirecting to your workout dashboard...',
+          })
 
-      startProgramSheetRef.current?.dismiss()
-      Toast.show({
-        type: 'success',
-        text1: 'Program Started!',
-        text2: 'Redirecting to your workout dashboard...',
-      })
-
-      // Wait a bit for the animation and sync
-      setTimeout(() => {
-        router.push('/(app)/(tabs)/workout')
-      }, 500)
-    } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to start program',
-        text2: error.message || 'Please try again',
-      })
-    }
+          // Wait a bit for the animation and sync
+          setTimeout(() => {
+            router.push('/(app)/(tabs)/workout')
+          }, 500)
+        },
+        onError: (error: any) => {
+          Toast.show({
+            type: 'error',
+            text1: 'Failed to start program',
+            text2: error.message || 'Please try again',
+          })
+        },
+      },
+    )
   }
 
   const currentUserId = useAuth((s) => s.userId)
@@ -205,13 +209,23 @@ export default function ProgramTemplateDetails() {
         description="Are you sure you want to delete this program? This will not affect users already following it."
         deleteAction={{
           title: 'Delete',
-          onPress: async () => {
+          onPress: () => {
             if (!program?.id) return
 
-            await deleteProgramMutation.mutateAsync(program.id)
-            Toast.show({ type: 'success', text1: 'Program deleted' })
-            deleteModalRef.current?.dismiss()
-            router.back()
+            deleteProgramMutation.mutate(program.id, {
+              onSuccess: () => {
+                Toast.show({ type: 'success', text1: 'Program deleted' })
+                deleteModalRef.current?.dismiss()
+                router.back()
+              },
+              onError: (error: any) => {
+                Toast.show({
+                  type: 'error',
+                  text1: 'Failed to delete program',
+                  text2: error.message || 'Please try again',
+                })
+              },
+            })
           },
         }}
         cancelAction={{

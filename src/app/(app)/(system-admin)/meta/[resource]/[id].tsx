@@ -95,20 +95,30 @@ export default function EditMeta() {
         formData.append('image', prepared as any)
       }
 
-      const data = await updateMutation.mutateAsync({ id, data: formData })
-
-      Toast.show({ type: 'success', text1: `${label} updated` })
-      setOriginal({
-        title: data.title,
-        thumbnailUrl: data.thumbnailUrl,
-        type: data.type ?? null,
-      })
-      setTitle(data.title)
-      setEquipmentType(data.type ?? null)
-      setThumbnailUri(data.thumbnailUrl)
+      updateMutation.mutate(
+        { id, data: formData },
+        {
+          onSuccess: (data) => {
+            Toast.show({ type: 'success', text1: `${label} updated` })
+            setOriginal({
+              title: data.title,
+              thumbnailUrl: data.thumbnailUrl,
+              type: data.type ?? null,
+            })
+            setTitle(data.title)
+            setEquipmentType(data.type ?? null)
+            setThumbnailUri(data.thumbnailUrl)
+          },
+          onError: (e: any) => {
+            Toast.show({ type: 'error', text1: e.message || `${label} update failed` })
+          },
+          onSettled: () => {
+            setUploading(false)
+          },
+        },
+      )
     } catch (e: any) {
       Toast.show({ type: 'error', text1: e.message || `${label} update failed` })
-    } finally {
       setUploading(false)
     }
   }, [
@@ -219,18 +229,20 @@ export default function EditMeta() {
         description={`This ${label.toLowerCase()} will be permanently removed.`}
         deleteAction={{
           title: 'Delete',
-          onPress: async () => {
-            try {
-              await deleteMutation.mutateAsync(id)
-              Toast.show({ type: 'success', text1: `${label} deleted` })
-              deleteConfirmModalRef.current?.dismiss()
-              navigation.goBack()
-            } catch (e: any) {
-              Toast.show({
-                type: 'error',
-                text1: e.message || `Failed to delete ${label.toLowerCase()}`,
-              })
-            }
+          onPress: () => {
+            deleteMutation.mutate(id, {
+              onSuccess: () => {
+                Toast.show({ type: 'success', text1: `${label} deleted` })
+                deleteConfirmModalRef.current?.dismiss()
+                navigation.goBack()
+              },
+              onError: (e: any) => {
+                Toast.show({
+                  type: 'error',
+                  text1: e.message || `Failed to delete ${label.toLowerCase()}`,
+                })
+              },
+            })
           },
         }}
         cancelAction={{

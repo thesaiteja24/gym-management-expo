@@ -95,7 +95,7 @@ export default function WorkoutSaveScreen() {
     })
   }
 
-  const handleSaveWorkout = async () => {
+  const handleSaveWorkout = () => {
     const validation = getWorkoutSaveState(workout, exerciseTypeMap)
 
     if (!validation.canSave) {
@@ -126,8 +126,6 @@ export default function WorkoutSaveScreen() {
       })
     }
 
-    // console.log('[workout payload]', JSON.stringify(finalized.payload, null, 2))
-
     if (mode === 'edit-history') {
       if (!workout.id) {
         Toast.show({
@@ -138,64 +136,70 @@ export default function WorkoutSaveScreen() {
         return
       }
 
-      try {
-        await updateWorkoutMutation.mutateAsync({
+      updateWorkoutMutation.mutate(
+        {
           id: workout.id,
           payload: finalized.payload as WorkoutPayload,
-        })
+        },
+        {
+          onSuccess: () => {
+            Toast.show({
+              type: 'success',
+              text1: 'Workout updated',
+              text2: 'The updated workout payload was logged and sent to the API.',
+            })
+
+            discardWorkout()
+            router.replace({
+              pathname: '/(app)/workout/[id]',
+              params: { id: workout.id as string },
+            } as const)
+          },
+          onError: (error) => {
+            const message =
+              error instanceof Error ? error.message : 'The workout update request failed.'
+            Toast.show({
+              type: 'error',
+              text1: 'Failed to update workout',
+              text2: message,
+            })
+          },
+        },
+      )
+      return
+    }
+
+    createWorkoutMutation.mutate(finalized.payload as WorkoutPayload, {
+      onSuccess: (response) => {
+        const createdWorkoutId = response?.id ?? null
 
         Toast.show({
           type: 'success',
-          text1: 'Workout updated',
-          text2: 'The updated workout payload was logged and sent to the API.',
+          text1: mode === 'program-workout' ? 'Program workout saved' : 'Workout saved',
+          text2: 'The workout payload was logged and sent to the API.',
         })
 
         discardWorkout()
-        router.replace({
-          pathname: '/(app)/workout/[id]',
-          params: { id: workout.id },
-        } as const)
-        return
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'The workout update request failed.'
+
+        if (createdWorkoutId) {
+          router.replace({
+            pathname: '/(app)/workout/[id]',
+            params: { id: createdWorkoutId },
+          } as const)
+          return
+        }
+
+        router.replace('/(app)/(tabs)/workout')
+      },
+      onError: (error) => {
+        const message = error instanceof Error ? error.message : 'The workout save request failed.'
         Toast.show({
           type: 'error',
-          text1: 'Failed to update workout',
+          text1: 'Failed to save workout',
           text2: message,
         })
-        return
-      }
-    }
-
-    try {
-      const response = await createWorkoutMutation.mutateAsync(finalized.payload as WorkoutPayload)
-      const createdWorkoutId = response?.id ?? null
-
-      Toast.show({
-        type: 'success',
-        text1: mode === 'program-workout' ? 'Program workout saved' : 'Workout saved',
-        text2: 'The workout payload was logged and sent to the API.',
-      })
-
-      discardWorkout()
-
-      if (createdWorkoutId) {
-        router.replace({
-          pathname: '/(app)/workout/[id]',
-          params: { id: createdWorkoutId },
-        } as const)
-        return
-      }
-
-      router.replace('/(app)/(tabs)/workout')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'The workout save request failed.'
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to save workout',
-        text2: message,
-      })
-    }
+      },
+    })
   }
 
   return (

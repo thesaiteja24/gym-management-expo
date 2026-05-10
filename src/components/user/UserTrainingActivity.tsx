@@ -161,7 +161,7 @@ export function UserTrainingActivity({ userId, analytics }: AthleteTrainingAnaly
             key={index}
             className={`h-1.5 w-1.5 rounded-full ${
               activeIndex === index
-                ? 'bg-neutral-900 dark:bg-white'
+                ? 'w-4 bg-neutral-900 dark:bg-white'
                 : 'bg-neutral-200 dark:bg-neutral-800'
             }`}
           />

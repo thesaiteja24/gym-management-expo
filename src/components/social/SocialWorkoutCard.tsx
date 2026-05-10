@@ -147,7 +147,10 @@ function SocialWorkoutCardInternal({
       <Pressable
         className="mb-4 flex-row items-center justify-between gap-4"
         onPress={() => {
-          router.push(`/(app)/profile/${workout.user?.id}`)
+          if (!user || user.id !== workout.user?.id) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            router.push(`/(app)/profile/${workout.user?.id}`)
+          }
         }}
       >
         <View className="flex-row items-center gap-4">

@@ -33,30 +33,35 @@ export const UserUnitPreferencesModal = forwardRef<BaseModalHandle, Props>((_, r
     return weightUnit !== storedWeightUnit || lengthUnit !== storedLengthUnit
   }, [weightUnit, lengthUnit, storedWeightUnit, storedLengthUnit])
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!hasChanges || !user?.id) {
       const modalRef = ref as React.RefObject<BaseModalHandle>
       modalRef.current?.dismiss()
       return
     }
 
-    try {
-      await updateUserDataMutation.mutateAsync({
+    updateUserDataMutation.mutate(
+      {
         preferredWeightUnit: weightUnit,
         preferredLengthUnit: lengthUnit,
-      })
-      Toast.show({
-        type: 'success',
-        text1: 'Preferences updated',
-      })
-      const modalRef = ref as React.RefObject<BaseModalHandle>
-      modalRef.current?.dismiss()
-    } catch {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to update preferences',
-      })
-    }
+      },
+      {
+        onSuccess: () => {
+          Toast.show({
+            type: 'success',
+            text1: 'Preferences updated',
+          })
+          const modalRef = ref as React.RefObject<BaseModalHandle>
+          modalRef.current?.dismiss()
+        },
+        onError: () => {
+          Toast.show({
+            type: 'error',
+            text1: 'Failed to update preferences',
+          })
+        },
+      },
+    )
   }
 
   const optionClass = (active: boolean, rounded?: string) =>

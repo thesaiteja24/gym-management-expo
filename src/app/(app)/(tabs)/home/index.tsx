@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons'
+import { useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -13,9 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 import { HabitCard } from '@/components/habit/HabitCard'
+import { queryKeys } from '@/lib/queryKeys'
+import { getUserWorkoutsService } from '@/services/workouts.service'
 import { Button } from '@/components/ui/buttons/Button'
 import { ShimmerHomeScreen } from '@/components/ui/shimmers/ShimmerHomeScreen'
-import { StreakDay,UserStreakCard } from '@/components/user/UserStreakCard'
+import { TopLifts } from '@/components/user'
+import { StreakDay, UserStreakCard } from '@/components/user/UserStreakCard'
 import {
   WeeklyDurationCard,
   WeeklyRepsCard,
@@ -25,6 +30,7 @@ import { UserWeightMetricCard } from '@/components/user/UserWeightMetricCard'
 import { useAskNotificationPermission } from '@/hooks/notifications/useAskNotificationPermission'
 import { useHabitLogsQuery, useHabitsQuery } from '@/hooks/queries/habits'
 import { useMeasurementsQuery, useProfileQuery, useUserAnalyticsQuery } from '@/hooks/queries/me'
+import { useUserTopLiftsQuery } from '@/hooks/queries/usePublicUser'
 import { useUnitConverter } from '@/hooks/useUnitConverter'
 import { SelfUser } from '@/types/me'
 import {
@@ -51,6 +57,43 @@ export default function HomeScreen() {
     refetch: refetchUserAnalytics,
     isLoading: isLoadingUserAnalytics,
   } = useUserAnalyticsQuery()
+  const { data: topLifts = [], isLoading: isTopLiftsLoading } = useUserTopLiftsQuery(user?.id!, 10)
+
+  const qc = useQueryClient()
+
+  useEffect(() => {
+    const fetchFullHistory = async () => {
+      // Only prefetch if we don't have any cached data yet
+      const cachedData = qc.getQueryData(queryKeys.workouts.all)
+      if (cachedData || !user?.id) return
+
+      try {
+        const allPages: { workouts: any[]; meta: any }[] = []
+        const allParams: number[] = []
+        let currentPage = 1
+        let hasMore = true
+
+        // Fetch until we have everything (with a safety cap of 20 pages / 1000 workouts)
+        while (hasMore && currentPage <= 20) {
+          const data = await getUserWorkoutsService(currentPage, 50, user.id)
+          allPages.push({ workouts: data.workouts || [], meta: data.meta })
+          allParams.push(currentPage)
+          hasMore = data.meta.hasMore
+          currentPage++
+        }
+
+        // Manually seed the infinite query cache
+        qc.setQueryData(queryKeys.workouts.all, {
+          pages: allPages,
+          pageParams: allParams,
+        })
+      } catch (error) {
+        console.error('Failed to prefetch full workout history:', error)
+      }
+    }
+
+    fetchFullHistory()
+  }, [qc, user?.id])
 
   const latestMeasurements = measurements?.latestValues
 
@@ -388,6 +431,36 @@ export default function HomeScreen() {
                 />
               </View>
             </ScrollView>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(800).duration(500)}>
+            <Text className="my-4 text-xl font-semibold text-black dark:text-white">Top Lifts</Text>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(900).duration(500)} className="mb-12">
+            {topLifts.length > 0 ? (
+              <TopLifts lifts={topLifts} isLoading={isTopLiftsLoading} showTitle={false} />
+            ) : (
+              <View className="flex flex-col items-center justify-center rounded-3xl border border-neutral-100 bg-neutral-50/50 px-8 py-10 dark:border-neutral-800 dark:bg-neutral-900/50">
+                <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+                  <Ionicons name="trophy-outline" size={32} color="#A3A3A3" />
+                </View>
+                <Text className="mb-2 text-center text-lg font-bold text-black dark:text-white">
+                  No Personal Records Yet
+                </Text>
+                <Text className="mb-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                  Finish your first workout to start tracking your strongest lifts here.
+                </Text>
+                <Button
+                  title="Start Your First Workout"
+                  onPress={() => {
+                    router.push('/(app)/(tabs)/workout')
+                  }}
+                  variant="primary"
+                  className="w-full rounded-2xl"
+                />
+              </View>
+            )}
           </Animated.View>
         </ScrollView>
       )}

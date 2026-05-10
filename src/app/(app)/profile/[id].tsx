@@ -1,4 +1,5 @@
 import { FlashList } from '@shopify/flash-list'
+import { isThisWeek } from 'date-fns'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { ActivityIndicator, Text, View } from 'react-native'
@@ -53,8 +54,11 @@ export default function UserProfile() {
   )
 
   const isLoading = isUserLoading || isWorkoutsLoading || isTopLiftsLoading || isTrainingLoading
-
   const isSelf = id === currentUserId
+
+  const hasStreak = useMemo(() => {
+    return workouts.some((w) => isThisWeek(new Date(w.startTime), { weekStartsOn: 1 }))
+  }, [workouts])
 
   const handleShare = useCallback(async () => {
     if (!user) return
@@ -99,7 +103,13 @@ export default function UserProfile() {
     if (user.isFollowing) {
       unfollowMutation.mutate(id)
     } else {
-      followMutation.mutate(id)
+      followMutation.mutate(id, {
+        onSuccess: () => {
+          Arise.success({
+            heading: `You are now following ${user.firstName}`,
+          })
+        },
+      })
     }
   }, [user, id, followMutation, unfollowMutation])
 
@@ -203,7 +213,7 @@ export default function UserProfile() {
         ref={nudgeModalRef}
         targetUserId={id}
         targetUserName={user?.firstName ?? 'Athlete'}
-        hasStreak={true} // TODO: Replace with real streak boolean from user data
+        hasStreak={hasStreak}
         isLoading={nudgeMutation.isPending}
         onSend={(note) => {
           nudgeMutation.mutate(

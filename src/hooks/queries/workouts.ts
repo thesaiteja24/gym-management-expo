@@ -12,11 +12,7 @@ import {
 } from '@/services/workouts.service'
 import { useAuth } from '@/stores/auth.store'
 import { WorkoutPayload } from '@/types/payloads'
-import {
-  WorkoutHistoryInfiniteData,
-  WorkoutHistoryItem,
-  WorkoutLog,
-} from '@/types/workouts'
+import { WorkoutHistoryInfiniteData, WorkoutHistoryItem, WorkoutLog } from '@/types/workouts'
 import { serializeWorkoutForApi } from '@/utils/serializeForApi'
 
 const PAGE_LIMIT = 2
@@ -38,6 +34,8 @@ export function useUserWorkoutHistoryQuery() {
     },
     initialPageParam: 1,
     staleTime: Infinity,
+    gcTime: Infinity,
+    networkMode: 'offlineFirst',
   })
 
   const workoutHistory: WorkoutHistoryItem[] = (query.data?.pages ?? []).flatMap((p) => p.workouts)

@@ -12,7 +12,7 @@ import { Program, UserProgram } from '@/types/programs'
 interface StartProgramModalProps {
   program: Program
   activeProgram: UserProgram | null
-  onConfirm: (duration: number) => Promise<void>
+  onConfirm: (duration: number) => void | Promise<void>
   isLoading?: boolean
 }
 

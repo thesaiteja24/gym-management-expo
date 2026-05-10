@@ -18,7 +18,10 @@ function LiftCard({ lift }: LiftCardProps) {
         />
       )}
 
-      <Text numberOfLines={1} className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+      <Text
+        numberOfLines={1}
+        className="text-sm font-medium text-neutral-500 dark:text-neutral-400"
+      >
         {lift.title}
       </Text>
 
@@ -32,7 +35,7 @@ function LiftCard({ lift }: LiftCardProps) {
 
       <View className="mt-4 self-start rounded-full bg-neutral-200 px-3 py-1 dark:bg-neutral-800">
         <Text className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
-          freq: {lift.totalSets} sets
+          {lift.totalSets} sets
         </Text>
       </View>
     </View>
@@ -42,18 +45,21 @@ function LiftCard({ lift }: LiftCardProps) {
 interface TopLiftsProps {
   lifts: TopLift[]
   isLoading?: boolean
+  showTitle?: boolean
 }
 
-export function TopLifts({ lifts, isLoading }: TopLiftsProps) {
+export function TopLifts({ lifts, isLoading, showTitle = true }: TopLiftsProps) {
   if (!isLoading && (!lifts || lifts.length === 0)) {
     return null
   }
 
   return (
     <View className="gap-4">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-lg font-thin text-neutral-900 dark:text-white">Top Lifts</Text>
-      </View>
+      {showTitle && (
+        <View className="flex-row items-center justify-between">
+          <Text className="text-lg font-thin text-neutral-900 dark:text-white">Top Lifts</Text>
+        </View>
+      )}
 
       <ScrollView
         horizontal

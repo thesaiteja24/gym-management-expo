@@ -54,27 +54,35 @@ const SocialCommentInputFooterInternal = forwardRef(
       },
     }))
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
       if (!inputValue.trim()) return
-      try {
-        if (editingComment) {
-          await editCommentMutation.mutateAsync({
+
+      const options = {
+        onSuccess: () => {
+          setInputValue('')
+          Keyboard.dismiss()
+          if (editingComment) setEditingComment(null)
+          if (replyingTo) setReplyingTo(null)
+        },
+        onError: (error: any) => {
+          console.error(error)
+        },
+      }
+
+      if (editingComment) {
+        editCommentMutation.mutate(
+          {
             commentId: editingComment.id,
             content: inputValue.trim(),
-          })
-          setEditingComment(null)
-        } else if (replyingTo) {
-          await addReplyMutation.mutateAsync(inputValue.trim())
-          setReplyingTo(null)
-        } else if (viewingThreadId) {
-          await addReplyMutation.mutateAsync(inputValue.trim())
-        } else {
-          await addCommentMutation.mutateAsync(inputValue.trim())
-        }
-        setInputValue('')
-        Keyboard.dismiss()
-      } catch (error) {
-        console.error(error)
+          },
+          options,
+        )
+      } else if (replyingTo) {
+        addReplyMutation.mutate(inputValue.trim(), options)
+      } else if (viewingThreadId) {
+        addReplyMutation.mutate(inputValue.trim(), options)
+      } else {
+        addCommentMutation.mutate(inputValue.trim(), options)
       }
     }
 

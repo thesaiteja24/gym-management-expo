@@ -462,26 +462,29 @@ export default function ExercisesScreen() {
         description="This exercise will be permanently removed."
         deleteAction={{
           title: 'Delete',
-          onPress: async () => {
+          onPress: () => {
             if (!deleteExerciseId) return
-            try {
-              await deleteExerciseMutation.mutateAsync(deleteExerciseId.id)
-              setDeleteExerciseId(null)
-              deleteConfirmModalRef.current?.dismiss()
-              Toast.show({
-                type: 'success',
-                text1: 'Exercise deleted successfully',
-              })
-            } catch (e) {
-              const message = e instanceof Error ? e.message : 'Unexpected error deleting exercise'
-              setDeleteExerciseId(null)
-              deleteConfirmModalRef.current?.dismiss()
-              Toast.show({
-                type: 'error',
-                text1: 'Error deleting exercise',
-                text2: message,
-              })
-            }
+            deleteExerciseMutation.mutate(deleteExerciseId.id, {
+              onSuccess: () => {
+                setDeleteExerciseId(null)
+                deleteConfirmModalRef.current?.dismiss()
+                Toast.show({
+                  type: 'success',
+                  text1: 'Exercise deleted successfully',
+                })
+              },
+              onError: (e) => {
+                const message =
+                  e instanceof Error ? e.message : 'Unexpected error deleting exercise'
+                setDeleteExerciseId(null)
+                deleteConfirmModalRef.current?.dismiss()
+                Toast.show({
+                  type: 'error',
+                  text1: 'Error deleting exercise',
+                  text2: message,
+                })
+              },
+            })
           },
         }}
         cancelAction={{

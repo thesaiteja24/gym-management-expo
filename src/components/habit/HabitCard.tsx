@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router'
 import { useMemo, useRef, useState } from 'react'
 import { Pressable, Text, useWindowDimensions, View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import Toast from 'react-native-toast-message'
 
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
 import { TextInput } from '@/components/ui/inputs/TextInput'
@@ -16,6 +15,7 @@ import {
 } from '@/hooks/queries/habits'
 import { HabitLogType, HabitType } from '@/types/habits'
 
+import { Arise } from '@/lib/arise'
 import { HabitHeatMap } from './HabitHeatMap'
 
 interface HabitCardProps {
@@ -108,67 +108,76 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
 
   const logWeightMutation = useLogWeight()
 
-  const handleWeightSubmit = async () => {
+  const handleWeightSubmit = () => {
     if (!weightValue || isNaN(Number(weightValue))) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Weight',
-        text2: 'Please enter a valid number',
+      Arise.error({
+        heading: 'Invalid Weight',
+        content: 'Please enter a valid number',
       })
       return
     }
 
-    try {
-      await logWeightMutation.mutateAsync({
+    logWeightMutation.mutate(
+      {
         weight: Number(weightValue),
         date: new Date().toISOString(),
-      })
-      Toast.show({
-        type: 'success',
-        text1: 'Weight Logged',
-        text2: `Successfully logged ${weightValue} kg`,
-      })
-      setWeightValue('')
-      habitModalRef.current?.dismiss()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to log weight'
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: message,
-      })
-    }
+      },
+      {
+        onSuccess: () => {
+          Arise.success({ heading: 'Weight logged successfully' })
+          setWeightValue('')
+          habitModalRef.current?.dismiss()
+        },
+        onError: (error: any) => {
+          console.error('Log Weight Error:', error)
+          Arise.error({
+            heading: error.message || 'Failed to log weight',
+          })
+        },
+      },
+    )
   }
 
   const [manualValue, setManualValue] = useState('')
   const logHabitMutation = useLogHabit()
   const deleteHabitMutation = useDeleteHabit()
 
-  const handleManualLog = async (val: string) => {
+  const handleManualLog = (val: string) => {
     const numValue = val ? parseFloat(val) : 0
-    try {
-      await logHabitMutation.mutateAsync({
+    logHabitMutation.mutate(
+      {
         habitId: habit.id,
         data: { value: numValue, date: new Date().toISOString() },
-      })
-      Toast.show({ type: 'success', text1: 'Progress saved!' })
-      habitModalRef.current?.dismiss()
-      setManualValue('')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to save progress'
-      Toast.show({ type: 'error', text1: message })
-    }
+      },
+      {
+        onSuccess: () => {
+          Arise.success({ heading: 'Progress saved successfully' })
+          habitModalRef.current?.dismiss()
+          setManualValue('')
+        },
+        onError: (error: any) => {
+          console.error('Log Habit Error:', error)
+          Arise.error({
+            heading: error.message || 'Failed to save progress',
+          })
+        },
+      },
+    )
   }
 
-  const handleDelete = async () => {
-    try {
-      await deleteHabitMutation.mutateAsync(habit.id)
-      Toast.show({ type: 'success', text1: 'Habit deleted' })
-      habitModalRef.current?.dismiss()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to delete habit'
-      Toast.show({ type: 'error', text1: message })
-    }
+  const handleDelete = () => {
+    deleteHabitMutation.mutate(habit.id, {
+      onSuccess: () => {
+        Arise.success({ heading: 'Habit deleted successfully' })
+        habitModalRef.current?.dismiss()
+      },
+      onError: (error: any) => {
+        console.error('Delete Habit Error:', error)
+        Arise.error({
+          heading: error.message || 'Failed to delete habit',
+        })
+      },
+    })
   }
 
   const handleEdit = () => {

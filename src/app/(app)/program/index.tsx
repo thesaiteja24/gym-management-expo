@@ -92,7 +92,7 @@ export default function ProgramEditor() {
     }
   }, [isEditing, params.id, programData, startDraftProgram, draftProgram, programsLoading])
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(() => {
     if (!draftProgram) return
 
     if (!draftProgram.title.trim()) {
@@ -114,30 +114,35 @@ export default function ProgramEditor() {
     }
 
     setSaving(true)
-    try {
-      if (isEditing && draftProgram.id) {
-        await updateProgramMutation.mutateAsync({ id: draftProgram.id, data: draftProgram })
-      } else {
-        await createProgramMutation.mutateAsync(draftProgram)
-      }
 
-      Toast.show({
-        type: 'success',
-        text1: isEditing ? 'Program updated' : 'Program created',
-      })
-      discardDraftProgram()
-      requestAnimationFrame(() => {
-        router.back()
-      })
-    } catch (error: any) {
-      console.error('Error in program handleSave', error)
-      Toast.show({
-        type: 'error',
-        text1: 'Save error',
-        text2: error.message || 'An unexpected error occurred.',
-      })
-    } finally {
-      setSaving(false)
+    const options = {
+      onSuccess: () => {
+        Toast.show({
+          type: 'success',
+          text1: isEditing ? 'Program updated' : 'Program created',
+        })
+        discardDraftProgram()
+        requestAnimationFrame(() => {
+          router.back()
+        })
+      },
+      onError: (error: any) => {
+        console.error('Error in program handleSave', error)
+        Toast.show({
+          type: 'error',
+          text1: 'Save error',
+          text2: error.message || 'An unexpected error occurred.',
+        })
+      },
+      onSettled: () => {
+        setSaving(false)
+      },
+    }
+
+    if (isEditing && draftProgram.id) {
+      updateProgramMutation.mutate({ id: draftProgram.id, data: draftProgram }, options)
+    } else {
+      createProgramMutation.mutate(draftProgram, options)
     }
   }, [
     draftProgram,
