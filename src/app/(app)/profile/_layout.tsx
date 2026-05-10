@@ -1,6 +1,5 @@
-import { router, Stack } from 'expo-router'
+import { Stack } from 'expo-router'
 
-import { AppHeader } from '@/components/common/AppHeader'
 import { useThemeColor } from '@/hooks/theme'
 
 export default function ProfileLayout() {
@@ -10,69 +9,20 @@ export default function ProfileLayout() {
     <Stack
       screenOptions={{
         animation: 'slide_from_right',
-        contentStyle: {
-          backgroundColor: colors.background,
-        },
-        header: (props) => {
-          const { options } = props
-          const custom = options as any
-
-          if (options.headerShown === false) return null
-
-          return (
-            <AppHeader
-              title={options.title ?? ''}
-              leftIcon={custom.leftIcon}
-              onLeftPress={custom.onLeftPress}
-              rightIcons={custom.rightIcons}
-            />
-          )
-        },
+        headerShown: false,
       }}
     >
+      {/* User Profile */}
       <Stack.Screen name="[id]" />
 
-      {/* FOLLOWING */}
-      <Stack.Screen
-        name="following"
-        options={
-          {
-            title: 'Following',
-            leftIcon: 'chevron-back-outline',
-            onLeftPress: () => {
-              router.back()
-            },
-          } as any
-        }
-      />
+      {/* Following */}
+      <Stack.Screen name="following" />
 
-      {/* FOLLOWERS */}
-      <Stack.Screen
-        name="followers"
-        options={
-          {
-            title: 'Followers',
-            leftIcon: 'chevron-back-outline',
-            onLeftPress: () => {
-              router.back()
-            },
-          } as any
-        }
-      />
+      {/* Followers */}
+      <Stack.Screen name="followers" />
 
-      {/* SEARCH */}
-      <Stack.Screen
-        name="search"
-        options={
-          {
-            title: 'Search',
-            leftIcon: 'chevron-back-outline',
-            onLeftPress: () => {
-              router.back()
-            },
-          } as any
-        }
-      />
+      {/* Search */}
+      <Stack.Screen name="search" />
     </Stack>
   )
 }

@@ -26,28 +26,51 @@ const Header = memo(
     left,
     right,
   }: Pick<BaseScreenProps, 'title' | 'subTitle' | 'left' | 'right'>) => {
-    return (
-      <View className="flex-row items-center justify-between pb-4">
-        <View className="items-start">{left}</View>
+    const hasCenteredHeader = Boolean(left && title)
 
-        <View className="flex-1">
-          {title && (
-            <Text className="text-2xl font-bold tracking-wide text-black dark:text-white">
-              {title}
-            </Text>
-          )}
-          {subTitle && (
-            <Text className="text-base font-normal text-neutral-600 dark:text-neutral-400">
-              {subTitle}
-            </Text>
+    if (hasCenteredHeader) {
+      return (
+        <View className="relative flex-row items-center justify-between pb-4">
+          <View className="flex-1 items-start">{left}</View>
+
+          <Text
+            numberOfLines={1}
+            className="text-2xl font-bold tracking-wide text-black dark:text-white"
+          >
+            {title}
+          </Text>
+
+          <View className="flex-1 items-end">{right}</View>
+        </View>
+      )
+    }
+
+    return (
+      <View className="flex-row items-start justify-between pb-4">
+        <View className="flex-1 items-start">
+          {title ? (
+            <View>
+              <Text className="text-2xl font-bold tracking-wide text-black dark:text-white">
+                {title}
+              </Text>
+
+              {subTitle && (
+                <Text className="mt-1 text-base text-neutral-600 dark:text-neutral-400">
+                  {subTitle}
+                </Text>
+              )}
+            </View>
+          ) : (
+            left
           )}
         </View>
 
-        <View className="items-end">{right}</View>
+        {right && <View className="items-end">{right}</View>}
       </View>
     )
   },
 )
+
 Header.displayName = 'Header'
 
 const BaseScreen = ({

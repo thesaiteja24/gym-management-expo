@@ -1,11 +1,14 @@
+import { Ionicons } from '@expo/vector-icons'
 import { FlashList } from '@shopify/flash-list'
 import { isThisWeek } from 'date-fns'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { router, useLocalSearchParams } from 'expo-router'
+import { useColorScheme } from 'nativewind'
+import { useCallback, useMemo, useRef } from 'react'
 import { ActivityIndicator, Text, View } from 'react-native'
 
 import { BaseModalHandle, NudgeModal } from '@/components/modals'
 import { SocialWorkoutCard } from '@/components/social/SocialWorkoutCard'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { Button } from '@/components/ui/buttons/Button'
 import { ShimmerProfileScreen } from '@/components/ui/shimmers'
 import { TopLifts, UserHeader } from '@/components/user'
@@ -26,10 +29,11 @@ import { useMeStore } from '@/stores/me.store'
 
 export default function UserProfile() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const navigation = useNavigation()
   const currentUserId = useAuth((state) => state.userId)
   const { canNudgeUser } = useMeStore()
   const { shareEntity } = useShare()
+  const { colorScheme } = useColorScheme()
+  const isDarkMode = colorScheme === 'dark'
 
   const { data: user, isLoading: isUserLoading } = usePublicUserQuery(id)
   const { data: topLifts = [], isLoading: isTopLiftsLoading } = useUserTopLiftsQuery(id)
@@ -70,27 +74,11 @@ export default function UserProfile() {
     })
   }, [user, id, shareEntity])
 
-  useEffect(() => {
-    navigation.setOptions({
-      title: isLoading
-        ? 'Profile'
-        : user
-          ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
-          : 'Profile',
-      leftIcon: 'chevron-back-outline',
-      onLeftPress: () => {
-        router.back()
-      },
-      rightIcons: isLoading
-        ? []
-        : [
-            {
-              name: 'share-outline',
-              onPress: handleShare,
-            },
-          ],
-    })
-  }, [user, navigation, isLoading, handleShare])
+  const headerTitle = useMemo(() => {
+    if (isLoading) return 'Profile'
+    if (!user) return 'Profile'
+    return `${user.firstName || ''} ${user.lastName || ''}`.trim()
+  }, [user, isLoading])
 
   const exerciseTypeMap = useMemo(() => {
     const map = new Map<string, any>()
@@ -182,7 +170,37 @@ export default function UserProfile() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return (
-    <View className="flex-1 bg-white px-4 dark:bg-black">
+    <BaseScreen
+      title={headerTitle}
+      left={
+        <Button
+          title=""
+          variant="ghost"
+          leftIcon={
+            <Ionicons
+              name="chevron-back-outline"
+              size={28}
+              color={isDarkMode ? 'white' : 'black'}
+            />
+          }
+          onPress={() => router.back()}
+          className="p-0"
+        />
+      }
+      right={
+        !isLoading && (
+          <Button
+            title=""
+            variant="ghost"
+            leftIcon={
+              <Ionicons name="share-outline" size={28} color={isDarkMode ? 'white' : 'black'} />
+            }
+            onPress={handleShare}
+            className="p-0"
+          />
+        )
+      }
+    >
       {isLoading ? (
         <ShimmerProfileScreen />
       ) : (
@@ -231,6 +249,6 @@ export default function UserProfile() {
           )
         }}
       />
-    </View>
+    </BaseScreen>
   )
 }

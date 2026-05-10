@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { FlashList } from '@shopify/flash-list'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -7,6 +7,8 @@ import { TextInput } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { SocialUserItem } from '@/components/social/SocialUserItem'
+import { Button } from '@/components/ui'
+import BaseScreen from '@/components/ui/BaseScreen'
 import {
   useFollowUserMutation,
   useSearchUsersQuery,
@@ -76,11 +78,25 @@ export default function Search() {
   }, [isSearching, refetchSuggested, refetchSearch])
 
   return (
-    <View
-      style={{ paddingBottom: safeAreaInsets.bottom }}
-      className="flex-1 gap-6 bg-white px-4 dark:bg-black"
+    <BaseScreen
+      title="Search"
+      left={
+        <Button
+          title=""
+          variant="ghost"
+          leftIcon={
+            <Ionicons
+              name="chevron-back-outline"
+              size={28}
+              color={colors.isDark ? 'white' : 'black'}
+            />
+          }
+          onPress={() => router.back()}
+          className="p-0"
+        />
+      }
     >
-      <View className="flex-row items-center justify-center gap-2">
+      <View className="flex-row items-center justify-center gap-2 pb-6">
         {searchLoading ? (
           <ActivityIndicator
             size="small"
@@ -157,6 +173,6 @@ export default function Search() {
           )
         }
       />
-    </View>
+    </BaseScreen>
   )
 }
