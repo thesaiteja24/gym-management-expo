@@ -1,11 +1,6 @@
 import * as Haptics from 'expo-haptics'
-import React from 'react'
-import {
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  TouchableOpacityProps,
-} from 'react-native'
+import React, { memo } from 'react'
+import { ActivityIndicator, Text, TouchableOpacity, TouchableOpacityProps } from 'react-native'
 import { twMerge } from 'tailwind-merge'
 
 /* --------------------------------------------------
@@ -212,4 +207,4 @@ export function Button({
     </TouchableOpacity>
   )
 }
-export default Button
+export default memo(Button)

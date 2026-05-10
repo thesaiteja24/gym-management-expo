@@ -43,7 +43,7 @@ export function UserThemeToggle() {
         </Text>
       </View>
 
-      <View className="flex-row items-center gap-1 rounded-full bg-neutral-100 p-1 dark:bg-neutral-900">
+      <View className="flex-row items-center gap-1 rounded-full bg-neutral-100 p-1 dark:bg-black">
         <Pressable
           onPress={handleUserThemeToggle}
           className={twMerge(
@@ -51,7 +51,11 @@ export function UserThemeToggle() {
             colorScheme === 'light' && 'bg-white dark:bg-neutral-800',
           )}
         >
-          <Ionicons name="sunny" size={18} color={colorScheme === 'light' ? '#EAB308' : '#737373'} />
+          <Ionicons
+            name="sunny"
+            size={18}
+            color={colorScheme === 'light' ? '#EAB308' : '#737373'}
+          />
           {colorScheme === 'light' && (
             <Text className="text-sm font-semibold text-neutral-900 dark:text-white">Light</Text>
           )}

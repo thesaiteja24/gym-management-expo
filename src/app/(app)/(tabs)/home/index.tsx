@@ -275,6 +275,13 @@ export default function HomeScreen() {
     return `Ready to get pumped?`
   }, [])
 
+  const isScreenLoading =
+    refreshing ||
+    isLoadingMeasurements ||
+    isLoadingUserAnalytics ||
+    isLoadingHabits ||
+    isLoadingHabitLogs
+
   // ───────────────── Render ─────────────────
   return (
     <BaseScreen
@@ -283,160 +290,152 @@ export default function HomeScreen() {
       scroll
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       contentContainerStyle={{ paddingBottom: '50%' }}
+      isLoading={isScreenLoading}
+      shimmer={<ShimmerHomeScreen />}
     >
-      {refreshing ||
-      isLoadingMeasurements ||
-      isLoadingUserAnalytics ||
-      isLoadingHabits ||
-      isLoadingHabitLogs ? (
-        <ShimmerHomeScreen />
-      ) : (
-        <>
-          <UserStreakCard {...streakData} />
+      <UserStreakCard {...streakData} />
 
-          <Animated.View
-            entering={FadeInDown.delay(600).duration(500)}
-            className="mb-4 flex-row items-center justify-between"
+      <Animated.View
+        entering={FadeInDown.delay(600).duration(500)}
+        className="mb-4 flex-row items-center justify-between"
+      >
+        <View>
+          <Text className="text-xl font-bold text-black dark:text-white">Habits</Text>
+        </View>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(700).duration(500)}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+        >
+          {habits.map((habit) => (
+            <HabitCard key={habit.id} habit={habit} />
+          ))}
+
+          <View
+            style={{ width: width * 0.5, height: width * 0.4 }}
+            className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
           >
-            <View>
-              <Text className="text-xl font-bold text-black dark:text-white">Habits</Text>
+            <Button
+              title="Track New Habit"
+              onPress={() => {
+                router.push('/habit')
+              }}
+              variant="outline"
+              textClassName="text-sm"
+            />
+          </View>
+        </ScrollView>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(800).duration(500)}>
+        <Text className="my-4 text-xl font-semibold text-black dark:text-white">Metrics</Text>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(900).duration(500)}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+        >
+          <UserWeightMetricCard width={width * 0.5} />
+          <View
+            style={{ width: width * 0.5, height: width * 0.4 }}
+            className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-2 px-4 dark:border-neutral-800 dark:bg-neutral-900"
+          >
+            <Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">
+              Body Fat
+            </Text>
+            <Text className="text-base font-semibold text-black dark:text-white">
+              {composition?.bodyFat.toFixed(1)}%
+            </Text>
+          </View>
+
+          <View
+            style={{ width: width * 0.5 }}
+            className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
+          >
+            <Button
+              title="View All"
+              onPress={() => {
+                Arise.info({ heading: 'Coming Soon' })
+              }}
+              variant="outline"
+              textClassName="text-sm"
+            />
+          </View>
+        </ScrollView>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(800).duration(500)}>
+        <Text className="my-4 text-xl font-semibold text-black dark:text-white">Training</Text>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(900).duration(500)}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+        >
+          <WeeklyVolumeCard
+            volume={weeklyVolume}
+            lastWeekVolume={lastWeekVolume}
+            width={width * 0.5}
+          />
+          <WeeklyDurationCard
+            duration={weeklyDuration}
+            lastWeekDuration={lastWeekDuration}
+            width={width * 0.5}
+          />
+          <WeeklyRepsCard reps={weeklyReps} lastWeekReps={lastWeekReps} width={width * 0.5} />
+
+          <View
+            style={{ width: width * 0.5 }}
+            className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
+          >
+            <Button
+              title="View Trends"
+              onPress={() => {
+                router.push('/(app)/analytics')
+              }}
+              variant="outline"
+              textClassName="text-sm"
+            />
+          </View>
+        </ScrollView>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(800).duration(500)}>
+        <Text className="my-4 text-xl font-semibold text-black dark:text-white">Top Lifts</Text>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(900).duration(500)} className="mb-12">
+        {topLifts.length > 0 ? (
+          <TopLifts lifts={topLifts} isLoading={isTopLiftsLoading} showTitle={false} />
+        ) : (
+          <View className="flex flex-col items-center justify-center rounded-3xl border border-neutral-100 bg-neutral-50/50 px-8 py-10 dark:border-neutral-800 dark:bg-neutral-900/50">
+            <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+              <Ionicons name="trophy-outline" size={32} color="#A3A3A3" />
             </View>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(700).duration(500)}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 10, paddingRight: 20 }}
-            >
-              {habits.map((habit) => (
-                <HabitCard key={habit.id} habit={habit} />
-              ))}
-
-              <View
-                style={{ width: width * 0.5, height: width * 0.4 }}
-                className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
-              >
-                <Button
-                  title="Track New Habit"
-                  onPress={() => {
-                    router.push('/habit')
-                  }}
-                  variant="outline"
-                  textClassName="text-sm"
-                />
-              </View>
-            </ScrollView>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(800).duration(500)}>
-            <Text className="my-4 text-xl font-semibold text-black dark:text-white">Metrics</Text>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(900).duration(500)}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 10, paddingRight: 20 }}
-            >
-              <UserWeightMetricCard width={width * 0.5} />
-              <View
-                style={{ width: width * 0.5, height: width * 0.4 }}
-                className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-2 px-4 dark:border-neutral-800 dark:bg-neutral-900"
-              >
-                <Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">
-                  Body Fat
-                </Text>
-                <Text className="text-base font-semibold text-black dark:text-white">
-                  {composition?.bodyFat.toFixed(1)}%
-                </Text>
-              </View>
-
-              <View
-                style={{ width: width * 0.5 }}
-                className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
-              >
-                <Button
-                  title="View All"
-                  onPress={() => {
-                    Arise.info({ heading: 'Coming Soon' })
-                  }}
-                  variant="outline"
-                  textClassName="text-sm"
-                />
-              </View>
-            </ScrollView>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(800).duration(500)}>
-            <Text className="my-4 text-xl font-semibold text-black dark:text-white">Training</Text>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(900).duration(500)}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 10, paddingRight: 20 }}
-            >
-              <WeeklyVolumeCard
-                volume={weeklyVolume}
-                lastWeekVolume={lastWeekVolume}
-                width={width * 0.5}
-              />
-              <WeeklyDurationCard
-                duration={weeklyDuration}
-                lastWeekDuration={lastWeekDuration}
-                width={width * 0.5}
-              />
-              <WeeklyRepsCard reps={weeklyReps} lastWeekReps={lastWeekReps} width={width * 0.5} />
-
-              <View
-                style={{ width: width * 0.5 }}
-                className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
-              >
-                <Button
-                  title="View Trends"
-                  onPress={() => {
-                    router.push('/(app)/analytics')
-                  }}
-                  variant="outline"
-                  textClassName="text-sm"
-                />
-              </View>
-            </ScrollView>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(800).duration(500)}>
-            <Text className="my-4 text-xl font-semibold text-black dark:text-white">Top Lifts</Text>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(900).duration(500)} className="mb-12">
-            {topLifts.length > 0 ? (
-              <TopLifts lifts={topLifts} isLoading={isTopLiftsLoading} showTitle={false} />
-            ) : (
-              <View className="flex flex-col items-center justify-center rounded-3xl border border-neutral-100 bg-neutral-50/50 px-8 py-10 dark:border-neutral-800 dark:bg-neutral-900/50">
-                <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
-                  <Ionicons name="trophy-outline" size={32} color="#A3A3A3" />
-                </View>
-                <Text className="mb-2 text-center text-lg font-bold text-black dark:text-white">
-                  No Personal Records Yet
-                </Text>
-                <Text className="mb-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                  Finish your first workout to start tracking your strongest lifts here.
-                </Text>
-                <Button
-                  title="Start Your First Workout"
-                  onPress={() => {
-                    router.push('/(app)/(tabs)/workout')
-                  }}
-                  variant="primary"
-                  className="w-full rounded-2xl"
-                />
-              </View>
-            )}
-          </Animated.View>
-        </>
-      )}
+            <Text className="mb-2 text-center text-lg font-bold text-black dark:text-white">
+              No Personal Records Yet
+            </Text>
+            <Text className="mb-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
+              Finish your first workout to start tracking your strongest lifts here.
+            </Text>
+            <Button
+              title="Start Your First Workout"
+              onPress={() => {
+                router.push('/(app)/(tabs)/workout')
+              }}
+              variant="primary"
+              className="w-full rounded-2xl"
+            />
+          </View>
+        )}
+      </Animated.View>
     </BaseScreen>
   )
 }

@@ -69,10 +69,14 @@ export default function DiscoverScreen() {
     [exerciseTypeMap],
   )
 
+  const isScreenLoading = refreshing || discoverLoading
+
   // ───────────────── Render ─────────────────
   return (
     <BaseScreen
       title="Discover"
+      isLoading={isScreenLoading}
+      shimmer={<ShimmerDiscoverScreen />}
       right={
         <Button
           title=""
@@ -91,35 +95,28 @@ export default function DiscoverScreen() {
         />
       }
     >
-      {/* Workout List */}
-      {refreshing || discoverLoading ? (
-        <ShimmerDiscoverScreen />
-      ) : (
-        <FlashList
-          data={workouts}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={discoverLoading} onRefresh={onRefresh} />}
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            discoverHasMore ? (
-              <View className="mb-[100%] items-center justify-center p-4 pb-12 pt-6">
-                {discoverLoadingNextPage && (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                )}
-              </View>
-            ) : (
-              <View className="mb-[50%] items-center justify-center p-4 pb-12 pt-6">
-                <Text className="text-neutral-500 dark:text-neutral-400">
-                  You&apos;ve conquered all the workouts here 🏆
-                </Text>
-              </View>
-            )
-          }
-        />
-      )}
+      <FlashList
+        data={workouts}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          discoverHasMore ? (
+            <View className="mb-[100%] items-center justify-center p-4 pb-12 pt-6">
+              {discoverLoadingNextPage && <ActivityIndicator size="small" color={colors.primary} />}
+            </View>
+          ) : (
+            <View className="mb-[50%] items-center justify-center p-4 pb-12 pt-6">
+              <Text className="text-neutral-500 dark:text-neutral-400">
+                You&apos;ve conquered all the workouts here 🏆
+              </Text>
+            </View>
+          )
+        }
+      />
 
       <CommentsModal ref={commentsModalRef} />
     </BaseScreen>

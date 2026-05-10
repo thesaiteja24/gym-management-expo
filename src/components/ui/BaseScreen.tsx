@@ -17,6 +17,9 @@ interface BaseScreenProps {
 
   refreshControl?: React.ReactElement<RefreshControlProps>
   contentContainerStyle?: StyleProp<ViewStyle>
+
+  isLoading?: boolean
+  shimmer?: React.ReactNode
 }
 
 const Header = memo(
@@ -35,7 +38,7 @@ const Header = memo(
 
           <Text
             numberOfLines={1}
-            className="text-2xl font-bold tracking-wide text-black dark:text-white"
+            className="text-2xl font-semibold tracking-wide text-black dark:text-white"
           >
             {title}
           </Text>
@@ -50,7 +53,7 @@ const Header = memo(
         <View className="flex-1 items-start">
           {title ? (
             <View>
-              <Text className="text-2xl font-bold tracking-wide text-black dark:text-white">
+              <Text className="text-2xl font-semibold tracking-wide text-black dark:text-white">
                 {title}
               </Text>
 
@@ -83,12 +86,16 @@ const BaseScreen = ({
   padded = true,
   refreshControl,
   contentContainerStyle,
+  isLoading = false,
+  shimmer,
 }: BaseScreenProps) => {
   return (
     <SafeAreaView className={`flex-1 bg-white dark:bg-black ${padded ? 'px-4 pt-4' : ''}`}>
       <Header title={title} subTitle={subTitle} left={left} right={right} />
 
-      {scroll ? (
+      {isLoading && shimmer ? (
+        shimmer
+      ) : scroll ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
           refreshControl={refreshControl}
