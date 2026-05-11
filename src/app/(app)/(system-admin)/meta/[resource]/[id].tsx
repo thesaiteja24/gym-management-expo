@@ -1,7 +1,7 @@
-import { useLocalSearchParams, useNavigation } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
+import { router, useLocalSearchParams } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  ActivityIndicator,
   Keyboard,
   Platform,
   Text,
@@ -10,9 +10,10 @@ import {
   useColorScheme,
   View,
 } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { UserEditableAvatar } from '@/components/user/UserEditableAvatar'
 import { useDeleteMeta, useMetaById, useUpdateMeta } from '@/hooks/queries/meta'
 import { Arise } from '@/lib/arise'
@@ -21,9 +22,7 @@ import { prepareImageForUpload } from '@/utils/prepareImageForUpload'
 
 export default function EditMeta() {
   const { resource, id } = useLocalSearchParams<{ resource: MetaResource; id: string }>()
-  const navigation = useNavigation()
   const isDarkMode = useColorScheme() === 'dark'
-  const insets = useSafeAreaInsets()
 
   const isEquipment = resource === 'equipment'
   const label = isEquipment ? 'Equipment' : 'Muscle Group'
@@ -136,35 +135,33 @@ export default function EditMeta() {
     resource,
   ])
 
-  useEffect(() => {
-    ;(navigation as any).setOptions({
-      title: `Edit ${label}`,
-      rightIcons: [
-        {
-          name: 'checkmark-done',
-          onPress: onSave,
-          disabled: !isDirty || updateMutation.isPending,
-          color: 'green',
-        },
-        {
-          name: 'trash',
-          onPress: () => deleteConfirmModalRef.current?.present(),
-          color: 'red',
-        },
-      ],
-    })
-  }, [navigation, isDirty, onSave, updateMutation.isPending, label])
-
-  if (loadingData) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        <ActivityIndicator animating size={'large'} />
-      </View>
-    )
-  }
+  const renderHeaderRight = () => (
+    <View className="flex-row items-center gap-2">
+      <Button
+        variant="ghost"
+        title=""
+        onPress={() => deleteConfirmModalRef.current?.present()}
+        leftIcon={<Ionicons name="trash-outline" size={24} color="#ef4444" />}
+        className="p-0"
+      />
+      <Button
+        variant="ghost"
+        title=""
+        onPress={onSave}
+        disabled={!isDirty || updateMutation.isPending}
+        leftIcon={<Ionicons name="checkmark-done" size={28} color="green" />}
+        className="p-0"
+      />
+    </View>
+  )
 
   return (
-    <View className="flex-1 bg-white p-4 dark:bg-black" style={{ paddingBottom: insets.bottom }}>
+    <BaseScreen
+      title={`Edit ${label}`}
+      isLoading={loadingData}
+      backButton
+      right={renderHeaderRight()}
+    >
       <View className="mb-6 items-center">
         <UserEditableAvatar
           uri={thumbnailUri}
@@ -236,7 +233,7 @@ export default function EditMeta() {
               onSuccess: () => {
                 Arise.success({ heading: `${label} deleted` })
                 deleteConfirmModalRef.current?.dismiss()
-                navigation.goBack()
+                router.back()
               },
               onError: (e: any) => {
                 Arise.error({ heading: `Failed to delete ${label.toLowerCase()}` })
@@ -249,6 +246,6 @@ export default function EditMeta() {
           onPress: () => deleteConfirmModalRef.current?.dismiss(),
         }}
       />
-    </View>
+    </BaseScreen>
   )
 }

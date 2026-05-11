@@ -1,21 +1,13 @@
 import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Keyboard,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Keyboard, Platform, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
 
 import { MetaModal } from '@/components/modals/ExerciseMetaModal'
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { useDeleteExercise, useExercises, useUpdateExercise } from '@/hooks/queries/exercises'
 import { useEquipment, useMuscleGroups } from '@/hooks/queries/meta'
 import { Arise } from '@/lib/arise'
@@ -23,10 +15,8 @@ import { ExerciseType } from '@/types/exercises'
 import { MetaItem } from '@/types/meta'
 
 export default function EditExercise() {
-  const navigation = useNavigation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const isDarkMode = useColorScheme() === 'dark'
-  const insets = useSafeAreaInsets()
   const placeholderColor = isDarkMode ? '#a3a3a3' : '#737373'
 
   const { data: exerciseList = [] } = useExercises()
@@ -119,7 +109,7 @@ export default function EditExercise() {
           Arise.success({
             heading: 'Exercise updated successfully',
           })
-          navigation.goBack()
+          router.back()
         },
         onError: (e: any) => {
           Arise.error({
@@ -141,49 +131,34 @@ export default function EditExercise() {
     primaryMuscleGroupId,
     videoUri,
     updateExerciseMutation,
-    navigation,
     original,
   ])
 
-  useEffect(() => {
-    ;(navigation as any).setOptions({
-      title: 'Edit Exercise',
-      rightIcons: [
-        {
-          name: 'trash-outline',
-          onPress: () => deleteModalRef.current?.present(),
-          disabled: updateExerciseMutation.isPending,
-        },
-        {
-          name: 'checkmark-done',
-          onPress: onSave,
-          disabled:
-            updateExerciseMutation.isPending ||
-            !title.trim() ||
-            !equipmentId ||
-            !primaryMuscleGroupId ||
-            !isDirty,
-          color: 'green',
-        },
-      ],
-    })
-  }, [
-    navigation,
-    onSave,
-    updateExerciseMutation.isPending,
-    title,
-    equipmentId,
-    primaryMuscleGroupId,
-    isDirty,
-  ])
-
-  if (!original) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        <Text className="text-lg text-neutral-500">Exercise not found.</Text>
-      </View>
-    )
-  }
+  const renderHeaderRight = () => (
+    <View className="flex-row items-center gap-2">
+      <Button
+        variant="ghost"
+        title=""
+        onPress={() => deleteModalRef.current?.present()}
+        leftIcon={<Ionicons name="trash-outline" size={24} color="#ef4444" />}
+        className="p-0"
+      />
+      <Button
+        variant="ghost"
+        title=""
+        onPress={onSave}
+        disabled={
+          updateExerciseMutation.isPending ||
+          !title.trim() ||
+          !equipmentId ||
+          !primaryMuscleGroupId ||
+          !isDirty
+        }
+        leftIcon={<Ionicons name="checkmark-done" size={28} color="green" />}
+        className="p-0"
+      />
+    </View>
+  )
 
   const handleSelectVideo = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -198,10 +173,15 @@ export default function EditExercise() {
   }
 
   return (
-    <View className="flex-1 bg-white dark:bg-black" style={{ paddingBottom: insets.bottom }}>
-      <ScrollView className="p-4">
-        {/* Video picker */}
-        <View className="mb-6 items-center">
+    <BaseScreen
+      title="Edit Exercise"
+      backButton
+      right={renderHeaderRight()}
+      scroll
+      contentContainerStyle={{ padding: 16 }}
+    >
+      {/* Video picker */}
+      <View className="mb-6 items-center">
           <TouchableOpacity
             onPress={handleSelectVideo}
             disabled={updateExerciseMutation.isPending || uploading}
@@ -304,7 +284,6 @@ export default function EditExercise() {
         </View>
 
         <View className="h-10" />
-      </ScrollView>
 
       {/* Modals */}
       <MetaModal
@@ -361,6 +340,6 @@ export default function EditExercise() {
           onPress: () => deleteModalRef.current?.dismiss(),
         }}
       />
-    </View>
+    </BaseScreen>
   )
 }

@@ -48,7 +48,7 @@ const Header = memo(
 
           <Text
             numberOfLines={1}
-            className="text-xl font-semibold tracking-wide text-black dark:text-white"
+            className="text-xl font-semibold tracking-widest text-black dark:text-white"
           >
             {title}
           </Text>
@@ -63,7 +63,7 @@ const Header = memo(
         <View className="flex-1 items-start">
           {title ? (
             <View>
-              <Text className="text-2xl font-semibold tracking-wide text-black dark:text-white">
+              <Text className="text-2xl font-semibold tracking-widest text-black dark:text-white">
                 {title}
               </Text>
 
