@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { type DimensionValue, ScrollView, useColorScheme, View, type ViewStyle } from 'react-native'
 import Animated, {
   FadeInDown,
@@ -8,7 +8,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 /* ──────────────────────────────────────────────
    Core Skeleton Block (fade-in + shimmer)
@@ -100,8 +99,6 @@ function SkeletonWorkoutExerciseRow() {
 ────────────────────────────────────────────── */
 
 export function ShimmerTemplateScreen() {
-  const safeAreaInsets = useSafeAreaInsets()
-
   return (
     <Animated.View
       entering={FadeInDown.duration(300).springify()}
@@ -112,7 +109,7 @@ export function ShimmerTemplateScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header Skeleton */}
-        <View className="border-b border-neutral-100 p-4 dark:border-neutral-900">
+        <View className="border-b border-neutral-100 pb-4 dark:border-neutral-900">
           {/* Title */}
           <SkeletonBlock width="70%" height={36} rounded={8} />
 
@@ -130,7 +127,7 @@ export function ShimmerTemplateScreen() {
         </View>
 
         {/* Exercise List Skeleton */}
-        <View className="gap-4 p-4">
+        <View className="gap-4 py-4">
           <SkeletonWorkoutExerciseRow />
           <SkeletonWorkoutExerciseRow />
           <SkeletonWorkoutExerciseRow />
@@ -138,13 +135,10 @@ export function ShimmerTemplateScreen() {
       </ScrollView>
 
       {/* Footer Buttons Skeleton */}
-      <View
-        className="absolute bottom-0 left-0 right-0 border-t border-neutral-100 bg-white p-4 dark:border-neutral-900 dark:bg-black"
-        style={{ paddingBottom: safeAreaInsets.bottom + 16 }}
-      >
+      <View className="absolute bottom-0 left-0 right-0 mb-2 px-4">
         <View className="flex-row items-center justify-center gap-4">
-          <SkeletonBlock width="66%" height={42} rounded={999} />
-          <SkeletonBlock width="33%" height={42} rounded={999} />
+          <SkeletonBlock width="33%" height={32} rounded={999} />
+          <SkeletonBlock width="66%" height={32} rounded={999} />
         </View>
       </View>
     </Animated.View>

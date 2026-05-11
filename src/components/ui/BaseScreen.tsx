@@ -48,7 +48,7 @@ const Header = memo(
 
           <Text
             numberOfLines={1}
-            className="text-2xl font-semibold tracking-wide text-black dark:text-white"
+            className="text-xl font-semibold tracking-wide text-black dark:text-white"
           >
             {title}
           </Text>
@@ -146,7 +146,7 @@ const BaseScreen = ({
       ) : (
         children
       )}
-      {footerComponent}
+      {!isLoading && footerComponent}
     </SafeAreaView>
   )
 }

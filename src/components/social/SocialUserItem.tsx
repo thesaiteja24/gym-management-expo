@@ -1,4 +1,6 @@
+import * as Haptics from 'expo-haptics'
 import { Image } from 'expo-image'
+import { useRouter } from 'expo-router'
 import { Pressable, Text, View } from 'react-native'
 
 import { Button } from '@/components/ui'
@@ -6,8 +8,6 @@ import { UserVerifiedBadge } from '@/components/user/UserVerifiedBadge'
 import { useThemeColor } from '@/hooks/theme'
 import { useAuth } from '@/stores/auth.store'
 import { SearchedUser } from '@/types/engagement'
-import * as Haptics from 'expo-haptics'
-import { useRouter } from 'expo-router'
 
 export const SocialUserItem = ({
   id,

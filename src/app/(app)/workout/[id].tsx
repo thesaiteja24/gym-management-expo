@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons'
+import { FlashList } from '@shopify/flash-list'
 import { formatDistanceToNow } from 'date-fns'
 import * as Crypto from 'expo-crypto'
 import { Image } from 'expo-image'
@@ -27,7 +28,6 @@ import { useWorkoutEditor } from '@/stores/workout-editor.store'
 import { ExerciseType } from '@/types/exercises'
 import { WorkoutHistoryExercise, WorkoutHistorySet, WorkoutLogGroup } from '@/types/workouts'
 import { calculateWorkoutMetrics, formatDurationFromDates } from '@/utils/workout'
-import { FlashList } from '@shopify/flash-list'
 
 /* ───────────────── Component ───────────────── */
 
@@ -80,7 +80,7 @@ export default function WorkoutDetails() {
 
   const groupMap = useMemo(() => {
     const map = new Map<string, WorkoutLogGroup>()
-    workout?.exerciseGroups.forEach((g: WorkoutLogGroup) => map.set(g.id, g))
+    workout?.exerciseGroups?.forEach((g: WorkoutLogGroup) => map.set(g.id, g))
     return map
   }, [workout?.exerciseGroups])
 
@@ -199,11 +199,7 @@ export default function WorkoutDetails() {
     })
   }, [workout, shareEntity])
 
-  if (isLoading) {
-    return <ShimmerWorkoutScreen />
-  }
-
-  if (!workout) {
+  if (!isLoading && !workout) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
         <Text className="text-lg text-neutral-500">Workout not found</Text>
@@ -211,21 +207,23 @@ export default function WorkoutDetails() {
     )
   }
 
-  const duration = formatDurationFromDates(workout.startTime, workout.endTime)
+  const duration = workout ? formatDurationFromDates(workout.startTime, workout.endTime) : '0:00'
 
-  const timeAgo = formatDistanceToNow(new Date(workout.endTime), { addSuffix: true })
+  const timeAgo = workout ? formatDistanceToNow(new Date(workout.endTime), { addSuffix: true }) : ''
 
-  const { tonnage, completedSets } = calculateWorkoutMetrics(workout, exerciseTypeMap)
+  const { tonnage, completedSets } = workout
+    ? calculateWorkoutMetrics(workout, exerciseTypeMap)
+    : { tonnage: 0, completedSets: 0 }
 
   /* UI Components */
   const renderHeaderRight = () => (
-    <View className="flex-row items-center gap-2">
+    <View className="flex-row items-center gap-1">
       <Button
         variant="ghost"
         title=""
         onPress={handleShare}
         leftIcon={<Ionicons name="share-outline" size={24} color={isDark ? 'white' : 'black'} />}
-        className="h-10 w-10 p-0"
+        className="p-0"
       />
       {isAuthrized && (
         <Button
@@ -233,7 +231,7 @@ export default function WorkoutDetails() {
           title=""
           onPress={handleEdit}
           leftIcon={<Ionicons name="create-outline" size={24} color={isDark ? 'white' : 'black'} />}
-          className="h-10 w-10 p-0"
+          className="p-0"
         />
       )}
     </View>
@@ -263,11 +261,13 @@ export default function WorkoutDetails() {
   /* UI Rendering */
   return (
     <BaseScreen
-      title={workout.title || 'Workout Details'}
+      title={workout?.title || 'Workout Details'}
       scroll
       backButton
       right={renderHeaderRight()}
       footerComponent={renderFooter()}
+      isLoading={isLoading}
+      shimmer={<ShimmerWorkoutScreen />}
     >
       {/* Header */}
       <View className="mb-6 flex-row items-start gap-4">
@@ -306,10 +306,10 @@ export default function WorkoutDetails() {
               numberOfLines={1}
               className="flex-1 text-sm text-neutral-500 dark:text-neutral-400"
             >
-              {timeAgo} · {duration} · {tonnage.toLocaleString()} kg · {completedSets} sets
+              {timeAgo} · {duration} · {tonnage?.toLocaleString()} kg · {completedSets} sets
             </Text>
 
-            {workout.isEdited && (
+            {workout?.isEdited && (
               <View className="ml-3 rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
                 <Text className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
                   Edited
@@ -322,7 +322,7 @@ export default function WorkoutDetails() {
 
       {/* Exercises */}
       <FlashList
-        data={workout.exercises}
+        data={workout?.exercises || []}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           const groupDetails = item.exerciseGroupId ? groupMap.get(item.exerciseGroupId) : null

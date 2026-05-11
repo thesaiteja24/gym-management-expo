@@ -18,7 +18,7 @@ export const ProgramWorkoutPromptModal = forwardRef<BaseModalHandle, ProgramWork
     const colors = useThemeColor()
 
     return (
-      <BaseModal ref={ref} title="Today's Program Workout">
+      <BaseModal ref={ref} title="Today's Program Workout" enableDynamicSizing={true}>
         <View className="items-center">
           <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <Ionicons name="calendar-outline" size={32} color={colors.primary} />

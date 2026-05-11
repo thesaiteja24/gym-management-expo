@@ -109,7 +109,7 @@ export function UserMuscleCompositionCard({
   return (
     <Animated.View
       entering={FadeInDown.delay(0).duration(500)}
-      className={`relative m-4 rounded-3xl border p-4 shadow-sm ${
+      className={`relative rounded-3xl border p-4 shadow-sm ${
         isDark ? 'border-neutral-800 bg-neutral-900' : 'border-neutral-200 bg-white'
       }`}
     >

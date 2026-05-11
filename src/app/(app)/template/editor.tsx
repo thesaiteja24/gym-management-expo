@@ -1,12 +1,12 @@
 import { usePreventRemove } from '@react-navigation/native'
-import { router, Stack, useLocalSearchParams } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, Text, TextInput, View } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { UserSubscriptionPaywallModal } from '@/components/modals/SubscriptionPaywallModal'
 import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { WorkoutExerciseRow } from '@/components/workout/WorkoutExerciseRow'
 import { WorkoutReorderList } from '@/components/workout/WorkoutReorderList'
 import { FREE_TIER_LIMITS } from '@/constants/limits'
@@ -23,7 +23,6 @@ import { useSubscriptionStore } from '@/stores/subscriptions.store'
 import { finalizeTemplateForSave, useWorkoutEditor } from '@/stores/workout-editor.store'
 
 export default function TemplateEditor() {
-  const insets = useSafeAreaInsets()
   const params = useLocalSearchParams<{
     id?: string
     context?: string
@@ -343,20 +342,40 @@ export default function TemplateEditor() {
     router.back()
   }, [discardWorkout, hasUnsavedChanges])
 
+  /* UI Components */
+  const renderFooter = () => {
+    if (isReorderMode) return null
+
+    return (
+      <View className="absolute bottom-0 left-0 right-0 mb-2 p-4">
+        <View className="flex-row gap-3">
+          <Button
+            title="Discard Template"
+            variant="danger"
+            className="flex-1 rounded-full"
+            onPress={() => discardModalRef.current?.present()}
+          />
+          <Button
+            title="Add Exercise"
+            variant="primary"
+            className="flex-1 rounded-full"
+            onPress={() => router.push('/(app)/exercises?context=builder')}
+          />
+        </View>
+      </View>
+    )
+  }
+
   if (!workout || (isEditing && templateLoading && mode !== 'template-edit')) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-black">
-        <Stack.Screen options={{ headerShown: false }} />
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-neutral-500 dark:text-neutral-400">Loading template...</Text>
-        </View>
-      </SafeAreaView>
+      <BaseScreen isLoading shimmer={<View />}>
+        <View />
+      </BaseScreen>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black">
-      <Stack.Screen options={{ headerShown: false }} />
+    <BaseScreen padded={false} footerComponent={renderFooter()}>
       <View className="border-b border-neutral-200 px-4 py-4 dark:border-neutral-800">
         <Text className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
           {mode === 'template-edit' ? 'Edit Template' : 'New Template'}
@@ -373,7 +392,12 @@ export default function TemplateEditor() {
           />
 
           <View className="flex-row gap-4">
-            <Button title="Cancel" variant="danger" onPress={handleCancel} className="" />
+            <Button
+              title="Cancel"
+              variant="danger"
+              onPress={handleCancel}
+              className="rounded-full"
+            />
             <Button
               title={isReorderMode ? 'Done' : 'Save'}
               variant="primary"
@@ -384,6 +408,7 @@ export default function TemplateEditor() {
                 }
                 handleSave()
               }}
+              className="rounded-full"
             />
           </View>
         </View>
@@ -419,7 +444,7 @@ export default function TemplateEditor() {
         <ScrollView
           className="flex-1"
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: insets.bottom + 132 }}
+          contentContainerStyle={{ paddingBottom: 132 }}
         >
           {workout.exerciseOrder.length === 0 ? (
             <View className="px-4 py-8">
@@ -436,28 +461,12 @@ export default function TemplateEditor() {
               />
             ))
           )}
-
-          <View className="px-4 pb-2 pt-4">
-            <View className="flex-row gap-3">
-              <Button
-                title="Add Exercise"
-                variant="primary"
-                className="flex-1"
-                onPress={() => router.push('/(app)/exercises?context=builder')}
-              />
-              <Button
-                title="Discard Template"
-                variant="danger"
-                className="flex-1"
-                onPress={() => discardModalRef.current?.present()}
-              />
-            </View>
-          </View>
         </ScrollView>
       )}
 
       <BaseModal
         ref={discardModalRef}
+        enableDynamicSizing={true}
         title="Discard Changes?"
         description="You have unsaved changes. Are you sure you want to discard them?"
         deleteAction={{
@@ -475,6 +484,7 @@ export default function TemplateEditor() {
 
       <BaseModal
         ref={pruneModalRef}
+        enableDynamicSizing={true}
         title="Confirm Save"
         description={pruneMessage || ''}
         confirmAction={{
@@ -510,6 +520,6 @@ export default function TemplateEditor() {
           router.back()
         }}
       />
-    </SafeAreaView>
+    </BaseScreen>
   )
 }

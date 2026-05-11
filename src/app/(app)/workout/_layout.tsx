@@ -1,10 +1,6 @@
 import { router, Stack } from 'expo-router'
 
-import { useThemeColor } from '@/hooks/theme'
-
 export default function WorkoutLayout() {
-  const colors = useThemeColor()
-
   return (
     <Stack
       screenOptions={{

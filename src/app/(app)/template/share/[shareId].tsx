@@ -1,10 +1,10 @@
-import { usePreventRemove } from '@react-navigation/native'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import React, { useEffect, useMemo } from 'react'
-import { Alert, ScrollView, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { router, useLocalSearchParams } from 'expo-router'
+import React, { useMemo } from 'react'
+import { Alert, Text, View } from 'react-native'
 
 import { Button } from '@/components/ui'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { ShimmerTemplateScreen } from '@/components/ui/shimmers/ShimmerTemplateScreen'
 import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
 import {
   useSaveSharedTemplateMutation,
@@ -12,12 +12,9 @@ import {
   useTemplatesQuery,
 } from '@/hooks/queries/templates'
 
-export default function TemplateDetails() {
+export default function SharedTemplateDetails() {
   const { shareId } = useLocalSearchParams<{ shareId: string }>()
 
-  const navigation = useNavigation()
-  const isDark = useColorScheme() === 'dark'
-  const safeAreaInsets = useSafeAreaInsets()
   const [loading, setLoading] = React.useState(false)
 
   // Templates from TQ cache (to detect if user already has the shared template)
@@ -25,31 +22,11 @@ export default function TemplateDetails() {
   const saveSharedMutation = useSaveSharedTemplateMutation()
 
   // TanStack Query — fetch shared template by shareId
-  const { data: sharedTemplate } = useTemplateByShareIdQuery(shareId)
-
-  usePreventRemove(true, (e) => {
-    router.replace('/(app)/(tabs)/workout')
-  })
-
-  useEffect(() => {
-    navigation.setOptions({
-      title: sharedTemplate?.title ?? 'Template Details',
-      headerLeft: () => (
-        <TouchableOpacity
-          onPress={() => {
-            router.replace('/(app)/(tabs)/workout')
-          }}
-          style={{ marginRight: 15 }}
-        >
-          <Text style={{ color: isDark ? '#fff' : '#000', fontSize: 17 }}>Back</Text>
-        </TouchableOpacity>
-      ),
-    })
-  }, [navigation, sharedTemplate, isDark])
+  const { data: sharedTemplate, isLoading } = useTemplateByShareIdQuery(shareId)
 
   const groupMap = useMemo(() => {
     const map = new Map<string, any>()
-    sharedTemplate?.exerciseGroups.forEach((g) => map.set(g.id, g))
+    sharedTemplate?.exerciseGroups?.forEach((g) => map.set(g.id, g))
     return map
   }, [sharedTemplate?.exerciseGroups])
 
@@ -142,76 +119,75 @@ export default function TemplateDetails() {
     }
   }
 
-  if (!sharedTemplate) {
+  /* UI Components */
+  const renderFooter = () => (
+    <View className="absolute bottom-0 left-0 right-0 mb-2 p-4">
+      <Button
+        title={existingTemplate ? 'Update Saved Template' : 'Save to My Templates'}
+        onPress={handleSave}
+        disabled={loading}
+        className="rounded-full"
+        variant="primary"
+      />
+    </View>
+  )
+
+  if (!isLoading && !sharedTemplate) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        {loading || !shareId ? (
-          <View>
-            <Text className="text-neutral-500">Loading...</Text>
-          </View>
-        ) : (
-          <Text className="text-neutral-500">Template not found.</Text>
-        )}
+        <Text className="text-neutral-500">Template not found.</Text>
       </View>
     )
   }
 
   return (
-    <View className="relative flex-1 bg-white dark:bg-black">
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header Info */}
-        <View className="border-b border-neutral-100 p-4 dark:border-neutral-900">
-          <Text className="mb-2 text-3xl font-bold text-black dark:text-white">
-            {sharedTemplate.title}
-          </Text>
-          {/* Author Info */}
-          <Text className="mb-2 text-sm font-medium text-blue-600 dark:text-blue-400">
-            {sharedTemplate.authorName
-              ? `Created by ${sharedTemplate.authorName}`
-              : 'Shared Template'}
-          </Text>
+    <BaseScreen
+      title="Shared Template"
+      isLoading={isLoading}
+      shimmer={<ShimmerTemplateScreen />}
+      backButton
+      onBackPress={() => router.replace('/(app)/(tabs)/workout')}
+      scroll
+      footerComponent={renderFooter()}
+      contentContainerStyle={{ paddingBottom: 120 }}
+    >
+      {/* Header Info */}
+      <View className="border-b border-neutral-100 pb-4 dark:border-neutral-900">
+        <Text className="mb-2 text-3xl font-bold text-black dark:text-white">
+          {sharedTemplate?.title}
+        </Text>
+        {/* Author Info */}
+        <Text className="mb-2 text-sm font-medium text-blue-600 dark:text-blue-400">
+          {sharedTemplate?.authorName
+            ? `Created by ${sharedTemplate.authorName}`
+            : 'Shared Template'}
+        </Text>
 
-          {sharedTemplate.notes && (
-            <Text className="mb-4 text-base text-neutral-600 dark:text-neutral-400">
-              {sharedTemplate.notes}
+        {sharedTemplate?.notes && (
+          <Text className="mb-4 text-base text-neutral-600 dark:text-neutral-400">
+            {sharedTemplate.notes}
+          </Text>
+        )}
+
+        <View className="flex-row gap-4">
+          <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
+            <Text className="text-base font-medium text-neutral-500">
+              {sharedTemplate?.exerciseGroups?.length || 0} Exercises
             </Text>
-          )}
-
-          <View className="flex-row gap-4">
-            <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
-              <Text className="text-base font-medium text-neutral-500">
-                {sharedTemplate.exerciseGroups.length} Exercises
-              </Text>
-            </View>
           </View>
         </View>
-
-        {/* Read Only Exercise List */}
-        <View className="gap-4 p-4">
-          {sharedTemplate.exercises.map((ex, idx) => (
-            <WorkoutReadOnlyExerciseRow
-              key={ex.id || idx}
-              exercise={ex}
-              group={ex.exerciseGroupId ? groupMap.get(ex.exerciseGroupId) : null}
-            />
-          ))}
-        </View>
-      </ScrollView>
-
-      {/* Floating Action Button for Starting */}
-      <View
-        className="absolute bottom-0 left-0 right-0 border-t border-neutral-100 bg-white p-4 dark:border-neutral-900 dark:bg-black"
-        style={{ paddingBottom: safeAreaInsets.bottom + 16 }}
-      >
-        <Button
-          title={existingTemplate ? 'Update Saved Template' : 'Save to My Templates'}
-          onPress={handleSave}
-          disabled={loading}
-        />
       </View>
-    </View>
+
+      {/* Read Only Exercise List */}
+      <View className="gap-4 py-4">
+        {sharedTemplate?.exercises?.map((ex, idx) => (
+          <WorkoutReadOnlyExerciseRow
+            key={ex.id || idx}
+            exercise={ex}
+            group={ex.exerciseGroupId ? groupMap.get(ex.exerciseGroupId) : null}
+          />
+        ))}
+      </View>
+    </BaseScreen>
   )
 }

@@ -1,7 +1,7 @@
 import { router, Stack } from 'expo-router'
 import { useMemo, useRef } from 'react'
 import { Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 import {
   TimerDurationModal,
@@ -29,7 +29,6 @@ import type { WorkoutPayload } from '@/types/payloads'
 import { formatSeconds } from '@/utils/workout'
 
 export default function WorkoutSaveScreen() {
-  const insets = useSafeAreaInsets()
   const durationModalRef = useRef<TimerDurationModalHandle>(null)
   const visibilityModalRef = useRef<BaseModalHandle>(null)
 

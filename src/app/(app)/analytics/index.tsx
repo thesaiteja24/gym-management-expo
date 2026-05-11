@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router'
 import { useEffect, useMemo } from 'react'
-import { BackHandler } from 'react-native'
+import { BackHandler, View } from 'react-native'
 
 import BaseScreen from '@/components/ui/BaseScreen'
 import { ShimmerAnalyticsScreen } from '@/components/ui/shimmers/ShimmerAnalyticsScreen'
@@ -162,15 +162,17 @@ const AnalyticsScreen = () => {
       shimmer={<ShimmerAnalyticsScreen />}
       backButton
     >
-      <UserMuscleCompositionCard composition={composition} gender={gender} goal={fitnessGoal} />
+      <View className="gap-4">
+        <UserMuscleCompositionCard composition={composition} gender={gender} goal={fitnessGoal} />
 
-      <UserNutritionTargetsCard
-        nutritionPlan={nutritionPlan}
-        fitnessProfile={fitnessProfile}
-        riskBadge={riskBadge}
-        bmr={bmr}
-        colors={colors}
-      />
+        <UserNutritionTargetsCard
+          nutritionPlan={nutritionPlan}
+          fitnessProfile={fitnessProfile}
+          riskBadge={riskBadge}
+          bmr={bmr}
+          colors={colors}
+        />
+      </View>
     </BaseScreen>
   )
 }

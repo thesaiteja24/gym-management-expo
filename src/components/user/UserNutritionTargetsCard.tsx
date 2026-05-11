@@ -1,6 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 
@@ -192,7 +191,6 @@ export function UserNutritionTargetsCard({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
     paddingBottom: 16,
   },
   card: {

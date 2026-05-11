@@ -1,7 +1,6 @@
 import { useGlobalSearchParams } from 'expo-router'
 import { useVideoPlayer, VideoView } from 'expo-video'
 import { Dimensions, ScrollView, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useExercises } from '@/hooks/queries/exercises'
 import { useThemeColor } from '@/hooks/theme'
@@ -22,16 +21,9 @@ export default function GuideScreen() {
   })
 
   const colors = useThemeColor()
-  const insets = useSafeAreaInsets()
 
   return (
-    <View
-      className="flex-1 items-center justify-center"
-      style={{
-        paddingBottom: insets.bottom,
-        backgroundColor: colors.background,
-      }}
-    >
+    <View className="flex-1 bg-white dark:bg-black">
       <VideoView
         style={{
           width: width,

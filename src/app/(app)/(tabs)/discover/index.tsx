@@ -119,7 +119,7 @@ export default function DiscoverScreen() {
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center pt-20">
             <Text className="text-lg text-neutral-500 dark:text-neutral-400">
-              It's quiet empty out here 🤧
+              It&apos;s quiet empty out here 🤧
             </Text>
           </View>
         }

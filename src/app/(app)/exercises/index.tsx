@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons'
+import { FlashList } from '@shopify/flash-list'
 import * as Haptics from 'expo-haptics'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import Fuse from 'fuse.js'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  ActivityIndicator,
   Keyboard,
   Platform,
   Text,
@@ -12,12 +14,12 @@ import {
   useColorScheme,
   View,
 } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { ExerciseList } from '@/components/exercise/ExerciseList'
+import { ExerciseListItem } from '@/components/exercise'
 import { MetaModal } from '@/components/modals/ExerciseMetaModal'
 import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { ROLES as roles } from '@/constants/roles'
 import { useDeleteExercise, useExercises } from '@/hooks/queries/exercises'
 import { useProfileQuery } from '@/hooks/queries/me'
@@ -27,15 +29,6 @@ import { useWorkoutEditor } from '@/stores/workout-editor.store'
 import { Exercise } from '@/types/exercises'
 import { SelfUser } from '@/types/me'
 import { MetaItem } from '@/types/meta'
-
-type NavigationWithRightIcons = {
-  setOptions: (options: {
-    rightIcons?: {
-      name: string
-      onPress: () => void
-    }[]
-  }) => void
-}
 
 /* ───────────────── Chip (UI only) ───────────────── */
 
@@ -61,15 +54,12 @@ function Chip({ label, onRemove }: ChipProps) {
 /* ───────────────── Screen ───────────────── */
 
 export default function ExercisesScreen() {
-  const navigation = useNavigation()
-  const navigationWithRightIcons = navigation as unknown as NavigationWithRightIcons
   const isDark = useColorScheme() === 'dark'
   const lineHeight = Platform.OS === 'ios' ? 0 : 20
 
   const { data: userData } = useProfileQuery()
   const user = userData as SelfUser | null
   const role = user?.role
-  const safeAreaInsets = useSafeAreaInsets()
   const params = useLocalSearchParams()
   const context = (params.context as 'library' | 'builder') || 'library'
   const isBuilderContext = context === 'builder'
@@ -138,19 +128,6 @@ export default function ExercisesScreen() {
     title: string
   } | null>(null)
 
-  useEffect(() => {
-    if (role === roles.systemAdmin) {
-      navigationWithRightIcons.setOptions({
-        rightIcons: [
-          {
-            name: 'add',
-            onPress: () => router.push('/(app)/(system-admin)/exercises/create'),
-          },
-        ],
-      })
-    }
-  }, [navigationWithRightIcons, role])
-
   /* ───────────────── Fuzzy search ───────────────── */
 
   const fuse = useMemo(() => {
@@ -191,160 +168,99 @@ export default function ExercisesScreen() {
 
   /* ───────────────── Handlers ───────────────── */
 
-  const handleExercisePress = (exercise: Exercise) => {
-    Haptics.selectionAsync()
+  const handleExercisePress = useCallback(
+    (exercise: Exercise) => {
+      Haptics.selectionAsync()
 
-    if (replaceInstanceId && isBuilderContext) {
-      const replacingExercise = workout?.exercisesById[replaceInstanceId]
-      if (!replacingExercise) {
+      if (replaceInstanceId && isBuilderContext) {
+        const replacingExercise = workout?.exercisesById[replaceInstanceId]
+        if (!replacingExercise) {
+          router.back()
+          return
+        }
+
+        if (
+          isTemplateMode &&
+          exercise.id !== replacingExercise.exerciseId &&
+          initialSelectedIds.has(exercise.id)
+        ) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+          Arise.error({
+            heading: 'Duplicate Exercise',
+            content: 'This exercise is already in your template.',
+          })
+          return
+        }
+
+        replaceExerciseInBuilder(replaceInstanceId, exercise.id)
         router.back()
         return
       }
 
-      if (
-        isTemplateMode &&
-        exercise.id !== replacingExercise.exerciseId &&
-        initialSelectedIds.has(exercise.id)
-      ) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-        Arise.error({
-          heading: 'Duplicate Exercise',
-          content: 'This exercise is already in your template.',
+      if (isBuilderContext) {
+        setTempSelectedIds((prev) => {
+          const next = new Set(prev)
+
+          if (next.has(exercise.id)) {
+            next.delete(exercise.id)
+          } else {
+            next.add(exercise.id)
+          }
+
+          return next
         })
         return
       }
 
-      replaceExerciseInBuilder(replaceInstanceId, exercise.id)
-      router.back()
-      return
-    }
+      if (isSelectionMode) {
+        setTempSelectedIds((prev) => {
+          const next = new Set(prev)
 
-    if (isBuilderContext) {
-      setTempSelectedIds((prev) => {
-        const next = new Set(prev)
+          if (next.has(exercise.id)) {
+            next.delete(exercise.id)
+          } else {
+            next.add(exercise.id)
+          }
 
-        if (next.has(exercise.id)) {
-          next.delete(exercise.id)
-        } else {
-          next.add(exercise.id)
-        }
+          return next
+        })
+        return
+      }
 
-        return next
-      })
-      return
-    }
+      router.push(`/(app)/exercises/${exercise.id}/(tabs)/summary`)
+    },
+    [
+      replaceInstanceId,
+      isBuilderContext,
+      workout?.exercisesById,
+      isTemplateMode,
+      initialSelectedIds,
+      replaceExerciseInBuilder,
+      setTempSelectedIds,
+      isSelectionMode,
+    ],
+  )
 
-    if (isSelectionMode) {
-      setTempSelectedIds((prev) => {
-        const next = new Set(prev)
-
-        if (next.has(exercise.id)) {
-          next.delete(exercise.id)
-        } else {
-          next.add(exercise.id)
-        }
-
-        return next
-      })
-      return
-    }
-
-    router.push(`/(app)/exercises/${exercise.id}/(tabs)/summary`)
+  /* UI Components */
+  const renderHeaderRight = () => {
+    if (role !== roles.systemAdmin) return null
+    return (
+      <Button
+        variant="ghost"
+        title=""
+        onPress={() => router.push('/(app)/(system-admin)/exercises/create')}
+        leftIcon={<Ionicons name="add" size={28} color={isDark ? 'white' : 'black'} />}
+        className="p-0"
+      />
+    )
   }
 
-  /* ───────────────── Render ───────────────── */
+  const renderFooter = () => {
+    if (!isSelectionMode || exerciseLoading) return null
 
-  return (
-    <View
-      style={{ paddingBottom: safeAreaInsets.bottom }}
-      className="flex-1 bg-white px-4 pt-4 dark:bg-black"
-    >
-      {/* Search */}
-      <View className="relative mb-4 justify-center">
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search exercises, equipment, muscles…"
-          placeholderTextColor="#9CA3AF"
-          className="rounded-xl border border-neutral-200 bg-white py-3 pl-4 pr-8 text-lg text-black dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
-          style={{ lineHeight: lineHeight }}
-        />
-        {query.length > 0 && (
-          <TouchableOpacity
-            onPress={() => {
-              setQuery('')
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-            }}
-            className="absolute right-3"
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="close-circle" size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Filters */}
-      <View className="mb-4 flex-row gap-4">
-        <View className="flex-1">
-          {filter.equipmentId ? (
-            <Chip
-              label={equipmentList.find((e) => e.id === filter.equipmentId)?.title ?? 'Equipment'}
-              onRemove={() => {
-                setFilter((f) => ({ ...f, equipmentId: '' }))
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-              }}
-            />
-          ) : (
-            <Button
-              title="Equipment"
-              onPress={() => {
-                equipmentModalRef.current?.present()
-                Keyboard.dismiss()
-              }}
-            />
-          )}
-        </View>
-
-        <View className="flex-1">
-          {filter.muscleGroupId ? (
-            <Chip
-              label={
-                muscleGroupList.find((m) => m.id === filter.muscleGroupId)?.title ?? 'Muscle Groups'
-              }
-              onRemove={() => {
-                setFilter((f) => ({ ...f, muscleGroupId: '' }))
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-              }}
-            />
-          ) : (
-            <Button
-              title="Muscle Groups"
-              onPress={() => {
-                muscleGroupsModalRef.current?.present()
-                Keyboard.dismiss()
-              }}
-            />
-          )}
-        </View>
-      </View>
-
-      {/* Exercise list */}
-      <ExerciseList
-        loading={exerciseLoading}
-        exercises={filteredExercises}
-        isSelecting={isSelectionMode}
-        isSelected={(id) => selectedExerciseIds.has(id)}
-        onPress={handleExercisePress}
-        onLongPress={(exercise) => {
-          if (role !== roles.systemAdmin) return
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
-          router.push(`/(app)/(system-admin)/exercises/${exercise.id}`)
-        }}
-      />
-
-      {/* Bottom bar (selection mode) */}
-      {isSelectionMode && !exerciseLoading && (
-        <View className="flex-row items-center justify-between rounded-2xl border border-neutral-200/60 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
+    return (
+      <View className="absolute bottom-0 left-0 right-0 mb-2 bg-transparent p-4">
+        <View className="mx-4 flex-row items-center justify-between rounded-2xl border border-neutral-200/60 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
           <TouchableOpacity
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
@@ -404,7 +320,125 @@ export default function ExercisesScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-      )}
+      </View>
+    )
+  }
+
+  const renderItem = useCallback(
+    ({ item }: { item: Exercise }) => (
+      <ExerciseListItem
+        item={item}
+        isSelecting={isSelectionMode}
+        selected={selectedExerciseIds.has(item.id)}
+        onPress={handleExercisePress}
+        onLongPress={(exercise) => {
+          if (role !== roles.systemAdmin) return
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+          router.push(`/(app)/(system-admin)/exercises/${exercise.id}`)
+        }}
+      />
+    ),
+    [isSelectionMode, selectedExerciseIds, handleExercisePress, role],
+  )
+
+  return (
+    <BaseScreen
+      title="Exercises"
+      backButton
+      right={renderHeaderRight()}
+      footerComponent={renderFooter()}
+    >
+      {/* Search */}
+      <View className="relative mb-4 justify-center">
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search exercises, equipment, muscles…"
+          placeholderTextColor="#9CA3AF"
+          className="rounded-xl border border-neutral-200 bg-white py-3 pl-4 pr-8 text-lg text-black dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+          style={{ lineHeight: lineHeight }}
+        />
+        {query.length > 0 && (
+          <TouchableOpacity
+            onPress={() => {
+              setQuery('')
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+            }}
+            className="absolute right-7"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="close-circle" size={22} color={isDark ? '#9CA3AF' : '#6B7280'} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Filters */}
+      <View className="mb-4 flex-row gap-4">
+        <View className="flex-1">
+          {filter.equipmentId ? (
+            <Chip
+              label={equipmentList.find((e) => e.id === filter.equipmentId)?.title ?? 'Equipment'}
+              onRemove={() => {
+                setFilter((f) => ({ ...f, equipmentId: '' }))
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+              }}
+            />
+          ) : (
+            <Button
+              title="Equipment"
+              onPress={() => {
+                equipmentModalRef.current?.present()
+                Keyboard.dismiss()
+              }}
+            />
+          )}
+        </View>
+
+        <View className="flex-1">
+          {filter.muscleGroupId ? (
+            <Chip
+              label={
+                muscleGroupList.find((m) => m.id === filter.muscleGroupId)?.title ?? 'Muscle Groups'
+              }
+              onRemove={() => {
+                setFilter((f) => ({ ...f, muscleGroupId: '' }))
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+              }}
+            />
+          ) : (
+            <Button
+              title="Muscle Groups"
+              onPress={() => {
+                muscleGroupsModalRef.current?.present()
+                Keyboard.dismiss()
+              }}
+            />
+          )}
+        </View>
+      </View>
+
+      {/* Exercise list */}
+      <View className="flex-1">
+        {exerciseLoading ? (
+          <ActivityIndicator animating size="large" className="mt-8" color="#3b82f6" />
+        ) : filteredExercises.length === 0 ? (
+          <View className="my-8 px-4">
+            <Text className="text-center text-neutral-500 dark:text-neutral-400">
+              No exercises found.
+            </Text>
+          </View>
+        ) : (
+          <FlashList
+            data={filteredExercises}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="always"
+            ListFooterComponent={<View className="mb-[50%]" />}
+          />
+        )}
+      </View>
 
       {/* Modals */}
       <MetaModal
@@ -489,6 +523,6 @@ export default function ExercisesScreen() {
           },
         }}
       />
-    </View>
+    </BaseScreen>
   )
 }
