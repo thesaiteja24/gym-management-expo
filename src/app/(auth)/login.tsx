@@ -1,7 +1,7 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin'
 import { useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
-import { KeyboardAvoidingView, Pressable, Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -196,7 +196,7 @@ export default function Login() {
         </Text>
       </Animated.View>
 
-      <KeyboardAvoidingView behavior="position" className="flex-[4] justify-center gap-4 px-6">
+      <View className="flex-[4] justify-center gap-4 px-6">
         <View className="mb-4 flex-row items-center justify-center gap-4 px-6">
           <View className="w-full border-t-[0.25px] border-gray-500 dark:border-gray-400"></View>
           <Text className="text-sm text-gray-500 dark:text-gray-400">
@@ -251,7 +251,7 @@ export default function Login() {
             </Text>
           </Text>
         </View>
-      </KeyboardAvoidingView>
+      </View>
       <PrivacyPolicyModal
         ref={privacyModalRef}
         onAgree={(version) => {

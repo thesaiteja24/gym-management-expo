@@ -1,14 +1,5 @@
-import { FlashList } from '@shopify/flash-list'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  ActivityIndicator,
-  DimensionValue,
-  RefreshControl,
-  Text,
-  useColorScheme,
-  View,
-  ViewStyle,
-} from 'react-native'
+import { DimensionValue, useColorScheme, View, ViewStyle } from 'react-native'
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -18,10 +9,9 @@ import Animated, {
 } from 'react-native-reanimated'
 
 import { SocialWorkoutCard } from '@/components/social/SocialWorkoutCard'
-import BaseScreen from '@/components/ui/BaseScreen'
+import BaseListScreen from '@/components/ui/BaseListScreen'
 import { useExercises } from '@/hooks/queries/exercises'
 import { useWorkoutHistoryQuery } from '@/hooks/queries/workouts'
-import { useThemeColor } from '@/hooks/theme'
 import { ExerciseType } from '@/types/exercises'
 
 /* ──────────────────────────────────────────────
@@ -94,7 +84,6 @@ function SkeletonSocialWorkoutCard() {
 }
 
 const History = () => {
-  const colors = useThemeColor()
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const {
@@ -131,49 +120,25 @@ const History = () => {
   )
 
   return (
-    <BaseScreen
+    <BaseListScreen
       title="Workout History"
       backButton
-      scroll
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
-      isLoading={isLoading || isRefreshing}
+      isLoading={isLoading}
+      isRefreshing={isRefreshing}
+      onRefresh={onRefresh}
       shimmer={renderShimmer()}
-    >
-      <FlashList
-        data={workoutHistory}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <SocialWorkoutCard workout={item} exerciseTypeMap={exerciseTypeMap} index={index} />
-        )}
-        showsVerticalScrollIndicator={false}
-        onEndReached={() => {
-          if (!isFetchingNextPage && hasNextPage) fetchNextPage()
-        }}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          hasNextPage ? (
-            <View className="mb-[100%] items-center justify-center p-4 pb-12 pt-6">
-              {isFetchingNextPage && <ActivityIndicator size="small" color={colors.primary} />}
-            </View>
-          ) : (
-            <View className="mb-[100%] items-center justify-center p-4 pb-12 pt-6">
-              <Text className="text-neutral-500 dark:text-neutral-400">
-                You&apos;ve conquered all the workouts here 🏆
-              </Text>
-            </View>
-          )
-        }
-        ListEmptyComponent={
-          !isLoading ? (
-            <View className="flex-1 items-center justify-center pt-20">
-              <Text className="text-lg text-neutral-500 dark:text-neutral-400">
-                No workouts yet.
-              </Text>
-            </View>
-          ) : null
-        }
-      />
-    </BaseScreen>
+      data={workoutHistory}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item, index }) => (
+        <SocialWorkoutCard workout={item} exerciseTypeMap={exerciseTypeMap} index={index} />
+      )}
+      hasNextPage={hasNextPage}
+      isFetchingNextPage={isFetchingNextPage}
+      onEndReached={fetchNextPage}
+      emptyText="It's quiet empty out here 🤧"
+      endReachedText="You've conquered all the workouts here 🏆"
+      estimatedItemSize={150}
+    />
   )
 }
 

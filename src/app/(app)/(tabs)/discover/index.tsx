@@ -1,14 +1,12 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { FlashList } from '@shopify/flash-list'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { ActivityIndicator, RefreshControl, Text, View } from 'react-native'
 
 import CommentsModal, { CommentsModalHandle } from '@/components/modals/SocialCommentsModal'
 import { SocialWorkoutCard } from '@/components/social/SocialWorkoutCard'
 import { Button } from '@/components/ui'
-import BaseScreen from '@/components/ui/BaseScreen'
+import BaseListScreen from '@/components/ui/BaseListScreen'
 import { ShimmerDiscoverScreen } from '@/components/ui/shimmers/ShimmerDiscoverScreen'
 import { useExercises } from '@/hooks/queries/exercises'
 import { useWorkoutListQuery } from '@/hooks/queries/workouts'
@@ -73,59 +71,40 @@ export default function DiscoverScreen() {
 
   // ───────────────── Render ─────────────────
   return (
-    <BaseScreen
-      title="Discover"
-      isLoading={isScreenLoading}
-      shimmer={<ShimmerDiscoverScreen />}
-      right={
-        <Button
-          title=""
-          variant="ghost"
-          className="p-0"
-          onPress={() => {
-            router.push('/(app)/profile/search')
-          }}
-          rightIcon={
-            <MaterialCommunityIcons
-              name="magnify"
-              size={24}
-              color={colors.isDark ? 'white' : 'black'}
-            />
-          }
-        />
-      }
-    >
-      <FlashList
+    <>
+      <BaseListScreen
+        title="Discover"
+        isLoading={isScreenLoading}
+        shimmer={<ShimmerDiscoverScreen />}
+        right={
+          <Button
+            title=""
+            variant="ghost"
+            className="p-0"
+            onPress={() => {
+              router.push('/(app)/profile/search')
+            }}
+            rightIcon={
+              <MaterialCommunityIcons
+                name="magnify"
+                size={24}
+                color={colors.isDark ? 'white' : 'black'}
+              />
+            }
+          />
+        }
         data={workouts}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: { id: string }) => item.id}
         renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        isRefreshing={refreshing}
+        onRefresh={onRefresh}
+        hasNextPage={discoverHasMore}
+        isFetchingNextPage={discoverLoadingNextPage}
         onEndReached={onEndReached}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          discoverHasMore ? (
-            <View className="mb-[100%] items-center justify-center p-4 pb-12 pt-6">
-              {discoverLoadingNextPage && <ActivityIndicator size="small" color={colors.primary} />}
-            </View>
-          ) : (
-            <View className="mb-[100%] items-center justify-center p-4 pb-12 pt-6">
-              <Text className="text-neutral-500 dark:text-neutral-400">
-                You&apos;ve conquered all the workouts here 🏆
-              </Text>
-            </View>
-          )
-        }
-        ListEmptyComponent={
-          <View className="flex-1 items-center justify-center pt-20">
-            <Text className="text-lg text-neutral-500 dark:text-neutral-400">
-              It&apos;s quiet empty out here 🤧
-            </Text>
-          </View>
-        }
+        emptyText="It's quiet empty out here 🤧"
+        endReachedText="You've conquered all the workouts here 🏆"
       />
-
       <CommentsModal ref={commentsModalRef} />
-    </BaseScreen>
+    </>
   )
 }

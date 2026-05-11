@@ -8,7 +8,7 @@ import { useThemeColor } from '@/hooks/theme'
 
 import { Button } from './buttons'
 
-interface BaseScreenProps {
+export interface BaseScreenProps {
   children: React.ReactNode
   footerComponent?: React.ReactNode
 
@@ -32,7 +32,7 @@ interface BaseScreenProps {
   shimmer?: React.ReactNode
 }
 
-const Header = memo(
+export const Header = memo(
   ({
     title,
     subTitle,
@@ -105,6 +105,14 @@ const BaseScreen = ({
   const router = useRouter()
   const theme = useThemeColor()
 
+  const handleBackPress = React.useCallback(() => {
+    if (onBackPress) {
+      onBackPress()
+    } else {
+      router.back()
+    }
+  }, [onBackPress, router])
+
   const renderedLeft = useMemo(() => {
     if (left) return left
     if (backButton) {
@@ -119,34 +127,50 @@ const BaseScreen = ({
               color={theme.isDark ? 'white' : 'black'}
             />
           }
-          onPress={() => (onBackPress ? onBackPress() : router.back())}
+          onPress={handleBackPress}
           className="p-0"
         />
       )
     }
     return null
-  }, [left, backButton, theme.isDark, onBackPress, router])
+  }, [left, backButton, theme.isDark, handleBackPress])
 
   return (
-    <SafeAreaView className={`flex-1 bg-white dark:bg-black ${padded ? 'px-4 pt-4' : ''}`}>
+    <SafeAreaView
+      className={`flex-1 bg-white dark:bg-black ${padded && !scroll ? 'px-4 pt-4' : ''}`}
+    >
       {title || subTitle || left || right ? (
-        <Header title={title} subTitle={subTitle} left={renderedLeft} right={right} />
+        <View className={padded && scroll ? 'px-4 pt-4' : ''}>
+          <Header title={title} subTitle={subTitle} left={renderedLeft} right={right} />
+        </View>
       ) : null}
 
       {isLoading && shimmer ? (
-        shimmer
+        <View className={padded && scroll ? 'px-4' : ''}>{shimmer}</View>
       ) : scroll ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
           refreshControl={refreshControl}
-          contentContainerStyle={[contentContainerStyle]}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[
+            padded
+              ? {
+                  paddingHorizontal: 16,
+                  paddingTop: title || subTitle || left || right ? 0 : 16,
+                  paddingBottom: 16,
+                }
+              : undefined,
+            contentContainerStyle,
+          ]}
         >
           {children}
         </ScrollView>
       ) : (
         children
       )}
-      {!isLoading && footerComponent}
+      {!isLoading && footerComponent && (
+        <View className={padded && scroll ? 'px-4 pb-4' : ''}>{footerComponent}</View>
+      )}
     </SafeAreaView>
   )
 }
