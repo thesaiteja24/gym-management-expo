@@ -10,7 +10,7 @@ import { Text, View } from 'react-native'
 import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
 import BaseScreen from '@/components/ui/BaseScreen'
-import { ShimmerWorkoutScreen } from '@/components/ui/shimmers/ShimmerWorkoutScreen'
+import { WorkoutScreenShimmer } from '@/components/ui/shimmers'
 import { UserVerifiedBadge } from '@/components/user/UserVerifiedBadge'
 import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
 import { useExercises } from '@/hooks/queries/exercises'
@@ -267,7 +267,7 @@ export default function WorkoutDetails() {
       right={renderHeaderRight()}
       footerComponent={renderFooter()}
       isLoading={isLoading}
-      shimmer={<ShimmerWorkoutScreen />}
+      shimmer={<WorkoutScreenShimmer />}
     >
       {/* Header */}
       <View className="mb-6 flex-row items-start gap-4">

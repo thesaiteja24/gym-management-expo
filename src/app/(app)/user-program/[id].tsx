@@ -1,22 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
 import React, { useEffect, useState } from 'react'
-import {
-  type DimensionValue,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-  type ViewStyle,
-} from 'react-native'
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 import {
   WorkoutDetailsModal,
@@ -24,67 +9,11 @@ import {
 } from '@/components/modals/WorkoutDetailsModal'
 import { Button } from '@/components/ui'
 import BaseScreen from '@/components/ui/BaseScreen'
-import { ShimmerProgramDetails } from '@/components/ui/shimmers/ShimmerProgramDetails'
+import { DaysListShimmer } from '@/components/ui/shimmers'
+import { ProgramDetailsShimmer } from '@/components/ui/shimmers/ProgramDetailsShimmer'
 import { useUserProgram } from '@/hooks/queries/programs'
 import { Arise } from '@/lib/arise'
 import { useWorkoutEditor } from '@/stores/workout-editor.store'
-
-function SkeletonBlock({
-  width = '100%',
-  height = 14,
-  rounded = 8,
-}: {
-  width?: DimensionValue
-  height?: number
-  rounded?: number
-}) {
-  const scheme = useColorScheme()
-
-  const fade = useSharedValue(0)
-  const shimmer = useSharedValue(0.4)
-
-  useEffect(() => {
-    fade.value = withTiming(1, { duration: 250 })
-    shimmer.value = withRepeat(
-      withSequence(withTiming(0.85, { duration: 900 }), withTiming(0.4, { duration: 900 })),
-      -1,
-      true,
-    )
-  }, [fade, shimmer])
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: fade.value * shimmer.value,
-  }))
-
-  const blockStyle: ViewStyle = {
-    width,
-    height,
-    borderRadius: rounded,
-    backgroundColor: scheme === 'dark' ? '#3F3F46' : '#E5E7EB',
-  }
-
-  return <Animated.View style={[animatedStyle, blockStyle]} />
-}
-
-function ShimmerDaysList({ count = 6 }: { count?: number }) {
-  return (
-    <View className="gap-3">
-      {Array.from({ length: count }).map((_, i) => (
-        <View
-          key={i}
-          className="flex-row items-center justify-between rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
-        >
-          <View className="flex-1">
-            <SkeletonBlock width="55%" height={18} rounded={6} />
-            <View className="mt-2" />
-            <SkeletonBlock width="40%" height={14} rounded={6} />
-          </View>
-          <SkeletonBlock width={40} height={40} rounded={999} />
-        </View>
-      ))}
-    </View>
-  )
-}
 
 export default function UserProgramDashboard() {
   const params = useLocalSearchParams()
@@ -207,7 +136,7 @@ export default function UserProgramDashboard() {
       scroll
       contentContainerStyle={{ paddingBottom: 100 }}
       isLoading={isLoading}
-      shimmer={<ShimmerProgramDetails />}
+      shimmer={<ProgramDetailsShimmer />}
     >
       {/* Header Section */}
       <View className="mb-6">
@@ -272,7 +201,7 @@ export default function UserProgramDashboard() {
 
       {/* Daily Schedule */}
       {isWeekSwitchLoading ? (
-        <ShimmerDaysList count={Math.max(4, currentWeekData?.days?.length ?? 6)} />
+        <DaysListShimmer count={Math.max(4, currentWeekData?.days?.length ?? 6)} />
       ) : (
         <View className="gap-3">
           {currentWeekData?.days.map((day) => {

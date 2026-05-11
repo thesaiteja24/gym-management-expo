@@ -146,7 +146,7 @@ const BaseScreen = ({
       ) : null}
 
       {isLoading && shimmer ? (
-        <View className={padded && scroll ? 'px-4' : ''}>{shimmer}</View>
+        <View className={padded && scroll ? 'flex-1 px-4' : 'flex-1'}>{shimmer}</View>
       ) : scroll ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -168,9 +168,7 @@ const BaseScreen = ({
       ) : (
         children
       )}
-      {!isLoading && footerComponent && (
-        <View className={padded && scroll ? 'px-4 pb-4' : ''}>{footerComponent}</View>
-      )}
+      {!isLoading && footerComponent && footerComponent}
     </SafeAreaView>
   )
 }

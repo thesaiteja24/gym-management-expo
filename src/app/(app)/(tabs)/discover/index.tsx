@@ -7,7 +7,7 @@ import CommentsModal, { CommentsModalHandle } from '@/components/modals/SocialCo
 import { SocialWorkoutCard } from '@/components/social/SocialWorkoutCard'
 import { Button } from '@/components/ui'
 import BaseListScreen from '@/components/ui/BaseListScreen'
-import { ShimmerDiscoverScreen } from '@/components/ui/shimmers/ShimmerDiscoverScreen'
+import { DiscoverScreenShimmer } from '@/components/ui/shimmers/DiscoverScreenShimmer'
 import { useExercises } from '@/hooks/queries/exercises'
 import { useWorkoutListQuery } from '@/hooks/queries/workouts'
 import { useThemeColor } from '@/hooks/theme'
@@ -75,7 +75,7 @@ export default function DiscoverScreen() {
       <BaseListScreen
         title="Discover"
         isLoading={isScreenLoading}
-        shimmer={<ShimmerDiscoverScreen />}
+        shimmer={<DiscoverScreenShimmer />}
         right={
           <Button
             title=""

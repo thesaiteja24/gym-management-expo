@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react'
 import { BackHandler, View } from 'react-native'
 
 import BaseScreen from '@/components/ui/BaseScreen'
-import { ShimmerAnalyticsScreen } from '@/components/ui/shimmers/ShimmerAnalyticsScreen'
+import { AnalyticsScreenShimmer } from '@/components/ui/shimmers/AnalyticsScreenShimmer'
 import { UserMuscleCompositionCard } from '@/components/user/UserMuscleCompositionCard'
 import { UserNutritionTargetsCard } from '@/components/user/UserNutritionTargetsCard'
 import {
@@ -159,7 +159,7 @@ const AnalyticsScreen = () => {
     <BaseScreen
       title="Analytics"
       isLoading={isLoading}
-      shimmer={<ShimmerAnalyticsScreen />}
+      shimmer={<AnalyticsScreenShimmer />}
       backButton
     >
       <View className="gap-4">

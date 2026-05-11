@@ -9,7 +9,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated'
 import { HabitCard } from '@/components/habit/HabitCard'
 import { Button } from '@/components/ui'
 import BaseScreen from '@/components/ui/BaseScreen'
-import { ShimmerHomeScreen } from '@/components/ui/shimmers/ShimmerHomeScreen'
+import { HomeScreenShimmer } from '@/components/ui/shimmers'
 import { TopLifts } from '@/components/user'
 import { StreakDay, UserStreakCard } from '@/components/user/UserStreakCard'
 import {
@@ -291,7 +291,7 @@ export default function HomeScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       contentContainerStyle={{ paddingBottom: '50%' }}
       isLoading={isScreenLoading}
-      shimmer={<ShimmerHomeScreen />}
+      shimmer={<HomeScreenShimmer />}
     >
       <UserStreakCard {...streakData} />
 

@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
 import BaseScreen from '@/components/ui/BaseScreen'
-import { ShimmerProgramDetails } from '@/components/ui/shimmers/ShimmerProgramDetails'
+import { ProgramDetailsShimmer } from '@/components/ui/shimmers'
 import { ROLES } from '@/constants/roles'
 import { useProfileQuery } from '@/hooks/queries/me'
 import {
@@ -102,7 +102,7 @@ export default function ProgramTemplateDetails() {
   )
 
   const renderFooter = () => (
-    <View className="p-4">
+    <View className="absolute bottom-0 left-0 right-0 mb-2 p-6">
       <Button
         title="Start This Program"
         variant="primary"
@@ -111,10 +111,6 @@ export default function ProgramTemplateDetails() {
       />
     </View>
   )
-
-  if (programByIdLoading) {
-    return <ShimmerProgramDetails />
-  }
 
   if (!program) {
     return (
@@ -129,7 +125,7 @@ export default function ProgramTemplateDetails() {
     <BaseScreen
       title="Program Preview"
       isLoading={programByIdLoading}
-      shimmer={<ShimmerProgramDetails />}
+      shimmer={<ProgramDetailsShimmer />}
       backButton
       right={renderHeaderRight()}
       scroll

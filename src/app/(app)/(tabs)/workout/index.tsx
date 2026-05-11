@@ -27,9 +27,9 @@ import { Button } from '@/components/ui'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
 import BaseScreen from '@/components/ui/BaseScreen'
 import {
-  ShimmerProgramCard,
-  ShimmerTemplateCard,
-  ShimmerUserProgramCard,
+  ProgramCardShimmer,
+  TemplateCardShimmer,
+  UserProgramCardShimmer,
 } from '@/components/ui/shimmers/'
 import { FREE_TIER_LIMITS } from '@/constants/limits'
 import { ROLES } from '@/constants/roles'
@@ -246,7 +246,7 @@ export default function WorkoutScreen() {
           {/* Active Program Card or Dotted Interface */}
           <View className="">
             {activeLoading || refreshing ? (
-              <ShimmerUserProgramCard />
+              <UserProgramCardShimmer />
             ) : activeProgram ? (
               <>
                 <UserProgramCard program={activeProgram} />
@@ -288,7 +288,7 @@ export default function WorkoutScreen() {
             >
               {[1, 2].map((item) => (
                 <View key={item} style={{ width: width * 0.75 }}>
-                  <ShimmerProgramCard />
+                  <ProgramCardShimmer />
                 </View>
               ))}
             </ScrollView>
@@ -345,7 +345,7 @@ export default function WorkoutScreen() {
             >
               {[1, 2].map((item) => (
                 <View key={item} style={{ width: width * 0.75 }}>
-                  <ShimmerTemplateCard />
+                  <TemplateCardShimmer />
                 </View>
               ))}
             </ScrollView>
@@ -383,7 +383,7 @@ export default function WorkoutScreen() {
             </View>
 
             {userProgramsLoading || refreshing ? (
-              <ShimmerUserProgramCard />
+              <UserProgramCardShimmer />
             ) : (
               <View className="gap-4">
                 {pastPrograms.map((p) => (

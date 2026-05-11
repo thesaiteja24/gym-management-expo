@@ -6,7 +6,7 @@ import { Text, View } from 'react-native'
 import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
 import BaseScreen from '@/components/ui/BaseScreen'
-import { ShimmerTemplateScreen } from '@/components/ui/shimmers/ShimmerTemplateScreen'
+import { TemplateScreenShimmer } from '@/components/ui/shimmers'
 import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
 import { useDeleteTemplateMutation, useTemplateByIdQuery } from '@/hooks/queries/templates'
 import { useThemeColor } from '@/hooks/theme'
@@ -116,7 +116,7 @@ export default function TemplateDetails() {
       scroll
       contentContainerStyle={{ paddingBottom: 120 }}
       isLoading={isLoading}
-      shimmer={<ShimmerTemplateScreen />}
+      shimmer={<TemplateScreenShimmer />}
     >
       {/* Header Info */}
       <View className="border-b border-neutral-100 pb-4 dark:border-neutral-900">

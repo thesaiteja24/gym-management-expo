@@ -4,7 +4,7 @@ import { Alert, Text, View } from 'react-native'
 
 import { Button } from '@/components/ui'
 import BaseScreen from '@/components/ui/BaseScreen'
-import { ShimmerTemplateScreen } from '@/components/ui/shimmers/ShimmerTemplateScreen'
+import { TemplateScreenShimmer } from '@/components/ui/shimmers'
 import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
 import {
   useSaveSharedTemplateMutation,
@@ -144,7 +144,7 @@ export default function SharedTemplateDetails() {
     <BaseScreen
       title="Shared Template"
       isLoading={isLoading}
-      shimmer={<ShimmerTemplateScreen />}
+      shimmer={<TemplateScreenShimmer />}
       backButton
       onBackPress={() => router.replace('/(app)/(tabs)/workout')}
       scroll

@@ -1,16 +1,16 @@
 import { Ionicons } from '@expo/vector-icons'
-import { FlashList } from '@shopify/flash-list'
+import { FlashListProps } from '@shopify/flash-list'
 import { isThisWeek } from 'date-fns'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useColorScheme } from 'nativewind'
-import { useCallback, useMemo, useRef } from 'react'
-import { ActivityIndicator, Text, View } from 'react-native'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { Text, View } from 'react-native'
 
 import { BaseModalHandle, NudgeModal } from '@/components/modals'
 import { SocialWorkoutCard } from '@/components/social/SocialWorkoutCard'
 import { Button } from '@/components/ui'
-import BaseScreen from '@/components/ui/BaseScreen'
-import { ShimmerProfileScreen } from '@/components/ui/shimmers'
+import BaseListScreen from '@/components/ui/BaseListScreen'
+import { ProfileScreenShimmer } from '@/components/ui/shimmers'
 import { TopLifts, UserHeader } from '@/components/user'
 import { UserTrainingActivity } from '@/components/user/UserTrainingActivity'
 import { useFollowUserMutation, useUnfollowUserMutation } from '@/hooks/queries/engagement'
@@ -26,6 +26,7 @@ import { useShare } from '@/hooks/useShare'
 import { Arise } from '@/lib/arise'
 import { useAuth } from '@/stores/auth.store'
 import { useMeStore } from '@/stores/me.store'
+import { WorkoutHistoryItem } from '@/types/workouts'
 
 export default function UserProfile() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -34,6 +35,7 @@ export default function UserProfile() {
   const { shareEntity } = useShare()
   const { colorScheme } = useColorScheme()
   const isDarkMode = colorScheme === 'dark'
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const { data: user, isLoading: isUserLoading } = usePublicUserQuery(id)
   const { data: topLifts = [], isLoading: isTopLiftsLoading } = useUserTopLiftsQuery(id)
@@ -50,6 +52,7 @@ export default function UserProfile() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch: refetchWorkouts,
   } = useWorkoutListQuery(id)
 
   const { data: trainingAnalytics, isLoading: isTrainingLoading } = useUserTrainingAnalyticsQuery(
@@ -101,6 +104,12 @@ export default function UserProfile() {
     }
   }, [user, id, followMutation, unfollowMutation])
 
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    await refetchWorkouts()
+    setIsRefreshing(false)
+  }, [refetchWorkouts])
+
   const renderHeader = useMemo(() => {
     const isPending = followMutation.isPending || unfollowMutation.isPending
 
@@ -149,8 +158,8 @@ export default function UserProfile() {
     trainingAnalytics,
   ])
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: any; index: number }) => (
+  const renderItem: FlashListProps<WorkoutHistoryItem>['renderItem'] = useCallback(
+    ({ item, index }: { item: WorkoutHistoryItem; index: number }) => (
       <SocialWorkoutCard
         workout={item}
         exerciseTypeMap={exerciseTypeMap}
@@ -163,56 +172,45 @@ export default function UserProfile() {
     [exerciseTypeMap],
   )
 
-  const onEndReached = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage()
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
-
   return (
-    <BaseScreen
-      title={headerTitle}
-      backButton
-      right={
-        !isLoading && (
-          <Button
-            title=""
-            variant="ghost"
-            leftIcon={
-              <Ionicons name="share-outline" size={28} color={isDarkMode ? 'white' : 'black'} />
-            }
-            onPress={handleShare}
-            className="p-0"
-          />
-        )
-      }
-    >
-      {isLoading ? (
-        <ShimmerProfileScreen />
-      ) : (
-        <FlashList
-          data={workouts}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          ListHeaderComponent={renderHeader}
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
-          showsVerticalScrollIndicator={false}
-          ListFooterComponent={
-            hasNextPage ? (
-              <View className="mb-[100%] items-center justify-center p-4 pb-12 pt-6">
-                {isFetchingNextPage && <ActivityIndicator size="small" />}
-              </View>
-            ) : (
-              <View className="mb-[50%] items-center justify-center p-4 pb-12 pt-6">
-                <Text className="text-neutral-500 dark:text-neutral-400">
-                  You&apos;ve conquered all the workouts here 🏆
-                </Text>
-              </View>
-            )
-          }
-        />
-      )}
+    <>
+      <BaseListScreen
+        title={headerTitle}
+        backButton
+        right={
+          !isLoading && (
+            <Button
+              title=""
+              variant="ghost"
+              leftIcon={
+                <Ionicons name="share-outline" size={28} color={isDarkMode ? 'white' : 'black'} />
+              }
+              onPress={handleShare}
+              className="p-0"
+            />
+          )
+        }
+        // Data & Rendering
+        data={workouts}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        estimatedItemSize={250}
+        // States
+        isLoading={isLoading}
+        shimmer={<ProfileScreenShimmer />}
+        isRefreshing={isRefreshing}
+        onRefresh={onRefresh}
+        // Pagination
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onEndReached={fetchNextPage}
+        // Customizations
+        emptyText="This athlete hasn't posted any workouts yet 🏋️‍♂️"
+        endReachedText="You've conquered all the workouts here 🏆"
+        flashListProps={{
+          ListHeaderComponent: renderHeader,
+        }}
+      />
 
       <NudgeModal
         ref={nudgeModalRef}
@@ -235,6 +233,6 @@ export default function UserProfile() {
           )
         }}
       />
-    </BaseScreen>
+    </>
   )
 }
