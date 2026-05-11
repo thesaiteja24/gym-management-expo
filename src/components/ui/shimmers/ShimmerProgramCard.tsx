@@ -1,15 +1,15 @@
-import React from 'react'
 import { View } from 'react-native'
 
 /**
  * Skeleton for the global program templates (Library)
  */
-export const SkeletonProgramCard = () => {
+export const ShimmerProgramCard = () => {
   return (
-    <View className="ml-4 h-40 w-[85%] gap-2 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <View className="h-40 gap-2 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
       {/* Header */}
       <View className="flex-col gap-2">
         <View className="h-6 w-3/4 rounded bg-neutral-200 dark:bg-neutral-800" />
+        <View className="h-4 w-full rounded bg-neutral-200 dark:bg-neutral-800" />
         <View className="h-4 w-full rounded bg-neutral-200 dark:bg-neutral-800" />
       </View>
 
@@ -19,7 +19,7 @@ export const SkeletonProgramCard = () => {
           <View className="h-6 w-20 rounded-full bg-neutral-200 dark:bg-neutral-800" />
           <View className="h-6 w-24 rounded-full bg-neutral-200 dark:bg-neutral-800" />
         </View>
-        <View className="h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-800" />
+        <View className="h-10 w-14 rounded-full bg-neutral-200 dark:bg-neutral-800" />
       </View>
     </View>
   )
@@ -28,19 +28,16 @@ export const SkeletonProgramCard = () => {
 /**
  * Skeleton for the user's specific program sessions (Active or Past)
  */
-export const SkeletonUserProgramCard = () => {
+export const ShimmerUserProgramCard = () => {
   return (
     <View className="h-44 w-full gap-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
       {/* Top Section */}
-      <View className="flex-row items-start justify-between">
-        <View className="flex-1 gap-2">
-          <View className="flex-row items-center gap-2">
-            <View className="h-6 w-2/3 rounded-lg bg-neutral-200 dark:bg-neutral-800" />
-            <View className="h-5 w-16 rounded-full bg-neutral-200 dark:bg-neutral-800" />
-          </View>
-          <View className="h-4 w-1/2 rounded-md bg-neutral-200 dark:bg-neutral-800" />
+      <View className="flex-col items-start justify-between gap-2">
+        <View className="h-4 w-3/4 rounded-lg bg-neutral-200 dark:bg-neutral-800" />
+        <View className="w-full flex-row items-center justify-between gap-2">
+          <View className="h-4 w-1/3 rounded-lg bg-neutral-200 dark:bg-neutral-800" />
+          <View className="h-4 w-12 rounded-full bg-neutral-200 dark:bg-neutral-800" />
         </View>
-        <View className="h-8 w-12 rounded-full bg-neutral-200 dark:bg-neutral-800" />
       </View>
 
       {/* Progress Bar Placeholder */}
@@ -52,9 +49,8 @@ export const SkeletonUserProgramCard = () => {
           <View className="h-3 w-16 rounded bg-neutral-200 dark:bg-neutral-800" />
           <View className="h-5 w-3/4 rounded bg-neutral-200 dark:bg-neutral-800" />
         </View>
-        <View className="h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-800" />
+        <View className="h-10 w-14 rounded-full bg-neutral-200 dark:bg-neutral-800" />
       </View>
     </View>
   )
 }
-export default SkeletonProgramCard

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { type DimensionValue, useColorScheme, View, type ViewStyle } from 'react-native'
 import Animated, {
   useAnimatedStyle,
@@ -56,31 +56,20 @@ function SkeletonBlock({
    Template Card Skeleton (matches TemplateCard layout)
 ────────────────────────────────────────────── */
 
-export function SkeletonTemplateCard() {
+export function ShimmerTemplateCard() {
   return (
-    <View className="ml-4 h-40 w-[80%] rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <View className="h-40 w-full gap-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
       {/* Header */}
-      <View className="mb-3 flex-col justify-between gap-1">
+      <View className="mb-3 flex-col justify-between gap-2">
         <View className="flex-row items-center justify-between gap-4">
           <SkeletonBlock width="60%" height={20} rounded={6} />
-          <SkeletonBlock width={60} height={22} rounded={999} />
         </View>
         <SkeletonBlock width="40%" height={14} rounded={4} />
       </View>
 
-      {/* Exercise preview */}
-      {/* <View className="mb-4 flex-1">
-        {[0, 1, 2].map((i) => (
-          <View key={i} className="mb-2 flex-row items-center gap-2">
-            <SkeletonBlock width={32} height={32} rounded={999} />
-            <SkeletonBlock width="70%" height={14} rounded={4} />
-          </View>
-        ))}
-      </View> */}
-
       {/* Button skeleton */}
-      <SkeletonBlock width="100%" height={44} rounded={12} />
+      <SkeletonBlock width="100%" height={40} rounded={12} />
     </View>
   )
 }
-export default SkeletonTemplateCard
+export default ShimmerTemplateCard

@@ -26,7 +26,7 @@ export function TemplateCard({ template }: { template: WorkoutTemplate }) {
       onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
       asChild
     >
-      <Pressable className="ml-4 h-40 w-[80%] rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <Pressable className="h-40 w-full rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
         {/* Header */}
         <View className="mb-3 flex-col justify-between gap-1">
           <View className="flex-row items-center justify-between gap-4">

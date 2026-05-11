@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   BackHandler,
   RefreshControl,
+  ScrollView,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -16,7 +17,6 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated'
-import Carousel from 'react-native-reanimated-carousel'
 
 import { ProgramWorkoutPromptModal } from '@/components/modals/ProgramWorkoutPromptModal'
 import { UserSubscriptionPaywallModal } from '@/components/modals/SubscriptionPaywallModal'
@@ -27,10 +27,10 @@ import { Button } from '@/components/ui'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
 import BaseScreen from '@/components/ui/BaseScreen'
 import {
-  SkeletonProgramCard,
-  SkeletonUserProgramCard,
-} from '@/components/ui/shimmers/SkeletonProgramCard'
-import { SkeletonTemplateCard } from '@/components/ui/shimmers/SkeletonTemplateCard'
+  ShimmerProgramCard,
+  ShimmerTemplateCard,
+  ShimmerUserProgramCard,
+} from '@/components/ui/shimmers/'
 import { FREE_TIER_LIMITS } from '@/constants/limits'
 import { ROLES } from '@/constants/roles'
 import { useExercises } from '@/hooks/queries/exercises'
@@ -46,8 +46,6 @@ export default function WorkoutScreen() {
   const router = useRouter()
   const colors = useThemeColor()
   const { width } = useWindowDimensions()
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [activeProgramIndex, setActiveProgramIndex] = useState(0)
 
   // Workout Store
   const workout = useWorkoutEditor((s) => s.workout)
@@ -248,9 +246,11 @@ export default function WorkoutScreen() {
           {/* Active Program Card or Dotted Interface */}
           <View className="">
             {activeLoading || refreshing ? (
-              <SkeletonUserProgramCard />
+              <ShimmerUserProgramCard />
             ) : activeProgram ? (
-              <UserProgramCard program={activeProgram} />
+              <>
+                <UserProgramCard program={activeProgram} />
+              </>
             ) : (
               <View className="h-44 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
                 <Text className="mb-2 text-neutral-500 dark:text-neutral-400">
@@ -277,30 +277,21 @@ export default function WorkoutScreen() {
             )}
           </View>
 
-          {/* Available Programs Carousel */}
           {programLoading || refreshing ? (
-            <View>
-              <Carousel
-                loop={false}
-                width={width}
-                height={160}
-                autoPlay={false}
-                data={[1, 2]}
-                scrollAnimationDuration={700}
-                enabled={false}
-                renderItem={() => <SkeletonProgramCard />}
-                mode="parallax"
-                modeConfig={{
-                  parallaxAdjacentItemScale: 0.9,
-                  parallaxScrollingScale: 1,
-                  parallaxScrollingOffset: 160,
-                }}
-              />
-              <View className="flex-row justify-center gap-2">
-                <View className="h-2 w-6 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-                <View className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              </View>
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10 }}
+              decelerationRate="fast"
+              snapToInterval={width * 0.75 + 10}
+              snapToAlignment="start"
+            >
+              {[1, 2].map((item) => (
+                <View key={item} style={{ width: width * 0.75 }}>
+                  <ShimmerProgramCard />
+                </View>
+              ))}
+            </ScrollView>
           ) : programs.length === 0 ? (
             <View className="h-40 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
               <Text className="text-neutral-500 dark:text-neutral-400">
@@ -308,37 +299,20 @@ export default function WorkoutScreen() {
               </Text>
             </View>
           ) : (
-            <View>
-              <Carousel
-                loop={false}
-                width={width}
-                height={160}
-                autoPlay={false}
-                data={programs}
-                scrollAnimationDuration={700}
-                onSnapToItem={(index) => setActiveProgramIndex(index)}
-                renderItem={({ item }) => <ProgramCard program={item} />}
-                mode="parallax"
-                modeConfig={{
-                  parallaxAdjacentItemScale: 0.9,
-                  parallaxScrollingScale: 1,
-                  parallaxScrollingOffset: 160,
-                }}
-              />
-
-              <View className="flex-row justify-center gap-2">
-                {programs.map((_, index) => (
-                  <View
-                    key={index}
-                    className={`h-2 w-2 rounded-full ${
-                      index === activeProgramIndex
-                        ? 'w-6 bg-blue-600'
-                        : 'bg-neutral-300 dark:bg-neutral-700'
-                    }`}
-                  />
-                ))}
-              </View>
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10 }}
+              decelerationRate="fast"
+              snapToInterval={width * 0.75 + 10}
+              snapToAlignment="start"
+            >
+              {programs.map((program) => (
+                <View key={program.id} style={{ width: width * 0.75 }}>
+                  <ProgramCard program={program} />
+                </View>
+              ))}
+            </ScrollView>
           )}
         </Animated.View>
 
@@ -361,30 +335,20 @@ export default function WorkoutScreen() {
           </View>
 
           {templateLoading || refreshing ? (
-            <View>
-              <Carousel
-                loop={false}
-                width={width}
-                height={160}
-                autoPlay={false}
-                data={[1, 2]} // two skeleton cards
-                scrollAnimationDuration={700}
-                enabled={false}
-                renderItem={() => <SkeletonTemplateCard />}
-                mode="parallax"
-                modeConfig={{
-                  parallaxAdjacentItemScale: 0.9,
-                  parallaxScrollingScale: 1,
-                  parallaxScrollingOffset: 160,
-                }}
-              />
-
-              {/* fake pagination */}
-              <View className="flex-row justify-center gap-2">
-                <View className="h-2 w-6 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-                <View className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              </View>
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10 }}
+              decelerationRate="fast"
+              snapToInterval={width * 0.75 + 10}
+              snapToAlignment="start"
+            >
+              {[1, 2].map((item) => (
+                <View key={item} style={{ width: width * 0.75 }}>
+                  <ShimmerTemplateCard />
+                </View>
+              ))}
+            </ScrollView>
           ) : templates.length === 0 ? (
             <View className="h-40 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
               <Text className="text-neutral-500 dark:text-neutral-400">
@@ -392,37 +356,20 @@ export default function WorkoutScreen() {
               </Text>
             </View>
           ) : (
-            <View>
-              <Carousel
-                loop={false}
-                width={width}
-                height={160}
-                autoPlay={false}
-                data={templates}
-                scrollAnimationDuration={700}
-                onSnapToItem={(index) => setActiveIndex(index)}
-                renderItem={({ item }) => <TemplateCard template={item} />}
-                mode="parallax"
-                modeConfig={{
-                  parallaxAdjacentItemScale: 0.9,
-                  parallaxScrollingScale: 1,
-                  parallaxScrollingOffset: 160,
-                }}
-              />
-              {/* Pagination Dots */}
-              <View className="flex-row justify-center gap-2">
-                {templates.map((_, index) => (
-                  <View
-                    key={index}
-                    className={`h-2 w-2 rounded-full ${
-                      index === activeIndex
-                        ? 'w-6 bg-blue-600'
-                        : 'bg-neutral-300 dark:bg-neutral-700'
-                    }`}
-                  />
-                ))}
-              </View>
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10 }}
+              decelerationRate="fast"
+              snapToInterval={width * 0.75 + 10}
+              snapToAlignment="start"
+            >
+              {templates.map((template) => (
+                <View key={template.id} style={{ width: width * 0.75 }}>
+                  <TemplateCard template={template} />
+                </View>
+              ))}
+            </ScrollView>
           )}
         </Animated.View>
 
@@ -436,7 +383,7 @@ export default function WorkoutScreen() {
             </View>
 
             {userProgramsLoading || refreshing ? (
-              <SkeletonUserProgramCard />
+              <ShimmerUserProgramCard />
             ) : (
               <View className="gap-4">
                 {pastPrograms.map((p) => (

@@ -17,7 +17,7 @@ export function ProgramCard({ program }: { program: Program }) {
       onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
       asChild
     >
-      <Pressable className="ml-4 h-40 w-[80%] gap-2 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <Pressable className="h-40 w-full gap-2 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
         {/* Header */}
         <View className="flex-col justify-between gap-1">
           <View className="flex-row items-center justify-between gap-4">
