@@ -246,7 +246,6 @@ export const BaseModal = forwardRef<BaseModalHandle, BaseModalProps>(
               onPress={action!.onPress}
               loading={action!.loading}
               disabled={action!.disabled}
-              title=""
             />
           ))}
           {confirmBtn && (

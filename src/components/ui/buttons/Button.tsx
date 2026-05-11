@@ -13,7 +13,7 @@ export type ButtonVariant =
   | 'warning'
 
 export interface ButtonProps extends TouchableOpacityProps {
-  title: string
+  title?: string
   variant?: ButtonVariant
   disabled?: boolean
   loading?: boolean
@@ -106,9 +106,11 @@ function ButtonComponent({
         <>
           {leftIcon}
 
-          <Text numberOfLines={1} ellipsizeMode="tail" className={labelClassName}>
-            {title}
-          </Text>
+          {!!title && (
+            <Text numberOfLines={1} ellipsizeMode="tail" className={labelClassName}>
+              {title}
+            </Text>
+          )}
 
           {rightIcon}
         </>

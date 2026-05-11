@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons'
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { format } from 'date-fns'
 import { useRouter } from 'expo-router'
 import { useMemo, useRef, useState } from 'react'
@@ -268,14 +268,22 @@ export const HabitCard = ({ habit }: HabitCardProps) => {
         cancelAction={
           habit.source === 'manual' && habit.trackingType === 'streak'
             ? {
-                title: 'No',
-                onPress: () => handleManualLog('0'),
-                loading: logHabitMutation.isPending,
+                onPress: () => habitModalRef.current?.dismiss(),
               }
             : undefined
         }
       >
         <View className="flex flex-col">
+          {/* Manual Streak Habit Info */}
+          {habit.source === 'manual' && habit.trackingType === 'streak' && (
+            <View className="items-center gap-4 rounded-2xl bg-neutral-50 p-6 dark:bg-neutral-900">
+              <MaterialCommunityIcons name="fire" size={54} color="#f59e0b" />
+              <Text className="text-center text-sm text-neutral-600 dark:text-neutral-400">
+                Did you complete this habit today?
+              </Text>
+            </View>
+          )}
+
           {/* Manual Habis Logger - Only show input if not streak (streak uses footer actions) */}
           {habit.source === 'manual' && habit.trackingType !== 'streak' && (
             <View className="gap-4">

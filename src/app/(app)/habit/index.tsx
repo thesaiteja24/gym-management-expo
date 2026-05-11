@@ -10,9 +10,9 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Button } from '@/components/ui'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { useCreateHabit, useHabitsQuery, useUpdateHabit } from '@/hooks/queries/habits'
 import { Arise } from '@/lib/arise'
 import {
@@ -183,11 +183,11 @@ export default function HabitCreatorScreen() {
   }, [])
 
   return (
-    <SafeAreaView edges={['bottom']} className="flex-1 bg-white dark:bg-black">
+    <BaseScreen title={isEdit ? 'Edit Habit' : 'Create Habit'} backButton>
       <KeyboardAvoidingView className="flex-1" behavior="padding" keyboardVerticalOffset={100}>
         {/* Scrollable Content */}
         <ScrollView
-          contentContainerClassName="gap-4 p-4"
+          contentContainerClassName="gap-4"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -411,9 +411,15 @@ export default function HabitCreatorScreen() {
 
         {/* Fixed Bottom Button */}
         <View className="absolute bottom-0 left-0 right-0 border-t border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-black">
-          <Button title={isEdit ? 'Update Habit' : 'Create Habit'} onPress={handleCreate} />
+          <Button
+            title={isEdit ? 'Update Habit' : 'Create Habit'}
+            className="rounded-full"
+            onPress={handleCreate}
+            loading={createHabitMutation.isPending || updateHabitMutation.isPending}
+            disabled={createHabitMutation.isPending || updateHabitMutation.isPending}
+          />
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </BaseScreen>
   )
 }
