@@ -32,7 +32,7 @@ export const queryKeys = {
   user: {
     byId: (userId: string) => ['user', userId] as const,
 
-    topLifts: (userId: string) => ['user', userId, 'topLifts'] as const,
+    topLifts: (userId: string, limit?: number) => ['user', userId, 'topLifts', limit ?? 'all'] as const,
     trainingAnalytics: (userId: string, duration: string) =>
       ['user', userId, 'trainingAnalytics', duration] as const,
   },

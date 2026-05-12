@@ -39,7 +39,7 @@ export function useNudgeMutation() {
 
 export function useUserTopLiftsQuery(userId: string, limit?: number) {
   return useQuery({
-    queryKey: queryKeys.user.topLifts(userId),
+    queryKey: queryKeys.user.topLifts(userId, limit),
     queryFn: () => getUserTopLiftsService(userId, limit),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
