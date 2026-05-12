@@ -1,13 +1,14 @@
-import { Button } from '@/components/ui/buttons/Button'
-import { ReadOnlyExerciseRow } from '@/components/workout-editor/ReadOnlyExerciseRow'
-import { useSaveWorkoutMutation } from '@/hooks/queries/workouts'
-import { getWorkoutByShareIdService } from '@/services/workouts.service'
-import { WorkoutHistoryItem } from '@/types/workouts'
 import * as Crypto from 'expo-crypto'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
 import { Alert, ScrollView, Text, useColorScheme, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+
+import { Button } from '@/components/ui'
+import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
+import { useSaveWorkoutMutation } from '@/hooks/queries/workouts'
+import { getWorkoutByShareIdService } from '@/services/workouts.service'
+import { WorkoutHistoryItem } from '@/types/workouts'
 
 export default function SharedWorkoutDetails() {
   const { shareId } = useLocalSearchParams<{ shareId: string }>()
@@ -52,56 +53,58 @@ export default function SharedWorkoutDetails() {
     return map
   }, [sharedWorkout?.exerciseGroups])
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!sharedWorkout) return
     setSaving(true)
 
-    try {
-      const payload = {
-        clientId: Crypto.randomUUID(),
-        title: sharedWorkout.title ? `${sharedWorkout.title} (Copy)` : 'Copied Workout',
-        startTime: new Date().toISOString(),
-        endTime: new Date().toISOString(),
-        visibility: 'private' as const,
-        exerciseGroups: sharedWorkout.exerciseGroups.map((g) => ({
-          id: g.id,
-          groupType: g.groupType,
-          groupIndex: g.groupIndex,
-          restSeconds: g.restSeconds,
+    const payload = {
+      clientId: Crypto.randomUUID(),
+      title: sharedWorkout.title ? `${sharedWorkout.title} (Copy)` : 'Copied Workout',
+      startTime: new Date().toISOString(),
+      endTime: new Date().toISOString(),
+      visibility: 'private' as const,
+      exerciseGroups: sharedWorkout.exerciseGroups.map((g) => ({
+        id: g.id,
+        groupType: g.groupType,
+        groupIndex: g.groupIndex,
+        restSeconds: g.restSeconds,
+      })),
+      exercises: sharedWorkout.exercises.map((ex) => ({
+        exerciseId: ex.exerciseId,
+        exerciseIndex: ex.exerciseIndex,
+        exerciseGroupId: ex.exerciseGroupId ?? undefined,
+        sets: ex.sets.map((s) => ({
+          setIndex: s.setIndex,
+          setType: s.setType,
+          weight: s.weight ?? undefined,
+          reps: s.reps ?? undefined,
+          rpe: s.rpe ?? undefined,
+          durationSeconds: s.durationSeconds ?? undefined,
+          restSeconds: s.restSeconds ?? undefined,
+          note: s.note ?? undefined,
         })),
-        exercises: sharedWorkout.exercises.map((ex) => ({
-          exerciseId: ex.exerciseId,
-          exerciseIndex: ex.exerciseIndex,
-          exerciseGroupId: ex.exerciseGroupId ?? undefined,
-          sets: ex.sets.map((s) => ({
-            setIndex: s.setIndex,
-            setType: s.setType,
-            weight: s.weight ?? undefined,
-            reps: s.reps ?? undefined,
-            rpe: s.rpe ?? undefined,
-            durationSeconds: s.durationSeconds ?? undefined,
-            restSeconds: s.restSeconds ?? undefined,
-            note: s.note ?? undefined,
-          })),
-        })),
-      }
-
-      await saveMutation.mutateAsync(payload as any)
-
-      Alert.alert('Success', 'Workout copied to your history!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            router.replace('/(app)/(tabs)/workout')
-          },
-        },
-      ])
-    } catch (e) {
-      console.error('Failed to save shared workout', e)
-      Alert.alert('Error', 'Failed to save workout copy.')
-    } finally {
-      setSaving(false)
+      })),
     }
+
+    saveMutation.mutate(payload as any, {
+      onSuccess: () => {
+        Alert.alert('Success', 'Workout copied to your history!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              router.replace('/(app)/(tabs)/workout')
+            },
+          },
+        ])
+      },
+      onError: (e) => {
+        console.error('Failed to save shared workout', e)
+        Alert.alert('Error', 'Failed to save workout copy.')
+      },
+      onSettled: () => {
+        setSaving(false)
+      },
+    })
   }
 
   if (!sharedWorkout) {
@@ -150,7 +153,7 @@ export default function SharedWorkoutDetails() {
         {/* Read Only Exercise List */}
         <View className="gap-4 p-4">
           {sharedWorkout.exercises?.map((ex, idx) => (
-            <ReadOnlyExerciseRow
+            <WorkoutReadOnlyExerciseRow
               key={ex.id || idx}
               exercise={ex}
               group={ex.exerciseGroupId ? groupMap.get(ex.exerciseGroupId) : null}

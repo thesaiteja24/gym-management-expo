@@ -1,30 +1,20 @@
-import MetaModal from '@/components/meta/MetaModal'
-import { BaseModalHandle } from '@/components/ui/BaseModal'
+import { Ionicons } from '@expo/vector-icons'
+import * as ImagePicker from 'expo-image-picker'
+import { router } from 'expo-router'
+import { useCallback, useRef, useState } from 'react'
+import { Keyboard, Platform, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
 
+import { MetaModal } from '@/components/modals/ExerciseMetaModal'
+import { Button } from '@/components/ui'
+import { BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
 import { useCreateExercise } from '@/hooks/queries/exercises'
 import { useEquipment, useMuscleGroups } from '@/hooks/queries/meta'
+import { Arise } from '@/lib/arise'
 import { ExerciseType } from '@/types/exercises'
 import { MetaItem } from '@/types/meta'
 
-import { Ionicons } from '@expo/vector-icons'
-import * as ImagePicker from 'expo-image-picker'
-import { useNavigation } from 'expo-router'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  Keyboard,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
-
 export default function CreateExercise() {
-  const navigation = useNavigation()
   const isDarkMode = useColorScheme() === 'dark'
   const placeholderColor = isDarkMode ? '#a3a3a3' : '#737373'
 
@@ -46,58 +36,54 @@ export default function CreateExercise() {
 
   const lineHeight = Platform.OS === 'ios' ? 0 : 30
 
-  const insets = useSafeAreaInsets()
-
-  const onSave = useCallback(async () => {
+  const onSave = useCallback(() => {
     if (
       !title.trim() ||
       !equipmentId ||
       !primaryMuscleGroupId ||
       createExerciseMutation.isPending
     ) {
-      Toast.show({
-        type: 'info',
-        text1: 'Title, Equipment, and Primary Muscle Group are required',
+      Arise.error({
+        heading: 'Title, Equipment, and Primary Muscle Group are required',
       })
       return
     }
 
     Keyboard.dismiss()
 
-    try {
-      const formData = new FormData()
-      formData.append('title', title.trim())
-      formData.append('instructions', instructions.trim())
-      formData.append('exerciseType', exerciseType)
-      formData.append('equipmentId', equipmentId)
-      formData.append('primaryMuscleGroupId', primaryMuscleGroupId)
+    const formData = new FormData()
+    formData.append('title', title.trim())
+    formData.append('instructions', instructions.trim())
+    formData.append('exerciseType', exerciseType)
+    formData.append('equipmentId', equipmentId)
+    formData.append('primaryMuscleGroupId', primaryMuscleGroupId)
 
-      if (videoUri) {
-        setUploading(true)
-        formData.append('video', {
-          uri: videoUri,
-          name: 'exercise.mp4',
-          type: 'video/mp4',
-        } as any)
-      }
-
-      await createExerciseMutation.mutateAsync(formData)
-
-      Toast.show({
-        type: 'success',
-        text1: 'Exercise created successfully',
-      })
-      // Query is automatically invalidated by useCreateExercise
-      navigation.goBack()
-    } catch (e: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to create exercise',
-        text2: e.message,
-      })
-    } finally {
-      setUploading(false)
+    if (videoUri) {
+      setUploading(true)
+      formData.append('video', {
+        uri: videoUri,
+        name: 'exercise.mp4',
+        type: 'video/mp4',
+      } as any)
     }
+
+    createExerciseMutation.mutate(formData, {
+      onSuccess: () => {
+        Arise.success({
+          heading: 'Exercise created successfully',
+        })
+        router.back()
+      },
+      onError: (e: any) => {
+        Arise.error({
+          heading: 'Failed to create exercise',
+        })
+        console.error(e)
+      },
+      onSettled: () => {
+        setUploading(false)
+      },
+    })
   }, [
     title,
     instructions,
@@ -106,35 +92,24 @@ export default function CreateExercise() {
     primaryMuscleGroupId,
     videoUri,
     createExerciseMutation,
-    navigation,
   ])
 
-  useEffect(() => {
-    ;(navigation as any).setOptions({
-      title: 'Add Exercise',
-      rightIcons: [
-        {
-          name: 'checkmark-done',
-          onPress: onSave,
-          disabled:
-            createExerciseMutation.isPending ||
-            !title.trim() ||
-            !equipmentId ||
-            !primaryMuscleGroupId ||
-            !videoUri,
-          color: 'green',
-        },
-      ],
-    })
-  }, [
-    navigation,
-    onSave,
-    createExerciseMutation.isPending,
-    title,
-    equipmentId,
-    primaryMuscleGroupId,
-    videoUri,
-  ])
+  const renderHeaderRight = () => (
+    <Button
+      variant="ghost"
+      title=""
+      onPress={onSave}
+      disabled={
+        createExerciseMutation.isPending ||
+        !title.trim() ||
+        !equipmentId ||
+        !primaryMuscleGroupId ||
+        !videoUri
+      }
+      leftIcon={<Ionicons name="checkmark-done" size={28} color="green" />}
+      className="p-0"
+    />
+  )
 
   const handleSelectVideo = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -149,98 +124,102 @@ export default function CreateExercise() {
   }
 
   return (
-    <View className="flex-1 bg-white dark:bg-black" style={{ paddingBottom: insets.bottom }}>
-      <ScrollView className="p-4">
-        {/* Video picker */}
-        <View className="mb-6 items-center">
-          <TouchableOpacity
-            onPress={handleSelectVideo}
-            disabled={createExerciseMutation.isPending || uploading}
-            className="items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-6 py-8 dark:border-neutral-700 dark:bg-neutral-900"
-            style={{
-              height: 160,
-              width: '100%',
-              opacity: createExerciseMutation.isPending || uploading ? 0.5 : 1,
-            }}
-          >
-            {videoUri ? (
-              <>
-                <Ionicons name="videocam" size={48} color={isDarkMode ? '#93c5fd' : '#3b82f6'} />
-                <Text className="mt-2 text-center text-sm font-medium text-blue-500">
-                  Video Selected
-                </Text>
-                <Text className="mt-1 text-center text-xs text-neutral-500">
-                  Tap to choose a different video
-                </Text>
-              </>
-            ) : (
-              <>
-                <Ionicons name="cloud-upload-outline" size={48} color={placeholderColor} />
-                <Text className="mt-2 text-center text-base font-medium text-neutral-600 dark:text-neutral-400">
-                  Select Exercise Video
-                </Text>
-                <Text className="mt-1 text-center text-xs text-neutral-500">
-                  MP4 format supported
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+    <BaseScreen
+      title="Add Exercise"
+      backButton
+      right={renderHeaderRight()}
+      scroll
+      contentContainerStyle={{ padding: 16 }}
+    >
+      {/* Video picker */}
+      <View className="mb-6 items-center">
+        <TouchableOpacity
+          onPress={handleSelectVideo}
+          disabled={createExerciseMutation.isPending || uploading}
+          className="items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-6 py-8 dark:border-neutral-700 dark:bg-neutral-900"
+          style={{
+            height: 160,
+            width: '100%',
+            opacity: createExerciseMutation.isPending || uploading ? 0.5 : 1,
+          }}
+        >
+          {videoUri ? (
+            <>
+              <Ionicons name="videocam" size={48} color={isDarkMode ? '#93c5fd' : '#3b82f6'} />
+              <Text className="mt-2 text-center text-sm font-medium text-blue-500">
+                Video Selected
+              </Text>
+              <Text className="mt-1 text-center text-xs text-neutral-500">
+                Tap to choose a different video
+              </Text>
+            </>
+          ) : (
+            <>
+              <Ionicons name="cloud-upload-outline" size={48} color={placeholderColor} />
+              <Text className="mt-2 text-center text-base font-medium text-neutral-600 dark:text-neutral-400">
+                Select Exercise Video
+              </Text>
+              <Text className="mt-1 text-center text-xs text-neutral-500">
+                MP4 format supported
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
 
-        {/* Title input */}
-        <View className="mt-4 flex flex-row items-center gap-4">
-          <Text className="w-24 text-lg font-semibold text-black dark:text-white">Title</Text>
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            editable={!createExerciseMutation.isPending}
-            placeholder="e.g. Bench Press"
-            className="flex-1 text-lg text-blue-500"
-            placeholderTextColor={placeholderColor}
-            style={{ lineHeight }}
-          />
-        </View>
+      {/* Title input */}
+      <View className="mt-4 flex flex-row items-center gap-4">
+        <Text className="w-24 text-lg font-semibold text-black dark:text-white">Title</Text>
+        <TextInput
+          value={title}
+          onChangeText={setTitle}
+          editable={!createExerciseMutation.isPending}
+          placeholder="e.g. Bench Press"
+          className="flex-1 text-lg text-blue-500"
+          placeholderTextColor={placeholderColor}
+          style={{ lineHeight }}
+        />
+      </View>
 
-        {/* Instructions */}
-        <View className="mt-6 flex flex-col gap-2">
-          <Text className="text-lg font-semibold text-black dark:text-white">Instructions</Text>
-          <TextInput
-            value={instructions}
-            onChangeText={setInstructions}
-            editable={!createExerciseMutation.isPending}
-            placeholder="Describe how to perform the exercise..."
-            className="min-h-[80px] rounded-xl border border-neutral-200 p-3 text-base text-black dark:border-neutral-800 dark:text-white"
-            placeholderTextColor={placeholderColor}
-            multiline
-          />
-        </View>
+      {/* Instructions */}
+      <View className="mt-6 flex flex-col gap-2">
+        <Text className="text-lg font-semibold text-black dark:text-white">Instructions</Text>
+        <TextInput
+          value={instructions}
+          onChangeText={setInstructions}
+          editable={!createExerciseMutation.isPending}
+          placeholder="Describe how to perform the exercise..."
+          className="min-h-[80px] rounded-xl border border-neutral-200 p-3 text-base text-black dark:border-neutral-800 dark:text-white"
+          placeholderTextColor={placeholderColor}
+          multiline
+        />
+      </View>
 
-        {/* Fields Selection */}
-        <View className="mt-6 flex flex-col gap-4">
-          <TouchableOpacity
-            className="flex flex-row items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900"
-            onPress={() => equipmentModalRef.current?.present()}
-          >
-            <Text className="text-lg font-semibold text-black dark:text-white">Equipment</Text>
-            <Text className="text-lg text-neutral-500 dark:text-neutral-400">
-              {equipmentList.find((e: MetaItem) => e.id === equipmentId)?.title || 'Select'}
-            </Text>
-          </TouchableOpacity>
+      {/* Fields Selection */}
+      <View className="mt-6 flex flex-col gap-4">
+        <TouchableOpacity
+          className="flex flex-row items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900"
+          onPress={() => equipmentModalRef.current?.present()}
+        >
+          <Text className="text-lg font-semibold text-black dark:text-white">Equipment</Text>
+          <Text className="text-lg text-neutral-500 dark:text-neutral-400">
+            {equipmentList.find((e: MetaItem) => e.id === equipmentId)?.title || 'Select'}
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            className="flex flex-row items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900"
-            onPress={() => primaryMuscleModalRef.current?.present()}
-          >
-            <Text className="text-lg font-semibold text-black dark:text-white">Primary Muscle</Text>
-            <Text className="text-lg text-neutral-500 dark:text-neutral-400">
-              {muscleGroupList.find((m: MetaItem) => m.id === primaryMuscleGroupId)?.title ||
-                'Select'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          className="flex flex-row items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900"
+          onPress={() => primaryMuscleModalRef.current?.present()}
+        >
+          <Text className="text-lg font-semibold text-black dark:text-white">Primary Muscle</Text>
+          <Text className="text-lg text-neutral-500 dark:text-neutral-400">
+            {muscleGroupList.find((m: MetaItem) => m.id === primaryMuscleGroupId)?.title ||
+              'Select'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        <View className="h-10" />
-      </ScrollView>
+      <View className="h-10" />
 
       {/* Modals */}
       <MetaModal
@@ -268,6 +247,6 @@ export default function CreateExercise() {
           primaryMuscleModalRef.current?.dismiss()
         }}
       />
-    </View>
+    </BaseScreen>
   )
 }

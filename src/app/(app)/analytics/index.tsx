@@ -1,14 +1,19 @@
-import { MuscleCompositionCard } from '@/components/me/MuscleCompositionCard'
-import { NutritionTargetsCard } from '@/components/me/NutritionTargetsCard'
-import ShimmerAnalyticsScreen from '@/components/ui/shimmers/ShimmerAnalyticsScreen'
+import { useRouter } from 'expo-router'
+import { useEffect, useMemo } from 'react'
+import { BackHandler, View } from 'react-native'
+
+import BaseScreen from '@/components/ui/BaseScreen'
+import { AnalyticsScreenShimmer } from '@/components/ui/shimmers/AnalyticsScreenShimmer'
+import { UserMuscleCompositionCard } from '@/components/user/UserMuscleCompositionCard'
+import { UserNutritionTargetsCard } from '@/components/user/UserNutritionTargetsCard'
 import {
   useFitnessProfileQuery,
   useMeasurementsQuery,
   useNutritionPlanQuery,
   useProfileQuery,
 } from '@/hooks/queries/me'
-import { useUnitConverter } from '@/hooks/useUnitConverter'
 import { useThemeColor } from '@/hooks/theme'
+import { useUnitConverter } from '@/hooks/useUnitConverter'
 import { SelfUser } from '@/types/me'
 import {
   calculateBMI,
@@ -17,9 +22,6 @@ import {
   calculateComposition,
   estimateBodyFatFromBMI,
 } from '@/utils/analytics'
-import { useRouter } from 'expo-router'
-import React, { useEffect, useMemo } from 'react'
-import { BackHandler, ScrollView, View } from 'react-native'
 
 const AnalyticsScreen = () => {
   const router = useRouter()
@@ -154,27 +156,24 @@ const AnalyticsScreen = () => {
   }, [router])
 
   return (
-    <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-      {isLoading ? (
-        <ShimmerAnalyticsScreen />
-      ) : (
-        <View className="flex items-center justify-center gap-4">
-          <MuscleCompositionCard
-            composition={composition}
-            gender={gender}
-            goal={fitnessGoal}
-          />
+    <BaseScreen
+      title="Analytics"
+      isLoading={isLoading}
+      shimmer={<AnalyticsScreenShimmer />}
+      backButton
+    >
+      <View className="gap-4">
+        <UserMuscleCompositionCard composition={composition} gender={gender} goal={fitnessGoal} />
 
-          <NutritionTargetsCard
-            nutritionPlan={nutritionPlan}
-            fitnessProfile={fitnessProfile}
-            riskBadge={riskBadge}
-            bmr={bmr}
-            colors={colors}
-          />
-        </View>
-      )}
-    </ScrollView>
+        <UserNutritionTargetsCard
+          nutritionPlan={nutritionPlan}
+          fitnessProfile={fitnessProfile}
+          riskBadge={riskBadge}
+          bmr={bmr}
+          colors={colors}
+        />
+      </View>
+    </BaseScreen>
   )
 }
 

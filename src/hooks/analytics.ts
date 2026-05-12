@@ -1,5 +1,6 @@
-import { useUserWorkoutHistoryQuery } from '@/hooks/queries/workouts'
 import { useCallback } from 'react'
+
+import { useWorkoutHistoryQuery } from '@/hooks/queries/workouts'
 
 /* ────────────────────────────────────────────── */
 /* Exercise analytics types */
@@ -31,7 +32,7 @@ export interface UseAnalyticsResult {
 }
 
 export function useAnalytics(): UseAnalyticsResult {
-  const { workoutHistory } = useUserWorkoutHistoryQuery()
+  const { workoutHistory } = useWorkoutHistoryQuery()
 
   /* ───────────── User-level analytics ───────────── */
   /* ───────────── Exercise-level analytics ───────────── */
@@ -42,11 +43,11 @@ export function useAnalytics(): UseAnalyticsResult {
       let heaviestWeight = 0
       let best1RM = 0
       let bestSetVolume = 0
-      let setRecords: Record<number, number> = {}
+      const setRecords: Record<number, number> = {}
       // Data for graphs
-      let heaviestWeightRecords: Record<string, number> = {}
-      let best1RMRecords: Record<string, number> = {}
-      let bestSetVolumeRecords: Record<string, number> = {}
+      const heaviestWeightRecords: Record<string, number> = {}
+      const best1RMRecords: Record<string, number> = {}
+      const bestSetVolumeRecords: Record<string, number> = {}
 
       for (const workout of workoutHistory) {
         for (const exercise of workout.exercises) {

@@ -1,8 +1,14 @@
-import { PaywallModal } from '@/components/subscriptions/PaywallModal'
+import { usePreventRemove } from '@react-navigation/native'
+import { router, useLocalSearchParams } from 'expo-router'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ScrollView, Text, TextInput, View } from 'react-native'
+
+import { UserSubscriptionPaywallModal } from '@/components/modals/SubscriptionPaywallModal'
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
-import ExerciseRow from '@/components/workout-editor/ExerciseRow'
-import WorkoutReorderList from '@/components/workout-editor/WorkoutReorderList'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { WorkoutExerciseRow } from '@/components/workout/WorkoutExerciseRow'
+import { WorkoutReorderList } from '@/components/workout/WorkoutReorderList'
 import { FREE_TIER_LIMITS } from '@/constants/limits'
 import { useExercises } from '@/hooks/queries/exercises'
 import {
@@ -11,18 +17,12 @@ import {
   useTemplatesQuery,
   useUpdateTemplateMutation,
 } from '@/hooks/queries/templates'
+import { Arise } from '@/lib/arise'
 import { useProgram } from '@/stores/programs.store'
 import { useSubscriptionStore } from '@/stores/subscriptions.store'
 import { finalizeTemplateForSave, useWorkoutEditor } from '@/stores/workout-editor.store'
-import { usePreventRemove } from '@react-navigation/native'
-import { Stack, router, useLocalSearchParams } from 'expo-router'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ScrollView, Text, TextInput, View } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
 
 export default function TemplateEditor() {
-  const insets = useSafeAreaInsets()
   const params = useLocalSearchParams<{
     id?: string
     context?: string
@@ -81,7 +81,7 @@ export default function TemplateEditor() {
   useEffect(() => {
     if (isEditing) {
       if (!params.id) {
-        Toast.show({ type: 'error', text1: 'Error', text2: 'No template ID provided' })
+        Arise.error({ heading: 'Error', content: 'No template ID provided' })
         router.back()
         return
       }
@@ -89,7 +89,7 @@ export default function TemplateEditor() {
       if (templateLoading) return
 
       if (!templateFromQuery) {
-        Toast.show({ type: 'error', text1: 'Error', text2: 'Template not found' })
+        Arise.error({ heading: 'Error', content: 'Template not found' })
         router.back()
         return
       }
@@ -220,61 +220,66 @@ export default function TemplateEditor() {
   }, [exerciseList, workout])
 
   const commitSave = useCallback(
-    async (templateToSave: ReturnType<typeof finalizeTemplateForSave>['template']) => {
-      try {
-        const response =
-          mode === 'template-edit' && source?.templateId
-            ? await updateMutation.mutateAsync({
-                id: source.templateId,
-                draft: templateToSave,
-              })
-            : await createMutation.mutateAsync(templateToSave)
+    (templateToSave: ReturnType<typeof finalizeTemplateForSave>['template']) => {
+      const options = {
+        onSuccess: (response: any) => {
+          const savedId = response?.id || source?.templateId || templateToSave.id
 
-        const savedId = response?.id || source?.templateId || templateToSave.id
+          if (source?.programWeekIndex != null && source?.programDayIndex != null) {
+            const draftProgram = useProgram.getState().draftProgram
 
-        if (source?.programWeekIndex != null && source?.programDayIndex != null) {
-          const draftProgram = useProgram.getState().draftProgram
-
-          if (draftProgram?.weeks) {
-            const nextWeeks = [...draftProgram.weeks]
-            if (nextWeeks[source.programWeekIndex]?.days[source.programDayIndex]) {
-              nextWeeks[source.programWeekIndex].days[source.programDayIndex].templateId =
-                savedId || templateToSave.clientId
-              useProgram.getState().updateDraftProgram({ weeks: nextWeeks })
+            if (draftProgram?.weeks) {
+              const nextWeeks = [...draftProgram.weeks]
+              if (nextWeeks[source.programWeekIndex]?.days[source.programDayIndex]) {
+                nextWeeks[source.programWeekIndex].days[source.programDayIndex].templateId =
+                  savedId || templateToSave.clientId
+                useProgram.getState().updateDraftProgram({ weeks: nextWeeks })
+              }
             }
           }
-        }
 
-        Toast.show({
-          type: 'success',
-          text1: mode === 'template-edit' ? 'Template updated' : 'Template created',
-        })
-
-        discardWorkout()
-        setPendingPrunedTemplate(null)
-        setPruneMessage(null)
-
-        if (source?.programWeekIndex != null && source?.programDayIndex != null) {
-          router.back()
-          return
-        }
-
-        if (savedId) {
-          router.replace({
-            pathname: '/(app)/template/[id]',
-            params: { id: savedId },
+          Arise.success({
+            heading: mode === 'template-edit' ? 'Template updated' : 'Template created',
           })
-          return
-        }
 
-        router.replace('/(app)/(tabs)/workout')
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'The template request failed.'
-        Toast.show({
-          type: 'error',
-          text1: 'Failed to save template',
-          text2: message,
-        })
+          discardWorkout()
+          setPendingPrunedTemplate(null)
+          setPruneMessage(null)
+
+          if (source?.programWeekIndex != null && source?.programDayIndex != null) {
+            router.back()
+            return
+          }
+
+          if (savedId) {
+            router.replace({
+              pathname: '/(app)/template/[id]',
+              params: { id: savedId },
+            })
+            return
+          }
+
+          router.replace('/(app)/(tabs)/workout')
+        },
+        onError: (error: any) => {
+          const message = error instanceof Error ? error.message : 'The template request failed.'
+          Arise.error({
+            heading: 'Failed to save template',
+            content: message,
+          })
+        },
+      }
+
+      if (mode === 'template-edit' && source?.templateId) {
+        updateMutation.mutate(
+          {
+            id: source.templateId,
+            draft: templateToSave,
+          },
+          options,
+        )
+      } else {
+        createMutation.mutate(templateToSave, options)
       }
     },
     [
@@ -288,23 +293,21 @@ export default function TemplateEditor() {
     ],
   )
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(() => {
     if (!workout) return
 
     if (!workout.title.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Title required',
-        text2: 'Please enter a name for your template.',
+      Arise.error({
+        heading: 'Title required',
+        content: 'Please enter a name for your template.',
       })
       return
     }
 
     if (workout.exerciseOrder.length === 0) {
-      Toast.show({
-        type: 'error',
-        text1: 'No exercises',
-        text2: 'Add at least one exercise to your template.',
+      Arise.error({
+        heading: 'No exercises',
+        content: 'Add at least one exercise to your template.',
       })
       return
     }
@@ -312,10 +315,10 @@ export default function TemplateEditor() {
     const finalized = finalizeTemplateForSave(workout, validExerciseIds, source)
 
     if (finalized.template.exercises.length === 0) {
-      Toast.show({
-        type: 'error',
-        text1: 'No valid exercises',
-        text2: 'All exercises in this template are unavailable. Add valid exercises and try again.',
+      Arise.error({
+        heading: 'No valid exercises',
+        content:
+          'All exercises in this template are unavailable. Add valid exercises and try again.',
       })
       return
     }
@@ -326,7 +329,7 @@ export default function TemplateEditor() {
       return
     }
 
-    await commitSave(finalized.template)
+    commitSave(finalized.template)
   }, [commitSave, source, validExerciseIds, workout])
 
   const handleCancel = useCallback(() => {
@@ -339,20 +342,40 @@ export default function TemplateEditor() {
     router.back()
   }, [discardWorkout, hasUnsavedChanges])
 
+  /* UI Components */
+  const renderFooter = () => {
+    if (isReorderMode) return null
+
+    return (
+      <View className="absolute bottom-0 left-0 right-0 mb-2 p-4">
+        <View className="flex-row gap-3">
+          <Button
+            title="Discard Template"
+            variant="danger"
+            className="flex-1 rounded-full"
+            onPress={() => discardModalRef.current?.present()}
+          />
+          <Button
+            title="Add Exercise"
+            variant="primary"
+            className="flex-1 rounded-full"
+            onPress={() => router.push('/(app)/exercises?context=builder')}
+          />
+        </View>
+      </View>
+    )
+  }
+
   if (!workout || (isEditing && templateLoading && mode !== 'template-edit')) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-black">
-        <Stack.Screen options={{ headerShown: false }} />
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-neutral-500 dark:text-neutral-400">Loading template...</Text>
-        </View>
-      </SafeAreaView>
+      <BaseScreen isLoading shimmer={<View />}>
+        <View />
+      </BaseScreen>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black">
-      <Stack.Screen options={{ headerShown: false }} />
+    <BaseScreen padded={false} footerComponent={renderFooter()}>
       <View className="border-b border-neutral-200 px-4 py-4 dark:border-neutral-800">
         <Text className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
           {mode === 'template-edit' ? 'Edit Template' : 'New Template'}
@@ -369,7 +392,12 @@ export default function TemplateEditor() {
           />
 
           <View className="flex-row gap-4">
-            <Button title="Cancel" variant="danger" onPress={handleCancel} className="" />
+            <Button
+              title="Cancel"
+              variant="danger"
+              onPress={handleCancel}
+              className="rounded-full"
+            />
             <Button
               title={isReorderMode ? 'Done' : 'Save'}
               variant="primary"
@@ -378,8 +406,9 @@ export default function TemplateEditor() {
                   setIsReorderMode(false)
                   return
                 }
-                void handleSave()
+                handleSave()
               }}
+              className="rounded-full"
             />
           </View>
         </View>
@@ -415,7 +444,7 @@ export default function TemplateEditor() {
         <ScrollView
           className="flex-1"
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: insets.bottom + 132 }}
+          contentContainerStyle={{ paddingBottom: 132 }}
         >
           {workout.exerciseOrder.length === 0 ? (
             <View className="px-4 py-8">
@@ -425,35 +454,19 @@ export default function TemplateEditor() {
             </View>
           ) : (
             workout.exerciseOrder.map((exerciseInstanceId) => (
-              <ExerciseRow
+              <WorkoutExerciseRow
                 key={exerciseInstanceId}
                 exerciseInstanceId={exerciseInstanceId}
                 onEnterReorder={() => setIsReorderMode(true)}
               />
             ))
           )}
-
-          <View className="px-4 pb-2 pt-4">
-            <View className="flex-row gap-3">
-              <Button
-                title="Add Exercise"
-                variant="primary"
-                className="flex-1"
-                onPress={() => router.push('/(app)/exercises?context=builder')}
-              />
-              <Button
-                title="Discard Template"
-                variant="danger"
-                className="flex-1"
-                onPress={() => discardModalRef.current?.present()}
-              />
-            </View>
-          </View>
         </ScrollView>
       )}
 
       <BaseModal
         ref={discardModalRef}
+        enableDynamicSizing={true}
         title="Discard Changes?"
         description="You have unsaved changes. Are you sure you want to discard them?"
         deleteAction={{
@@ -471,6 +484,7 @@ export default function TemplateEditor() {
 
       <BaseModal
         ref={pruneModalRef}
+        enableDynamicSizing={true}
         title="Confirm Save"
         description={pruneMessage || ''}
         confirmAction={{
@@ -491,7 +505,7 @@ export default function TemplateEditor() {
         }}
       />
 
-      <PaywallModal
+      <UserSubscriptionPaywallModal
         ref={paywallModalRef}
         title="Upgrade to Pro"
         description={`You can only add up to ${FREE_TIER_LIMITS.MAX_CUSTOM_TEMPLATES} custom templates on the Free plan.`}
@@ -506,6 +520,6 @@ export default function TemplateEditor() {
           router.back()
         }}
       />
-    </SafeAreaView>
+    </BaseScreen>
   )
 }

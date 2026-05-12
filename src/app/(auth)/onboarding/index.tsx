@@ -1,8 +1,8 @@
-import { Button } from '@/components/ui/buttons/Button'
 import { useRouter } from 'expo-router'
-import React from 'react'
 import { Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+import { Button } from '@/components/ui'
 
 export default function OnboardingWelcome() {
   const router = useRouter()

@@ -1,9 +1,3 @@
-import ExerciseCharts from '@/components/exercises/ExerciseCharts'
-import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-import { useAnalytics } from '@/hooks/analytics'
-import { useExercises } from '@/hooks/queries/exercises'
-import { useThemeColor } from '@/hooks/theme'
-import { useUnitConverter } from '@/hooks/useUnitConverter'
 import { EvilIcons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useGlobalSearchParams } from 'expo-router'
 import { useVideoPlayer, VideoView } from 'expo-video'
@@ -16,7 +10,13 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+
+import { ExerciseCharts } from '@/components/exercise/ExerciseCharts'
+import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
+import { useAnalytics } from '@/hooks/analytics'
+import { useExercises } from '@/hooks/queries/exercises'
+import { useThemeColor } from '@/hooks/theme'
+import { useUnitConverter } from '@/hooks/useUnitConverter'
 
 const { width } = Dimensions.get('window')
 
@@ -32,9 +32,8 @@ export default function ViewExerciseScreen() {
   const best1RMModalRef = useRef<BaseModalHandle>(null)
   const bestSetVolumeModalRef = useRef<BaseModalHandle>(null)
   const heaviestWeightModalRef = useRef<BaseModalHandle>(null)
-  const insets = useSafeAreaInsets()
 
-  const isOpen = useSharedValue(0) // 1 = open, 0 = closed
+  const isOpen = useSharedValue(1) // 1 = open, 0 = closed
 
   const exercise = exerciseList.find((e) => e.id === id)
   const videoSource = exercise?.videoUrl ?? ''
@@ -65,21 +64,11 @@ export default function ViewExerciseScreen() {
   const recordsStyle = useAnimatedStyle(() => {
     return {
       opacity: isOpen.value,
-      height: interpolate(
-        isOpen.value,
-        [0, 1],
-        [0, 300], // adjust based on expected content
-        Extrapolation.CLAMP,
-      ),
-      overflow: 'hidden',
     }
   })
 
   return (
-    <View
-      className="flex-1 items-center justify-center bg-white dark:bg-black"
-      style={{ paddingBottom: insets.bottom }}
-    >
+    <View className="flex-1 bg-white dark:bg-black">
       <ScrollView showsVerticalScrollIndicator={false}>
         <VideoView
           style={{
@@ -162,7 +151,7 @@ export default function ViewExerciseScreen() {
           </Animated.View>
         </Pressable>
 
-        <Animated.View style={recordsStyle}>
+        <Animated.View style={recordsStyle} className={'mb-[10%]'}>
           <View className="flex flex-row gap-4 px-4 pt-4">
             <Text className="w-16 text-lg font-normal text-black dark:text-white">Reps</Text>
             <Text className="w-32 text-lg font-normal text-black dark:text-white">

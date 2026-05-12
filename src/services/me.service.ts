@@ -5,7 +5,6 @@ import {
   MY_MEASUREMENTS_ENDPOINT as my_measurements_endpoint,
   MY_NUTRITION_PLAN_ENDPOINT as my_nutrition_plan_endpoint,
   MY_PROFILE_PIC_ENDPOINT as my_profile_pic_endpoint,
-  MY_TRAINING_ANALYTICS_ENDPOINT,
   USER_ENDPOINT as user_endpoint,
 } from '@/constants/urls'
 import {
@@ -16,10 +15,10 @@ import {
   NutritionPlan,
   PublicUser,
   SelfUser,
-  TrainingAnalytics,
   UpdateUserBody,
 } from '@/types/me'
 import { handleApiResponse } from '@/utils/handleApiResponse'
+
 import client from './api'
 
 export async function getMeService(): Promise<SelfUser> {
@@ -86,18 +85,6 @@ export async function getUserAnalyticsService(): Promise<AnalyticsMetrics> {
   try {
     const res = await client.get(my_analytics_endpoint)
     const handled = handleApiResponse<AnalyticsMetrics>(res)
-    if (!handled.success) throw new Error(handled.message || 'Request failed')
-    return handled.data!
-  } catch (error: any) {
-    const errData = error.response?.data
-    throw new Error(errData?.message || error.message || 'Network error')
-  }
-}
-
-export async function getTrainingAnalyticsService(duration: string): Promise<TrainingAnalytics> {
-  try {
-    const res = await client.get(MY_TRAINING_ANALYTICS_ENDPOINT(duration))
-    const handled = handleApiResponse<TrainingAnalytics>(res)
     if (!handled.success) throw new Error(handled.message || 'Request failed')
     return handled.data!
   } catch (error: any) {

@@ -7,6 +7,8 @@ export const API_BASE_URL = (() => {
   return url
 })()
 
+export const SHARE_BASE_URL = 'https://pump.thesaiteja.dev/share'
+
 // AUTH
 export const REFRESH_TOKEN_ENDPOINT = `/auth/refresh-token`
 export const GOOGLE_LOGIN_ENDPOINT = `/auth/google`
@@ -15,15 +17,18 @@ export const GOOGLE_LOGIN_ENDPOINT = `/auth/google`
 export const ME_ENDPOINT = `/me`
 export const MY_PROFILE_PIC_ENDPOINT = `/me/profile-picture`
 export const MY_ANALYTICS_ENDPOINT = `/me/analytics`
-export const MY_TRAINING_ANALYTICS_ENDPOINT = (duration: string) =>
-  `/me/analytics/training?duration=${duration}`
 export const MY_FITNESS_PROFILE_ENDPOINT = `/me/fitness-profile`
 export const MY_NUTRITION_PLAN_ENDPOINT = `/me/nutrition-plan`
 export const MY_MEASUREMENTS_ENDPOINT = (duration?: string) =>
   `/me/measurements${duration ? `?duration=${duration}` : ''}`
 
 // USERS (PUBLIC)
-export const USER_ENDPOINT = (id: string) => `/users/${id}`
+export const USER_ENDPOINT = (userId: string) => `/users/${userId}`
+export const USER_NUDGE_ENDPOINT = (userId: string) => `/users/${userId}/nudge`
+export const USER_TOP_LIFTS_ENDPOINT = (userId: string, limit: number) =>
+  `/users/${userId}/analytics/top-lifts?limit=${limit}`
+export const USER_TRAINING_ANALYTICS_ENDPOINT = (userId: string, duration: string) =>
+  `/users/${userId}/analytics/training?duration=${duration}`
 
 // ENGAGEMENT
 export const SEARCH_USERS_ENDPOINT = (query: string) => `/engagement/search?query=${query}`
@@ -48,7 +53,6 @@ export const EXERCISE_ITEM_ENDPOINT = (id: string) => `/exercises/${id}`
 
 // WORKOUTS
 export const WORKOUTS_ENDPOINT = `/workouts`
-export const DISCOVER_WORKOUTS_ENDPOINT = `/workouts/discover`
 export const WORKOUT_ITEM_ENDPOINT = (id: string) => `/workouts/${id}`
 export const WORKOUT_SHARE_ENDPOINT = (id: string) => `/workouts/share/${id}`
 

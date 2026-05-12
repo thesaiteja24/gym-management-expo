@@ -1,35 +1,32 @@
-import TemplateSelectionModal from '@/components/templates/TemplateSelectionModal'
-import { BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
-import { useCreateProgram, useProgramById, useUpdateProgram } from '@/hooks/queries/programs'
-import { useTemplatesQuery } from '@/hooks/queries/templates'
-import { useProgram } from '@/stores/programs.store'
-import { DraftProgramDay, DraftProgramWeek } from '@/types/programs'
-import { WorkoutTemplate } from '@/types/templates'
 import { Ionicons } from '@expo/vector-icons'
 import * as Crypto from 'expo-crypto'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  ActivityIndicator,
-  BackHandler,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   Switch,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
+
+import { TemplateSelectionModal } from '@/components/modals/TemplateSelectionModal'
+import { Button } from '@/components/ui'
+import { BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { useCreateProgram, useProgramById, useUpdateProgram } from '@/hooks/queries/programs'
+import { useTemplatesQuery } from '@/hooks/queries/templates'
+import { Arise } from '@/lib/arise'
+import { useProgram } from '@/stores/programs.store'
+import { DraftProgramDay, DraftProgramWeek } from '@/types/programs'
+import { WorkoutTemplate } from '@/types/templates'
 
 export default function ProgramEditor() {
-  const insets = useSafeAreaInsets()
-  const navigation = useNavigation()
   const params = useLocalSearchParams()
   const isEditing = params.mode === 'edit'
+  const templateSelectionModalRef = useRef<BaseModalHandle>(null)
 
   // Draft state (Zustand — pure UI)
   const draftProgram = useProgram((s) => s.draftProgram)
@@ -47,9 +44,6 @@ export default function ProgramEditor() {
   // Template store — write actions only; list comes from TanStack Query
   const { data: templates = [] } = useTemplatesQuery()
   const [saving, setSaving] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
-  const templateSelectionModalRef = useRef<BaseModalHandle>(null)
   const [activeSelectionContext, setActiveSelectionContext] = useState<{
     weekIndex: number
     dayIndex: number
@@ -58,12 +52,12 @@ export default function ProgramEditor() {
   const isTemplatesSynced = useCallback(() => {
     if (!draftProgram) return true
     const templateIds = draftProgram.weeks
-      .flatMap((w) => w.days)
-      .map((d) => d.templateId)
-      .filter(Boolean)
+      .flatMap((w: DraftProgramWeek) => w.days)
+      .map((d: DraftProgramDay) => d.templateId)
+      .filter((id): id is string => Boolean(id))
 
     // All templates from TQ have real server IDs; just verify they exist in the list
-    return templateIds.every((id) => templates.some((t) => t.id === id))
+    return templateIds.every((id: string) => templates.some((t: WorkoutTemplate) => t.id === id))
   }, [draftProgram, templates])
 
   // Init Draft
@@ -91,52 +85,51 @@ export default function ProgramEditor() {
     }
   }, [isEditing, params.id, programData, startDraftProgram, draftProgram, programsLoading])
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(() => {
     if (!draftProgram) return
 
     if (!draftProgram.title.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Title required',
-        text2: 'Please enter a name for your program.',
+      Arise.error({
+        heading: 'Title required',
+        content: 'Please enter a name for your program.',
       })
       return
     }
 
     if (!isTemplatesSynced()) {
-      Toast.show({
-        type: 'info',
-        text1: 'Syncing templates...',
-        text2: 'Please wait until all templates are synced with the backend.',
+      Arise.info({
+        heading: 'Syncing templates...',
+        content: 'Please wait until all templates are synced with the backend.',
       })
       return
     }
 
     setSaving(true)
-    try {
-      if (isEditing && draftProgram.id) {
-        await updateProgramMutation.mutateAsync({ id: draftProgram.id, data: draftProgram })
-      } else {
-        await createProgramMutation.mutateAsync(draftProgram)
-      }
 
-      Toast.show({
-        type: 'success',
-        text1: isEditing ? 'Program updated' : 'Program created',
-      })
-      discardDraftProgram()
-      requestAnimationFrame(() => {
-        router.back()
-      })
-    } catch (error: any) {
-      console.error('Error in program handleSave', error)
-      Toast.show({
-        type: 'error',
-        text1: 'Save error',
-        text2: error.message || 'An unexpected error occurred.',
-      })
-    } finally {
-      setSaving(false)
+    const options = {
+      onSuccess: () => {
+        Arise.success({ heading: isEditing ? 'Program updated' : 'Program created' })
+        discardDraftProgram()
+        requestAnimationFrame(() => {
+          router.back()
+        })
+      },
+      onError: (error: any) => {
+        console.error('Error in program handleSave', error)
+        Arise.error({
+          heading: 'Save error',
+          content: error.message || 'An unexpected error occurred.',
+        })
+      },
+      onSettled: () => {
+        setSaving(false)
+      },
+    }
+
+    if (isEditing && draftProgram.id) {
+      updateProgramMutation.mutate({ id: draftProgram.id, data: draftProgram }, options)
+    } else {
+      createProgramMutation.mutate(draftProgram, options)
     }
   }, [
     draftProgram,
@@ -147,26 +140,23 @@ export default function ProgramEditor() {
     isTemplatesSynced,
   ])
 
-  useEffect(() => {
-    navigation.setOptions({
-      title: isEditing ? 'Edit Program' : 'New Program',
-      onLeftPress: () => {
-        discardDraftProgram()
-        requestAnimationFrame(() => {
-          router.back()
-        })
-      },
-      headerBackButtonMenuEnabled: false,
-      rightIcons: [
-        {
-          name: 'checkmark-done',
-          onPress: saving ? undefined : handleSave,
-          disabled: saving,
-          color: 'green',
-        },
-      ],
+  const renderHeaderRight = () => (
+    <Button
+      variant="ghost"
+      title=""
+      onPress={saving ? undefined : handleSave}
+      disabled={saving}
+      leftIcon={<Ionicons name="checkmark-done" size={28} color="green" />}
+      className="p-0"
+    />
+  )
+
+  const onBack = useCallback(() => {
+    discardDraftProgram()
+    requestAnimationFrame(() => {
+      router.back()
     })
-  }, [navigation, saving, isEditing, handleSave, discardDraftProgram])
+  }, [discardDraftProgram])
 
   const addWeek = useCallback(() => {
     if (!draftProgram) return
@@ -216,184 +206,154 @@ export default function ProgramEditor() {
     [draftProgram, updateDraftProgram],
   )
 
-  useEffect(() => {
-    const onBackPress = () => {
-      if (isModalOpen) {
-        templateSelectionModalRef.current?.dismiss()
-        return true
-      }
-
-      if (router.canGoBack()) {
-        discardDraftProgram()
-        router.back()
-      } else {
-        discardDraftProgram()
-        router.push('/(app)/(tabs)/workout')
-      }
-      return true
-    }
-
-    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
-
-    return () => subscription.remove()
-  }, [isModalOpen, discardDraftProgram])
-
-  if (isEditing && programsLoading && draftProgram?.id !== params.id) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
-          Loading program...
-        </Text>
-      </View>
-    )
-  }
-
   if (!draftProgram) return null
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={['bottom']}>
+    <BaseScreen
+      title={isEditing ? 'Edit Program' : 'New Program'}
+      isLoading={isEditing && programsLoading && draftProgram?.id !== params.id}
+      backButton
+      onBackPress={onBack}
+      right={renderHeaderRight()}
+      scroll
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
-          {/* Header Inputs */}
-          <View className="border-b border-neutral-200 p-4 dark:border-neutral-800">
-            <TextInput
-              value={draftProgram.title}
-              onChangeText={(t) => updateDraftProgram({ title: t })}
-              placeholder="Program Name e.g. Hypertrophy PPL"
-              placeholderTextColor="#9ca3af"
-              className="mb-2 text-xl font-semibold text-black dark:text-white"
-            />
-            <TextInput
-              value={draftProgram.description}
-              onChangeText={(t) => updateDraftProgram({ description: t })}
-              placeholder="Description (optional)"
-              placeholderTextColor="#9ca3af"
-              multiline
-              className="mb-4 text-base text-neutral-600 dark:text-neutral-400"
-            />
+        <View className="border-b border-neutral-200 pb-4 dark:border-neutral-800">
+          <TextInput
+            value={draftProgram.title}
+            onChangeText={(t) => updateDraftProgram({ title: t })}
+            placeholder="Program Name e.g. Hypertrophy PPL"
+            placeholderTextColor="#9ca3af"
+            className="mb-2 text-xl font-semibold text-black dark:text-white"
+          />
+          <TextInput
+            value={draftProgram.description}
+            onChangeText={(t) => updateDraftProgram({ description: t })}
+            placeholder="Description (optional)"
+            placeholderTextColor="#9ca3af"
+            multiline
+            className="mb-4 text-base text-neutral-600 dark:text-neutral-400"
+          />
 
-            {/* Program Settings */}
-            <View className="mb-4 flex-row items-center justify-between">
-              <View className="flex-1">
-                <Text className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-500">
-                  Experience Level
-                </Text>
-                <View className="flex-row gap-2">
-                  {(['beginner', 'intermediate', 'advanced'] as const).map((level) => (
-                    <TouchableOpacity
-                      key={level}
-                      onPress={() => updateDraftProgram({ experienceLevel: level })}
-                      className={`rounded-full border px-3 py-1.5 ${
+          {/* Program Settings */}
+          <View className="mb-4 flex-row items-center justify-between">
+            <View className="flex-1">
+              <Text className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-500">
+                Experience Level
+              </Text>
+              <View className="flex-row gap-2">
+                {(['beginner', 'intermediate', 'advanced'] as const).map((level) => (
+                  <TouchableOpacity
+                    key={level}
+                    onPress={() => updateDraftProgram({ experienceLevel: level })}
+                    className={`rounded-full border px-3 py-1.5 ${
+                      draftProgram.experienceLevel === level
+                        ? 'border-blue-600 bg-blue-600'
+                        : 'border-neutral-200 dark:border-neutral-800'
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs capitalize ${
                         draftProgram.experienceLevel === level
-                          ? 'border-blue-600 bg-blue-600'
-                          : 'border-neutral-200 dark:border-neutral-800'
+                          ? 'font-semibold text-white'
+                          : 'text-neutral-600 dark:text-neutral-400'
                       }`}
                     >
-                      <Text
-                        className={`text-xs capitalize ${
-                          draftProgram.experienceLevel === level
-                            ? 'font-semibold text-white'
-                            : 'text-neutral-600 dark:text-neutral-400'
-                        }`}
-                      >
-                        {level}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                      {level}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
+          </View>
 
-            <View>
-              <Text className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-500">
-                Duration Options (Weeks)
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {[4, 6, 8, 10, 12, 16].map((weeks) => {
-                  const currentOptions = draftProgram.durationOptions
-                  const isSelected = currentOptions.includes(weeks)
-                  return (
-                    <TouchableOpacity
-                      key={weeks}
-                      onPress={() => {
-                        if (isSelected) {
-                          if (currentOptions.length > 1) {
-                            updateDraftProgram({
-                              durationOptions: currentOptions.filter((o) => o !== weeks),
-                            })
-                          }
-                        } else {
+          <View>
+            <Text className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-500">
+              Duration Options (Weeks)
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {[4, 6, 8, 10, 12, 16].map((weeks) => {
+                const currentOptions = draftProgram.durationOptions
+                const isSelected = currentOptions.includes(weeks)
+                return (
+                  <TouchableOpacity
+                    key={weeks}
+                    onPress={() => {
+                      if (isSelected) {
+                        if (currentOptions.length > 1) {
                           updateDraftProgram({
-                            durationOptions: [...currentOptions, weeks].sort((a, b) => a - b),
+                            durationOptions: currentOptions.filter((o) => o !== weeks),
                           })
                         }
-                      }}
-                      className={`rounded-lg border px-3 py-1.5 ${
+                      } else {
+                        updateDraftProgram({
+                          durationOptions: [...currentOptions, weeks].sort((a, b) => a - b),
+                        })
+                      }
+                    }}
+                    className={`rounded-lg border px-3 py-1.5 ${
+                      isSelected
+                        ? 'border-neutral-800 bg-neutral-800 dark:border-neutral-200 dark:bg-neutral-200'
+                        : 'border-neutral-200 dark:border-neutral-800'
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs ${
                         isSelected
-                          ? 'border-neutral-800 bg-neutral-800 dark:border-neutral-200 dark:bg-neutral-200'
-                          : 'border-neutral-200 dark:border-neutral-800'
+                          ? 'font-semibold text-white dark:text-black'
+                          : 'text-neutral-600 dark:text-neutral-400'
                       }`}
                     >
-                      <Text
-                        className={`text-xs ${
-                          isSelected
-                            ? 'font-semibold text-white dark:text-black'
-                            : 'text-neutral-600 dark:text-neutral-400'
-                        }`}
-                      >
-                        {weeks}
-                      </Text>
-                    </TouchableOpacity>
-                  )
-                })}
-              </View>
+                      {weeks}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              })}
             </View>
           </View>
+        </View>
 
-          {/* Weeks & Days lists */}
-          <View className="p-4">
-            {draftProgram.weeks?.map((week, wIndex) => (
-              <ProgramWeekItem
-                key={week.key}
-                week={week}
-                weekIndex={wIndex}
-                templates={templates}
-                onUpdateWeekName={(name) => {
-                  const newW = [...draftProgram.weeks!]
-                  newW[wIndex].name = name
-                  updateDraftProgram({ weeks: newW })
-                }}
-                onRemoveWeek={() => removeWeek(wIndex)}
-                onUpdateDay={updateDay}
-                onSelectTemplate={(wIdx, dIdx) => {
-                  setActiveSelectionContext({
-                    weekIndex: wIdx,
-                    dayIndex: dIdx,
-                  })
-                  setIsModalOpen(true)
-                  templateSelectionModalRef.current?.present()
-                }}
-              />
-            ))}
-
-            <Button
-              title="Add Week"
-              variant="primary"
-              leftIcon={<Ionicons name="add" size={20} color="white" />}
-              onPress={addWeek}
-              className="mt-4"
+        {/* Weeks & Days lists */}
+        <View className="py-4">
+          {draftProgram.weeks?.map((week, wIndex) => (
+            <ProgramWeekItem
+              key={week.key}
+              week={week}
+              weekIndex={wIndex}
+              templates={templates}
+              onUpdateWeekName={(name) => {
+                const newW = [...draftProgram.weeks!]
+                newW[wIndex].name = name
+                updateDraftProgram({ weeks: newW })
+              }}
+              onRemoveWeek={() => removeWeek(wIndex)}
+              onUpdateDay={updateDay}
+              onSelectTemplate={(wIdx, dIdx) => {
+                setActiveSelectionContext({
+                  weekIndex: wIdx,
+                  dayIndex: dIdx,
+                })
+                templateSelectionModalRef.current?.present()
+              }}
             />
-          </View>
-        </ScrollView>
+          ))}
+
+          <Button
+            title="Add Week"
+            variant="primary"
+            leftIcon={<Ionicons name="add" size={20} color="white" />}
+            onPress={addWeek}
+            className="mt-4"
+          />
+        </View>
       </KeyboardAvoidingView>
       <TemplateSelectionModal
         ref={templateSelectionModalRef}
         templates={templates}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {}}
         onSelect={(templateId) => {
           if (activeSelectionContext) {
             updateDay(activeSelectionContext.weekIndex, activeSelectionContext.dayIndex, {
@@ -402,7 +362,7 @@ export default function ProgramEditor() {
           }
         }}
       />
-    </SafeAreaView>
+    </BaseScreen>
   )
 }
 

@@ -1,33 +1,30 @@
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
 import { queryClient } from '@/lib/queryClient'
 import { queryKeys } from '@/lib/queryKeys'
 import {
   createWorkoutService,
   deleteWorkoutService,
-  getDiscoverWorkoutsService,
-  getUserWorkoutsService,
   getWorkoutByIdService,
+  listWorkoutsService,
   updateWorkoutService,
 } from '@/services/workouts.service'
 import { useAuth } from '@/stores/auth.store'
 import { WorkoutPayload } from '@/types/payloads'
-import {
-  WorkoutHistoryInfiniteData,
-  WorkoutHistoryItem,
-  WorkoutLog,
-} from '@/types/workouts'
+import { WorkoutHistoryInfiniteData, WorkoutHistoryItem, WorkoutLog } from '@/types/workouts'
 import { serializeWorkoutForApi } from '@/utils/serializeForApi'
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const PAGE_LIMIT = 2
 
 // ─────────────────────────────────────────────────────
 // READ — workout history (paginated, infinite scroll)
 // ─────────────────────────────────────────────────────
-export function useUserWorkoutHistoryQuery() {
+export function useWorkoutHistoryQuery() {
+  const userId = useAuth((s) => s.userId)
   const query = useInfiniteQuery({
     queryKey: queryKeys.workouts.all,
     queryFn: async ({ pageParam = 1 }) => {
-      const data = await getUserWorkoutsService(pageParam as number, PAGE_LIMIT)
+      const data = await listWorkoutsService(pageParam as number, PAGE_LIMIT, userId!)
       const workouts = data.workouts || []
       return { workouts, meta: data.meta }
     },
@@ -37,26 +34,26 @@ export function useUserWorkoutHistoryQuery() {
     },
     initialPageParam: 1,
     staleTime: Infinity,
+    gcTime: Infinity,
+    networkMode: 'offlineFirst',
   })
 
   const workoutHistory: WorkoutHistoryItem[] = (query.data?.pages ?? []).flatMap((p) => p.workouts)
-  const hasMore = query.data?.pages?.at(-1)?.meta?.hasMore ?? false
 
   return {
     ...query,
     workoutHistory,
-    hasMore,
   }
 }
 
 // ─────────────────────────────────────────────────────
-// READ — discover workouts (paginated)
+// READ — list workouts (generic, paginated)
 // ─────────────────────────────────────────────────────
-export function useDiscoverWorkoutsQuery() {
+export function useWorkoutListQuery(userId?: string) {
   const query = useInfiniteQuery({
-    queryKey: queryKeys.workouts.discover,
+    queryKey: userId ? queryKeys.workouts.user(userId) : queryKeys.workouts.discover,
     queryFn: async ({ pageParam = 1 }) => {
-      const data = await getDiscoverWorkoutsService(pageParam as number, PAGE_LIMIT)
+      const data = await listWorkoutsService(pageParam as number, PAGE_LIMIT, userId)
       return {
         workouts: data.workouts || [],
         meta: data.meta,
@@ -70,15 +67,11 @@ export function useDiscoverWorkoutsQuery() {
     staleTime: 2 * 60 * 1000,
   })
 
-  const discoverWorkouts: WorkoutHistoryItem[] = (query.data?.pages ?? []).flatMap(
-    (p) => p.workouts,
-  )
-  const hasMore = query.data?.pages?.at(-1)?.meta?.hasMore ?? false
+  const workouts: WorkoutHistoryItem[] = (query.data?.pages ?? []).flatMap((p) => p.workouts)
 
   return {
     ...query,
-    discoverWorkouts,
-    hasMore,
+    workouts,
   }
 }
 

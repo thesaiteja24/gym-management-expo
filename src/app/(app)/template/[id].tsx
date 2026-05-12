@@ -1,23 +1,24 @@
+import { Ionicons } from '@expo/vector-icons'
+import { router, useLocalSearchParams } from 'expo-router'
+import { useCallback, useMemo, useRef } from 'react'
+import { Text, View } from 'react-native'
+
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { TemplateScreenShimmer } from '@/components/ui/shimmers'
+import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
 import { useDeleteTemplateMutation, useTemplateByIdQuery } from '@/hooks/queries/templates'
+import { useThemeColor } from '@/hooks/theme'
+import { useShare } from '@/hooks/useShare'
+import { Arise } from '@/lib/arise'
 import { useWorkoutEditor } from '@/stores/workout-editor.store'
 import { TemplateExerciseGroup } from '@/types/templates'
-import * as Clipboard from 'expo-clipboard'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { BackHandler, ScrollView, Text, View, useColorScheme } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
-
-import ShimmerTemplateScreen from '@/components/ui/shimmers/ShimmerTemplateScreen'
-import { ReadOnlyExerciseRow } from '@/components/workout-editor/ReadOnlyExerciseRow'
 
 export default function TemplateDetails() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const navigation = useNavigation()
-  const isDark = useColorScheme() === 'dark'
-  const safeAreaInsets = useSafeAreaInsets()
+  const { shareEntity } = useShare()
+  const isDark = useThemeColor().isDark
 
   // Fetch template directly from TQ cache / server
   const { data: template, isLoading } = useTemplateByIdQuery(id)
@@ -29,71 +30,30 @@ export default function TemplateDetails() {
     router.push(`/(app)/template/editor?id=${id}`)
   }, [id])
 
-  const handleShare = useCallback(() => {
+  const handleShare = useCallback(async () => {
     if (!template?.shareId) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Template has no share link',
+      Arise.error({
+        heading: 'Error',
+        content: 'Template has no share link',
       })
       return
     }
-    Clipboard.setStringAsync(template.shareId).then(() => {
-      Toast.show({
-        type: 'success',
-        text1: 'Link copied',
-        text2: 'Share link copied to clipboard',
-      })
+
+    await shareEntity('template', template.shareId, {
+      title: template.title || 'Workout Template',
+      message: `Check out this workout template: ${template.title}`,
     })
-  }, [template?.shareId])
+  }, [template, shareEntity])
 
   const deleteModalRef = useRef<BaseModalHandle>(null)
 
-  // Configure Navigation Header
-  useEffect(() => {
-    const rightIcons = [
-      {
-        name: 'share-outline',
-        onPress: handleShare,
-      },
-      {
-        name: 'create-outline',
-        onPress: handleEdit,
-      },
-    ]
-
-    navigation.setOptions({
-      title: 'Template Details',
-      rightIcons,
-    })
-  }, [id, navigation, handleEdit, handleShare, template, isDark])
-
-  useEffect(() => {
-    const onBackPress = () => {
-      if (router.canGoBack()) {
-        router.back()
-      } else {
-        router.push('/(app)/(tabs)/home')
-      }
-      return true
-    }
-
-    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
-
-    return () => subscription.remove()
-  }, [])
-
   const groupMap = useMemo(() => {
     const map = new Map<string, TemplateExerciseGroup>()
-    template?.exerciseGroups.forEach((g) => map.set(g.id, g))
+    template?.exerciseGroups?.forEach((g) => map.set(g.id, g))
     return map
   }, [template?.exerciseGroups])
 
-  if (isLoading) {
-    return <ShimmerTemplateScreen />
-  }
-
-  if (!template) {
+  if (!isLoading && !template) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
         <Text className="text-neutral-500">Template not found.</Text>
@@ -101,73 +61,97 @@ export default function TemplateDetails() {
     )
   }
 
-  return (
-    <View className="relative flex-1 bg-white dark:bg-black">
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header Info */}
-        <View className="border-b border-neutral-100 p-4 dark:border-neutral-900">
-          <Text className="mb-2 text-3xl font-bold text-black dark:text-white">
-            {template.title}
-          </Text>
-          {template.notes && (
-            <Text className="mb-4 text-base text-neutral-600 dark:text-neutral-400">
-              {template.notes}
-            </Text>
-          )}
+  /* UI Components */
+  const renderHeaderRight = () => (
+    <View className="flex-row items-center gap-1">
+      <Button
+        variant="ghost"
+        title=""
+        onPress={handleShare}
+        leftIcon={<Ionicons name="share-outline" size={24} color={isDark ? 'white' : 'black'} />}
+        className="p-0"
+      />
+      <Button
+        variant="ghost"
+        title=""
+        onPress={handleEdit}
+        leftIcon={<Ionicons name="create-outline" size={24} color={isDark ? 'white' : 'black'} />}
+        className="p-0"
+      />
+    </View>
+  )
 
-          <View className="flex-row gap-4">
-            <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
-              <Text className="text-base font-medium text-neutral-500">
-                {template.exercises.length} Exercises
-              </Text>
-            </View>
-            <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
-              <Text className="text-base font-medium text-neutral-500">Last used: Never</Text>
-            </View>
+  const renderFooter = () => (
+    <View className="absolute bottom-0 left-0 right-0 p-6">
+      <View className="flex-row items-center justify-center gap-4">
+        <Button
+          title="Delete"
+          className="w-1/3 rounded-full"
+          variant="danger"
+          onPress={() => {
+            deleteModalRef.current?.present()
+          }}
+        />
+        <Button
+          variant="success"
+          title="Start Workout"
+          className="w-2/3 rounded-full"
+          onPress={() => {
+            if (!template) return
+            discardWorkout()
+            initiateWorkout({ template })
+            router.push('/(app)/workout/start')
+          }}
+        />
+      </View>
+    </View>
+  )
+
+  return (
+    <BaseScreen
+      title="Template Details"
+      right={renderHeaderRight()}
+      footerComponent={renderFooter()}
+      backButton
+      scroll
+      contentContainerStyle={{ paddingBottom: 120 }}
+      isLoading={isLoading}
+      shimmer={<TemplateScreenShimmer />}
+    >
+      {/* Header Info */}
+      <View className="border-b border-neutral-100 pb-4 dark:border-neutral-900">
+        <Text className="mb-2 text-3xl font-bold text-black dark:text-white">
+          {template?.title}
+        </Text>
+        {template?.notes && (
+          <Text className="mb-4 text-base text-neutral-600 dark:text-neutral-400">
+            {template.notes}
+          </Text>
+        )}
+
+        <View className="flex-row gap-4">
+          <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
+            <Text className="text-base font-medium text-neutral-500">
+              {template?.exercises?.length || 0} Exercises
+            </Text>
+          </View>
+          <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
+            <Text className="text-base font-medium text-neutral-500">Last used: Never</Text>
           </View>
         </View>
-
-        {/* Read Only Exercise List */}
-        <View className="gap-4 p-4">
-          {template.exercises.map((ex, idx) => (
-            <ReadOnlyExerciseRow
-              key={ex.id || idx}
-              exercise={ex}
-              group={ex.exerciseGroupId ? groupMap.get(ex.exerciseGroupId) : null}
-            />
-          ))}
-        </View>
-      </ScrollView>
-
-      {/* Floating Action Button */}
-      <View
-        className="absolute bottom-0 left-0 right-0 p-6"
-        style={{ paddingBottom: safeAreaInsets.bottom + 16 }}
-      >
-        <View className="flex-row items-center justify-center gap-4">
-          <Button
-            title="Delete"
-            className="w-1/3 rounded-full"
-            variant="danger"
-            onPress={() => {
-              deleteModalRef.current?.present()
-            }}
-          />
-          <Button
-            variant="success"
-            title="Start Workout"
-            className="w-2/3 rounded-full"
-            onPress={() => {
-              discardWorkout()
-              initiateWorkout({ template })
-              router.push('/(app)/workout/start')
-            }}
-          />
-        </View>
       </View>
+
+      {/* Read Only Exercise List */}
+      <View className="gap-4 py-4">
+        {template?.exercises?.map((ex, idx) => (
+          <WorkoutReadOnlyExerciseRow
+            key={ex.id || idx}
+            exercise={ex}
+            group={ex.exerciseGroupId ? groupMap.get(ex.exerciseGroupId) : null}
+          />
+        ))}
+      </View>
+
       <BaseModal
         ref={deleteModalRef}
         title="Delete Template?"
@@ -187,6 +171,6 @@ export default function TemplateDetails() {
           onPress: () => deleteModalRef.current?.dismiss(),
         }}
       />
-    </View>
+    </BaseScreen>
   )
 }

@@ -1,20 +1,7 @@
-import PrivacyPolicyModal from '@/components/auth/PrivacyPolicyModal'
-import { BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
-import { useGoogleLoginMutation } from '@/hooks/queries/auth'
-import {
-  updateFitnessProfileService,
-  updateMeService,
-  updateNutritionPlanService,
-} from '@/services/me.service'
-import { useAuth } from '@/stores/auth.store'
-import { useOnboarding } from '@/stores/me.store'
-import { SelfUser } from '@/types/me'
-import { calculateBMR, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
 import { GoogleSignin } from '@react-native-google-signin/google-signin'
 import { useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
-import { KeyboardAvoidingView, Pressable, Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -24,7 +11,22 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
+
+import { PrivacyPolicyModal } from '@/components/modals/PrivacyPolicyModal'
+import { Button } from '@/components/ui'
+import { BaseModalHandle } from '@/components/ui/BaseModal'
+import { useGoogleLoginMutation } from '@/hooks/queries/auth'
+import { Arise } from '@/lib/arise'
+import {
+  updateFitnessProfileService,
+  updateMeService,
+  updateNutritionPlanService,
+} from '@/services/me.service'
+import { useAuth } from '@/stores/auth.store'
+import { useOnboarding } from '@/stores/me.store'
+import { SelfUser } from '@/types/me'
+import { calculateBMR, calculateDailyTargets, calculateTDEE } from '@/utils/analytics'
+
 import GoogleIcon from '../../assets/components/icons/Google'
 
 export default function Login() {
@@ -67,9 +69,8 @@ export default function Login() {
               handlePostLogin(data.user)
             },
             onError: (err: any) => {
-              Toast.show({
-                type: 'error',
-                text1: err?.message || 'Google Login Failed',
+              Arise.error({
+                heading: err?.message || 'Google Login Failed',
               })
             },
           },
@@ -195,7 +196,7 @@ export default function Login() {
         </Text>
       </Animated.View>
 
-      <KeyboardAvoidingView behavior="position" className="flex-[4] justify-center gap-4 px-6">
+      <View className="flex-[4] justify-center gap-4 px-6">
         <View className="mb-4 flex-row items-center justify-center gap-4 px-6">
           <View className="w-full border-t-[0.25px] border-gray-500 dark:border-gray-400"></View>
           <Text className="text-sm text-gray-500 dark:text-gray-400">
@@ -250,7 +251,7 @@ export default function Login() {
             </Text>
           </Text>
         </View>
-      </KeyboardAvoidingView>
+      </View>
       <PrivacyPolicyModal
         ref={privacyModalRef}
         onAgree={(version) => {

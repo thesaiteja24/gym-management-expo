@@ -1,4 +1,12 @@
+import {
+  QueryClient,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { OneSignal } from 'react-native-onesignal'
+
 import { queryKeys } from '@/lib/queryKeys'
 import {
   createCommentService,
@@ -26,13 +34,6 @@ import {
   toggleLikeInWorkouts,
   updateCommentAcrossCaches,
 } from '@/utils/queries/engagementCacheUtils'
-import {
-  QueryClient,
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
 
 /**
  * Helper function to update user data across all related queries
@@ -129,14 +130,10 @@ export function useFollowUserMutation() {
       setFollowLoading(qc, targetUserId, false)
     },
 
-    onSettled: () => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.engagement.followRoot,
-      })
-
-      qc.invalidateQueries({
-        queryKey: queryKeys.me.profile,
-      })
+    onSettled: (_data, _error, targetUserId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.engagement.followRoot })
+      qc.invalidateQueries({ queryKey: queryKeys.me.profile })
+      qc.invalidateQueries({ queryKey: queryKeys.user.byId(targetUserId) })
     },
   })
 }
@@ -165,14 +162,10 @@ export function useUnfollowUserMutation() {
       setFollowLoading(qc, targetUserId, false)
     },
 
-    onSettled: () => {
-      qc.invalidateQueries({
-        queryKey: queryKeys.engagement.followRoot,
-      })
-
-      qc.invalidateQueries({
-        queryKey: queryKeys.me.profile,
-      })
+    onSettled: (_data, _error, targetUserId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.engagement.followRoot })
+      qc.invalidateQueries({ queryKey: queryKeys.me.profile })
+      qc.invalidateQueries({ queryKey: queryKeys.user.byId(targetUserId) })
     },
   })
 }

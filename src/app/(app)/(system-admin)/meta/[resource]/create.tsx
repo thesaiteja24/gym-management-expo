@@ -1,25 +1,18 @@
-import EditableAvatar from '@/components/me/EditableAvatar'
-import { useCreateMeta } from '@/hooks/queries/meta'
+import { Ionicons } from '@expo/vector-icons'
+import { router, useLocalSearchParams } from 'expo-router'
+import { useCallback, useState } from 'react'
+import { Keyboard, Platform, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
 
+import { Button } from '@/components/ui'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { UserEditableAvatar } from '@/components/user/UserEditableAvatar'
+import { useCreateMeta } from '@/hooks/queries/meta'
+import { Arise } from '@/lib/arise'
 import { EquipmentType, MetaResource } from '@/types/meta'
 import { prepareImageForUpload } from '@/utils/prepareImageForUpload'
-import { useLocalSearchParams, useNavigation } from 'expo-router'
-import React, { useCallback, useEffect, useState } from 'react'
-import {
-  Keyboard,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
 
 export default function CreateMeta() {
   const { resource } = useLocalSearchParams<{ resource: MetaResource }>()
-  const navigation = useNavigation()
   const isDarkMode = useColorScheme() === 'dark'
 
   const isEquipment = resource === 'equipment'
@@ -35,11 +28,10 @@ export default function CreateMeta() {
   const [uploading, setUploading] = useState(false)
 
   const lineHeight = Platform.OS === 'ios' ? 0 : 30
-  const insets = useSafeAreaInsets()
 
   const onSave = useCallback(async () => {
     if (!title.trim() || createMutation.isPending) {
-      Toast.show({ type: 'info', text1: 'Title is required' })
+      Arise.error({ heading: 'Title is required' })
       return
     }
 
@@ -63,35 +55,42 @@ export default function CreateMeta() {
         formData.append('image', prepared as any)
       }
 
-      await createMutation.mutateAsync(formData)
-
-      Toast.show({ type: 'success', text1: `${label} created successfully` })
-      navigation.goBack()
+      createMutation.mutate(formData, {
+        onSuccess: () => {
+          Arise.success({ heading: `${label} created successfully` })
+          router.back()
+        },
+        onError: (e: any) => {
+          Arise.error({
+            heading: `Failed to create ${label.toLowerCase()}`,
+          })
+          console.error(e)
+        },
+        onSettled: () => {
+          setUploading(false)
+        },
+      })
     } catch (e: any) {
-      Toast.show({ type: 'error', text1: e.message || `Failed to create ${label.toLowerCase()}` })
-    } finally {
+      Arise.error({ heading: e.message || `Failed to create ${label.toLowerCase()}` })
       setUploading(false)
     }
-  }, [title, equipmentType, thumbnailUri, createMutation, navigation, isEquipment, label, resource])
+  }, [title, equipmentType, thumbnailUri, createMutation, isEquipment, label, resource])
 
-  useEffect(() => {
-    ;(navigation as any).setOptions({
-      title: `Add ${label}`,
-      rightIcons: [
-        {
-          name: 'checkmark-done',
-          onPress: onSave,
-          disabled: createMutation.isPending || !title.trim(),
-          color: 'green',
-        },
-      ],
-    })
-  }, [navigation, onSave, createMutation.isPending, title, label])
+  const renderHeaderRight = () => (
+    <Button
+      variant="ghost"
+      title=""
+      onPress={onSave}
+      disabled={createMutation.isPending || !title.trim()}
+      leftIcon={<Ionicons name="checkmark-done" size={28} color="green" />}
+      className="p-0"
+    />
+  )
 
   return (
-    <View className="flex-1 bg-white p-4 dark:bg-black" style={{ paddingBottom: insets.bottom }}>
+    <BaseScreen title={`Add ${label}`} backButton right={renderHeaderRight()}>
       <View className="mb-6 items-center">
-        <EditableAvatar
+        <UserEditableAvatar
           uri={thumbnailUri}
           size={132}
           editable={!createMutation.isPending}
@@ -149,6 +148,6 @@ export default function CreateMeta() {
           </View>
         </View>
       )}
-    </View>
+    </BaseScreen>
   )
 }

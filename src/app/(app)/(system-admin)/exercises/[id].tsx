@@ -1,32 +1,22 @@
-import MetaModal from '@/components/meta/MetaModal'
-import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-
-import { useDeleteExercise, useExercises, useUpdateExercise } from '@/hooks/queries/exercises'
-import { useEquipment, useMuscleGroups } from '@/hooks/queries/meta'
-import { ExerciseType } from '@/types/exercises'
-import { MetaItem } from '@/types/meta'
 import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Keyboard,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
+import { Keyboard, Platform, Text, TextInput, TouchableOpacity, useColorScheme, View } from 'react-native'
+
+import { MetaModal } from '@/components/modals/ExerciseMetaModal'
+import { Button } from '@/components/ui'
+import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { useDeleteExercise, useExercises, useUpdateExercise } from '@/hooks/queries/exercises'
+import { useEquipment, useMuscleGroups } from '@/hooks/queries/meta'
+import { Arise } from '@/lib/arise'
+import { ExerciseType } from '@/types/exercises'
+import { MetaItem } from '@/types/meta'
 
 export default function EditExercise() {
-  const navigation = useNavigation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const isDarkMode = useColorScheme() === 'dark'
-  const insets = useSafeAreaInsets()
   const placeholderColor = isDarkMode ? '#a3a3a3' : '#737373'
 
   const { data: exerciseList = [] } = useExercises()
@@ -80,7 +70,7 @@ export default function EditExercise() {
     }
   }, [original])
 
-  const onSave = useCallback(async () => {
+  const onSave = useCallback(() => {
     if (
       !title.trim() ||
       !equipmentId ||
@@ -88,49 +78,50 @@ export default function EditExercise() {
       updateExerciseMutation.isPending ||
       !original
     ) {
-      Toast.show({
-        type: 'info',
-        text1: 'Title, Equipment, and Primary Muscle Group are required',
+      Arise.error({
+        heading: 'Title, Equipment, and Primary Muscle Group are required',
       })
       return
     }
 
     Keyboard.dismiss()
 
-    try {
-      const formData = new FormData()
-      formData.append('title', title.trim())
-      formData.append('instructions', instructions.trim())
-      formData.append('exerciseType', exerciseType)
-      formData.append('equipmentId', equipmentId)
-      formData.append('primaryMuscleGroupId', primaryMuscleGroupId)
+    const formData = new FormData()
+    formData.append('title', title.trim())
+    formData.append('instructions', instructions.trim())
+    formData.append('exerciseType', exerciseType)
+    formData.append('equipmentId', equipmentId)
+    formData.append('primaryMuscleGroupId', primaryMuscleGroupId)
 
-      if (videoUri) {
-        setUploading(true)
-        formData.append('video', {
-          uri: videoUri,
-          name: 'exercise.mp4',
-          type: 'video/mp4',
-        } as any)
-      }
-
-      await updateExerciseMutation.mutateAsync({ id, data: formData })
-
-      Toast.show({
-        type: 'success',
-        text1: 'Exercise updated successfully',
-      })
-      // Query is automatically invalidated by useUpdateExercise
-      navigation.goBack()
-    } catch (e: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to update exercise',
-        text2: e.message,
-      })
-    } finally {
-      setUploading(false)
+    if (videoUri) {
+      setUploading(true)
+      formData.append('video', {
+        uri: videoUri,
+        name: 'exercise.mp4',
+        type: 'video/mp4',
+      } as any)
     }
+
+    updateExerciseMutation.mutate(
+      { id, data: formData },
+      {
+        onSuccess: () => {
+          Arise.success({
+            heading: 'Exercise updated successfully',
+          })
+          router.back()
+        },
+        onError: (e: any) => {
+          Arise.error({
+            heading: 'Failed to update exercise',
+          })
+          console.error(e)
+        },
+        onSettled: () => {
+          setUploading(false)
+        },
+      },
+    )
   }, [
     id,
     title,
@@ -140,49 +131,34 @@ export default function EditExercise() {
     primaryMuscleGroupId,
     videoUri,
     updateExerciseMutation,
-    navigation,
     original,
   ])
 
-  useEffect(() => {
-    ;(navigation as any).setOptions({
-      title: 'Edit Exercise',
-      rightIcons: [
-        {
-          name: 'trash-outline',
-          onPress: () => deleteModalRef.current?.present(),
-          disabled: updateExerciseMutation.isPending,
-        },
-        {
-          name: 'checkmark-done',
-          onPress: onSave,
-          disabled:
-            updateExerciseMutation.isPending ||
-            !title.trim() ||
-            !equipmentId ||
-            !primaryMuscleGroupId ||
-            !isDirty,
-          color: 'green',
-        },
-      ],
-    })
-  }, [
-    navigation,
-    onSave,
-    updateExerciseMutation.isPending,
-    title,
-    equipmentId,
-    primaryMuscleGroupId,
-    isDirty,
-  ])
-
-  if (!original) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-black">
-        <Text className="text-lg text-neutral-500">Exercise not found.</Text>
-      </View>
-    )
-  }
+  const renderHeaderRight = () => (
+    <View className="flex-row items-center gap-2">
+      <Button
+        variant="ghost"
+        title=""
+        onPress={() => deleteModalRef.current?.present()}
+        leftIcon={<Ionicons name="trash-outline" size={24} color="#ef4444" />}
+        className="p-0"
+      />
+      <Button
+        variant="ghost"
+        title=""
+        onPress={onSave}
+        disabled={
+          updateExerciseMutation.isPending ||
+          !title.trim() ||
+          !equipmentId ||
+          !primaryMuscleGroupId ||
+          !isDirty
+        }
+        leftIcon={<Ionicons name="checkmark-done" size={28} color="green" />}
+        className="p-0"
+      />
+    </View>
+  )
 
   const handleSelectVideo = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -197,10 +173,15 @@ export default function EditExercise() {
   }
 
   return (
-    <View className="flex-1 bg-white dark:bg-black" style={{ paddingBottom: insets.bottom }}>
-      <ScrollView className="p-4">
-        {/* Video picker */}
-        <View className="mb-6 items-center">
+    <BaseScreen
+      title="Edit Exercise"
+      backButton
+      right={renderHeaderRight()}
+      scroll
+      contentContainerStyle={{ padding: 16 }}
+    >
+      {/* Video picker */}
+      <View className="mb-6 items-center">
           <TouchableOpacity
             onPress={handleSelectVideo}
             disabled={updateExerciseMutation.isPending || uploading}
@@ -223,7 +204,7 @@ export default function EditExercise() {
               </>
             ) : original?.thumbnailUrl ? (
               <>
-                {/* In a real app we'd just render an Image with the thumbnail, but Ionicons is a faster mockup here since EditableAvatar is gone */}
+                {/* In a real app we'd just render an Image with the thumbnail, but Ionicons is a faster mockup here since UserEditableAvatar is gone */}
                 <Ionicons
                   name="film-outline"
                   size={48}
@@ -303,7 +284,6 @@ export default function EditExercise() {
         </View>
 
         <View className="h-10" />
-      </ScrollView>
 
       {/* Modals */}
       <MetaModal
@@ -338,28 +318,28 @@ export default function EditExercise() {
         description="Are you sure you want to delete this exercise? This action cannot be undone."
         deleteAction={{
           title: 'Delete',
-          onPress: async () => {
-            try {
-              await deleteExerciseMutation.mutateAsync(id)
-              Toast.show({
-                type: 'success',
-                text1: 'Exercise deleted successfully',
-              })
-              deleteModalRef.current?.dismiss()
-              router.back()
-            } catch (e: any) {
-              Toast.show({
-                type: 'error',
-                text1: 'Failed to delete exercise',
-                text2: e.message,
-              })
-            }
+          onPress: () => {
+            deleteExerciseMutation.mutate(id, {
+              onSuccess: () => {
+                Arise.success({
+                  heading: 'Exercise deleted successfully',
+                })
+                deleteModalRef.current?.dismiss()
+                router.back()
+              },
+              onError: (e: any) => {
+                Arise.error({
+                  heading: 'Failed to delete exercise',
+                })
+                console.error(e)
+              },
+            })
           },
         }}
         cancelAction={{
           onPress: () => deleteModalRef.current?.dismiss(),
         }}
       />
-    </View>
+    </BaseScreen>
   )
 }

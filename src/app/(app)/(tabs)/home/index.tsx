@@ -1,28 +1,31 @@
+import { Ionicons } from '@expo/vector-icons'
+import { useQueryClient } from '@tanstack/react-query'
+import { format } from 'date-fns'
+import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, Text, useWindowDimensions, View } from 'react-native'
-import Animated, {
-  Easing,
-  FadeInDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import Animated, { FadeInDown } from 'react-native-reanimated'
 
-import StreakCard, { StreakDay } from '@/components/me/StreakCard'
-import ShimmerHomeScreen from '@/components/ui/shimmers/ShimmerHomeScreen'
-
-import { HabitCard } from '@/components/habits/HabitCard'
+import { HabitCard } from '@/components/habit/HabitCard'
+import { BaseEmptyState, Button, SectionHeader } from '@/components/ui'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { HomeScreenShimmer } from '@/components/ui/shimmers'
+import { TopLifts } from '@/components/user'
+import { StreakDay, UserStreakCard } from '@/components/user/UserStreakCard'
 import {
   WeeklyDurationCard,
   WeeklyRepsCard,
   WeeklyVolumeCard,
-} from '@/components/me/TrainingMetricCards'
-import { WeightMetricCard } from '@/components/me/WeightMetricCard'
-import { Button } from '@/components/ui/buttons/Button'
+} from '@/components/user/UserTrainingMetricCards'
+import { UserWeightMetricCard } from '@/components/user/UserWeightMetricCard'
 import { useAskNotificationPermission } from '@/hooks/notifications/useAskNotificationPermission'
 import { useHabitLogsQuery, useHabitsQuery } from '@/hooks/queries/habits'
 import { useMeasurementsQuery, useProfileQuery, useUserAnalyticsQuery } from '@/hooks/queries/me'
+import { useUserTopLiftsQuery } from '@/hooks/queries/usePublicUser'
+import { useUnitConverter } from '@/hooks/useUnitConverter'
+import { Arise } from '@/lib/arise'
+import { queryKeys } from '@/lib/queryKeys'
+import { listWorkoutsService } from '@/services/workouts.service'
 import { SelfUser } from '@/types/me'
 import {
   calculateBMI,
@@ -31,10 +34,6 @@ import {
   estimateBodyFatFromBMI,
 } from '@/utils/analytics'
 import { getMotivationLine } from '@/utils/motivation'
-import { useUnitConverter } from '@/hooks/useUnitConverter'
-import { format } from 'date-fns'
-import { useRouter } from 'expo-router'
-import Toast from 'react-native-toast-message'
 
 export default function HomeScreen() {
   const router = useRouter()
@@ -52,6 +51,43 @@ export default function HomeScreen() {
     refetch: refetchUserAnalytics,
     isLoading: isLoadingUserAnalytics,
   } = useUserAnalyticsQuery()
+  const { data: topLifts = [], isLoading: isTopLiftsLoading } = useUserTopLiftsQuery(user?.id!, 10)
+
+  const qc = useQueryClient()
+
+  useEffect(() => {
+    const fetchFullHistory = async () => {
+      // Only prefetch if we don't have any cached data yet
+      const cachedData = qc.getQueryData(queryKeys.workouts.all)
+      if (cachedData || !user?.id) return
+
+      try {
+        const allPages: { workouts: any[]; meta: any }[] = []
+        const allParams: number[] = []
+        let currentPage = 1
+        let hasMore = true
+
+        // Fetch until we have everything (with a safety cap of 20 pages / 1000 workouts)
+        while (hasMore && currentPage <= 20) {
+          const data = await listWorkoutsService(currentPage, 50, user.id)
+          allPages.push({ workouts: data.workouts || [], meta: data.meta })
+          allParams.push(currentPage)
+          hasMore = data.meta.hasMore
+          currentPage++
+        }
+
+        // Manually seed the infinite query cache
+        qc.setQueryData(queryKeys.workouts.all, {
+          pages: allPages,
+          pageParams: allParams,
+        })
+      } catch (error) {
+        console.error('Failed to prefetch full workout history:', error)
+      }
+    }
+
+    fetchFullHistory()
+  }, [qc, user?.id])
 
   const latestMeasurements = measurements?.latestValues
 
@@ -204,23 +240,6 @@ export default function HomeScreen() {
     setRefreshing(false)
   }, [refetchMeasurements, refetchUserAnalytics, refetchHabits, refetchHabitLogs])
 
-  // ───────────────── Header animation ─────────────────
-  const headerOpacity = useSharedValue(0)
-  const headerTranslateY = useSharedValue(-20)
-
-  useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 800 })
-    headerTranslateY.value = withTiming(0, {
-      duration: 800,
-      easing: Easing.out(Easing.exp),
-    })
-  }, [headerOpacity, headerTranslateY])
-
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerTranslateY.value }],
-  }))
-
   const isFullyLoaded =
     !isLoadingMeasurements &&
     !isLoadingUserAnalytics &&
@@ -243,155 +262,169 @@ export default function HomeScreen() {
 
   useAskNotificationPermission(isFullyLoaded && hasFinishedAnimations)
 
+  const title = useMemo(() => {
+    const hours = new Date().getHours()
+    if (hours < 12)
+      return `Good Morning, ${user?.firstName ? `${user.firstName.split(' ').at(-1)}` : ''}!`
+    if (hours < 18)
+      return `Good Afternoon, ${user?.firstName ? `${user.firstName.split(' ').at(-1)}` : ''}!`
+    return `Good Evening, ${user?.firstName ? `${user.firstName.split(' ').at(-1)}` : ''}!`
+  }, [user?.firstName])
+
+  const subTitle = useMemo(() => {
+    return `Ready to get pumped?`
+  }, [])
+
+  const isScreenLoading =
+    refreshing ||
+    isLoadingMeasurements ||
+    isLoadingUserAnalytics ||
+    isLoadingHabits ||
+    isLoadingHabitLogs
+
   // ───────────────── Render ─────────────────
   return (
-    <SafeAreaView className="flex-1 bg-white px-4 pt-4 dark:bg-black" edges={['top']}>
-      {/* Header */}
-      <Animated.View style={headerAnimatedStyle} className="mb-4">
-        <Text numberOfLines={1} className="text-2xl font-semibold text-black dark:text-white">
-          {(() => {
-            const hours = new Date().getHours()
-            if (hours < 12) return 'Good Morning'
-            if (hours < 18) return 'Good Afternoon'
-            return 'Good Evening'
-          })()}
-          {user?.firstName ? `, ${user.firstName.split(' ').at(-1)}` : ''}!
-        </Text>
-        <Text className="text-base font-normal text-neutral-600 dark:text-neutral-400">
-          Ready to get pumped?
-        </Text>
+    <BaseScreen
+      title={title}
+      subTitle={subTitle}
+      scroll
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      contentContainerStyle={{ paddingBottom: '50%' }}
+      isLoading={isScreenLoading}
+      shimmer={<HomeScreenShimmer />}
+    >
+      <UserStreakCard {...streakData} />
+
+      <Animated.View entering={FadeInDown.delay(600).duration(500)}>
+        <SectionHeader title="Habits" className="mb-4" />
       </Animated.View>
 
-      {refreshing ||
-      isLoadingMeasurements ||
-      isLoadingUserAnalytics ||
-      isLoadingHabits ||
-      isLoadingHabitLogs ? (
-        <ShimmerHomeScreen />
-      ) : (
+      <Animated.View entering={FadeInDown.delay(700).duration(500)}>
         <ScrollView
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          contentContainerStyle={{ paddingBottom: '50%' }}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10, paddingRight: 20 }}
         >
-          <StreakCard {...streakData} />
+          {habits.map((habit) => (
+            <HabitCard key={habit.id} habit={habit} />
+          ))}
 
-          <Animated.View
-            entering={FadeInDown.delay(600).duration(500)}
-            className="mb-4 flex-row items-center justify-between"
+          <View
+            style={{ width: width * 0.5, height: width * 0.4 }}
+            className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
           >
-            <View>
-              <Text className="text-xl font-bold text-black dark:text-white">Habits</Text>
-            </View>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(700).duration(500)}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 10, paddingRight: 20 }}
-            >
-              {habits.map((habit) => (
-                <HabitCard key={habit.id} habit={habit} />
-              ))}
-
-              <View
-                style={{ width: width * 0.5, height: width * 0.4 }}
-                className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
-              >
-                <Button
-                  title="Track New Habit"
-                  onPress={() => {
-                    router.push('/habit')
-                  }}
-                  variant="outline"
-                  textClassName="text-sm"
-                />
-              </View>
-            </ScrollView>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(800).duration(500)}>
-            <Text className="my-4 text-xl font-semibold text-black dark:text-white">Metrics</Text>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(900).duration(500)}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 10, paddingRight: 20 }}
-            >
-              <WeightMetricCard width={width * 0.5} />
-              <View
-                style={{ width: width * 0.5, height: width * 0.4 }}
-                className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-2 px-4 dark:border-neutral-800 dark:bg-neutral-900"
-              >
-                <Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">
-                  Body Fat
-                </Text>
-                <Text className="text-base font-semibold text-black dark:text-white">
-                  {composition?.bodyFat.toFixed(1)}%
-                </Text>
-              </View>
-
-              <View
-                style={{ width: width * 0.5 }}
-                className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
-              >
-                <Button
-                  title="View All"
-                  onPress={() => {
-                    Toast.show({
-                      type: 'info',
-                      text1: 'Coming Soon',
-                    })
-                  }}
-                  variant="outline"
-                  textClassName="text-sm"
-                />
-              </View>
-            </ScrollView>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(800).duration(500)}>
-            <Text className="my-4 text-xl font-semibold text-black dark:text-white">Training</Text>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(900).duration(500)}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 10, paddingRight: 20 }}
-            >
-              <WeeklyVolumeCard
-                volume={weeklyVolume}
-                lastWeekVolume={lastWeekVolume}
-                width={width * 0.5}
-              />
-              <WeeklyDurationCard
-                duration={weeklyDuration}
-                lastWeekDuration={lastWeekDuration}
-                width={width * 0.5}
-              />
-              <WeeklyRepsCard reps={weeklyReps} lastWeekReps={lastWeekReps} width={width * 0.5} />
-
-              <View
-                style={{ width: width * 0.5 }}
-                className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
-              >
-                <Button
-                  title="View Trends"
-                  onPress={() => {
-                    router.push('/(app)/analytics')
-                  }}
-                  variant="outline"
-                  textClassName="text-sm"
-                />
-              </View>
-            </ScrollView>
-          </Animated.View>
+            <Button
+              title="Track New Habit"
+              onPress={() => {
+                router.push('/habit')
+              }}
+              variant="outline"
+              textClassName="text-sm"
+            />
+          </View>
         </ScrollView>
-      )}
-    </SafeAreaView>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(800).duration(500)}>
+        <SectionHeader title="Metrics" className="my-4" />
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(900).duration(500)}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+        >
+          <UserWeightMetricCard width={width * 0.5} />
+          <View
+            style={{ width: width * 0.5, height: width * 0.4 }}
+            className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-2 px-4 dark:border-neutral-800 dark:bg-neutral-900"
+          >
+            <Text className="text-base font-medium text-neutral-600 dark:text-neutral-400">
+              Body Fat
+            </Text>
+            <Text className="text-base font-semibold text-black dark:text-white">
+              {composition?.bodyFat.toFixed(1)}%
+            </Text>
+          </View>
+
+          <View
+            style={{ width: width * 0.5 }}
+            className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
+          >
+            <Button
+              title="View All"
+              onPress={() => {
+                Arise.info({ heading: 'Coming Soon' })
+              }}
+              variant="outline"
+              textClassName="text-sm"
+            />
+          </View>
+        </ScrollView>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(800).duration(500)}>
+        <SectionHeader title="Training" className="my-4" />
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(900).duration(500)}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+        >
+          <WeeklyVolumeCard
+            volume={weeklyVolume}
+            lastWeekVolume={lastWeekVolume}
+            width={width * 0.5}
+          />
+          <WeeklyDurationCard
+            duration={weeklyDuration}
+            lastWeekDuration={lastWeekDuration}
+            width={width * 0.5}
+          />
+          <WeeklyRepsCard reps={weeklyReps} lastWeekReps={lastWeekReps} width={width * 0.5} />
+
+          <View
+            style={{ width: width * 0.5 }}
+            className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-transparent px-4 py-4 dark:border-neutral-700"
+          >
+            <Button
+              title="View Trends"
+              onPress={() => {
+                router.push('/(app)/analytics')
+              }}
+              variant="outline"
+              textClassName="text-sm"
+            />
+          </View>
+        </ScrollView>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(800).duration(500)}>
+        <SectionHeader title="Top Lifts" className="my-4" />
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(900).duration(500)} className="mb-12">
+        {topLifts.length > 0 ? (
+          <TopLifts lifts={topLifts} isLoading={isTopLiftsLoading} showTitle={false} />
+        ) : (
+          <BaseEmptyState
+            message="No Personal Records Yet"
+            description="Finish your first workout to start tracking your strongest lifts here."
+            actionLabel="Start Your First Workout"
+            onActionPress={() => router.push('/(app)/(tabs)/workout')}
+            icon={
+              <View className="h-16 w-16 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+                <Ionicons name="trophy-outline" size={32} color="#A3A3A3" />
+              </View>
+            }
+            dashed={false}
+            className="bg-neutral-50/50 dark:bg-neutral-900/50"
+          />
+        )}
+      </Animated.View>
+    </BaseScreen>
   )
 }

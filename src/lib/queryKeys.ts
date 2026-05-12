@@ -20,7 +20,6 @@ export const queryKeys = {
 
     analyticsRoot: ['me', 'analytics'] as const,
     userAnalytics: ['me', 'analytics', 'user'] as const,
-    trainingAnalytics: (duration: string) => ['me', 'analytics', 'training', duration] as const,
 
     fitnessProfile: ['me', 'fitnessProfile'] as const,
     nutritionPlan: ['me', 'nutritionPlan'] as const,
@@ -32,6 +31,10 @@ export const queryKeys = {
 
   user: {
     byId: (userId: string) => ['user', userId] as const,
+
+    topLifts: (userId: string, limit?: number) => ['user', userId, 'topLifts', limit ?? 'all'] as const,
+    trainingAnalytics: (userId: string, duration: string) =>
+      ['user', userId, 'trainingAnalytics', duration] as const,
   },
 
   meta: {
@@ -102,6 +105,7 @@ export const queryKeys = {
   workouts: {
     all: ['workouts'] as const,
     discover: ['discoverWorkouts'] as const,
+    user: (userId: string) => ['workouts', 'user', userId] as const,
     byId: (id: string) => ['workouts', 'detail', id] as const,
   },
 } as const

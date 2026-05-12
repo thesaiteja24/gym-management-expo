@@ -1,16 +1,6 @@
-import { Button } from '@/components/ui/buttons/Button'
-import { useCreateHabit, useHabitsQuery, useUpdateHabit } from '@/hooks/queries/habits'
-import {
-  HabitColorScheme,
-  HabitFooterType,
-  HabitSourceType,
-  HabitTrackingType,
-  InternalMetricId,
-  UpdateHabitPayload,
-} from '@/types/habits'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   BackHandler,
   KeyboardAvoidingView,
@@ -20,8 +10,19 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
+
+import { Button } from '@/components/ui'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { useCreateHabit, useHabitsQuery, useUpdateHabit } from '@/hooks/queries/habits'
+import { Arise } from '@/lib/arise'
+import {
+  HabitColorScheme,
+  HabitFooterType,
+  HabitSourceType,
+  HabitTrackingType,
+  InternalMetricId,
+  UpdateHabitPayload,
+} from '@/types/habits'
 
 const COLORS: { name: HabitColorScheme; hex: string }[] = [
   { name: 'blue', hex: '#3b82f6' },
@@ -91,40 +92,52 @@ export default function HabitCreatorScreen() {
     }
   }, [isEdit, habitToEdit])
 
-  const handleCreate = async () => {
-    try {
-      if (!title && source === 'manual') {
-        Toast.show({ type: 'error', text1: 'Please enter a title' })
-        return
+  const handleCreate = () => {
+    if (!title && source === 'manual') {
+      Arise.error({ heading: 'Please enter a title' })
+      return
+    }
+
+    if (trackingType === 'quantity' && !targetValue) {
+      Arise.error({ heading: 'Please enter a goal value' })
+      return
+    }
+
+    if (isEdit) {
+      const updateData: UpdateHabitPayload = {
+        title,
+        colorScheme: selectedColor,
+        footerType,
       }
 
-      if (trackingType === 'quantity' && !targetValue) {
-        Toast.show({ type: 'error', text1: 'Please enter a goal value' })
-        return
+      if (source === 'manual') {
+        updateData.trackingType = trackingType
+        updateData.targetValue = targetValue ? parseFloat(targetValue) : null
+        updateData.unit = unit || null
       }
 
-      if (isEdit) {
-        const updateData: UpdateHabitPayload = {
-          title,
-          colorScheme: selectedColor,
-          footerType,
-        }
-
-        if (source === 'manual') {
-          updateData.trackingType = trackingType
-          updateData.targetValue = targetValue ? parseFloat(targetValue) : null
-          updateData.unit = unit || null
-        }
-
-        await updateHabitMutation.mutateAsync({
+      updateHabitMutation.mutate(
+        {
           id,
           data: updateData,
-        })
-        router.back()
-        return
-      }
+        },
+        {
+          onSuccess: () => {
+            router.back()
+          },
+          onError: (error: any) => {
+            console.error('Update Habit Error:', error)
+            Arise.error({
+              heading: error.message || 'Failed to update habit',
+            })
+          },
+        },
+      )
+      return
+    }
 
-      await createHabitMutation.mutateAsync({
+    createHabitMutation.mutate(
+      {
         title:
           source === 'internal'
             ? INTERNAL_METRICS.find((m) => m.id === internalMetricId)?.title || title
@@ -136,17 +149,20 @@ export default function HabitCreatorScreen() {
         footerType,
         source,
         internalMetricId,
-      })
-
-      router.back()
-    } catch (error: any) {
-      console.log('Create Habit Error:', error)
-
-      Toast.show({
-        type: 'error',
-        text1: error.message || 'Failed to create habit',
-      })
-    }
+      },
+      {
+        onSuccess: () => {
+          Arise.success({ heading: 'Habit created successfully' })
+          router.back()
+        },
+        onError: (error: any) => {
+          console.error('Create Habit Error:', error)
+          Arise.error({
+            heading: error.message || 'Failed to create habit',
+          })
+        },
+      },
+    )
   }
 
   useEffect(() => {
@@ -167,11 +183,11 @@ export default function HabitCreatorScreen() {
   }, [])
 
   return (
-    <SafeAreaView edges={['bottom']} className="flex-1 bg-white dark:bg-black">
+    <BaseScreen title={isEdit ? 'Edit Habit' : 'Create Habit'} backButton>
       <KeyboardAvoidingView className="flex-1" behavior="padding" keyboardVerticalOffset={100}>
         {/* Scrollable Content */}
         <ScrollView
-          contentContainerClassName="gap-4 p-4"
+          contentContainerClassName="gap-4"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -395,9 +411,15 @@ export default function HabitCreatorScreen() {
 
         {/* Fixed Bottom Button */}
         <View className="absolute bottom-0 left-0 right-0 border-t border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-black">
-          <Button title={isEdit ? 'Update Habit' : 'Create Habit'} onPress={handleCreate} />
+          <Button
+            title={isEdit ? 'Update Habit' : 'Create Habit'}
+            className="rounded-full"
+            onPress={handleCreate}
+            loading={createHabitMutation.isPending || updateHabitMutation.isPending}
+            disabled={createHabitMutation.isPending || updateHabitMutation.isPending}
+          />
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </BaseScreen>
   )
 }

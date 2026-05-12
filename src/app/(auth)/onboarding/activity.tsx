@@ -1,13 +1,13 @@
-import { Button } from '@/components/ui/buttons/Button'
-import { SelectableCard } from '@/components/ui/SelectableCard'
-import { useThemeColor } from '@/hooks/theme'
-import { useOnboarding } from '@/stores/me.store'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import React from 'react'
 import { ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
+
+import { Button } from '@/components/ui'
+import { SelectableCard } from '@/components/ui/cards/SelectableCard'
+import { useThemeColor } from '@/hooks/theme'
+import { Arise } from '@/lib/arise'
+import { useOnboarding } from '@/stores/me.store'
 
 export default function OnboardingActivity() {
   const router = useRouter()
@@ -44,9 +44,8 @@ export default function OnboardingActivity() {
 
   const handleNext = () => {
     if (!activityLevel) {
-      Toast.show({
-        type: 'error',
-        text1: 'Please select your activity level',
+      Arise.error({
+        heading: 'Please select your activity level',
       })
       return
     }

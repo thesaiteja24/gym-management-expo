@@ -1,15 +1,23 @@
-import { Button } from '@/components/ui/buttons/Button'
-import DateTimePicker from '@/components/ui/DateTimePicker'
-import TimerDurationModal, {
+import { router, Stack } from 'expo-router'
+import { useMemo, useRef } from 'react'
+import { Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+
+import {
+  TimerDurationModal,
   TimerDurationModalHandle,
-} from '@/components/workouts/modals/TimerDurationModal'
-import VisibilitySelectionModal from '@/components/workouts/modals/VisibilitySelectionModal'
+} from '@/components/modals/TimerDurationModal'
+import { VisibilitySelectionModal } from '@/components/modals/VisibilitySelectionModal'
+import { Button } from '@/components/ui'
 import { BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { DateTimePicker } from '@/components/ui/inputs/DateTimePicker'
 import { useExercises } from '@/hooks/queries/exercises'
 import {
   useCreateWorkoutPayloadMutation,
   useUpdateWorkoutPayloadMutation,
 } from '@/hooks/queries/workouts'
+import { Arise } from '@/lib/arise'
 import {
   finalizeWorkoutForSave,
   getWorkoutDurationSeconds,
@@ -19,14 +27,8 @@ import {
 import type { ExerciseType } from '@/types/exercises'
 import type { WorkoutPayload } from '@/types/payloads'
 import { formatSeconds } from '@/utils/workout'
-import { Stack, router } from 'expo-router'
-import { useMemo, useRef } from 'react'
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
 
 export default function WorkoutSaveScreen() {
-  const insets = useSafeAreaInsets()
   const durationModalRef = useRef<TimerDurationModalHandle>(null)
   const visibilityModalRef = useRef<BaseModalHandle>(null)
 
@@ -96,7 +98,7 @@ export default function WorkoutSaveScreen() {
     })
   }
 
-  const handleSaveWorkout = async () => {
+  const handleSaveWorkout = () => {
     const validation = getWorkoutSaveState(workout, exerciseTypeMap)
 
     if (!validation.canSave) {
@@ -104,12 +106,11 @@ export default function WorkoutSaveScreen() {
       const hasOnlyInvalidCompletedSets =
         invalidCompletedSetCount > 0 && validation.validSetIds.length === 0
 
-      Toast.show({
-        type: 'error',
-        text1: hasOnlyInvalidCompletedSets
+      Arise.error({
+        heading: hasOnlyInvalidCompletedSets
           ? 'Completed sets need fixes'
           : 'Workout cannot be saved',
-        text2:
+        content:
           invalidCompletedSetCount > 0
             ? `${invalidCompletedSetCount} completed set${invalidCompletedSetCount === 1 ? ' is' : 's are'} missing required values. Fix them or uncheck them before saving.`
             : validation.reasons.join(' '),
@@ -120,94 +121,113 @@ export default function WorkoutSaveScreen() {
     const finalized = finalizeWorkoutForSave(workout, exerciseTypeMap, source)
 
     if (finalized.warnings.length > 0) {
-      Toast.show({
-        type: 'info',
-        text1: 'Workout finalized',
-        text2: finalized.warnings.join(' '),
+      Arise.info({
+        heading: 'Workout finalized',
+        content: finalized.warnings.join(' '),
       })
     }
-
-    // console.log('[workout payload]', JSON.stringify(finalized.payload, null, 2))
 
     if (mode === 'edit-history') {
       if (!workout.id) {
-        Toast.show({
-          type: 'error',
-          text1: 'Missing workout id',
-          text2: 'This history workout cannot be updated because its id is missing.',
+        Arise.error({
+          heading: 'Missing workout id',
+          content: 'This history workout cannot be updated because its id is missing.',
         })
         return
       }
 
-      try {
-        await updateWorkoutMutation.mutateAsync({
+      updateWorkoutMutation.mutate(
+        {
           id: workout.id,
           payload: finalized.payload as WorkoutPayload,
-        })
+        },
+        {
+          onSuccess: () => {
+            Arise.success({
+              heading: 'Workout updated',
+              content: 'The updated workout payload was logged and sent to the API.',
+            })
 
-        Toast.show({
-          type: 'success',
-          text1: 'Workout updated',
-          text2: 'The updated workout payload was logged and sent to the API.',
+            discardWorkout()
+            router.replace({
+              pathname: '/(app)/workout/[id]',
+              params: { id: workout.id as string },
+            } as const)
+          },
+          onError: (error) => {
+            const message =
+              error instanceof Error ? error.message : 'The workout update request failed.'
+            Arise.error({
+              heading: 'Failed to update workout',
+              content: message,
+            })
+          },
+        },
+      )
+      return
+    }
+
+    createWorkoutMutation.mutate(finalized.payload as WorkoutPayload, {
+      onSuccess: (response) => {
+        const createdWorkoutId = response?.id ?? null
+
+        Arise.success({
+          heading: mode === 'program-workout' ? 'Program workout saved' : 'Workout saved',
+          content: 'The workout payload was logged and sent to the API.',
         })
 
         discardWorkout()
-        router.replace({
-          pathname: '/(app)/workout/[id]',
-          params: { id: workout.id },
-        } as const)
-        return
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'The workout update request failed.'
-        Toast.show({
-          type: 'error',
-          text1: 'Failed to update workout',
-          text2: message,
+
+        if (createdWorkoutId) {
+          router.replace({
+            pathname: '/(app)/workout/[id]',
+            params: { id: createdWorkoutId },
+          } as const)
+          return
+        }
+
+        router.replace('/(app)/(tabs)/workout')
+      },
+      onError: (error) => {
+        const message = error instanceof Error ? error.message : 'The workout save request failed.'
+        Arise.error({
+          heading: 'Failed to save workout',
+          content: message,
         })
-        return
-      }
-    }
-
-    try {
-      const response = await createWorkoutMutation.mutateAsync(finalized.payload as WorkoutPayload)
-      const createdWorkoutId = response?.id ?? null
-
-      Toast.show({
-        type: 'success',
-        text1: mode === 'program-workout' ? 'Program workout saved' : 'Workout saved',
-        text2: 'The workout payload was logged and sent to the API.',
-      })
-
-      discardWorkout()
-
-      if (createdWorkoutId) {
-        router.replace({
-          pathname: '/(app)/workout/[id]',
-          params: { id: createdWorkoutId },
-        } as const)
-        return
-      }
-
-      router.replace('/(app)/(tabs)/workout')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'The workout save request failed.'
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to save workout',
-        text2: message,
-      })
-    }
+      },
+    })
   }
 
-  return (
-    <SafeAreaView style={{ paddingBottom: insets.bottom }} className="flex-1 bg-white dark:bg-black">
-      <Stack.Screen options={{ headerShown: false }} />
+  const renderFooter = () => (
+    <View className="absolute bottom-0 left-0 right-0 mb-2 bg-transparent p-4">
+      <View className="flex-col gap-4">
+        <Button
+          title={
+            mode === 'edit-history'
+              ? 'Update Workout'
+              : mode === 'program-workout'
+                ? 'Save Program Workout'
+                : 'Save Workout'
+          }
+          variant="primary"
+          className="rounded-full"
+          onPress={() => {
+            void handleSaveWorkout()
+          }}
+        />
+        <Button
+          title="Back to Workout"
+          variant="secondary"
+          className="rounded-full"
+          onPress={() => router.back()}
+        />
+      </View>
+    </View>
+  )
 
-      <ScrollView
-        className="flex-1 px-4 pt-4"
-        contentContainerStyle={{ paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-      >
+  return (
+    <BaseScreen footerComponent={renderFooter()}>
+      <View className="flex-1">
         <Text className="mb-1 text-neutral-500">Workout title</Text>
         <TextInput
           value={workout.title}
@@ -242,26 +262,11 @@ export default function WorkoutSaveScreen() {
             className="mt-1"
             onPress={() => durationModalRef.current?.present(durationSeconds)}
           >
-            <Text className="text-base font-medium text-primary">{formatSeconds(durationSeconds)}</Text>
+            <Text className="text-base font-medium text-primary">
+              {formatSeconds(durationSeconds)}
+            </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-
-      <View className="gap-3 px-4 pb-4">
-        <Button
-          title={
-            mode === 'edit-history'
-              ? 'Update Workout'
-              : mode === 'program-workout'
-                ? 'Save Program Workout'
-                : 'Save Workout'
-          }
-          variant="primary"
-          onPress={() => {
-            void handleSaveWorkout()
-          }}
-        />
-        <Button title="Back to Workout" variant="secondary" onPress={() => router.back()} />
       </View>
 
       <TimerDurationModal
@@ -277,6 +282,6 @@ export default function WorkoutSaveScreen() {
         onSelect={(visibility) => updateWorkoutMeta({ visibility })}
         onClose={() => visibilityModalRef.current?.dismiss()}
       />
-    </SafeAreaView>
+    </BaseScreen>
   )
 }

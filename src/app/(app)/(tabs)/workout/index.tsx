@@ -1,34 +1,9 @@
-import { ProgramWorkoutPromptModal } from '@/components/programs/modals/ProgramWorkoutPromptModal'
-import ProgramCard from '@/components/programs/ProgramCard'
-import UserProgramCard from '@/components/programs/UserProgramCard'
-import { PaywallModal } from '@/components/subscriptions/PaywallModal'
-import TemplateCard from '@/components/templates/TemplateCard'
-import { BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
-import {
-  SkeletonProgramCard,
-  SkeletonUserProgramCard,
-} from '@/components/ui/shimmers/SkeletonProgramCard'
-import SkeletonTemplateCard from '@/components/ui/shimmers/SkeletonTemplateCard'
-import { FREE_TIER_LIMITS } from '@/constants/limits'
-import { ROLES } from '@/constants/roles'
-import { useExercises } from '@/hooks/queries/exercises'
-import { useProfileQuery } from '@/hooks/queries/me'
-import { useActiveProgram, usePrograms, useUserPrograms } from '@/hooks/queries/programs'
-import { useTemplatesQuery } from '@/hooks/queries/templates'
-import { useThemeColor } from '@/hooks/theme'
-import { useSubscriptionStore } from '@/stores/subscriptions.store'
-import { useWorkoutEditor } from '@/stores/workout-editor.store'
-import { SelfUser } from '@/types/me'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import React, { useEffect, useRef, useState } from 'react'
 import {
   BackHandler,
   RefreshControl,
   ScrollView,
-  Text,
-  TouchableOpacity,
   useWindowDimensions,
   View,
 } from 'react-native'
@@ -39,14 +14,35 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated'
-import Carousel from 'react-native-reanimated-carousel'
+
+import { ProgramWorkoutPromptModal } from '@/components/modals/ProgramWorkoutPromptModal'
+import { UserSubscriptionPaywallModal } from '@/components/modals/SubscriptionPaywallModal'
+import { ProgramCard } from '@/components/program/ProgramCard'
+import { UserProgramCard } from '@/components/program/UserProgramCard'
+import { TemplateCard } from '@/components/template/TemplateCard'
+import { BaseEmptyState, Button, SectionHeader } from '@/components/ui'
+import { BaseModalHandle } from '@/components/ui/BaseModal'
+import BaseScreen from '@/components/ui/BaseScreen'
+import {
+  ProgramCardShimmer,
+  TemplateCardShimmer,
+  UserProgramCardShimmer,
+} from '@/components/ui/shimmers/'
+import { FREE_TIER_LIMITS } from '@/constants/limits'
+import { ROLES } from '@/constants/roles'
+import { useExercises } from '@/hooks/queries/exercises'
+import { useProfileQuery } from '@/hooks/queries/me'
+import { useActiveProgram, usePrograms, useUserPrograms } from '@/hooks/queries/programs'
+import { useTemplatesQuery } from '@/hooks/queries/templates'
+import { useThemeColor } from '@/hooks/theme'
+import { useSubscriptionStore } from '@/stores/subscriptions.store'
+import { useWorkoutEditor } from '@/stores/workout-editor.store'
+import { SelfUser } from '@/types/me'
 
 export default function WorkoutScreen() {
   const router = useRouter()
   const colors = useThemeColor()
   const { width } = useWindowDimensions()
-  const [activeIndex, setActiveIndex] = useState(0)
-  const [activeProgramIndex, setActiveProgramIndex] = useState(0)
 
   // Workout Store
   const workout = useWorkoutEditor((s) => s.workout)
@@ -58,8 +54,6 @@ export default function WorkoutScreen() {
   const userRole = user?.role
   const hasActiveWorkout = Boolean(workout)
 
-  // Template Store — draft/write actions only
-  // Templates list and loading state come from TanStack Query
   const {
     data: templates = [],
     isLoading: templateLoading,
@@ -181,9 +175,9 @@ export default function WorkoutScreen() {
   }, [router])
 
   return (
-    <ScrollView
-      className="flex-1 bg-white p-4 dark:bg-black"
-      showsVerticalScrollIndicator={false}
+    <BaseScreen
+      title="Workout"
+      scroll
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
@@ -242,202 +236,127 @@ export default function WorkoutScreen() {
         </Animated.View>
 
         <Animated.View style={programsStyle} className="mb-8 flex flex-col gap-4">
-          <View className="flex flex-row items-center justify-between">
-            <Text className="text-xl font-semibold text-black dark:text-white">Active Program</Text>
-          </View>
+          <SectionHeader title="Active Program" />
 
           {/* Active Program Card or Dotted Interface */}
           <View className="">
             {activeLoading || refreshing ? (
-              <SkeletonUserProgramCard />
+              <UserProgramCardShimmer />
             ) : activeProgram ? (
-              <UserProgramCard program={activeProgram} />
+              <>
+                <UserProgramCard program={activeProgram} />
+              </>
             ) : (
-              <View className="h-44 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
-                <Text className="mb-2 text-neutral-500 dark:text-neutral-400">
-                  No active program. Choose one below!
-                </Text>
-              </View>
+              <BaseEmptyState message="No active program. Choose one below!" className="h-44" />
             )}
           </View>
         </Animated.View>
 
         {/* Programs Section */}
         <Animated.View style={programsStyle} className="mb-8 flex flex-col gap-4">
-          <View className="flex flex-row items-center justify-between">
-            <Text className="text-xl font-semibold text-black dark:text-white">Programs</Text>
+          <SectionHeader
+            title="Programs"
+            actionIcon={
+              isPro && userRole === ROLES.systemAdmin ? 'folder-plus' : undefined
+            }
+            onActionPress={
+              isPro && userRole === ROLES.systemAdmin
+                ? () => router.push('/(app)/program')
+                : undefined
+            }
+          />
 
-            {isPro && userRole === ROLES.systemAdmin && (
-              <TouchableOpacity
-                onPress={() => {
-                  router.push('/(app)/program')
-                }}
-              >
-                <MaterialCommunityIcons name="folder-plus" size={24} color={colors.icon} />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Available Programs Carousel */}
           {programLoading || refreshing ? (
-            <View>
-              <Carousel
-                loop={false}
-                width={width}
-                height={160}
-                autoPlay={false}
-                data={[1, 2]}
-                scrollAnimationDuration={700}
-                enabled={false}
-                renderItem={() => <SkeletonProgramCard />}
-                mode="parallax"
-                modeConfig={{
-                  parallaxAdjacentItemScale: 0.9,
-                  parallaxScrollingScale: 1,
-                  parallaxScrollingOffset: 160,
-                }}
-              />
-              <View className="flex-row justify-center gap-2">
-                <View className="h-2 w-6 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-                <View className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              </View>
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10 }}
+              decelerationRate="fast"
+              snapToInterval={width * 0.75 + 10}
+              snapToAlignment="start"
+            >
+              {[1, 2].map((item) => (
+                <View key={item} style={{ width: width * 0.75 }}>
+                  <ProgramCardShimmer />
+                </View>
+              ))}
+            </ScrollView>
           ) : programs.length === 0 ? (
-            <View className="h-40 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
-              <Text className="text-neutral-500 dark:text-neutral-400">
-                No programs available. Create one!
-              </Text>
-            </View>
+            <BaseEmptyState message="No programs available. Create one!" className="h-40" />
           ) : (
-            <View>
-              <Carousel
-                loop={false}
-                width={width}
-                height={160}
-                autoPlay={false}
-                data={programs}
-                scrollAnimationDuration={700}
-                onSnapToItem={(index) => setActiveProgramIndex(index)}
-                renderItem={({ item }) => <ProgramCard program={item} />}
-                mode="parallax"
-                modeConfig={{
-                  parallaxAdjacentItemScale: 0.9,
-                  parallaxScrollingScale: 1,
-                  parallaxScrollingOffset: 160,
-                }}
-              />
-
-              <View className="flex-row justify-center gap-2">
-                {programs.map((_, index) => (
-                  <View
-                    key={index}
-                    className={`h-2 w-2 rounded-full ${
-                      index === activeProgramIndex
-                        ? 'w-6 bg-blue-600'
-                        : 'bg-neutral-300 dark:bg-neutral-700'
-                    }`}
-                  />
-                ))}
-              </View>
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10 }}
+              decelerationRate="fast"
+              snapToInterval={width * 0.75 + 10}
+              snapToAlignment="start"
+            >
+              {programs.map((program) => (
+                <View key={program.id} style={{ width: width * 0.75 }}>
+                  <ProgramCard program={program} />
+                </View>
+              ))}
+            </ScrollView>
           )}
         </Animated.View>
 
         {/* Templates Section */}
         <Animated.View style={templatesStyle} className="flex flex-col gap-4">
-          <View className="flex flex-row items-center justify-between">
-            <Text className="text-xl font-semibold text-black dark:text-white">My Templates</Text>
-
-            <TouchableOpacity
-              onPress={() => {
-                if (!isPro && templates.length >= FREE_TIER_LIMITS.MAX_CUSTOM_TEMPLATES) {
-                  paywallModalRef.current?.present()
-                } else {
-                  router.push('/(app)/template/editor')
-                }
-              }}
-            >
-              <MaterialCommunityIcons name="folder-plus" size={24} color={colors.icon} />
-            </TouchableOpacity>
-          </View>
+          <SectionHeader
+            title="My Templates"
+            actionIcon="folder-plus"
+            onActionPress={() => {
+              if (!isPro && templates.length >= FREE_TIER_LIMITS.MAX_CUSTOM_TEMPLATES) {
+                paywallModalRef.current?.present()
+              } else {
+                router.push('/(app)/template/editor')
+              }
+            }}
+          />
 
           {templateLoading || refreshing ? (
-            <View>
-              <Carousel
-                loop={false}
-                width={width}
-                height={160}
-                autoPlay={false}
-                data={[1, 2]} // two skeleton cards
-                scrollAnimationDuration={700}
-                enabled={false}
-                renderItem={() => <SkeletonTemplateCard />}
-                mode="parallax"
-                modeConfig={{
-                  parallaxAdjacentItemScale: 0.9,
-                  parallaxScrollingScale: 1,
-                  parallaxScrollingOffset: 160,
-                }}
-              />
-
-              {/* fake pagination */}
-              <View className="flex-row justify-center gap-2">
-                <View className="h-2 w-6 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-                <View className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-              </View>
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10 }}
+              decelerationRate="fast"
+              snapToInterval={width * 0.75 + 10}
+              snapToAlignment="start"
+            >
+              {[1, 2].map((item) => (
+                <View key={item} style={{ width: width * 0.75 }}>
+                  <TemplateCardShimmer />
+                </View>
+              ))}
+            </ScrollView>
           ) : templates.length === 0 ? (
-            <View className="h-40 items-center justify-center rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-700">
-              <Text className="text-neutral-500 dark:text-neutral-400">
-                No templates yet. Create one!
-              </Text>
-            </View>
+            <BaseEmptyState message="No templates yet. Create one!" className="h-40" />
           ) : (
-            <View>
-              <Carousel
-                loop={false}
-                width={width}
-                height={160}
-                autoPlay={false}
-                data={templates}
-                scrollAnimationDuration={700}
-                onSnapToItem={(index) => setActiveIndex(index)}
-                renderItem={({ item }) => <TemplateCard template={item} />}
-                mode="parallax"
-                modeConfig={{
-                  parallaxAdjacentItemScale: 0.9,
-                  parallaxScrollingScale: 1,
-                  parallaxScrollingOffset: 160,
-                }}
-              />
-              {/* Pagination Dots */}
-              <View className="flex-row justify-center gap-2">
-                {templates.map((_, index) => (
-                  <View
-                    key={index}
-                    className={`h-2 w-2 rounded-full ${
-                      index === activeIndex
-                        ? 'w-6 bg-blue-600'
-                        : 'bg-neutral-300 dark:bg-neutral-700'
-                    }`}
-                  />
-                ))}
-              </View>
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10 }}
+              decelerationRate="fast"
+              snapToInterval={width * 0.75 + 10}
+              snapToAlignment="start"
+            >
+              {templates.map((template) => (
+                <View key={template.id} style={{ width: width * 0.75 }}>
+                  <TemplateCard template={template} />
+                </View>
+              ))}
+            </ScrollView>
           )}
         </Animated.View>
 
         {/* Past Programs Section */}
         {pastPrograms.length > 0 && (
           <Animated.View style={programsStyle} className="mt-8 flex flex-col gap-4">
-            <View className="flex flex-row items-center justify-between">
-              <Text className="text-xl font-semibold text-black dark:text-white">
-                Past Programs
-              </Text>
-            </View>
+            <SectionHeader title="Past Programs" />
 
             {userProgramsLoading || refreshing ? (
-              <SkeletonUserProgramCard />
+              <UserProgramCardShimmer />
             ) : (
               <View className="gap-4">
                 {pastPrograms.map((p) => (
@@ -475,12 +394,12 @@ export default function WorkoutScreen() {
         }}
       />
 
-      <PaywallModal
+      <UserSubscriptionPaywallModal
         ref={paywallModalRef}
         title="Upgrade to Pro"
         description={`You can only add up to ${FREE_TIER_LIMITS.MAX_CUSTOM_TEMPLATES} custom templates on the Free plan. Upgrade to create UNLIMITED Templates`}
         continueText="View Plans"
       />
-    </ScrollView>
+    </BaseScreen>
   )
 }

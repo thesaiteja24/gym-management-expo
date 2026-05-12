@@ -1,38 +1,41 @@
+import { Ionicons } from '@expo/vector-icons'
+import { FlashList } from '@shopify/flash-list'
+import { formatDistanceToNow } from 'date-fns'
+import * as Crypto from 'expo-crypto'
+import { Image } from 'expo-image'
+import { router, useLocalSearchParams } from 'expo-router'
+import { useCallback, useMemo, useRef } from 'react'
+import { Text, View } from 'react-native'
+
+import { Button } from '@/components/ui'
 import { BaseModal, BaseModalHandle } from '@/components/ui/BaseModal'
-import { Button } from '@/components/ui/buttons/Button'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { WorkoutScreenShimmer } from '@/components/ui/shimmers'
+import { UserVerifiedBadge } from '@/components/user/UserVerifiedBadge'
+import { WorkoutReadOnlyExerciseRow } from '@/components/workout/WorkoutReadOnlyExerciseRow'
 import { useExercises } from '@/hooks/queries/exercises'
+import {
+  useDeleteWorkoutMutation,
+  useWorkoutByIdQuery,
+  useWorkoutHistoryQuery,
+  useWorkoutListQuery,
+} from '@/hooks/queries/workouts'
+import { useThemeColor } from '@/hooks/theme'
+import { useShare } from '@/hooks/useShare'
+import { Arise } from '@/lib/arise'
+import { useAuth } from '@/stores/auth.store'
 import { useWorkoutEditor } from '@/stores/workout-editor.store'
 import { ExerciseType } from '@/types/exercises'
 import { WorkoutHistoryExercise, WorkoutHistorySet, WorkoutLogGroup } from '@/types/workouts'
 import { calculateWorkoutMetrics, formatDurationFromDates } from '@/utils/workout'
-import * as Crypto from 'expo-crypto'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
-import { BackHandler, ScrollView, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
-
-import { VerifiedBadge } from '@/components/subscriptions/VerifiedBadge'
-import ShimmerWorkoutScreen from '@/components/ui/shimmers/ShimmerWorkoutScreen'
-import { ReadOnlyExerciseRow } from '@/components/workout-editor/ReadOnlyExerciseRow'
-import {
-  useDeleteWorkoutMutation,
-  useDiscoverWorkoutsQuery,
-  useUserWorkoutHistoryQuery,
-  useWorkoutByIdQuery,
-} from '@/hooks/queries/workouts'
-import { useThemeColor } from '@/hooks/theme'
-import { useAuth } from '@/stores/auth.store'
-import { formatDistanceToNow } from 'date-fns'
-import { Image } from 'expo-image'
 
 /* ───────────────── Component ───────────────── */
 
 export default function WorkoutDetails() {
   /* Local State */
   const { id } = useLocalSearchParams<{ id: string }>()
-  const navigation = useNavigation()
   const isDark = useThemeColor().isDark
+  const { shareEntity } = useShare()
 
   const deleteModalRef = useRef<BaseModalHandle>(null)
   const discardModalRef = useRef<BaseModalHandle>(null)
@@ -43,8 +46,8 @@ export default function WorkoutDetails() {
 
   const deleteMutation = useDeleteWorkoutMutation()
 
-  const { discoverWorkouts, isLoading: isDiscoverLoading } = useDiscoverWorkoutsQuery()
-  const { workoutHistory, isLoading: isHistoryLoading } = useUserWorkoutHistoryQuery()
+  const { workouts, isLoading: isDiscoverLoading } = useWorkoutListQuery()
+  const { workoutHistory, isLoading: isHistoryLoading } = useWorkoutHistoryQuery()
 
   /* Derived State */
   const exerciseTypeMap = useMemo(() => {
@@ -60,8 +63,8 @@ export default function WorkoutDetails() {
     return workoutHistory.find((w) => w.id === id)
   }, [workoutHistory, id])
   const workoutFromDiscover = useMemo(() => {
-    return discoverWorkouts.find((w) => w.id === id)
-  }, [discoverWorkouts, id])
+    return workouts.find((w) => w.id === id)
+  }, [workouts, id])
 
   const hasLocalData = !!(workoutFromStore || workoutFromHistory || workoutFromDiscover)
 
@@ -77,7 +80,7 @@ export default function WorkoutDetails() {
 
   const groupMap = useMemo(() => {
     const map = new Map<string, WorkoutLogGroup>()
-    workout?.exerciseGroups.forEach((g: WorkoutLogGroup) => map.set(g.id, g))
+    workout?.exerciseGroups?.forEach((g: WorkoutLogGroup) => map.set(g.id, g))
     return map
   }, [workout?.exerciseGroups])
 
@@ -117,8 +120,8 @@ export default function WorkoutDetails() {
     if (!workout) return
     router.back()
     deleteMutation.mutate(workout.id, {
-      onSuccess: () => Toast.show({ type: 'success', text1: 'Workout deleted' }),
-      onError: () => Toast.show({ type: 'error', text1: 'Failed to delete workout' }),
+      onSuccess: () => Arise.success({ heading: 'Workout deleted' }),
+      onError: () => Arise.error({ heading: 'Failed to delete workout' }),
     })
   }
 
@@ -180,31 +183,23 @@ export default function WorkoutDetails() {
     router.push('/(app)/template/editor')
   }
 
-  useEffect(() => {
-    const rightIcons = [{ name: 'create-outline', onPress: handleEdit }]
-
-    if (isAuthrized) {
-      navigation.setOptions({
-        rightIcons,
+  const handleShare = useCallback(async () => {
+    if (!workout || !workout.shareId) {
+      Arise.error({
+        heading: 'Error',
+        content: 'Workout cannot be shared',
       })
-    }
-  }, [id, isAuthrized, navigation, handleEdit, workout, discardModalRef])
-
-  useEffect(() => {
-    const onBackPress = () => {
-      router.back()
-      return true
+      return
     }
 
-    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+    await shareEntity('workout', workout.shareId, {
+      title: workout.title || 'Workout',
+      image: workout.user?.profilePicUrl,
+      message: `Check out ${workout.user?.firstName}'s workout on Pump!`,
+    })
+  }, [workout, shareEntity])
 
-    return () => subscription.remove()
-  }, [])
-  if (isLoading) {
-    return <ShimmerWorkoutScreen />
-  }
-
-  if (!workout) {
+  if (!isLoading && !workout) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-black">
         <Text className="text-lg text-neutral-500">Workout not found</Text>
@@ -212,92 +207,131 @@ export default function WorkoutDetails() {
     )
   }
 
-  const duration = formatDurationFromDates(workout.startTime, workout.endTime)
+  const duration = workout ? formatDurationFromDates(workout.startTime, workout.endTime) : '0:00'
 
-  const timeAgo = formatDistanceToNow(new Date(workout.endTime), { addSuffix: true })
+  const timeAgo = workout ? formatDistanceToNow(new Date(workout.endTime), { addSuffix: true }) : ''
 
-  const { tonnage, completedSets } = calculateWorkoutMetrics(workout, exerciseTypeMap)
+  const { tonnage, completedSets } = workout
+    ? calculateWorkoutMetrics(workout, exerciseTypeMap)
+    : { tonnage: 0, completedSets: 0 }
+
+  /* UI Components */
+  const renderHeaderRight = () => (
+    <View className="flex-row items-center gap-1">
+      <Button
+        variant="ghost"
+        title=""
+        onPress={handleShare}
+        leftIcon={<Ionicons name="share-outline" size={24} color={isDark ? 'white' : 'black'} />}
+        className="p-0"
+      />
+      {isAuthrized && (
+        <Button
+          variant="ghost"
+          title=""
+          onPress={handleEdit}
+          leftIcon={<Ionicons name="create-outline" size={24} color={isDark ? 'white' : 'black'} />}
+          className="p-0"
+        />
+      )}
+    </View>
+  )
+
+  const renderFooter = () => (
+    <View className="absolute bottom-0 left-0 right-0 mb-2 bg-transparent p-4">
+      <View className="flex-row items-center justify-center gap-4 px-4">
+        {isAuthrized && (
+          <Button
+            title="Delete"
+            className="w-1/3 rounded-full"
+            variant="danger"
+            onPress={() => deleteModalRef.current?.present()}
+          />
+        )}
+        <Button
+          variant="primary"
+          title="Save as Template"
+          className="w-2/3 rounded-full"
+          onPress={handleSaveAsTemplate}
+        />
+      </View>
+    </View>
+  )
 
   /* UI Rendering */
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom']} className="bg-white dark:bg-black">
-      <ScrollView
-        className="flex-1 bg-white p-4 dark:bg-black"
-        contentContainerStyle={{ paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View className="mb-6 flex-col gap-2">
-          <View className="w-2/3 flex-row items-center gap-4">
-            <Image
-              source={
-                workout?.user?.profilePicUrl
-                  ? { uri: workout.user.profilePicUrl }
-                  : require('../../../assets/images/icon.png')
-              }
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 100,
-                borderColor: isDark ? 'white' : '#black',
-                borderWidth: 0.25,
-              }}
-              contentFit="cover"
-            />
-            <View className="flex-row items-center gap-2">
-              <Text className="text-base text-black dark:text-white">
-                {workout?.user?.firstName} {workout?.user?.lastName}
-              </Text>
-              {workout?.user?.isPro && (
-                <VerifiedBadge tier={workout.user.proSubscriptionType} size={20} />
-              )}
-            </View>
-          </View>
-          <View className="flex-row items-center justify-between">
-            <Text className="flex-1 text-xl font-bold text-black dark:text-white">
-              {workout.title || 'Workout'}
+    <BaseScreen
+      title={workout?.title || 'Workout Details'}
+      scroll
+      backButton
+      right={renderHeaderRight()}
+      footerComponent={renderFooter()}
+      isLoading={isLoading}
+      shimmer={<WorkoutScreenShimmer />}
+    >
+      {/* Header */}
+      <View className="mb-6 flex-row items-start gap-4">
+        <Image
+          source={
+            workout?.user?.profilePicUrl
+              ? { uri: workout.user.profilePicUrl }
+              : require('../../../assets/images/icon.png')
+          }
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 999,
+            borderColor: isDark ? 'white' : 'black',
+            borderWidth: 0.25,
+          }}
+          contentFit="cover"
+        />
+
+        <View className="flex-1 gap-1">
+          <View className="flex-row items-center gap-2">
+            <Text
+              numberOfLines={1}
+              className="flex-shrink text-base font-medium text-black dark:text-white"
+            >
+              {workout?.user?.firstName} {workout?.user?.lastName}
             </Text>
-            {workout.isEdited && (
-              <View className="rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
+
+            {workout?.user?.isPro && (
+              <UserVerifiedBadge tier={workout.user.proSubscriptionType} size={20} />
+            )}
+          </View>
+
+          <View className="flex-row items-center justify-between">
+            <Text
+              numberOfLines={1}
+              className="flex-1 text-sm text-neutral-500 dark:text-neutral-400"
+            >
+              {timeAgo} · {duration} · {tonnage?.toLocaleString()} kg · {completedSets} sets
+            </Text>
+
+            {workout?.isEdited && (
+              <View className="ml-3 rounded-full bg-neutral-100 px-3 py-1 dark:bg-neutral-800">
                 <Text className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
                   Edited
                 </Text>
               </View>
             )}
           </View>
-
-          <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {timeAgo} · {duration} · {tonnage.toLocaleString()} kg · {completedSets} sets
-          </Text>
-        </View>
-
-        {/* Exercises */}
-        {workout.exercises.map((ex: WorkoutHistoryExercise) => {
-          const groupDetails = ex.exerciseGroupId ? groupMap.get(ex.exerciseGroupId) : null
-
-          return <ReadOnlyExerciseRow key={ex.id} exercise={ex} group={groupDetails} />
-        })}
-      </ScrollView>
-
-      {/* Floating Action Button */}
-      <View className="absolute bottom-0 left-0 right-0 mb-4 bg-transparent p-4">
-        <View className="flex-row items-center justify-center gap-4">
-          {isAuthrized && (
-            <Button
-              title="Delete"
-              className="w-1/3 rounded-full"
-              variant="danger"
-              onPress={() => deleteModalRef.current?.present()}
-            />
-          )}
-          <Button
-            variant="primary"
-            title="Save as Template"
-            className="w-2/3 rounded-full"
-            onPress={handleSaveAsTemplate}
-          />
         </View>
       </View>
+
+      {/* Exercises */}
+      <FlashList
+        data={workout?.exercises || []}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => {
+          const groupDetails = item.exerciseGroupId ? groupMap.get(item.exerciseGroupId) : null
+
+          return <WorkoutReadOnlyExerciseRow key={item.id} exercise={item} group={groupDetails} />
+        }}
+        showsVerticalScrollIndicator={false}
+        ListFooterComponent={<View className="mb-[100%]" />}
+      />
 
       <BaseModal
         ref={deleteModalRef}
@@ -324,6 +358,6 @@ export default function WorkoutDetails() {
           onPress: () => discardModalRef.current?.dismiss(),
         }}
       />
-    </SafeAreaView>
+    </BaseScreen>
   )
 }

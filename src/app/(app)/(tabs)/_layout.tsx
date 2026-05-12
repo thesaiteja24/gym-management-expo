@@ -1,14 +1,13 @@
-import CoachModal, { CoachModalHandle } from '@/components/coach/CoachModal'
-import AnimatedButton from '@/components/ui/buttons/AnimatedButton'
-import CustomHeader from '@/components/ui/CustomHeader'
-
-import { useThemeColor } from '@/hooks/theme'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import { Tabs } from 'expo-router'
 import { useRef } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+
+import { CoachModal, CoachModalHandle } from '@/components/modals/CoachModal'
+import { AnimatedButton } from '@/components/ui/buttons/AnimatedButton'
+import { useThemeColor } from '@/hooks/theme'
 
 export default function TabsLayout() {
   const { isDark, ...colors } = useThemeColor()
@@ -25,6 +24,7 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           tabBarShowLabel: false,
+          headerShown: false,
 
           // ---- COLORS ----
           tabBarActiveTintColor: activeColor,
@@ -62,30 +62,12 @@ export default function TabsLayout() {
               ]}
             />
           ),
-
-          // ---- HEADER ----
-          header: (props) => {
-            const { options } = props
-            const custom = options as any
-
-            if (options.headerShown === false) return null
-
-            return (
-              <CustomHeader
-                title={options.title ?? ''}
-                leftIcon={custom.leftIcon}
-                onLeftPress={custom.onLeftPress}
-                rightIcons={custom.rightIcons}
-              />
-            )
-          },
         }}
       >
         <Tabs.Screen
           name="discover"
           options={{
             title: 'Discover',
-            headerShown: false,
             tabBarItemStyle: {
               alignItems: 'center',
               justifyContent: 'center',
@@ -120,7 +102,6 @@ export default function TabsLayout() {
           name="home"
           options={{
             title: 'Home',
-            headerShown: false,
             tabBarItemStyle: {
               alignItems: 'center',
               justifyContent: 'center',
@@ -151,7 +132,6 @@ export default function TabsLayout() {
           name="workout"
           options={{
             title: 'Workout',
-            headerShown: false,
             // ---- ITEM ----
             tabBarItemStyle: {
               alignItems: 'center',
@@ -187,7 +167,6 @@ export default function TabsLayout() {
           name="profile"
           options={{
             title: 'Profile',
-            headerShown: false,
             // ---- ITEM ----
             tabBarItemStyle: {
               alignItems: 'center',

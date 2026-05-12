@@ -1,5 +1,4 @@
 import {
-  DISCOVER_WORKOUTS_ENDPOINT as discover_workouts_endpoint,
   WORKOUT_ITEM_ENDPOINT as workout_item_endpoint,
   WORKOUT_SHARE_ENDPOINT as workout_share_endpoint,
   WORKOUTS_ENDPOINT as workouts_endpoint,
@@ -7,6 +6,7 @@ import {
 import { WorkoutPayload } from '@/types/payloads'
 import { WorkoutHistoryItem, WorkoutsPaginatedResponse } from '@/types/workouts'
 import { handleApiResponse } from '@/utils/handleApiResponse'
+
 import client from './api'
 
 export async function getWorkoutByShareIdService(shareId: string): Promise<WorkoutHistoryItem> {
@@ -21,12 +21,13 @@ export async function getWorkoutByShareIdService(shareId: string): Promise<Worko
   }
 }
 
-export async function getUserWorkoutsService(
+export async function listWorkoutsService(
   page: number = 1,
   limit: number = 2,
+  userId?: string,
 ): Promise<WorkoutsPaginatedResponse> {
   try {
-    const res = await client.get(workouts_endpoint, { params: { page, limit } })
+    const res = await client.get(workouts_endpoint, { params: { page, limit, userId } })
     const handled = handleApiResponse<WorkoutsPaginatedResponse>(res)
     if (!handled.success) throw new Error(handled.message || 'Request failed')
     return handled.data!
@@ -40,21 +41,6 @@ export async function getWorkoutByIdService(id: string): Promise<WorkoutHistoryI
   try {
     const res = await client.get(workout_item_endpoint(id))
     const handled = handleApiResponse<WorkoutHistoryItem>(res)
-    if (!handled.success) throw new Error(handled.message || 'Request failed')
-    return handled.data!
-  } catch (error: any) {
-    const errData = error.response?.data
-    throw new Error(errData?.message || error.message || 'Network error')
-  }
-}
-
-export async function getDiscoverWorkoutsService(
-  page: number = 1,
-  limit: number = 2,
-): Promise<WorkoutsPaginatedResponse> {
-  try {
-    const res = await client.get(discover_workouts_endpoint, { params: { page, limit } })
-    const handled = handleApiResponse<WorkoutsPaginatedResponse>(res)
     if (!handled.success) throw new Error(handled.message || 'Request failed')
     return handled.data!
   } catch (error: any) {

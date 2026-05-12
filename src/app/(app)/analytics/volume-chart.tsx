@@ -1,9 +1,13 @@
-import { BaseTrainingChart } from '@/components/me/BaseTrainingChart'
+import BaseScreen from '@/components/ui/BaseScreen'
+import { UserMetricChart } from '@/components/user/UserMetricChart'
+import { useUserTrainingAnalyticsQuery } from '@/hooks/queries/usePublicUser'
 import { useUnitConverter } from '@/hooks/useUnitConverter'
-import React from 'react'
+import { useAuth } from '@/stores/auth.store'
 
 export default function VolumeChartScreen() {
+  const userId = useAuth((s) => s.userId)
   const { formatWeight, weightUnit: preferredUnit } = useUnitConverter()
+  const { data: analytics, isLoading } = useUserTrainingAnalyticsQuery(userId!, 'all')
 
   const formatVolume = (val: number) => {
     const converted = formatWeight(val, 0)
@@ -11,13 +15,17 @@ export default function VolumeChartScreen() {
   }
 
   return (
-    <BaseTrainingChart
-      title="Training Volume"
-      metricKey="volume"
-      unit={preferredUnit}
-      lineColor="#10b981"
-      icon="bar-chart-outline"
-      formatValue={formatVolume}
-    />
+    <BaseScreen title="Volume Trend" backButton>
+      <UserMetricChart
+        title="Training Volume"
+        data={analytics?.volume || []}
+        isLoading={isLoading}
+        unit={preferredUnit}
+        accentColor="#10b981"
+        icon="bar-chart-outline"
+        formatValue={formatVolume}
+        defaultChartType="bar"
+      />
+    </BaseScreen>
   )
 }

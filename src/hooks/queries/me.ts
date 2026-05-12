@@ -1,3 +1,5 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
 import { queryKeys } from '@/lib/queryKeys'
 import {
   addMeasurementsService,
@@ -6,7 +8,6 @@ import {
   getMeasurementsService,
   getMeService,
   getNutritionPlanService,
-  getTrainingAnalyticsService,
   getUserAnalyticsService,
   updateFitnessProfileService,
   updateMeService,
@@ -28,7 +29,6 @@ import {
   updateMyNutritionPlanCache,
   updateMyProfileCache,
 } from '@/utils/queries/meCacheUtils'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export function useProfileQuery() {
   const userId = useAuth((s) => s.userId)
@@ -73,15 +73,6 @@ export function useUserAnalyticsQuery() {
     queryKey: queryKeys.me.userAnalytics,
     queryFn: () => getUserAnalyticsService(),
     staleTime: 24 * 60 * 60 * 1000,
-  })
-}
-
-export function useTrainingAnalyticsQuery(duration: string = '3m') {
-  return useQuery({
-    queryKey: queryKeys.me.trainingAnalytics(duration),
-    queryFn: () => getTrainingAnalyticsService(duration),
-    staleTime: 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
   })
 }
 

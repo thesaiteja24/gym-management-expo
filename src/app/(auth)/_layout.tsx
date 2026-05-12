@@ -1,5 +1,6 @@
-import { useThemeColor } from '@/hooks/theme'
 import { Stack } from 'expo-router'
+
+import { useThemeColor } from '@/hooks/theme'
 
 export default function Layout() {
   const colors = useThemeColor()
@@ -14,7 +15,6 @@ export default function Layout() {
         }}
       >
         <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="verify-otp" options={{ headerShown: false }} />
       </Stack>
     </>
   )
